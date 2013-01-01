@@ -1,6 +1,6 @@
 (*
   JCore, Consts unit
-  Copyright (C) 2012 Joao Morais
+  Copyright (C) 2013 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
   for details about the copyright.
@@ -20,15 +20,6 @@ const
   SJCoreTrueString = 'True';
   SJCoreFalseString = 'False';
 
-  // Error messages from core and adjacent classes
-  SCannotReleaseInstance = 'Cannot release instance ''%s''';
-  SInvalidIdentifier = 'Invalid identifier ''%s''';
-  SStringLengthOutOfBounds = 'String length out of bounds';
-  STokenExpected = '''%s'' was expected, but ''%s'' was found';
-  STokenLengthOutOfBounds = 'Token length out of bounds';
-  SUnexpectedEof = 'Unexpected end of file';
-
-  // Partial translations for parsers or another error messages
   SJCoreBooleanValueMsg = 'Boolean value';
   SJCoreEofMsg = 'End of file';
   SJCoreIdentifierMsg = 'Identifier';
@@ -37,6 +28,13 @@ const
   SJCoreNumberValueMsg = 'Number';
   SJCoreStringDelimiterMsg = 'String delimiter';
   SJCoreStringValueMsg = 'String';
+
+  SCannotReleaseInstance = 'Cannot release instance ''%s''';
+  SInvalidIdentifier = 'Invalid identifier ''%s''';
+  SStringLengthOutOfBounds = 'String length out of bounds';
+  STokenExpected = '''%s'' was expected, but ''%s'' was found';
+  STokenLengthOutOfBounds = 'Token length out of bounds';
+  SUnexpectedEof = 'Unexpected end of file';
 
 implementation
 

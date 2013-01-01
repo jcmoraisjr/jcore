@@ -1,6 +1,6 @@
 (*
   JCore, Base Parser Classes
-  Copyright (C) 2012 Joao Morais
+  Copyright (C) 2013 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
   for details about the copyright.
