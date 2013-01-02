@@ -428,9 +428,7 @@ begin
   if Assigned(FItemList) and not FItemList.FreeObjects then
     for I := Pred(FItemList.Count) downto 0 do
       FItemList[I].Free;
-  { TODO : FreeAndNil seems to leak memory }
-  //SysUtils.FreeAndNil(FItemList);
-  FItemList.Free;
+  FreeAndNil(FItemList);
   inherited;
 end;
 
