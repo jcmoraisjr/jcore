@@ -42,7 +42,6 @@
         <UnitName Value="JCoreExpressionLib"/>
       </Item6>
     </Files>
-    <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="FCL"/>
