@@ -5,11 +5,11 @@ unit TestExpression;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, JCoreExpression;
+  SysUtils, Classes, fpcunit, testregistry, JCoreExpression;
 
 type
 
-  ETestError = class(Exception);
+  ETestExpressionError = class(Exception);
 
   { TTestExpression }
 
@@ -28,6 +28,7 @@ type
     procedure Expression4;
     procedure Expression5;
     procedure Expression6;
+    procedure ExpressionWithInvalidNumber;
     procedure ExpressionWithoutCloseParenthese;
     procedure ExpressionWithoutOpenParenthese;
     procedure FunctionOneParam;
@@ -136,7 +137,7 @@ end;
 
 procedure TTestError.VarCalc;
 begin
-  raise ETestError.Create('I am the TTestError class!');
+  raise ETestExpressionError.Create('I am the TTestError class!');
 end;
 
 { TTestExpression }
@@ -215,6 +216,11 @@ begin
   AssertExpressionNumber('(15+9)*(4^3)', 1536);
 end;
 
+procedure TTestExpression.ExpressionWithInvalidNumber;
+begin
+  AssertExpressionException('10.5+10.25.5', EJCoreReadError);
+end;
+
 procedure TTestExpression.ExpressionWithoutCloseParenthese;
 begin
   AssertExpressionException('(15+9)*(4^3', EJCoreReadError);
@@ -248,7 +254,7 @@ begin
     AssertExpressionNumber('optional(2,1,2)', 3);
     AssertExpressionNumber('optional(3,1,2,3)', 6);
     //AssertExpressionNumber('optional(3,1,2,3,4)', 0);
-    AssertExpressionException('optional(3,1,2,3,4)', ETestError);
+    AssertExpressionException('optional(3,1,2,3,4)', ETestExpressionError);
   finally
     JCoreExpressionLibrary.UnregisterFunctions([TTestOptionalFunction]);
     AssertExpressionException('optional(2,1,2)', EJCoreReadError);
@@ -368,7 +374,7 @@ begin
   try
     AssertExpressionException('errorinexistent()', EJCoreReadError, False);
     AssertExpressionException('error()', nil, False);
-    AssertExpressionException('error()', ETestError, True);
+    AssertExpressionException('error()', ETestExpressionError, True);
   finally
     JCoreExpressionLibrary.UnregisterFunctions([TTestError]);
     AssertExpressionException('error()', EJCoreReadError, False);
@@ -398,7 +404,7 @@ var
 begin
   // First param is the number of params declared beyond the first one
   if Length(Params) <> (Params[0]^ + 1) then
-    raise ETestError.Create('Wrong number of params');
+    raise ETestExpressionError.Create('Wrong number of params');
   Res^ := 0;
   for I := 1 to Pred(Length(Params)) do
     Res^ := Res^ + Params[I]^;

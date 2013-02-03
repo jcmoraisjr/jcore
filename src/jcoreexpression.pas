@@ -51,7 +51,6 @@ type
     FRes: PJCoreExpressionValue;
     FVars: TJCoreExpressionVars;
     function DoParseExpression(Reader: TJCoreExpressionReader): PJCoreExpressionValue;
-    function GetCalc: TObjectList;
     function GetVars: TJCoreExpressionVars;
     function GetVarValue: Variant;
     function ParseFunction(Reader: TJCoreParserReader): TJCoreExpressionItem;
@@ -68,7 +67,7 @@ type
     destructor Destroy; override;
     function ParseExpression(AExpression: string): PJCoreExpressionValue;
     function ParseExpression(Reader: TJCoreExpressionReader): PJCoreExpressionValue;
-    property Calc: TObjectList read GetCalc;
+    property Calc: TObjectList read FCalc;
     property Res: PJCoreExpressionValue read FRes;
     property Vars: TJCoreExpressionVars read GetVars;
     property VarValue: Variant read GetVarValue;
@@ -219,13 +218,6 @@ begin
   Result := FRes;
 end;
 
-function TJCoreExpression.GetCalc: TObjectList;
-begin
-  if not Assigned(FCalc) then
-    FCalc := TObjectList.Create(False);
-  Result := FCalc;
-end;
-
 function TJCoreExpression.GetVars: TJCoreExpressionVars;
 begin
   if not Assigned(FVars) then
@@ -283,11 +275,12 @@ end;
 constructor TJCoreExpression.Create;
 begin
   inherited Create(nil);
+  FCalc := TObjectList.Create(False);
 end;
 
 constructor TJCoreExpression.Create(AExpression: string);
 begin
-  inherited Create(nil);
+  Create;
   ParseExpression(AExpression);
 end;
 
