@@ -110,7 +110,7 @@ procedure TTestDIC.InterfaceNotFoundError;
 var
   VFacade: IHotColorFacade;
 begin
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
 end;
 
 procedure TTestDIC.UnsupportedInterfaceError;
@@ -137,7 +137,7 @@ var
 begin
   TJCoreDIC.Register(IHotColorFacade, TRedFacade);
   try
-    TJCoreDIC.Localize(IHotColorFacade, VFacade);
+    TJCoreDIC.Locate(IHotColorFacade, VFacade);
     AssertEquals(VFacade.MyClassName, TRedFacade.ClassName);
   finally
     AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRedFacade));
@@ -151,15 +151,15 @@ begin
   TJCoreDIC.Register(IHotColorFacade, TRubyRedFacade);
   try
     try
-      TJCoreDIC.Localize(IHotColorFacade, VFacade);
+      TJCoreDIC.Locate(IHotColorFacade, VFacade);
       AssertEquals(VFacade.MyClassName, TRubyRedFacade.ClassName);
       TJCoreDIC.Register(IHotColorFacade, TRedFacade);
-      TJCoreDIC.Localize(IHotColorFacade, VFacade);
+      TJCoreDIC.Locate(IHotColorFacade, VFacade);
       AssertEquals(VFacade.MyClassName, TRubyRedFacade.ClassName);
     finally
       AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRubyRedFacade));
     end;
-    TJCoreDIC.Localize(IHotColorFacade, VFacade);
+    TJCoreDIC.Locate(IHotColorFacade, VFacade);
     AssertEquals(VFacade.MyClassName, TRedFacade.ClassName);
   finally
     AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRedFacade));
@@ -172,16 +172,16 @@ var
 begin
   TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
   try
-    TJCoreDIC.Localize(IColdColorFacade, VFacade);
+    TJCoreDIC.Locate(IColdColorFacade, VFacade);
     AssertEquals(TNavyBlueFacade.ClassName, VFacade.MyClassName);
     TJCoreDIC.Register(IColdColorFacade, TGreenFacade, nil, TNavyBlueFacade);
     try
-      TJCoreDIC.Localize(IColdColorFacade, VFacade);
+      TJCoreDIC.Locate(IColdColorFacade, VFacade);
       AssertEquals(TGreenFacade.ClassName, VFacade.MyClassName);
     finally
       AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
     end;
-    TJCoreDIC.Localize(IColdColorFacade, VFacade);
+    TJCoreDIC.Locate(IColdColorFacade, VFacade);
     AssertEquals(TNavyBlueFacade.ClassName, VFacade.MyClassName);
   finally
     AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
@@ -219,10 +219,10 @@ var
   VFacade: IHotColorFacade;
 begin
   TJCoreDIC.Register(IHotColorFacade, TRedFacade, TJCoreDICSingletonClass);
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CSingletonConfig;
   VFacade := nil;
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   AssertEquals(CSingletonConfig, VFacade.Value);
   AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRedFacade));
 end;
@@ -234,10 +234,10 @@ var
   VFacade: IHotColorFacade;
 begin
   TJCoreDIC.Register(IHotColorFacade, TRedFacade, TJCoreDICInstanceClass);
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CInstanceConfig;
   VFacade := nil;
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   AssertEquals('', VFacade.Value);
   AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRedFacade));
 end;
@@ -250,16 +250,16 @@ var
   VFacade: IHotColorFacade;
 begin
   TJCoreDIC.Register(IHotColorFacade, TRedFacade, TJCoreDICSingletonClass);
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CSingletonConfig;
   VFacade := nil;
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   AssertEquals(CSingletonConfig, VFacade.Value);
   TJCoreDIC.Register(IHotColorFacade, TYellowFacade, TJCoreDICInstanceClass, TRedFacade);
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CInstanceConfig;
   VFacade := nil;
-  TJCoreDIC.Localize(IHotColorFacade, VFacade);
+  TJCoreDIC.Locate(IHotColorFacade, VFacade);
   AssertEquals(TYellowFacade.ClassName, VFacade.MyClassName);
   AssertEquals('', VFacade.Value);
   AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRedFacade));

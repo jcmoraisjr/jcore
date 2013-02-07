@@ -131,7 +131,7 @@ type
     class function CheckGUID(const AGUID: TGuid): TJCoreDICClassFactory;
     class property Container: TJCoreDICDependencyMap read FContainer;
   public
-    class procedure Localize(const AGUID: TGuid; out AIntf);
+    class procedure Locate(const AGUID: TGuid; out AIntf);
     class procedure Register(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil; AOverrides: TClass = nil);
     class function Unregister(const AGUID: TGuid; AClass: TClass): Boolean;
   end;
@@ -139,7 +139,8 @@ type
 implementation
 
 uses
-  sysutils, JCoreConsts;
+  sysutils,
+  JCoreConsts;
 
 { EJCoreDICIntfNotFoundException }
 
@@ -322,7 +323,7 @@ begin
   Result := Container.Data[VIndex];
 end;
 
-class procedure TJCoreDIC.Localize(const AGUID: TGuid; out AIntf);
+class procedure TJCoreDIC.Locate(const AGUID: TGuid; out AIntf);
 var
   VGUIDStr: String;
   VInstance: TObject;
