@@ -21,10 +21,21 @@ uses
   Classes;
 
 type
-  EJCoreError = class(Exception)
+  { EJCoreException }
+
+  EJCoreException = class(Exception)
   public
     constructor Create(const AMsg: string);
     constructor CreateFmt(const AMsg: string; const AArgs: array of const);
+  end;
+
+  EJCoreError = class(EJCoreException);
+
+  { EJCoreNilPointerException }
+
+  EJCoreNilPointerException = class(EJCoreException)
+  public
+    constructor Create;
   end;
 
   EJCoreConversionError = class(EJCoreError);
@@ -122,17 +133,24 @@ uses
   Math,
   JCoreConsts;
 
-{ EJCoreError }
+{ EJCoreException }
 
-constructor EJCoreError.Create(const AMsg: string);
+constructor EJCoreException.Create(const AMsg: string);
 begin
   inherited Create(AMsg);
 end;
 
-constructor EJCoreError.CreateFmt(const AMsg: string;
+constructor EJCoreException.CreateFmt(const AMsg: string;
   const AArgs: array of const);
 begin
   inherited CreateFmt(AMsg, AArgs);
+end;
+
+{ EJCoreNilPointerException }
+
+constructor EJCoreNilPointerException.Create;
+begin
+  inherited Create(SNilPointer);
 end;
 
 { EJCoreReadError }
@@ -199,7 +217,7 @@ function TJCoreManagedObject.Release: Integer;
 begin
   Result := InterLockedDecrement(FRefCount);
   if FRefCount < 0 then
-    raise EJCoreError.CreateFmt(SCannotReleaseInstance, [ClassName]);
+    raise EJCoreException.CreateFmt(SCannotReleaseInstance, [ClassName]);
 end;
 
 function TJCoreManagedObject.SupportsIntf(const IID: TGUID): Boolean;

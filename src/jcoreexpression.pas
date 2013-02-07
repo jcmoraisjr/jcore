@@ -394,7 +394,7 @@ end;
 constructor TJCoreExpressionVar.Create(const AName: string);
 begin
   if not IsValidIdent(AName) then
-    raise EJCoreError.CreateFmt(SInvalidIdentifier, [AName]);
+    raise EJCoreException.CreateFmt(SInvalidIdentifier, [AName]);
   inherited Create;
   FName := AName;
 end;
