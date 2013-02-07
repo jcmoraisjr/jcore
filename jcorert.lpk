@@ -16,7 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="7">
       <Item1>
         <Filename Value="src/jcore.inc"/>
         <Type Value="Include"/>
@@ -41,6 +41,10 @@
         <Filename Value="src/jcoreexpressionlib.pas"/>
         <UnitName Value="JCoreExpressionLib"/>
       </Item6>
+      <Item7>
+        <Filename Value="src/jcoredic.pas"/>
+        <UnitName Value="JCoreDIC"/>
+      </Item7>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

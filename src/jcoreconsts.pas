@@ -29,12 +29,16 @@ const
   SJCoreStringDelimiterMsg = 'String delimiter';
   SJCoreStringValueMsg = 'String';
 
+  SAmbiguousClass = 'Ambiguous classes: ''%s'' and ''%s''';
   SCannotReleaseInstance = 'Cannot release instance ''%s''';
+  SInterfaceNotFound = 'Interface not found: ''%s''';
   SInvalidIdentifier = 'Invalid identifier ''%s''';
+  SNilPointer = 'Nil pointer';
   SStringLengthOutOfBounds = 'String length out of bounds';
   STokenExpected = '''%s'' was expected, but ''%s'' was found';
   STokenLengthOutOfBounds = 'Token length out of bounds';
   SUnexpectedEof = 'Unexpected end of file';
+  SUnsupportedInterface = 'Class ''%s'' does not support interface ''%s''';
 
 implementation
 

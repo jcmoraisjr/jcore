@@ -3,11 +3,16 @@ program JCoreTestsGUI;
 {$mode objfpc}{$H+}
 
 uses
-  heaptrc, Interfaces, Forms, GuiTestRunner, testexpression;
+  heaptrc, sysutils, Interfaces, Forms, GuiTestRunner,
+  TestExpression, TestDIC;
 
 {$R *.res}
 
 begin
+{$ifdef windows}
+  DeleteFile('heaptrace.log');
+  SetHeapTraceOutput('heaptrace.log');
+{$endif}
   Application.Initialize;
   Application.CreateForm(TGuiTestRunner, TestRunner);
   Application.Run;
