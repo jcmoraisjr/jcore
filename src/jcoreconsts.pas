@@ -16,7 +16,7 @@ unit JCoreConsts;
 
 interface
 
-const
+resourcestring
   SJCoreTrueString = 'True';
   SJCoreFalseString = 'False';
 
@@ -29,16 +29,16 @@ const
   SJCoreStringDelimiterMsg = 'String delimiter';
   SJCoreStringValueMsg = 'String';
 
-  SAmbiguousClass = 'Ambiguous classes: ''%s'' and ''%s''';
-  SCannotReleaseInstance = 'Cannot release instance ''%s''';
-  SInterfaceNotFound = 'Interface not found: ''%s''';
-  SInvalidIdentifier = 'Invalid identifier ''%s''';
-  SNilPointer = 'Nil pointer';
-  SStringLengthOutOfBounds = 'String length out of bounds';
-  STokenExpected = '''%s'' was expected, but ''%s'' was found';
-  STokenLengthOutOfBounds = 'Token length out of bounds';
-  SUnexpectedEof = 'Unexpected end of file';
-  SUnsupportedInterface = 'Class ''%s'' does not support interface ''%s''';
+  SJCoreAmbiguousClass = 'Ambiguous classes: ''%s'' and ''%s''';
+  SJCoreCannotReleaseInstance = 'Cannot release instance ''%s''';
+  SJCoreInterfaceNotFound = 'Interface not found: ''%s''';
+  SJCoreInvalidIdentifier = 'Invalid identifier ''%s''';
+  SJCoreNilPointer = 'Nil pointer';
+  SJCoreStringLengthOutOfBounds = 'String length out of bounds';
+  SJCoreTokenExpected = '''%s'' was expected, but ''%s'' was found';
+  SJCoreTokenLengthOutOfBounds = 'Token length out of bounds';
+  SJCoreUnexpectedEof = 'Unexpected end of file';
+  SJCoreUnsupportedInterface = 'Class ''%s'' does not support interface ''%s''';
 
 implementation
 

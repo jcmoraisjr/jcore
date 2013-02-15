@@ -150,7 +150,7 @@ end;
 
 constructor EJCoreNilPointerException.Create;
 begin
-  inherited Create(SNilPointer);
+  inherited Create(SJCoreNilPointer);
 end;
 
 { EJCoreReadError }
@@ -217,7 +217,7 @@ function TJCoreManagedObject.Release: Integer;
 begin
   Result := InterLockedDecrement(FRefCount);
   if FRefCount < 0 then
-    raise EJCoreException.CreateFmt(SCannotReleaseInstance, [ClassName]);
+    raise EJCoreException.CreateFmt(SJCoreCannotReleaseInstance, [ClassName]);
 end;
 
 function TJCoreManagedObject.SupportsIntf(const IID: TGUID): Boolean;
@@ -285,7 +285,8 @@ begin
     VToken := SJCoreEofMsg
   else
     VToken := AToken;
-  raise EJCoreReadError.CreateFmt(TokenPos, STokenExpected, [AExpectedToken, VToken]);
+  raise EJCoreReadError.CreateFmt(TokenPos, SJCoreTokenExpected,
+   [AExpectedToken, VToken]);
 end;
 
 procedure TJCoreTextReader.ErrorFmt(
@@ -316,7 +317,7 @@ end;
 function TJCoreTextReader.ReadChar(GoForward: Boolean): Char;
 begin
   if Eof then
-    ErrorMsg(SUnexpectedEof);
+    ErrorMsg(SJCoreUnexpectedEof);
   Result := FBuffer[FCurrentPos.Position];
   if GoForward then
   begin

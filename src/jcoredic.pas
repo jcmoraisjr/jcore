@@ -146,7 +146,7 @@ uses
 
 constructor EJCoreDICIntfNotFoundException.Create(AGUID: TGuid);
 begin
-  CreateFmt(SInterfaceNotFound, [GUIDToString(AGUID)]);
+  CreateFmt(SJCoreInterfaceNotFound, [GUIDToString(AGUID)]);
   FGUID := AGUID;
 end;
 
@@ -154,7 +154,7 @@ end;
 
 constructor EJCoreDICUnsupportedIntfException.Create(AClass: TClass; AGUID: TGuid);
 begin
-  CreateFmt(SUnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
+  CreateFmt(SJCoreUnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
   FClass := AClass;
   FGUID := AGUID;
 end;
@@ -163,7 +163,7 @@ end;
 
 constructor EJCoreDICAmbiguousClassException.Create(AClass1, AClass2: TClass);
 begin
-  CreateFmt(SAmbiguousClass, [AClass1.ClassName, AClass2.ClassName]);
+  CreateFmt(SJCoreAmbiguousClass, [AClass1.ClassName, AClass2.ClassName]);
   FClass1 := AClass1;
   FClass2 := AClass2;
 end;
