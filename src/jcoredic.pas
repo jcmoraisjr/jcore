@@ -1,5 +1,5 @@
 (*
-  JCore, Dependency Injection Container
+  JCore, Dependency Injection Container Classes
   Copyright (C) 2013 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
@@ -32,18 +32,6 @@ type
     FGUID: TGuid;
   public
     constructor Create(AGUID: TGuid);
-    property GUID: TGuid read FGUID;
-  end;
-
-  { EJCoreDICUnsupportedIntfException }
-
-  EJCoreDICUnsupportedIntfException = class(EJCoreDICException)
-  strict private
-    FClass: TClass;
-    FGUID: TGuid;
-  public
-    constructor Create(AClass: TClass; AGUID: TGuid);
-    property TheClass: TClass read FClass;
     property GUID: TGuid read FGUID;
   end;
 
@@ -147,15 +135,6 @@ uses
 constructor EJCoreDICIntfNotFoundException.Create(AGUID: TGuid);
 begin
   CreateFmt(SJCoreInterfaceNotFound, [GUIDToString(AGUID)]);
-  FGUID := AGUID;
-end;
-
-{ EJCoreDICUnsupportedIntfException }
-
-constructor EJCoreDICUnsupportedIntfException.Create(AClass: TClass; AGUID: TGuid);
-begin
-  CreateFmt(SJCoreUnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
-  FClass := AClass;
   FGUID := AGUID;
 end;
 
@@ -335,7 +314,7 @@ begin
     raise EJCoreDICIntfNotFoundException.Create(AGUID);
   VInstance := Container.Data[VIndex].CurrentClass.Instance;
   if not VInstance.GetInterface(AGUID, IUnknown(AIntf)) then
-    raise EJCoreDICUnsupportedIntfException.Create(VInstance.ClassType, AGUID);
+    raise EJCoreUnsupportedIntfException.Create(VInstance.ClassType, AGUID);
 end;
 
 class procedure TJCoreDIC.Register(
@@ -347,7 +326,7 @@ begin
   if not Assigned(AClass) then
     raise EJCoreNilPointerException.Create;
   if (AClass.GetInterfaceEntry(AGUID) = nil) then
-    raise EJCoreDICUnsupportedIntfException.Create(AClass, AGUID);
+    raise EJCoreUnsupportedIntfException.Create(AClass, AGUID);
   if not Assigned(ADICClass) then
     ADICClass := TJCoreDICSingletonClass;
   VDICClass := ADICClass.Create(AClass, AOverrides);

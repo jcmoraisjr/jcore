@@ -38,6 +38,18 @@ type
     constructor Create;
   end;
 
+  { EJCoreUnsupportedIntfException }
+
+  EJCoreUnsupportedIntfException = class(EJCoreException)
+  strict private
+    FClass: TClass;
+    FGUID: TGuid;
+  public
+    constructor Create(AClass: TClass; AGUID: TGuid);
+    property TheClass: TClass read FClass;
+    property GUID: TGuid read FGUID;
+  end;
+
   EJCoreConversionError = class(EJCoreError);
 
   TJCoreTextPos = record
@@ -151,6 +163,15 @@ end;
 constructor EJCoreNilPointerException.Create;
 begin
   inherited Create(SJCoreNilPointer);
+end;
+
+{ EJCoreUnsupportedIntfException }
+
+constructor EJCoreUnsupportedIntfException.Create(AClass: TClass; AGUID: TGuid);
+begin
+  CreateFmt(SJCoreUnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
+  FClass := AClass;
+  FGUID := AGUID;
 end;
 
 { EJCoreReadError }
