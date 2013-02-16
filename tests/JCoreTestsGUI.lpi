@@ -32,7 +32,7 @@
     </RunParams>
     <RequiredPackages Count="4">
       <Item1>
-        <PackageName Value="jcorert"/>
+        <PackageName Value="JCoreRT"/>
       </Item1>
       <Item2>
         <PackageName Value="FPCUnitTestRunner"/>

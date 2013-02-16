@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <CONFIG>
   <Package Version="4">
-    <Name Value="jcorert"/>
+    <Name Value="JCoreRT"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
