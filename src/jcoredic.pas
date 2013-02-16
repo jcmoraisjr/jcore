@@ -185,13 +185,6 @@ begin
    (Assigned(FOverrides) and FOverrides.InheritsFrom(AOther.TheClass));
 end;
 
-{ TJCoreDICInstanceClass }
-
-function TJCoreDICInstanceClass.GetInstance: TObject;
-begin
-  Result := TheClass.Create;
-end;
-
 { TJCoreDICSingletonClass }
 
 procedure TJCoreDICSingletonClass.SetCurrentObj(AValue: TObject);
@@ -211,6 +204,13 @@ begin
   if not Assigned(CurrentObj) then
     CurrentObj := TheClass.Create;
   Result := CurrentObj;
+end;
+
+{ TJCoreDICInstanceClass }
+
+function TJCoreDICInstanceClass.GetInstance: TObject;
+begin
+  Result := TheClass.Create;
 end;
 
 { TJCoreDICClassFactory }
