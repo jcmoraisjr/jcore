@@ -29,7 +29,7 @@ resourcestring
   SJCoreStringDelimiterMsg = 'String delimiter';
   SJCoreStringValueMsg = 'String';
 
-  SJCoreAmbiguousClass = 'Ambiguous classes: ''%s'' and ''%s''';
+  SJCoreAmbiguousImplementation = 'Ambiguous Implementation for Interface ''%s'': ''%s'' and ''%s''';
   SJCoreCannotReleaseInstance = 'Cannot release instance ''%s''';
   SJCoreInterfaceNotFound = 'Interface not found: ''%s''';
   SJCoreInvalidIdentifier = 'Invalid identifier ''%s''';

@@ -35,14 +35,14 @@ type
     property GUID: TGuid read FGUID;
   end;
 
-  { EJCoreDICAmbiguousClassException }
+  { EJCoreDICAmbiguousImplementationException }
 
-  EJCoreDICAmbiguousClassException = class(EJCoreDICException)
+  EJCoreDICAmbiguousImplementationException = class(EJCoreDICException)
   strict private
     FClass1: TClass;
     FClass2: TClass;
   public
-    constructor Create(AClass1, AClass2: TClass);
+    constructor Create(AGUID: TGUID; AClass1, AClass2: TClass);
     property Class1: TClass read FClass1;
     property Class2: TClass read FClass2;
   end;
@@ -138,11 +138,13 @@ begin
   FGUID := AGUID;
 end;
 
-{ EJCoreDICAmbiguousClassException }
+{ EJCoreDICAmbiguousImplementationException }
 
-constructor EJCoreDICAmbiguousClassException.Create(AClass1, AClass2: TClass);
+constructor EJCoreDICAmbiguousImplementationException.Create(AGUID: TGUID;
+  AClass1, AClass2: TClass);
 begin
-  CreateFmt(SJCoreAmbiguousClass, [AClass1.ClassName, AClass2.ClassName]);
+  CreateFmt(SJCoreAmbiguousImplementation, [
+   GUIDToString(AGUID), AClass1.ClassName, AClass2.ClassName]);
   FClass1 := AClass1;
   FClass2 := AClass2;
 end;
@@ -204,7 +206,7 @@ begin
   else if Assigned(AClass2) and AClass2.Overrides(AClass1) then
     Result := AClass2
   else
-    raise EJCoreDICAmbiguousClassException.Create(
+    raise EJCoreDICAmbiguousImplementationException.Create(FGUID,
      AClass1.TheClass, AClass2.TheClass);
 end;
 
