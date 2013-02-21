@@ -55,10 +55,11 @@ type
   strict private
     FClass: TClass;
     FOverrides: TClass;
+    FIsLazy: Boolean;
   strict protected
     function GetInstance: TObject; virtual; abstract;
   public
-    constructor Create(AClass, AOverrides: TClass);
+    constructor Create(AClass, AOverrides: TClass; AIsLazy: Boolean);
     function Overrides(AOther: TJCoreDICClass): Boolean;
     property Instance: TObject read GetInstance;
     property TheClass: TClass read FClass;
@@ -117,8 +118,10 @@ type
     class constructor Create;
     class destructor Destroy;
     class function CheckGUID(const AGUID: TGuid): TJCoreDICClassFactory;
+    class procedure DoRegister(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
     class property Container: TJCoreDICDependencyMap read FContainer;
   public
+    class procedure LazyRegister(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil);
     class procedure Locate(const AGUID: TGuid; out AIntf);
     class procedure Register(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil; AOverrides: TClass = nil);
     class function Unregister(const AGUID: TGuid; AClass: TClass): Boolean;
@@ -151,18 +154,20 @@ end;
 
 { TJCoreDICClass }
 
-constructor TJCoreDICClass.Create(AClass, AOverrides: TClass);
+constructor TJCoreDICClass.Create(AClass, AOverrides: TClass; AIsLazy: Boolean);
 begin
   if not Assigned(AClass) then
     raise EJCoreNilPointerException.Create;
   inherited Create;
   FClass := AClass;
   FOverrides := AOverrides;
+  FIsLazy := AIsLazy;
 end;
 
 function TJCoreDICClass.Overrides(AOther: TJCoreDICClass): Boolean;
 begin
-  Result := not Assigned(AOther) or FClass.InheritsFrom(AOther.TheClass) or
+  Result := not Assigned(AOther) or AOther.FIsLazy or
+   FClass.InheritsFrom(AOther.TheClass) or
    (Assigned(FOverrides) and FOverrides.InheritsFrom(AOther.TheClass));
 end;
 
@@ -304,6 +309,32 @@ begin
   Result := Container.Data[VIndex];
 end;
 
+class procedure TJCoreDIC.DoRegister(const AGUID: TGuid; AClass: TClass;
+  ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
+var
+  VDICClass: TJCoreDICClass;
+begin
+  if not Assigned(AClass) then
+    raise EJCoreNilPointerException.Create;
+  if (AClass.GetInterfaceEntry(AGUID) = nil) then
+    raise EJCoreUnsupportedIntfException.Create(AClass, AGUID);
+  if not Assigned(ADICClass) then
+    ADICClass := TJCoreDICSingletonClass;
+  VDICClass := ADICClass.Create(AClass, AOverrides, AIsLazy);
+  try
+    CheckGUID(AGUID).AddClass(VDICClass);
+  except
+    FreeAndNil(VDICClass);
+    raise;
+  end;
+end;
+
+class procedure TJCoreDIC.LazyRegister(const AGUID: TGuid; AClass: TClass;
+  ADICClass: TJCoreDICClassClass);
+begin
+  DoRegister(AGUID, AClass, ADICClass, nil, True);
+end;
+
 class procedure TJCoreDIC.Locate(const AGUID: TGuid; out AIntf);
 var
   VGUIDStr: String;
@@ -322,22 +353,8 @@ end;
 class procedure TJCoreDIC.Register(
   const AGUID: TGuid; AClass: TClass;
   ADICClass: TJCoreDICClassClass; AOverrides: TClass);
-var
-  VDICClass: TJCoreDICClass;
 begin
-  if not Assigned(AClass) then
-    raise EJCoreNilPointerException.Create;
-  if (AClass.GetInterfaceEntry(AGUID) = nil) then
-    raise EJCoreUnsupportedIntfException.Create(AClass, AGUID);
-  if not Assigned(ADICClass) then
-    ADICClass := TJCoreDICSingletonClass;
-  VDICClass := ADICClass.Create(AClass, AOverrides);
-  try
-    CheckGUID(AGUID).AddClass(VDICClass);
-  except
-    FreeAndNil(VDICClass);
-    raise;
-  end;
+  DoRegister(AGUID, AClass, ADICClass, AOverrides, False);
 end;
 
 class function TJCoreDIC.Unregister(
