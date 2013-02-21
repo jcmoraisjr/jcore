@@ -5,9 +5,9 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <IncludeFiles Value="src"/>
-        <OtherUnitFiles Value="src"/>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+        <IncludeFiles Value="core"/>
+        <OtherUnitFiles Value="core"/>
+        <UnitOutputDirectory Value="lib/core/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Other>
         <CompilerMessages>
@@ -18,31 +18,31 @@
     </CompilerOptions>
     <Files Count="7">
       <Item1>
-        <Filename Value="src/jcore.inc"/>
+        <Filename Value="core/jcore.inc"/>
         <Type Value="Include"/>
       </Item1>
       <Item2>
-        <Filename Value="src/jcoreconsts.pas"/>
+        <Filename Value="core/jcoreconsts.pas"/>
         <UnitName Value="JCoreConsts"/>
       </Item2>
       <Item3>
-        <Filename Value="src/jcoreclasses.pas"/>
+        <Filename Value="core/jcoreclasses.pas"/>
         <UnitName Value="JCoreClasses"/>
       </Item3>
       <Item4>
-        <Filename Value="src/jcoreparser.pas"/>
+        <Filename Value="core/jcoreparser.pas"/>
         <UnitName Value="JCoreParser"/>
       </Item4>
       <Item5>
-        <Filename Value="src/jcoreexpression.pas"/>
+        <Filename Value="core/jcoreexpression.pas"/>
         <UnitName Value="JCoreExpression"/>
       </Item5>
       <Item6>
-        <Filename Value="src/jcoreexpressionlib.pas"/>
+        <Filename Value="core/jcoreexpressionlib.pas"/>
         <UnitName Value="JCoreExpressionLib"/>
       </Item6>
       <Item7>
-        <Filename Value="src/jcoredic.pas"/>
+        <Filename Value="core/jcoredic.pas"/>
         <UnitName Value="JCoreDIC"/>
       </Item7>
     </Files>
