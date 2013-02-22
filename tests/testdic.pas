@@ -23,7 +23,7 @@ type
     procedure FindInheritedImplementation;
     procedure FindOverridedImplementation;
     procedure InterfaceNotFoundCheck;
-    procedure AmbiguousClassesCheck;
+    procedure AmbiguousImplementationCheck;
     procedure SingletonFactory;
     procedure InstanceFactory;
     procedure SingletonAndInstanceFactories;
@@ -186,7 +186,7 @@ begin
   AssertException(EJCoreDICIntfNotFoundException, @InterfaceNotFoundError);
 end;
 
-procedure TTestDIC.AmbiguousClassesCheck;
+procedure TTestDIC.AmbiguousImplementationCheck;
 begin
   TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
   try
