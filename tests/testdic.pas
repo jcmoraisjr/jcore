@@ -14,8 +14,7 @@ type
   TTestDIC = class(TTestCase)
   private
     procedure InterfaceNotFoundError;
-    procedure UnsupportedInterfaceError;
-    procedure AmbiguousClassesError;
+    procedure AmbiguousImplementationException;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -24,7 +23,6 @@ type
     procedure FindInheritedImplementation;
     procedure FindOverridedImplementation;
     procedure InterfaceNotFoundCheck;
-    procedure UnsupportedInterfaceCheck;
     procedure AmbiguousClassesCheck;
     procedure SingletonFactory;
     procedure InstanceFactory;
@@ -113,12 +111,7 @@ begin
   TJCoreDIC.Locate(IHotColorFacade, VFacade);
 end;
 
-procedure TTestDIC.UnsupportedInterfaceError;
-begin
-  TJCoreDIC.Register(IHotColorFacade, TNavyBlueFacade);
-end;
-
-procedure TTestDIC.AmbiguousClassesError;
+procedure TTestDIC.AmbiguousImplementationException;
 begin
   TJCoreDIC.Register(IColdColorFacade, TGreenFacade);
 end;
@@ -193,17 +186,12 @@ begin
   AssertException(EJCoreDICIntfNotFoundException, @InterfaceNotFoundError);
 end;
 
-procedure TTestDIC.UnsupportedInterfaceCheck;
-begin
-  AssertException(EJCoreDICUnsupportedIntfException, @UnsupportedInterfaceError);
-end;
-
 procedure TTestDIC.AmbiguousClassesCheck;
 begin
   TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
   try
     try
-      AssertException(EJCoreDICAmbiguousClassException, @AmbiguousClassesError);
+      AssertException(EJCoreDICAmbiguousImplementationException, @AmbiguousImplementationException);
     finally
       AssertFalse(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
     end;

@@ -8,7 +8,6 @@
       <Title Value="JCoreTestsGUI"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
-      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -76,7 +75,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="10">
+    <Exceptions Count="8">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -96,17 +95,11 @@
         <Name Value="EAssertionFailedError"/>
       </Item6>
       <Item7>
-        <Name Value="EJCoreDICUnsupportedIntfError"/>
+        <Name Value="EJCoreDICIntfNotFoundException"/>
       </Item7>
       <Item8>
-        <Name Value="EJCoreDICIntfNotFoundException"/>
+        <Name Value="EJCoreDICAmbiguousImplementationException"/>
       </Item8>
-      <Item9>
-        <Name Value="EJCoreDICUnsupportedIntfException"/>
-      </Item9>
-      <Item10>
-        <Name Value="EJCoreDICAmbiguousClassException"/>
-      </Item10>
     </Exceptions>
   </Debugging>
 </CONFIG>
