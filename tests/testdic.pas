@@ -24,6 +24,7 @@ type
     procedure FindOverridedImplementation;
     procedure InterfaceNotFoundCheck;
     procedure AmbiguousImplementationCheck;
+    procedure LazyRegistrationCheck;
     procedure SingletonFactory;
     procedure InstanceFactory;
     procedure SingletonAndInstanceFactories;
@@ -194,6 +195,37 @@ begin
       AssertException(EJCoreDICAmbiguousImplementationException, @AmbiguousImplementationException);
     finally
       AssertFalse(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
+    end;
+  finally
+    AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
+  end;
+end;
+
+procedure TTestDIC.LazyRegistrationCheck;
+var
+  VColdColor: IColdColorFacade;
+begin
+  TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade);
+  try
+    TJCoreDIC.Register(IColdColorFacade, TGreenFacade);
+    try
+      TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+      AssertEquals(TGreenFacade.ClassName, VColdColor.MyClassName);
+    finally
+      AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
+    end;
+  finally
+    AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
+  end;
+
+  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
+  try
+    TJCoreDIC.LazyRegister(IColdColorFacade, TGreenFacade);
+    try
+      TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+      AssertEquals(TNavyBlueFacade.ClassName, VColdColor.MyClassName);
+    finally
+      AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
     end;
   finally
     AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
