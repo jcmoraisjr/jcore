@@ -17,7 +17,8 @@ unit JCoreParser;
 interface
 
 uses
-  fgl, JCoreClasses;
+  fgl,
+  JCoreClasses;
 
 type
   TJCoreParserReader = class(TJCoreTextReader)
@@ -422,8 +423,6 @@ begin
 end;
 
 destructor TJCoreParserObject.Destroy;
-var
-  I: Integer;
 begin
   if Assigned(FOwner) then
     FOwner.ExtractItem(Self);
