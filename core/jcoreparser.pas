@@ -53,6 +53,8 @@ type
   TJCoreParserClass = class of TJCoreParserObject;
   TJCoreParserList = specialize TFPGObjectList<TJCoreParserObject>;
 
+  { TJCoreParserObject }
+
   TJCoreParserObject = class(TObject)
   private
     FItemList: TJCoreParserList;
@@ -71,6 +73,7 @@ type
     constructor Create(AOwner: TJCoreParserObject); virtual;
     destructor Destroy; override;
     class function Apply(Reader: TJCoreParserReader): Boolean;
+    procedure ExtractItem(AItem: TJCoreParserObject);
     function ItemCount: Integer;
     procedure Read(Reader: TJCoreParserReader);
     property Items[AIndex: Integer]: TJCoreParserObject read GetItems; default;
@@ -423,13 +426,15 @@ var
   I: Integer;
 begin
   if Assigned(FOwner) then
-    FOwner.ItemList.Extract(Self);
-  { TODO : See TJCoreParserObject.GetItemList }
-  if Assigned(FItemList) and not FItemList.FreeObjects then
-    for I := Pred(FItemList.Count) downto 0 do
-      FItemList[I].Free;
+    FOwner.ExtractItem(Self);
   FreeAndNil(FItemList);
   inherited;
+end;
+
+procedure TJCoreParserObject.ExtractItem(AItem: TJCoreParserObject);
+begin
+  if Assigned(FItemList) then
+    FItemList.Extract(AItem);
 end;
 
 function TJCoreParserObject.FindRule(Reader: TJCoreParserReader;
@@ -449,8 +454,7 @@ end;
 function TJCoreParserObject.GetItemList: TJCoreParserList;
 begin
   if not Assigned(FItemList) then
-    { TODO : TFPGObjectList's management seems to leak memory }
-    FItemList := TJCoreParserList.Create(False);
+    FItemList := TJCoreParserList.Create(True);
   Result := FItemList;
 end;
 
