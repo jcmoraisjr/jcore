@@ -16,7 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="10">
       <Item1>
         <Filename Value="core/jcore.inc"/>
         <Type Value="Include"/>
@@ -26,33 +26,37 @@
         <UnitName Value="JCoreConsts"/>
       </Item2>
       <Item3>
-        <Filename Value="core/jcoreclasses.pas"/>
-        <UnitName Value="JCoreClasses"/>
+        <Filename Value="core/jcoreutils.pas"/>
+        <UnitName Value="JCoreUtils"/>
       </Item3>
       <Item4>
-        <Filename Value="core/jcoredic.pas"/>
-        <UnitName Value="JCoreDIC"/>
+        <Filename Value="core/jcoreclasses.pas"/>
+        <UnitName Value="JCoreClasses"/>
       </Item4>
       <Item5>
-        <Filename Value="core/jcorelogger.pas"/>
-        <UnitName Value="JCoreLogger"/>
+        <Filename Value="core/jcoredic.pas"/>
+        <UnitName Value="JCoreDIC"/>
       </Item5>
       <Item6>
-        <Filename Value="core/jcoreconfig.pas"/>
-        <UnitName Value="JCoreConfig"/>
+        <Filename Value="core/jcorelogger.pas"/>
+        <UnitName Value="JCoreLogger"/>
       </Item6>
       <Item7>
-        <Filename Value="core/jcoreparser.pas"/>
-        <UnitName Value="JCoreParser"/>
+        <Filename Value="core/jcoreconfig.pas"/>
+        <UnitName Value="JCoreConfig"/>
       </Item7>
       <Item8>
-        <Filename Value="core/jcoreexpression.pas"/>
-        <UnitName Value="JCoreExpression"/>
+        <Filename Value="core/jcoreparser.pas"/>
+        <UnitName Value="JCoreParser"/>
       </Item8>
       <Item9>
+        <Filename Value="core/jcoreexpression.pas"/>
+        <UnitName Value="JCoreExpression"/>
+      </Item9>
+      <Item10>
         <Filename Value="core/jcoreexpressionlib.pas"/>
         <UnitName Value="JCoreExpressionLib"/>
-      </Item9>
+      </Item10>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>
