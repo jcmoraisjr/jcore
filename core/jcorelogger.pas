@@ -18,7 +18,7 @@ interface
 
 type
 
-  IJCoreLogger = interface
+  IJCoreLogger = interface(IInterface)
   ['{786C99E6-9AC9-446C-8DE9-4913C910E90F}']
     procedure Debug(const AMsg: string);
     procedure Info(const AMsg: string);
@@ -28,7 +28,7 @@ type
     procedure PrintStackTrace;
   end;
 
-  IJCoreLogFactory = interface
+  IJCoreLogFactory = interface(IInterface)
   ['{C580B89F-3829-4321-AC79-1A85B3D2B0BB}']
     function CreateLogger(const AName: string): IJCoreLogger;
   end;
