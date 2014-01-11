@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
     <Version Value="9"/>
@@ -29,21 +29,24 @@
         <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="4">
+    <RequiredPackages Count="5">
       <Item1>
-        <PackageName Value="JCoreRT"/>
+        <PackageName Value="JCoreOPFRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="FPCUnitTestRunner"/>
+        <PackageName Value="JCoreRT"/>
       </Item2>
       <Item3>
-        <PackageName Value="LCL"/>
+        <PackageName Value="FPCUnitTestRunner"/>
       </Item3>
       <Item4>
-        <PackageName Value="FCL"/>
+        <PackageName Value="LCL"/>
       </Item4>
+      <Item5>
+        <PackageName Value="FCL"/>
+      </Item5>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="JCoreTestsGUI.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -59,6 +62,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="TestDIC"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="testopf.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="TestOPF"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -75,7 +83,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="8">
+    <Exceptions Count="12">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -100,6 +108,18 @@
       <Item8>
         <Name Value="EJCoreDICAmbiguousImplementationException"/>
       </Item8>
+      <Item9>
+        <Name Value="EJCoreOPFUndefinedDriver"/>
+      </Item9>
+      <Item10>
+        <Name Value="EJCoreOPFDriverNotFound"/>
+      </Item10>
+      <Item11>
+        <Name Value="EJCoreOPFUndefinedMapping"/>
+      </Item11>
+      <Item12>
+        <Name Value="EJCoreOPFMappingNotFound"/>
+      </Item12>
     </Exceptions>
   </Debugging>
 </CONFIG>
