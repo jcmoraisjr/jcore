@@ -5,7 +5,7 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <IncludeFiles Value="opf"/>
+        <IncludeFiles Value="core"/>
         <OtherUnitFiles Value="opf"/>
         <UnitOutputDirectory Value="lib/opf/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>

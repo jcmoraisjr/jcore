@@ -1,6 +1,18 @@
+(*
+  JCore, OPF Session Interface
+  Copyright (C) 2014 Joao Morais
+
+  See the file LICENSE.txt, included in this distribution,
+  for details about the copyright.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*)
+
 unit JCoreOPFSession;
 
-{$mode objfpc}{$H+}
+{$I jcore.inc}
 
 interface
 
@@ -11,13 +23,10 @@ uses
 
 type
 
-  {$push}
-  {$interfaces corba}
   IJCoreOPFSessionManager = interface
     function GetMappingClassList: TJCoreOPFMappingClassList;
     property MappingClassList: TJCoreOPFMappingClassList read GetMappingClassList;
   end;
-  {$pop}
 
   IJCoreOPFSession = interface(IInterface)
     procedure Store(const AObject: TObject);
