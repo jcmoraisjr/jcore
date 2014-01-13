@@ -4,7 +4,7 @@ program JCoreTestsGUI;
 
 uses
   heaptrc, sysutils, Interfaces, Forms, GuiTestRunner,
-  TestExpression, TestDIC, TestOPF;
+  TestExpression, TestDIC, TestOPF, TestLogger;
 
 {$R *.res}
 

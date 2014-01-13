@@ -3,7 +3,8 @@ program JCoreTestsConsole;
 {$mode objfpc}{$H+}
 
 uses
-  heaptrc, Classes, consoletestrunner, testexpression, testdic, testopf;
+  heaptrc, Classes, consoletestrunner,
+  TestExpression, TestDIC, TestOPF, TestLogger;
 
 type
 

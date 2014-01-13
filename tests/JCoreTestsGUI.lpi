@@ -46,7 +46,7 @@
         <PackageName Value="FCL"/>
       </Item5>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="JCoreTestsGUI.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -67,6 +67,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="TestOPF"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="testlogger.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="TestLogger"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
