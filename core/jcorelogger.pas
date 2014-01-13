@@ -30,7 +30,7 @@ type
 
   IJCoreLogFactory = interface(IInterface)
   ['{C580B89F-3829-4321-AC79-1A85B3D2B0BB}']
-    function CreateLogger(const AName: string): IJCoreLogger;
+    function CreateLogger(const ALogger: string): IJCoreLogger;
   end;
 
 implementation
@@ -44,11 +44,11 @@ type
 
   TJCoreLazyLogger = class(TInterfacedObject, IJCoreLogger)
   public
-    procedure Debug({%H-}const AMsg: string);
-    procedure Info({%H-}const AMsg: string);
-    procedure Warn({%H-}const AMsg: string);
-    procedure Error({%H-}const AMsg: string);
-    procedure Fatal({%H-}const AMsg: string);
+    procedure Debug(const AMsg: string);
+    procedure Info(const AMsg: string);
+    procedure Warn(const AMsg: string);
+    procedure Error(const AMsg: string);
+    procedure Fatal(const AMsg: string);
     procedure PrintStackTrace;
   end;
 
@@ -56,7 +56,7 @@ type
 
   TJCoreLazyLogFactory = class(TInterfacedObject, IJCoreLogFactory)
   public
-    function CreateLogger({%H-}const AName: string): IJCoreLogger;
+    function CreateLogger(const ALogger: string): IJCoreLogger;
   end;
 
 { TJCoreLazyLogger }
@@ -87,7 +87,7 @@ end;
 
 { TJCoreLazyLogFactory }
 
-function TJCoreLazyLogFactory.CreateLogger(const AName: string): IJCoreLogger;
+function TJCoreLazyLogFactory.CreateLogger(const ALogger: string): IJCoreLogger;
 begin
   Result := TJCoreLazyLogger.Create;
 end;
