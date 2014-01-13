@@ -56,7 +56,7 @@ type
     * The number of Query fields need to match the number of Write<Data>. On the
       commit event, if there are some Write<Data> in the stack, raise an exception
 
-      * Always return de ExecSQL function with the number of the affected rows.
+    * Always return the ExecSQL function with the number of the affected rows.
 
     * Drivers, as well as Mappings and Sessions are NOT thread safe. A threaded
       application need to create one Session per thread, which will create its
