@@ -5,7 +5,8 @@ unit TestDIC;
 interface
 
 uses
-  SysUtils, Classes, fpcunit, testregistry, JCoreDIC;
+  fpcunit,
+  JCoreDIC;
 
 type
 
@@ -102,6 +103,9 @@ type
   end;
 
 implementation
+
+uses
+  testregistry;
 
 { TTestDIC }
 

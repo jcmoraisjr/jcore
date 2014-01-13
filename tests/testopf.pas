@@ -5,10 +5,8 @@ unit TestOPF;
 interface
 
 uses
-  sysutils,
   Classes,
   fpcunit,
-  testregistry,
   JCoreOPFPID,
   JCoreOPFOID,
   JCoreOPFDriver,
@@ -137,6 +135,8 @@ type
 implementation
 
 uses
+  sysutils,
+  testregistry,
   JCoreOPFException;
 
 const

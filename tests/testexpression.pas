@@ -5,7 +5,9 @@ unit TestExpression;
 interface
 
 uses
-  SysUtils, Classes, fpcunit, testregistry, JCoreExpression;
+  sysutils,
+  fpcunit,
+  JCoreExpression;
 
 type
 
@@ -116,7 +118,10 @@ type
 implementation
 
 uses
-  Math, JCoreClasses, JCoreExpressionLib;
+  testregistry,
+  Math,
+  JCoreClasses,
+  JCoreExpressionLib;
 
 { TTestError }
 
