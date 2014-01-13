@@ -58,9 +58,9 @@ type
     procedure AddMappingClass(const AMappingClass: TJCoreOPFMappingClass);
     function CreateSession: IJCoreOPFSession;
     property DriverName: string read GetDriverName write SetDriverName;
-    property Host: string read FHost write FHost;
-    property Password: string read FPassword write FPassword;
-    property Username: string read FUsername write FUsername;
+    property Host: string write FHost;
+    property Password: string write FPassword;
+    property Username: string write FUsername;
   end;
 
 implementation
