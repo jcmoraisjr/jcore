@@ -33,10 +33,27 @@ type
     function CreateLogger(const ALogger: string): IJCoreLogger;
   end;
 
+  { TJCoreLogger }
+
+  TJCoreLogger = class(TObject)
+  public
+    class function CreateLogger(const ALogger: string): IJCoreLogger;
+  end;
+
 implementation
 
 uses
   JCoreDIC;
+
+{ TJCoreLogger }
+
+class function TJCoreLogger.CreateLogger(const ALogger: string): IJCoreLogger;
+var
+  VLogFactory: IJCoreLogFactory;
+begin
+  TJCoreDIC.Locate(IJCoreLogFactory, VLogFactory);
+  Result := VLogFactory.CreateLogger(ALogger);
+end;
 
 type
 
