@@ -17,7 +17,8 @@ unit JCoreOPFDriver;
 interface
 
 uses
-  fgl;
+  fgl,
+  JCoreLogger;
 
 type
 
@@ -67,6 +68,7 @@ type
 
   TJCoreOPFDriver = class(TObject)
   public
+    constructor Create; virtual;
     procedure WriteString(const AValue: string); virtual; abstract;
     procedure WriteInteger(const AValue: Integer); virtual; abstract;
     class function DriverName: string; virtual; abstract;
@@ -81,9 +83,15 @@ type
   { TJCoreOPFSQLDriver }
 
   TJCoreOPFSQLDriver = class(TJCoreOPFDriver)
+  private
+    class var FLOGSQL: IJCoreLogger;
+  protected
+    function InternalExecSQL(const ASQL: string): Integer; virtual; abstract;
+    class property LOGSQL: IJCoreLogger read FLOGSQL;
   public
+    constructor Create; override;
     procedure WriteNull; virtual; abstract;
-    function ExecSQL(const ASQL: string): Integer; virtual; abstract;
+    function ExecSQL(const ASQL: string): Integer;
     procedure ExecSQL(const ASQL: string; const AExpectedSize: Integer);
   end;
 
@@ -92,7 +100,27 @@ implementation
 uses
   JCoreOPFException;
 
+{ TJCoreOPFDriver }
+
+constructor TJCoreOPFDriver.Create;
+begin
+  inherited Create;
+end;
+
 { TJCoreOPFSQLDriver }
+
+constructor TJCoreOPFSQLDriver.Create;
+begin
+  inherited Create;
+  if not Assigned(FLOGSQL) then
+    FLOGSQL := TJCoreLogger.GetLogger('jcore.opf.driver.sql');
+end;
+
+function TJCoreOPFSQLDriver.ExecSQL(const ASQL: string): Integer;
+begin
+  LOGSQL.Debug(ASQL);
+  Result := InternalExecSQL(ASQL);
+end;
 
 procedure TJCoreOPFSQLDriver.ExecSQL(const ASQL: string; const AExpectedSize: Integer);
 var
