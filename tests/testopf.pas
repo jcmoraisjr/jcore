@@ -69,11 +69,12 @@ type
   TTestSQLDriver = class(TJCoreOPFSQLDriver)
   private
     class var FCommands: TStringList;
+  protected
+    function InternalExecSQL(const ASQL: string): Integer; override;
   public
     class constructor Create;
     class destructor Destroy;
     class function DriverName: string; override;
-    function ExecSQL(const ASQL: string): Integer; override;
     function ReadInteger: Integer; override;
     function ReadString: string; override;
     procedure WriteInteger(const AValue: Integer); override;
@@ -175,6 +176,12 @@ end;
 
 { TTestSQLDriver }
 
+function TTestSQLDriver.InternalExecSQL(const ASQL: string): Integer;
+begin
+  FCommands.Add('ExecSQL ' + ASQL);
+  Result := -1;
+end;
+
 class constructor TTestSQLDriver.Create;
 begin
   FCommands := TStringList.Create;
@@ -188,12 +195,6 @@ end;
 class function TTestSQLDriver.DriverName: string;
 begin
   Result := 'TestSQLDriver';
-end;
-
-function TTestSQLDriver.ExecSQL(const ASQL: string): Integer;
-begin
-  FCommands.Add('ExecSQL ' + ASQL);
-  Result := -1;
 end;
 
 function TTestSQLDriver.ReadInteger: Integer;
