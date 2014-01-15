@@ -44,7 +44,7 @@ type
 
   TTestLogFactory = class(TInterfacedObject, IJCoreLogFactory)
   public
-    function CreateLogger(const ALogger: string): IJCoreLogger;
+    function GetLogger(const ALogger: string): IJCoreLogger;
   end;
 
 implementation
@@ -70,12 +70,12 @@ begin
   try
     TTestLoggerLogger.Commands.Clear;
     TJCoreDIC.Locate(IJCoreLogFactory, VLogFactory);
-    VLogger := VLogFactory.CreateLogger('thelogger');
+    VLogger := VLogFactory.GetLogger('thelogger');
     VLogger.Debug('themsg');
     AssertEquals(0, TTestLoggerLogger.Commands.Count);
     TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory);
     TJCoreDIC.Locate(IJCoreLogFactory, VLogFactory);
-    VLogger := VLogFactory.CreateLogger('otherlogger');
+    VLogger := VLogFactory.GetLogger('otherlogger');
     VLogger.Info('othermsg');
     AssertEquals(1, TTestLoggerLogger.Commands.Count);
     AssertEquals('otherlogger Info othermsg', TTestLoggerLogger.Commands[0]);
@@ -135,7 +135,7 @@ end;
 
 { TTestLogFactory }
 
-function TTestLogFactory.CreateLogger(const ALogger: string): IJCoreLogger;
+function TTestLogFactory.GetLogger(const ALogger: string): IJCoreLogger;
 begin
   Result := TTestLoggerLogger.Create(ALogger);
 end;
