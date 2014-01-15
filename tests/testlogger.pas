@@ -23,20 +23,16 @@ type
 
   { TTestLoggerLogger }
 
-  TTestLoggerLogger = class(TInterfacedObject, IJCoreLogger)
+  TTestLoggerLogger = class(TJCoreAbstractLogger)
   private
     class var FCommands: TStringList;
     FLogger: string;
+  protected
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); override;
   public
     class constructor Create;
     class destructor Destroy;
     constructor Create(const ALogger: string);
-    procedure Debug(const AMsg: string);
-    procedure Info(const AMsg: string);
-    procedure Warn(const AMsg: string);
-    procedure Error(const AMsg: string);
-    procedure Fatal(const AMsg: string);
-    procedure PrintStackTrace;
     class property Commands: TStringList read FCommands;
   end;
 
@@ -78,7 +74,7 @@ begin
     VLogger := VLogFactory.GetLogger('otherlogger');
     VLogger.Info('othermsg');
     AssertEquals(1, TTestLoggerLogger.Commands.Count);
-    AssertEquals('otherlogger Info othermsg', TTestLoggerLogger.Commands[0]);
+    AssertEquals('otherlogger INFO othermsg', TTestLoggerLogger.Commands[0]);
   finally
     TTestLoggerLogger.Commands.Clear;
     AssertTrue(TJCoreDIC.Unregister(IJCoreLogFactory, TTestLogFactory));
@@ -86,6 +82,11 @@ begin
 end;
 
 { TTestLoggerLogger }
+
+procedure TTestLoggerLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
+begin
+  Commands.Add(FLogger + ' ' + CJCoreLogLevel[ALevel] + ' ' + AMsg);
+end;
 
 class constructor TTestLoggerLogger.Create;
 begin
@@ -101,36 +102,6 @@ constructor TTestLoggerLogger.Create(const ALogger: string);
 begin
   inherited Create;
   FLogger := ALogger;
-end;
-
-procedure TTestLoggerLogger.Debug(const AMsg: string);
-begin
-  Commands.Add(FLogger + ' Debug ' + AMsg);
-end;
-
-procedure TTestLoggerLogger.Info(const AMsg: string);
-begin
-  Commands.Add(FLogger + ' Info ' + AMsg);
-end;
-
-procedure TTestLoggerLogger.Warn(const AMsg: string);
-begin
-  Commands.Add(FLogger + ' Warn ' + AMsg);
-end;
-
-procedure TTestLoggerLogger.Error(const AMsg: string);
-begin
-  Commands.Add(FLogger + ' Error ' + AMsg);
-end;
-
-procedure TTestLoggerLogger.Fatal(const AMsg: string);
-begin
-  Commands.Add(FLogger + ' Fatal ' + AMsg);
-end;
-
-procedure TTestLoggerLogger.PrintStackTrace;
-begin
-  Commands.Add(FLogger + ' Stack');
 end;
 
 { TTestLogFactory }

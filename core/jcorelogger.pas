@@ -17,15 +17,22 @@ unit JCoreLogger;
 interface
 
 type
+  TJCoreLogLevel = (jllTrace, jllDebug, jllInfo, jllWarn, jllError, jllFatal);
+
+const
+  CJCoreLogLevel: array[TJCoreLogLevel] of string = (
+   'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL');
+
+type
 
   IJCoreLogger = interface(IInterface)
   ['{786C99E6-9AC9-446C-8DE9-4913C910E90F}']
+    procedure Trace(const AMsg: string);
     procedure Debug(const AMsg: string);
     procedure Info(const AMsg: string);
     procedure Warn(const AMsg: string);
     procedure Error(const AMsg: string);
     procedure Fatal(const AMsg: string);
-    procedure PrintStackTrace;
   end;
 
   IJCoreLogFactory = interface(IInterface)
@@ -40,10 +47,40 @@ type
     class function GetLogger(const ALogger: string): IJCoreLogger;
   end;
 
+  { TJCoreAbstractLogger }
+
+  TJCoreAbstractLogger = class(TInterfacedObject, IJCoreLogger)
+  protected
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); virtual; abstract;
+  public
+    procedure Trace(const AMsg: string);
+    procedure Debug(const AMsg: string);
+    procedure Info(const AMsg: string);
+    procedure Warn(const AMsg: string);
+    procedure Error(const AMsg: string);
+    procedure Fatal(const AMsg: string);
+  end;
+
 implementation
 
 uses
   JCoreDIC;
+
+type
+
+  { TJCoreLazyLogger }
+
+  TJCoreLazyLogger = class(TJCoreAbstractLogger)
+  protected
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); override;
+  end;
+
+  { TJCoreLazyLogFactory }
+
+  TJCoreLazyLogFactory = class(TInterfacedObject, IJCoreLogFactory)
+  public
+    function GetLogger(const ALogger: string): IJCoreLogger;
+  end;
 
 { TJCoreLogger }
 
@@ -55,51 +92,43 @@ begin
   Result := VLogFactory.GetLogger(ALogger);
 end;
 
-type
+{ TJCoreAbstractLogger }
 
-  { TJCoreLazyLogger }
+procedure TJCoreAbstractLogger.Trace(const AMsg: string);
+begin
+  InternalLog(jllTrace, AMsg);
+end;
 
-  TJCoreLazyLogger = class(TInterfacedObject, IJCoreLogger)
-  public
-    procedure Debug(const AMsg: string);
-    procedure Info(const AMsg: string);
-    procedure Warn(const AMsg: string);
-    procedure Error(const AMsg: string);
-    procedure Fatal(const AMsg: string);
-    procedure PrintStackTrace;
-  end;
+procedure TJCoreAbstractLogger.Debug(const AMsg: string);
+begin
+  InternalLog(jllDebug, AMsg);
+end;
 
-  { TJCoreLazyLogFactory }
+procedure TJCoreAbstractLogger.Info(const AMsg: string);
+begin
+  InternalLog(jllInfo, AMsg);
+end;
 
-  TJCoreLazyLogFactory = class(TInterfacedObject, IJCoreLogFactory)
-  public
-    function GetLogger(const ALogger: string): IJCoreLogger;
-  end;
+procedure TJCoreAbstractLogger.Warn(const AMsg: string);
+begin
+  InternalLog(jllWarn, AMsg);
+end;
+
+procedure TJCoreAbstractLogger.Error(const AMsg: string);
+begin
+  InternalLog(jllError, AMsg);
+end;
+
+procedure TJCoreAbstractLogger.Fatal(const AMsg: string);
+begin
+  InternalLog(jllFatal, AMsg);
+end;
 
 { TJCoreLazyLogger }
 
-procedure TJCoreLazyLogger.Debug(const AMsg: string);
+procedure TJCoreLazyLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
 begin
-end;
-
-procedure TJCoreLazyLogger.Info(const AMsg: string);
-begin
-end;
-
-procedure TJCoreLazyLogger.Warn(const AMsg: string);
-begin
-end;
-
-procedure TJCoreLazyLogger.Error(const AMsg: string);
-begin
-end;
-
-procedure TJCoreLazyLogger.Fatal(const AMsg: string);
-begin
-end;
-
-procedure TJCoreLazyLogger.PrintStackTrace;
-begin
+  writeln(amsg);
 end;
 
 { TJCoreLazyLogFactory }
