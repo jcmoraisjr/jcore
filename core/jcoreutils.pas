@@ -17,8 +17,12 @@ unit JCoreUtils;
 interface
 
 function JCoreDumpStackTrace: string;
+function JCoreDumpExceptionStackTrace: string;
 
 implementation
+
+uses
+  sysutils;
 
 // From: http://wiki.freepascal.org/Logging_exceptions#Dump_current_call_stack
 function JCoreDumpStackTrace: string;
@@ -54,6 +58,20 @@ begin
   except
     { prevent endless dump if an exception occured }
   end;
+  Result := Report;
+end;
+
+// From: http://wiki.freepascal.org/Logging_exceptions#Dump_exception_call_stack
+function JCoreDumpExceptionStackTrace: string;
+var
+  I: Integer;
+  Frames: PPointer;
+  Report: string;
+begin
+  Report := BackTraceStrFunc(ExceptAddr);
+  Frames := ExceptFrames;
+  for I := 0 to ExceptFrameCount - 1 do
+    Report := Report + LineEnding + BackTraceStrFunc(Frames[I]);
   Result := Report;
 end;
 
