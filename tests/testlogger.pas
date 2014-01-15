@@ -74,7 +74,7 @@ begin
     VLogger := VLogFactory.GetLogger('otherlogger');
     VLogger.Info('othermsg');
     AssertEquals(1, TTestLoggerLogger.Commands.Count);
-    AssertEquals('otherlogger INFO othermsg', TTestLoggerLogger.Commands[0]);
+    AssertEquals('INFO otherlogger othermsg', TTestLoggerLogger.Commands[0]);
   finally
     TTestLoggerLogger.Commands.Clear;
     AssertTrue(TJCoreDIC.Unregister(IJCoreLogFactory, TTestLogFactory));
@@ -85,7 +85,7 @@ end;
 
 procedure TTestLoggerLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
 begin
-  Commands.Add(FLogger + ' ' + CJCoreLogLevel[ALevel] + ' ' + AMsg);
+  Commands.Add(CJCoreLogLevel[ALevel] + ' ' + FLogger + ' ' + AMsg);
 end;
 
 class constructor TTestLoggerLogger.Create;
