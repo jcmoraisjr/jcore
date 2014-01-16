@@ -35,11 +35,7 @@ type
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
   protected
-    procedure ExecuteInsert(const APID: IJCoreOPFPID); virtual; abstract;
-    procedure ExecuteUpdate(const APID: IJCoreOPFPID); virtual; abstract;
-    function GenerateOID(const APID: IJCoreOPFPID): TJCoreOPFOID; virtual; abstract;
-    procedure InternalStore(const APID: IJCoreOPFPID); virtual;
-    procedure StorePID(const APID: IJCoreOPFPID); virtual; abstract;
+    procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
   public
@@ -61,6 +57,14 @@ type
     { TODO : Generics? }
     FSQLDriver: TJCoreOPFSQLDriver;
   protected
+    function CreateOID(const APID: IJCoreOPFPID): TJCoreOPFOID; virtual; abstract;
+    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
+    function GenerateSelectStatement(const AClass: TClass; const AOID: string): string; virtual; abstract;
+    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
+    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; virtual; abstract;
+    procedure WriteToDriver(const APID: IJCoreOPFPID); virtual; abstract;
+  protected
+    procedure InternalStore(const APID: IJCoreOPFPID); override;
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); override;
@@ -74,22 +78,6 @@ uses
   JCoreOPFException;
 
 { TJCoreOPFMapping }
-
-procedure TJCoreOPFMapping.InternalStore(const APID: IJCoreOPFPID);
-begin
-  if APID.IsPersistent then
-  begin
-    StorePID(APID);
-    APID.OID.WriteToDriver(Driver);
-    ExecuteUpdate(APID);
-  end else
-  begin
-    APID.AssignOID(GenerateOID(APID));
-    APID.OID.WriteToDriver(Driver);
-    StorePID(APID);
-    ExecuteInsert(APID);
-  end;
-end;
 
 constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver);
 begin
@@ -106,6 +94,22 @@ begin
 end;
 
 { TJCoreOPFSQLMapping }
+
+procedure TJCoreOPFSQLMapping.InternalStore(const APID: IJCoreOPFPID);
+begin
+  if APID.IsPersistent then
+  begin
+    WriteToDriver(APID);
+    APID.OID.WriteToDriver(Driver);
+    Driver.ExecSQL(GenerateUpdateStatement(APID));
+  end else
+  begin
+    APID.AssignOID(CreateOID(APID));
+    APID.OID.WriteToDriver(Driver);
+    WriteToDriver(APID);
+    Driver.ExecSQL(GenerateInsertStatement(APID));
+  end;
+end;
 
 constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver);
 begin

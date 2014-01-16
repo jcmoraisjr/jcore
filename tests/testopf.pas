@@ -90,7 +90,7 @@ type
   private
     class var FCurrentOID: Integer;
   protected
-    function GenerateOID(const APID: IJCoreOPFPID): TJCoreOPFOID; override;
+    function CreateOID(const APID: IJCoreOPFPID): TJCoreOPFOID; override;
   public
     class procedure ClearOID;
   end;
@@ -99,9 +99,9 @@ type
 
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    procedure ExecuteInsert(const APID: IJCoreOPFPID); override;
-    procedure ExecuteUpdate(const APID: IJCoreOPFPID); override;
-    procedure StorePID(const APID: IJCoreOPFPID); override;
+    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
+    procedure WriteToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -110,9 +110,9 @@ type
 
   TTestCitySQLMapping = class(TTestAbstractSQLMapping)
   protected
-    procedure ExecuteInsert(const APID: IJCoreOPFPID); override;
-    procedure ExecuteUpdate(const APID: IJCoreOPFPID); override;
-    procedure StorePID(const APID: IJCoreOPFPID); override;
+    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
+    procedure WriteToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -230,7 +230,7 @@ end;
 
 { TTestAbstractSQLMapping }
 
-function TTestAbstractSQLMapping.GenerateOID(const APID: IJCoreOPFPID
+function TTestAbstractSQLMapping.CreateOID(const APID: IJCoreOPFPID
   ): TJCoreOPFOID;
 begin
   Inc(FCurrentOID);
@@ -244,17 +244,17 @@ end;
 
 { TTestPersonSQLMapping }
 
-procedure TTestPersonSQLMapping.ExecuteInsert(const APID: IJCoreOPFPID);
+function TTestPersonSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
 begin
-  Driver.ExecSQL(CSQLINSERTPERSON)
+  Result := CSQLINSERTPERSON;
 end;
 
-procedure TTestPersonSQLMapping.ExecuteUpdate(const APID: IJCoreOPFPID);
+function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
 begin
-  Driver.ExecSQL(CSQLUPDATEPERSON);
+  Result := CSQLUPDATEPERSON;
 end;
 
-procedure TTestPersonSQLMapping.StorePID(const APID: IJCoreOPFPID);
+procedure TTestPersonSQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
 var
   VPerson: TTestPerson;
 begin
@@ -279,17 +279,17 @@ end;
 
 { TTestCitySQLMapping }
 
-procedure TTestCitySQLMapping.ExecuteInsert(const APID: IJCoreOPFPID);
+function TTestCitySQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
 begin
-  Driver.ExecSQL(CSQLINSERTCITY);
+  Result := CSQLINSERTCITY;
 end;
 
-procedure TTestCitySQLMapping.ExecuteUpdate(const APID: IJCoreOPFPID);
+function TTestCitySQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
 begin
-  Driver.ExecSQL(CSQLUPDATECITY);
+  Result := CSQLUPDATECITY;
 end;
 
-procedure TTestCitySQLMapping.StorePID(const APID: IJCoreOPFPID);
+procedure TTestCitySQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
 var
   VCity: TTestCity;
 begin
