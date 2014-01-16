@@ -41,7 +41,7 @@ type
     FSessionManager: IJCoreOPFSessionManager;
     function CreateMapping(const AMappingClass: TJCoreOPFMappingClass): TJCoreOPFMapping;
   protected
-    function AcquireMapping(const APID: IJCoreOPFPID): TJCoreOPFMapping;
+    function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure StorePID(const APID: IJCoreOPFPID);
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
   public
@@ -69,25 +69,25 @@ begin
   end;
 end;
 
-function TJCoreOPFSession.AcquireMapping(const APID: IJCoreOPFPID): TJCoreOPFMapping;
+function TJCoreOPFSession.AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
 var
   VMappingClass: TJCoreOPFMappingClass;
 begin
   for Result in FMappingList do
-    if Result.Apply(APID) then
+    if Result.Apply(AClass) then
       Exit;
   for VMappingClass in SessionManager.MappingClassList do
-    if VMappingClass.Apply(APID) then
+    if VMappingClass.Apply(AClass) then
     begin
       Result := CreateMapping(VMappingClass);
       Exit;
     end;
-  raise EJCoreOPFMappingNotFound.Create(APID.Entity.ClassName);
+  raise EJCoreOPFMappingNotFound.Create(AClass.ClassName);
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);
 begin
-  AcquireMapping(APID).Store(APID);
+  AcquireMapping(APID.Entity.ClassType).Store(APID);
 end;
 
 constructor TJCoreOPFSession.Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);

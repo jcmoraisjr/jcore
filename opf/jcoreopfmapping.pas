@@ -44,7 +44,7 @@ type
     property Mapper: IJCoreOPFMapper read FMapper;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); virtual;
-    class function Apply(const APID: IJCoreOPFPID): Boolean; virtual; abstract;
+    class function Apply(const AClass: TClass): Boolean; virtual; abstract;
     procedure Store(const APID: IJCoreOPFPID);
   end;
 

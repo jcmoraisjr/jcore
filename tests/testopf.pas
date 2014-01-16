@@ -28,7 +28,7 @@ type
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   public
-    class function Apply(const APID: IJCoreOPFPID): Boolean; override;
+    class function Apply(const AClass: TClass): Boolean; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
   end;
 
@@ -103,7 +103,7 @@ type
     procedure ExecuteUpdate(const APID: IJCoreOPFPID); override;
     procedure StorePID(const APID: IJCoreOPFPID); override;
   public
-    class function Apply(const APID: IJCoreOPFPID): Boolean; override;
+    class function Apply(const AClass: TClass): Boolean; override;
   end;
 
   { TTestCitySQLMapping }
@@ -114,7 +114,7 @@ type
     procedure ExecuteUpdate(const APID: IJCoreOPFPID); override;
     procedure StorePID(const APID: IJCoreOPFPID); override;
   public
-    class function Apply(const APID: IJCoreOPFPID): Boolean; override;
+    class function Apply(const AClass: TClass): Boolean; override;
   end;
 
   { TTestOPF }
@@ -169,7 +169,7 @@ end;
 
 { TTestEmptyMapping }
 
-class function TTestEmptyMapping.Apply(const APID: IJCoreOPFPID): Boolean;
+class function TTestEmptyMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := True;
 end;
@@ -272,9 +272,9 @@ begin
   end;
 end;
 
-class function TTestPersonSQLMapping.Apply(const APID: IJCoreOPFPID): Boolean;
+class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
-  Result := APID.Entity is TTestPerson;
+  Result := TTestPerson.InheritsFrom(AClass);
 end;
 
 { TTestCitySQLMapping }
@@ -297,9 +297,9 @@ begin
   Driver.WriteString(VCity.Name);
 end;
 
-class function TTestCitySQLMapping.Apply(const APID: IJCoreOPFPID): Boolean;
+class function TTestCitySQLMapping.Apply(const AClass: TClass): Boolean;
 begin
-  Result := APID.Entity is TTestCity;
+  Result := TTestCity.InheritsFrom(AClass);
 end;
 
 { TTestOPF }
