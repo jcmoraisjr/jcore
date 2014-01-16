@@ -19,6 +19,7 @@ type
     procedure TearDown; override;
   published
     procedure UseRegisteredLogFactory;
+    procedure AbstractLogFactory;
   end;
 
   { TTestLoggerLogger }
@@ -38,9 +39,13 @@ type
 
   { TTestLogFactory }
 
-  TTestLogFactory = class(TInterfacedObject, IJCoreLogFactory)
+  TTestLogFactory = class(TJCoreAbstractLogFactory)
+  private
+    class var FLoggerCount: Integer;
+  protected
+    function InternalCreateLogger(const ALogger: string): IJCoreLogger; override;
   public
-    function GetLogger(const ALogger: string): IJCoreLogger;
+    class property LoggerCount: Integer read FLoggerCount write FLoggerCount;
   end;
 
 implementation
@@ -81,6 +86,35 @@ begin
   end;
 end;
 
+procedure TTestLogger.AbstractLogFactory;
+var
+  VLogger1, VLogger2, VLogger3: IJCoreLogger;
+begin
+  try
+    TTestLogFactory.LoggerCount := 0;
+    TTestLoggerLogger.Commands.Clear;
+    TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory);
+
+    VLogger1 := TJCoreLogger.GetLogger('logger1');
+    AssertEquals(1, TTestLogFactory.LoggerCount);
+    VLogger1.Info('msg');
+    AssertEquals(1, TTestLoggerLogger.Commands.Count);
+
+    VLogger2 := TJCoreLogger.GetLogger('logger2');
+    AssertEquals(2, TTestLogFactory.LoggerCount);
+    VLogger2.Info('other msg');
+    AssertEquals(2, TTestLoggerLogger.Commands.Count);
+    AssertNotSame(VLogger1, VLogger2);
+
+    VLogger3 := TJCoreLogger.GetLogger('logger1');
+    AssertEquals(2, TTestLogFactory.LoggerCount);
+    AssertSame(VLogger1, VLogger3);
+  finally
+    TTestLoggerLogger.Commands.Clear;
+    AssertTrue(TJCoreDIC.Unregister(IJCoreLogFactory, TTestLogFactory));
+  end;
+end;
+
 { TTestLoggerLogger }
 
 procedure TTestLoggerLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
@@ -106,9 +140,10 @@ end;
 
 { TTestLogFactory }
 
-function TTestLogFactory.GetLogger(const ALogger: string): IJCoreLogger;
+function TTestLogFactory.InternalCreateLogger(const ALogger: string): IJCoreLogger;
 begin
   Result := TTestLoggerLogger.Create(ALogger);
+  Inc(FLoggerCount);
 end;
 
 initialization

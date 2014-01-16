@@ -16,6 +16,9 @@ unit JCoreLogger;
 
 interface
 
+uses
+  fgl;
+
 type
   TJCoreLogLevel = (jllTrace, jllDebug, jllInfo, jllWarn, jllError, jllFatal);
 
@@ -61,12 +64,41 @@ type
     procedure Fatal(const AMsg: string);
   end;
 
+  TJCoreLoggerMap = specialize TFPGMap<string, IJCoreLogger>;
+
+  { TJCoreAbstractLogFactory }
+
+  TJCoreAbstractLogFactory = class(TInterfacedObject, IJCoreLogFactory)
+  private
+    FLoggerMap: TJCoreLoggerMap;
+  protected
+    function InternalCreateLogger(const ALogger: string): IJCoreLogger; virtual; abstract;
+  public
+    destructor Destroy; override;
+    function GetLogger(const ALogger: string): IJCoreLogger;
+  end;
+
+  { TJCoreConsoleLogFactory }
+
+  TJCoreConsoleLogFactory = class(TJCoreAbstractLogFactory)
+  protected
+    function InternalCreateLogger(const ALogger: string): IJCoreLogger; override;
+  end;
+
 implementation
 
 uses
+  sysutils,
   JCoreDIC;
 
 type
+
+  { TJCoreConsoleLogger }
+
+  TJCoreConsoleLogger = class(TJCoreAbstractLogger)
+  protected
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); override;
+  end;
 
   { TJCoreLazyLogger }
 
@@ -81,6 +113,31 @@ type
   public
     function GetLogger(const ALogger: string): IJCoreLogger;
   end;
+
+{ TJCoreAbstractLogFactory }
+
+destructor TJCoreAbstractLogFactory.Destroy;
+begin
+  FreeAndNil(FLoggerMap);
+  inherited Destroy;
+end;
+
+function TJCoreAbstractLogFactory.GetLogger(const ALogger: string): IJCoreLogger;
+var
+  VIndex: Integer;
+begin
+  if not Assigned(FLoggerMap) then
+    FLoggerMap := TJCoreLoggerMap.Create;
+  if FLoggerMap.Find(ALogger, VIndex) then
+    Result := FLoggerMap.Data[VIndex]
+  else
+  begin
+    { TODO : Thread safe }
+    VIndex := FLoggerMap.Add(ALogger);
+    Result := InternalCreateLogger(ALogger);
+    FLoggerMap.Data[VIndex] := Result;
+  end;
+end;
 
 { TJCoreLogger }
 
@@ -122,6 +179,21 @@ end;
 procedure TJCoreAbstractLogger.Fatal(const AMsg: string);
 begin
   InternalLog(jllFatal, AMsg);
+end;
+
+{ TJCoreConsoleLogFactory }
+
+function TJCoreConsoleLogFactory.InternalCreateLogger(const ALogger: string): IJCoreLogger;
+begin
+  Result := TJCoreConsoleLogger.Create;
+end;
+
+{ TJCoreLoggerConsole }
+
+procedure TJCoreConsoleLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
+begin
+  writeln(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
+   ' | ' + CJCoreLogLevel[ALevel] + ' | ' + AMsg);
 end;
 
 { TJCoreLazyLogger }
