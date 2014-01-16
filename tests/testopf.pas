@@ -7,6 +7,7 @@ interface
 uses
   Classes,
   fpcunit,
+  JCoreLogger,
   JCoreOPFPID,
   JCoreOPFOID,
   JCoreOPFDriver,
@@ -119,10 +120,13 @@ type
   { TTestOPF }
 
   TTestOPF = class(TTestCase)
+  private
+    class var FLOG: IJCoreLogger;
   protected
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
     procedure SetUp; override;
     procedure TearDown; override;
+    class property LOG: IJCoreLogger read FLOG;
   published
     procedure CreatePID;
     procedure DriverNotFound;
@@ -322,6 +326,8 @@ end;
 procedure TTestOPF.SetUp;
 begin
   inherited SetUp;
+  if not Assigned(FLOG) then
+    FLOG := TJCoreLogger.GetLogger('jcore.teste.opf');
 end;
 
 procedure TTestOPF.TearDown;
@@ -363,7 +369,10 @@ begin
     on E: EAssertionFailedError do
       raise;
     on E: Exception do
+    begin
+      LOG.Debug('', E);
       AssertEquals(E.ClassType, EJCoreOPFUndefinedDriver.ClassType);
+    end;
   end;
 
   VConfiguration.AddDriverClass(TTestEmptyDriver);
@@ -374,7 +383,10 @@ begin
     on E: EAssertionFailedError do
       raise;
     on E: Exception do
+    begin
+      LOG.Debug('', E);
       AssertEquals(E.ClassType, EJCoreOPFDriverNotFound.ClassType);
+    end;
   end;
 
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
@@ -402,7 +414,10 @@ begin
       on E: EAssertionFailedError do
         raise;
       on E: Exception do
+      begin
+        LOG.Debug('', E);
         AssertEquals(EJCoreOPFMappingNotFound.ClassType, E.ClassType);
+      end;
     end;
     VConfiguration.AddMappingClass(TTestEmptyMapping);
     VSession.Store(VPerson);

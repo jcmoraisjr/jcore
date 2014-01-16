@@ -39,6 +39,7 @@ resourcestring
   SJCoreTokenLengthOutOfBounds = 'Token length out of bounds';
   SJCoreUnexpectedEof = 'Unexpected end of file';
   SJCoreUnsupportedInterface = 'Class ''%s'' does not support interface ''%s''';
+  SJCoreExceptionRaisedWithMessage = '%s exception was raised with the following message: %s';
 
 implementation
 

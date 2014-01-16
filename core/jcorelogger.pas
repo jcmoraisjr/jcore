@@ -17,6 +17,7 @@ unit JCoreLogger;
 interface
 
 uses
+  sysutils,
   fgl;
 
 type
@@ -30,12 +31,12 @@ type
 
   IJCoreLogger = interface(IInterface)
   ['{786C99E6-9AC9-446C-8DE9-4913C910E90F}']
-    procedure Trace(const AMsg: string);
-    procedure Debug(const AMsg: string);
-    procedure Info(const AMsg: string);
-    procedure Warn(const AMsg: string);
-    procedure Error(const AMsg: string);
-    procedure Fatal(const AMsg: string);
+    procedure Trace(const AMsg: string; const AException: Exception = nil);
+    procedure Debug(const AMsg: string; const AException: Exception = nil);
+    procedure Info(const AMsg: string; const AException: Exception = nil);
+    procedure Warn(const AMsg: string; const AException: Exception = nil);
+    procedure Error(const AMsg: string; const AException: Exception = nil);
+    procedure Fatal(const AMsg: string; const AException: Exception = nil);
   end;
 
   IJCoreLogFactory = interface(IInterface)
@@ -54,14 +55,14 @@ type
 
   TJCoreAbstractLogger = class(TInterfacedObject, IJCoreLogger)
   protected
-    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); virtual; abstract;
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string; const AException: Exception); virtual; abstract;
   public
-    procedure Trace(const AMsg: string);
-    procedure Debug(const AMsg: string);
-    procedure Info(const AMsg: string);
-    procedure Warn(const AMsg: string);
-    procedure Error(const AMsg: string);
-    procedure Fatal(const AMsg: string);
+    procedure Trace(const AMsg: string; const AException: Exception = nil);
+    procedure Debug(const AMsg: string; const AException: Exception = nil);
+    procedure Info(const AMsg: string; const AException: Exception = nil);
+    procedure Warn(const AMsg: string; const AException: Exception = nil);
+    procedure Error(const AMsg: string; const AException: Exception = nil);
+    procedure Fatal(const AMsg: string; const AException: Exception = nil);
   end;
 
   TJCoreLoggerMap = specialize TFPGMap<string, IJCoreLogger>;
@@ -88,7 +89,8 @@ type
 implementation
 
 uses
-  sysutils,
+  JCoreConsts,
+  JCoreUtils,
   JCoreDIC;
 
 type
@@ -97,14 +99,14 @@ type
 
   TJCoreConsoleLogger = class(TJCoreAbstractLogger)
   protected
-    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); override;
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string; const AException: Exception); override;
   end;
 
   { TJCoreLazyLogger }
 
   TJCoreLazyLogger = class(TJCoreAbstractLogger)
   protected
-    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string); override;
+    procedure InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string; const AException: Exception); override;
   end;
 
   { TJCoreLazyLogFactory }
@@ -151,34 +153,34 @@ end;
 
 { TJCoreAbstractLogger }
 
-procedure TJCoreAbstractLogger.Trace(const AMsg: string);
+procedure TJCoreAbstractLogger.Trace(const AMsg: string; const AException: Exception = nil);
 begin
-  InternalLog(jllTrace, AMsg);
+  InternalLog(jllTrace, AMsg, AException);
 end;
 
-procedure TJCoreAbstractLogger.Debug(const AMsg: string);
+procedure TJCoreAbstractLogger.Debug(const AMsg: string; const AException: Exception = nil);
 begin
-  InternalLog(jllDebug, AMsg);
+  InternalLog(jllDebug, AMsg, AException);
 end;
 
-procedure TJCoreAbstractLogger.Info(const AMsg: string);
+procedure TJCoreAbstractLogger.Info(const AMsg: string; const AException: Exception = nil);
 begin
-  InternalLog(jllInfo, AMsg);
+  InternalLog(jllInfo, AMsg, AException);
 end;
 
-procedure TJCoreAbstractLogger.Warn(const AMsg: string);
+procedure TJCoreAbstractLogger.Warn(const AMsg: string; const AException: Exception = nil);
 begin
-  InternalLog(jllWarn, AMsg);
+  InternalLog(jllWarn, AMsg, AException);
 end;
 
-procedure TJCoreAbstractLogger.Error(const AMsg: string);
+procedure TJCoreAbstractLogger.Error(const AMsg: string; const AException: Exception = nil);
 begin
-  InternalLog(jllError, AMsg);
+  InternalLog(jllError, AMsg, AException);
 end;
 
-procedure TJCoreAbstractLogger.Fatal(const AMsg: string);
+procedure TJCoreAbstractLogger.Fatal(const AMsg: string; const AException: Exception = nil);
 begin
-  InternalLog(jllFatal, AMsg);
+  InternalLog(jllFatal, AMsg, AException);
 end;
 
 { TJCoreConsoleLogFactory }
@@ -190,17 +192,24 @@ end;
 
 { TJCoreLoggerConsole }
 
-procedure TJCoreConsoleLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
+procedure TJCoreConsoleLogger.InternalLog(const ALevel: TJCoreLogLevel;
+  const AMsg: string; const AException: Exception);
 begin
   writeln(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
    ' | ' + CJCoreLogLevel[ALevel] + ' | ' + AMsg);
+  if Assigned(AException) then
+  begin
+    writeln(Format(SJCoreExceptionRaisedWithMessage, [
+     AException.ClassName, AException.Message]));
+    writeln(JCoreDumpExceptionStackTrace);
+  end;
 end;
 
 { TJCoreLazyLogger }
 
-procedure TJCoreLazyLogger.InternalLog(const ALevel: TJCoreLogLevel; const AMsg: string);
+procedure TJCoreLazyLogger.InternalLog(const ALevel: TJCoreLogLevel;
+  const AMsg: string; const AException: Exception);
 begin
-  writeln(amsg);
 end;
 
 { TJCoreLazyLogFactory }
