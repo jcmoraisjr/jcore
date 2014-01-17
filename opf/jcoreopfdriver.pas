@@ -72,8 +72,9 @@ type
     procedure WriteString(const AValue: string); virtual; abstract;
     procedure WriteInteger(const AValue: Integer); virtual; abstract;
     class function DriverName: string; virtual; abstract;
-    function ReadString: string; virtual; abstract;
     function ReadInteger: Integer; virtual; abstract;
+    function ReadNull: Boolean; virtual; abstract;
+    function ReadString: string; virtual; abstract;
   end;
 
   TJCoreOPFDriverClass = class of TJCoreOPFDriver;

@@ -6,6 +6,7 @@ interface
 
 uses
   Classes,
+  fgl,
   fpcunit,
   JCoreLogger,
   JCoreOPFPID,
@@ -65,11 +66,16 @@ type
     property City: TTestCity read FCity write FCity;
   end;
 
+  TTestIntegerList = specialize TFPGList<Integer>;
+
   { TTestSQLDriver }
 
   TTestSQLDriver = class(TJCoreOPFSQLDriver)
   private
+    function PopData(const APopFromQueue: Boolean = True): string;
     class var FCommands: TStringList;
+    class var FData:  TStringList;
+    class var FExpectedResultsets: TTestIntegerList;
   protected
     function InternalExecSQL(const ASQL: string): Integer; override;
   public
@@ -77,11 +83,14 @@ type
     class destructor Destroy;
     class function DriverName: string; override;
     function ReadInteger: Integer; override;
+    function ReadNull: Boolean; override;
     function ReadString: string; override;
     procedure WriteInteger(const AValue: Integer); override;
     procedure WriteString(const AValue: string); override;
     procedure WriteNull; override;
     class property Commands: TStringList read FCommands;
+    class property Data: TStringList read FData;
+    class property ExpectedResultsets: TTestIntegerList read FExpectedResultsets write FExpectedResultsets;
   end;
 
   { TTestAbstractSQLMapping }
@@ -90,7 +99,7 @@ type
   private
     class var FCurrentOID: Integer;
   protected
-    function CreateOID(const APID: IJCoreOPFPID): TJCoreOPFOID; override;
+    function CreateOID(const AOID: string): TJCoreOPFOID; override;
   public
     class procedure ClearOID;
   end;
@@ -100,7 +109,9 @@ type
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
+    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; override;
     procedure WriteToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
@@ -111,7 +122,9 @@ type
   TTestCitySQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
+    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; override;
     procedure WriteToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
@@ -137,6 +150,9 @@ type
     procedure StoreInsertPersonCityManualMapping;
     procedure StoreUpdateCityManualMapping;
     procedure StoreUpdatePersonManualMapping;
+    procedure SelectCityManualMapping;
+    procedure SelectPersonManualMapping;
+    procedure SelectPersonNullCityManualMapping;
   end;
 
 implementation
@@ -149,8 +165,8 @@ uses
 const
   CSQLINSERTCITY = 'INSERT INTO CITY(ID,NAME) VALUES(?,?)';
   CSQLINSERTPERSON = 'INSERT INTO PERSON(ID,NAME,AGE,CITY) VALUES(?,?,?,?)';
-  CSQLSELECTCITY = 'SELECT ID,NAME FROM CITY WHERE ID=?';
-  CSQLSELECTPERSON = 'SELECT ID,NAME,AGE,CITY FROM PERSON WHERE ID=?';
+  CSQLSELECTCITY = 'SELECT NAME FROM CITY WHERE ID=?';
+  CSQLSELECTPERSON = 'SELECT NAME,AGE,CITY FROM PERSON WHERE ID=?';
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
   CSQLUPDATEPERSON = 'UPDATE PERSON SET AGE=? WHERE ID=?';
 
@@ -182,20 +198,38 @@ end;
 
 { TTestSQLDriver }
 
+function TTestSQLDriver.PopData(const APopFromQueue: Boolean): string;
+begin
+  if Data.Count = 0 then
+    raise Exception.Create('Trying to read an empty data queue');
+  Result := Data[0];
+  if APopFromQueue then
+    Data.Delete(0);
+end;
+
 function TTestSQLDriver.InternalExecSQL(const ASQL: string): Integer;
 begin
   FCommands.Add('ExecSQL ' + ASQL);
-  Result := -1;
+  if ExpectedResultsets.Count > 0 then
+  begin
+    Result := ExpectedResultsets[0];
+    ExpectedResultsets.Delete(0);
+  end else
+    Result := 0;
 end;
 
 class constructor TTestSQLDriver.Create;
 begin
   FCommands := TStringList.Create;
+  FData := TStringList.Create;
+  FExpectedResultsets := TTestIntegerList.Create;
 end;
 
 class destructor TTestSQLDriver.Destroy;
 begin
   FreeAndNil(FCommands);
+  FreeAndNil(FData);
+  FreeAndNil(FExpectedResultsets);
 end;
 
 class function TTestSQLDriver.DriverName: string;
@@ -205,14 +239,19 @@ end;
 
 function TTestSQLDriver.ReadInteger: Integer;
 begin
-  Result := 1;
-  FCommands.Add('ReadInteger ' + IntToStr(Result));
+  Result := StrToInt(PopData);
+end;
+
+function TTestSQLDriver.ReadNull: Boolean;
+begin
+  Result := PopData(False) = 'null';
+  if Result then
+    PopData;
 end;
 
 function TTestSQLDriver.ReadString: string;
 begin
-  Result := 'Test';
-  FCommands.Add('ReadString ' + Result);
+  Result := PopData;
 end;
 
 procedure TTestSQLDriver.WriteInteger(const AValue: Integer);
@@ -232,11 +271,17 @@ end;
 
 { TTestAbstractSQLMapping }
 
-function TTestAbstractSQLMapping.CreateOID(const APID: IJCoreOPFPID
-  ): TJCoreOPFOID;
+function TTestAbstractSQLMapping.CreateOID(const AOID: string): TJCoreOPFOID;
+var
+  VOID: Integer;
 begin
-  Inc(FCurrentOID);
-  Result := TJCoreOPFIntegerOID.Create(FCurrentOID);
+  if AOID = '' then
+  begin
+    Inc(FCurrentOID);
+    VOID := FCurrentOID;
+  end else
+    VOID := StrToInt(AOID);
+  Result := TJCoreOPFIntegerOID.Create(VOID);
 end;
 
 class procedure TTestAbstractSQLMapping.ClearOID;
@@ -251,9 +296,31 @@ begin
   Result := CSQLINSERTPERSON;
 end;
 
+function TTestPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+begin
+  Result := CSQLSELECTPERSON;
+end;
+
 function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEPERSON;
+end;
+
+function TTestPersonSQLMapping.ReadFromDriver(const AClass: TClass; const AOID: string): TObject;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := Driver.ReadString;
+    VPerson.Age := Driver.ReadInteger;
+    if not Driver.ReadNull then
+      VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
+    Result := VPerson;
+  except
+    FreeAndNil(VPerson);
+    raise;
+  end;
 end;
 
 procedure TTestPersonSQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
@@ -286,9 +353,29 @@ begin
   Result := CSQLINSERTCITY;
 end;
 
+function TTestCitySQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+begin
+  Result := CSQLSELECTCITY;
+end;
+
 function TTestCitySQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
 begin
   Result := CSQLUPDATECITY;
+end;
+
+function TTestCitySQLMapping.ReadFromDriver(const AClass: TClass;
+  const AOID: string): TObject;
+var
+  VCity: TTestCity;
+begin
+  VCity := TTestCity.Create;
+  try
+    VCity.Name := Driver.ReadString;
+    Result := VCity;
+  except
+    FreeAndNil(VCity);
+    raise;
+  end;
 end;
 
 procedure TTestCitySQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
@@ -331,6 +418,7 @@ begin
   if not Assigned(FLOG) then
     FLOG := TJCoreLogger.GetLogger('jcore.teste.opf');
   AssertEquals(0, TTestSQLDriver.Commands.Count);
+  AssertEquals(0, TTestSQLDriver.Data.Count);
   FConfiguration := CreateConfiguration([TTestSQLDriver], [
    TTestPersonSQLMapping, TTestCitySQLMapping]);
   FSession := FConfiguration.CreateSession;
@@ -342,6 +430,7 @@ begin
   FSession := nil;
   TTestAbstractSQLMapping.ClearOID;
   TTestSQLDriver.Commands.Clear;
+  TTestSQLDriver.Data.Clear;
 end;
 
 procedure TTestOPF.CreatePID;
@@ -516,6 +605,89 @@ begin
     AssertEquals('WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPF.SelectCityManualMapping;
+var
+  VCity: TTestCity;
+begin
+  TTestSQLDriver.Data.Add('thecityname');
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  VCity := FSession.Retrieve(TTestCity, '15') as TTestCity;
+  try
+    AssertEquals(0, TTestSQLDriver.Data.Count);
+    AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals(2, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteInteger 15', TTestSQLDriver.Commands[0]);
+    AssertEquals('ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[1]);
+    AssertNotNull(VCity);
+    AssertNotNull(VCity._PID);
+    AssertEquals(15, (VCity._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals('thecityname', VCity.Name);
+  finally
+    FreeAndNil(VCity);
+  end;
+end;
+
+procedure TTestOPF.SelectPersonManualMapping;
+var
+  VPerson: TTestPerson;
+  VCity: TTestCity;
+begin
+  TTestSQLDriver.Data.Add('thepersonname');
+  TTestSQLDriver.Data.Add('30');
+  TTestSQLDriver.Data.Add('5');
+  TTestSQLDriver.Data.Add('nameofcity');
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  VPerson := FSession.Retrieve(TTestPerson, '8') as TTestPerson;
+  try
+    AssertEquals(0, TTestSQLDriver.Data.Count);
+    AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals(4, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteInteger 8', TTestSQLDriver.Commands[0]);
+    AssertEquals('ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
+    AssertEquals('WriteInteger 5', TTestSQLDriver.Commands[2]);
+    AssertEquals('ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[3]);
+    AssertNotNull(VPerson);
+    AssertNotNull(VPerson._PID);
+    AssertEquals(8, (VPerson._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals('thepersonname', VPerson.Name);
+    AssertEquals(30, VPerson.Age);
+    VCity := VPerson.City;
+    AssertNotNull(VCity);
+    AssertNotNull(VCity._PID);
+    AssertEquals(5, (VCity._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals('nameofcity', VCity.Name);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPF.SelectPersonNullCityManualMapping;
+var
+  VPerson: TTestPerson;
+begin
+  TTestSQLDriver.Data.Add('personname');
+  TTestSQLDriver.Data.Add('22');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  VPerson := FSession.Retrieve(TTestPerson, '18') as TTestPerson;
+  try
+    AssertEquals(0, TTestSQLDriver.Data.Count);
+    AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals(2, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[0]);
+    AssertEquals('ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
+    AssertNotNull(VPerson);
+    AssertNotNull(VPerson._PID);
+    AssertEquals(18, (VPerson._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals('personname', VPerson.Name);
+    AssertEquals(22, VPerson.Age);
+    AssertNull(VPerson.City);
   finally
     FreeAndNil(VPerson);
   end;

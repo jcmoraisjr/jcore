@@ -29,6 +29,7 @@ type
   end;
 
   IJCoreOPFSession = interface(IInterface)
+    function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AObject: TObject);
   end;
 
@@ -47,6 +48,7 @@ type
   public
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
+    function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
 
@@ -103,6 +105,11 @@ begin
   FreeAndNil(FDriver);
   FreeAndNil(FMappingList);
   inherited Destroy;
+end;
+
+function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;
+begin
+  Result := AcquireMapping(AClass).Retrieve(AClass, AOID);
 end;
 
 procedure TJCoreOPFSession.Store(const AEntity: TObject);

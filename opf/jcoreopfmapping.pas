@@ -25,6 +25,7 @@ uses
 type
 
   IJCoreOPFMapper = interface
+    function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
 
@@ -35,12 +36,14 @@ type
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
   protected
+    function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; virtual; abstract;
     procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); virtual;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
+    function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const APID: IJCoreOPFPID);
   end;
 
@@ -57,13 +60,14 @@ type
     { TODO : Generics? }
     FSQLDriver: TJCoreOPFSQLDriver;
   protected
-    function CreateOID(const APID: IJCoreOPFPID): TJCoreOPFOID; virtual; abstract;
+    function CreateOID(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
-    function GenerateSelectStatement(const AClass: TClass; const AOID: string): string; virtual; abstract;
+    function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; virtual; abstract;
     procedure WriteToDriver(const APID: IJCoreOPFPID); virtual; abstract;
   protected
+    function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
@@ -88,12 +92,36 @@ begin
   FDriver := ADriver;
 end;
 
+function TJCoreOPFMapping.Retrieve(const AClass: TClass; const AOID: string): TObject;
+begin
+  Result := InternalRetrieve(AClass, AOID);
+end;
+
 procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
 begin
   InternalStore(APID);
 end;
 
 { TJCoreOPFSQLMapping }
+
+function TJCoreOPFSQLMapping.InternalRetrieve(const AClass: TClass;
+  const AOID: string): TObject;
+var
+  VOID: TJCoreOPFOID;
+  VPID: IJCoreOPFPID;
+begin
+  VOID := CreateOID(AOID);
+  try
+    VOID.WriteToDriver(Driver);
+    Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
+    Result := ReadFromDriver(AClass, AOID);
+    VPID := TJCoreOPFPID.AcquirePID(Result);
+    VPID.AssignOID(VOID);
+  except
+    FreeAndNil(VOID);
+    raise;
+  end;
+end;
 
 procedure TJCoreOPFSQLMapping.InternalStore(const APID: IJCoreOPFPID);
 begin
@@ -104,7 +132,7 @@ begin
     Driver.ExecSQL(GenerateUpdateStatement(APID));
   end else
   begin
-    APID.AssignOID(CreateOID(APID));
+    APID.AssignOID(CreateOID(''));
     APID.OID.WriteToDriver(Driver);
     WriteToDriver(APID);
     Driver.ExecSQL(GenerateInsertStatement(APID));
