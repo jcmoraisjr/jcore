@@ -121,6 +121,8 @@ type
 
   TTestOPF = class(TTestCase)
   private
+    FConfiguration: IJCoreOPFConfiguration;
+    FSession: IJCoreOPFSession;
     class var FLOG: IJCoreLogger;
   protected
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
@@ -328,24 +330,29 @@ begin
   inherited SetUp;
   if not Assigned(FLOG) then
     FLOG := TJCoreLogger.GetLogger('jcore.teste.opf');
+  AssertEquals(0, TTestSQLDriver.Commands.Count);
+  FConfiguration := CreateConfiguration([TTestSQLDriver], [
+   TTestPersonSQLMapping, TTestCitySQLMapping]);
+  FSession := FConfiguration.CreateSession;
 end;
 
 procedure TTestOPF.TearDown;
 begin
   inherited TearDown;
+  FSession := nil;
+  TTestAbstractSQLMapping.ClearOID;
+  TTestSQLDriver.Commands.Clear;
 end;
 
 procedure TTestOPF.CreatePID;
 var
-  VSession: IJCoreOPFSession;
   VPerson: TTestPerson;
   VPID: IJCoreOPFPID;
 begin
-  VSession := CreateConfiguration([TTestEmptyDriver], [TTestEmptyMapping]).CreateSession;
   VPerson := TTestPerson.Create;
   try
     AssertNull(VPerson._PID);
-    VSession.Store(VPerson);
+    FSession.Store(VPerson);
     VPID := VPerson._PID;
     AssertNotNull(VPID);
     AssertSame(VPID.GetEntity, VPerson);
@@ -428,121 +435,89 @@ end;
 
 procedure TTestOPF.StoreInsertPersonManualMapping;
 var
-  VSession: IJCoreOPFSession;
   VPerson: TTestPerson;
 begin
-  AssertEquals(0, TTestSQLDriver.Commands.Count);
-  VSession := CreateConfiguration([TTestSQLDriver], [TTestPersonSQLMapping]).CreateSession;
   VPerson := TTestPerson.Create;
   try
-    try
-      VPerson.Name := 'TheName';
-      VPerson.Age := 15;
-      VSession.Store(VPerson);
-      AssertEquals(5, TTestSQLDriver.Commands.Count);
-      AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[0]);
-      AssertEquals('WriteString TheName', TTestSQLDriver.Commands[1]);
-      AssertEquals('WriteInteger 15', TTestSQLDriver.Commands[2]);
-      AssertEquals('WriteNull', TTestSQLDriver.Commands[3]);
-      AssertEquals('ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
-    finally
-      FreeAndNil(VPerson);
-    end;
+    VPerson.Name := 'TheName';
+    VPerson.Age := 15;
+    FSession.Store(VPerson);
+    AssertEquals(5, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[0]);
+    AssertEquals('WriteString TheName', TTestSQLDriver.Commands[1]);
+    AssertEquals('WriteInteger 15', TTestSQLDriver.Commands[2]);
+    AssertEquals('WriteNull', TTestSQLDriver.Commands[3]);
+    AssertEquals('ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
   finally
-    TTestAbstractSQLMapping.ClearOID;
-    TTestSQLDriver.Commands.Clear;
+    FreeAndNil(VPerson);
   end;
 end;
 
 procedure TTestOPF.StoreInsertPersonCityManualMapping;
 var
-  VSession: IJCoreOPFSession;
   VPerson: TTestPerson;
 begin
-  AssertEquals(0, TTestSQLDriver.Commands.Count);
-  VSession := CreateConfiguration([TTestSQLDriver], [TTestPersonSQLMapping, TTestCitySQLMapping]).CreateSession;
   VPerson := TTestPerson.Create;
   try
-    try
-      VPerson.Name := 'SomeName';
-      VPerson.Age := 25;
-      VPerson.City := TTestCity.Create;
-      VPerson.City.Name := 'CityName';
-      VSession.Store(VPerson);
-      AssertEquals(8, TTestSQLDriver.Commands.Count);
-      AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[0]);
-      AssertEquals('WriteString SomeName', TTestSQLDriver.Commands[1]);
-      AssertEquals('WriteInteger 25', TTestSQLDriver.Commands[2]);
-      AssertEquals('WriteInteger 2', TTestSQLDriver.Commands[3]);
-      AssertEquals('WriteString CityName', TTestSQLDriver.Commands[4]);
-      AssertEquals('ExecSQL ' + CSQLINSERTCITY, TTestSQLDriver.Commands[5]);
-      AssertEquals('WriteInteger 2', TTestSQLDriver.Commands[6]);
-      AssertEquals('ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[7]);
-    finally
-      FreeAndNil(VPerson);
-    end;
+    VPerson.Name := 'SomeName';
+    VPerson.Age := 25;
+    VPerson.City := TTestCity.Create;
+    VPerson.City.Name := 'CityName';
+    FSession.Store(VPerson);
+    AssertEquals(8, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[0]);
+    AssertEquals('WriteString SomeName', TTestSQLDriver.Commands[1]);
+    AssertEquals('WriteInteger 25', TTestSQLDriver.Commands[2]);
+    AssertEquals('WriteInteger 2', TTestSQLDriver.Commands[3]);
+    AssertEquals('WriteString CityName', TTestSQLDriver.Commands[4]);
+    AssertEquals('ExecSQL ' + CSQLINSERTCITY, TTestSQLDriver.Commands[5]);
+    AssertEquals('WriteInteger 2', TTestSQLDriver.Commands[6]);
+    AssertEquals('ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[7]);
   finally
-    TTestAbstractSQLMapping.ClearOID;
-    TTestSQLDriver.Commands.Clear;
+    FreeAndNil(VPerson);
   end;
 end;
 
 procedure TTestOPF.StoreUpdateCityManualMapping;
 var
-  VSession: IJCoreOPFSession;
   VCity: TTestCity;
 begin
-  AssertEquals(0, TTestSQLDriver.Commands.Count);
-  VSession := CreateConfiguration([TTestSQLDriver], [TTestPersonSQLMapping, TTestCitySQLMapping]).CreateSession;
   VCity := TTestCity.Create;
   try
-    try
-      VCity.Name := 'TheName';
-      VSession.Store(VCity);
-      TTestSQLDriver.Commands.Clear;
-      VCity.Name := 'OtherName';
-      VSession.Store(VCity);
-      AssertEquals(3, TTestSQLDriver.Commands.Count);
-      AssertEquals('WriteString OtherName', TTestSQLDriver.Commands[0]);
-      AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[1]);
-      AssertEquals('ExecSQL ' + CSQLUPDATECITY, TTestSQLDriver.Commands[2]);
-    finally
-      FreeAndNil(VCity);
-    end;
-  finally
-    TTestAbstractSQLMapping.ClearOID;
+    VCity.Name := 'TheName';
+    FSession.Store(VCity);
     TTestSQLDriver.Commands.Clear;
+    VCity.Name := 'OtherName';
+    FSession.Store(VCity);
+    AssertEquals(3, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteString OtherName', TTestSQLDriver.Commands[0]);
+    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[1]);
+    AssertEquals('ExecSQL ' + CSQLUPDATECITY, TTestSQLDriver.Commands[2]);
+  finally
+    FreeAndNil(VCity);
   end;
 end;
 
 procedure TTestOPF.StoreUpdatePersonManualMapping;
 var
-  VSession: IJCoreOPFSession;
   VPerson: TTestPerson;
 begin
-  AssertEquals(0, TTestSQLDriver.Commands.Count);
-  VSession := CreateConfiguration([TTestSQLDriver], [TTestPersonSQLMapping]).CreateSession;
   VPerson := TTestPerson.Create;
   try
-    try
-      VPerson.Name := 'TheName';
-      VPerson.Age := 15;
-      VSession.Store(VPerson);
-      TTestSQLDriver.Commands.Clear;
-      VPerson.Age := 18;
-      VSession.Store(VPerson);
-      AssertEquals(5, TTestSQLDriver.Commands.Count);
-      AssertEquals('WriteString TheName', TTestSQLDriver.Commands[0]);
-      AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[1]);
-      AssertEquals('WriteNull', TTestSQLDriver.Commands[2]);
-      AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[3]);
-      AssertEquals('ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
-    finally
-      FreeAndNil(VPerson);
-    end;
-  finally
-    TTestAbstractSQLMapping.ClearOID;
+    VPerson.Name := 'TheName';
+    VPerson.Age := 15;
+    FSession.Store(VPerson);
     TTestSQLDriver.Commands.Clear;
+    VPerson.Age := 18;
+    FSession.Store(VPerson);
+    AssertEquals(5, TTestSQLDriver.Commands.Count);
+    AssertEquals('WriteString TheName', TTestSQLDriver.Commands[0]);
+    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[1]);
+    AssertEquals('WriteNull', TTestSQLDriver.Commands[2]);
+    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[3]);
+    AssertEquals('ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+  finally
+    FreeAndNil(VPerson);
   end;
 end;
 
