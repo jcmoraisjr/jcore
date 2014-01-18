@@ -9,8 +9,7 @@ uses
   fgl,
   fpcunit,
   JCoreLogger,
-  JCoreOPFPID,
-  JCoreOPFOID,
+  JCoreOPFID,
   JCoreOPFDriver,
   JCoreOPFMapping,
   JCoreOPFSession,
@@ -160,7 +159,8 @@ implementation
 uses
   sysutils,
   testregistry,
-  JCoreOPFException;
+  JCoreOPFException,
+  JCoreOPFOID;
 
 const
   CSQLINSERTCITY = 'INSERT INTO CITY(ID,NAME) VALUES(?,?)';

@@ -18,13 +18,13 @@ interface
 
 uses
   fgl,
-  JCoreOPFOID,
-  JCoreOPFPID,
-  JCoreOPFDriver;
+  JCoreOPFDriver,
+  JCoreOPFID;
 
 type
 
   IJCoreOPFMapper = interface
+    function AcquirePID(AEntity: TObject): IJCoreOPFPID;
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
@@ -115,7 +115,7 @@ begin
     VOID.WriteToDriver(Driver);
     Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
     Result := ReadFromDriver(AClass, AOID);
-    VPID := TJCoreOPFPID.AcquirePID(Result);
+    VPID := Mapper.AcquirePID(Result);
     VPID.AssignOID(VOID);
   except
     FreeAndNil(VOID);

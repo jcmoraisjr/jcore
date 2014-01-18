@@ -17,7 +17,7 @@ unit JCoreOPFSession;
 interface
 
 uses
-  JCoreOPFPID,
+  JCoreOPFID,
   JCoreOPFDriver,
   JCoreOPFMapping;
 
@@ -48,6 +48,7 @@ type
   public
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
+    function AcquirePID(AEntity: TObject): IJCoreOPFPID;
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
@@ -56,7 +57,11 @@ implementation
 
 uses
   sysutils,
-  JCoreOPFException;
+  typinfo,
+  JCoreClasses,
+  JCoreOPFConsts,
+  JCoreOPFException,
+  JCoreOPFPID;
 
 { TJCoreOPFSession }
 
@@ -107,6 +112,23 @@ begin
   inherited Destroy;
 end;
 
+function TJCoreOPFSession.AcquirePID(AEntity: TObject): IJCoreOPFPID;
+var
+  VPropInfo: PPropInfo;
+begin
+  if not Assigned(AEntity) then
+    raise EJCoreNilPointerException.Create;
+  VPropInfo := GetPropInfo(AEntity, SPID);
+  if not Assigned(VPropInfo) then
+    raise EJCoreOPFPersistentIDFieldNotFound.Create(AEntity.ClassName);
+  Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
+  if not Assigned(Result) then
+  begin
+    Result := TJCoreOPFPID.Create(AEntity);
+    SetInterfaceProp(AEntity, VPropInfo, Result);
+  end;
+end;
+
 function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;
 begin
   Result := AcquireMapping(AClass).Retrieve(AClass, AOID);
@@ -115,7 +137,7 @@ end;
 procedure TJCoreOPFSession.Store(const AEntity: TObject);
 begin
   { TODO : User defined PID class }
-  StorePID(TJCoreOPFPID.AcquirePID(AEntity));
+  StorePID(AcquirePID(AEntity));
 end;
 
 end.

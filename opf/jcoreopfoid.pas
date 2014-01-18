@@ -17,23 +17,10 @@ unit JCoreOPFOID;
 interface
 
 uses
-  JCoreOPFDriver;
+  JCoreOPFDriver,
+  JCoreOPFID;
 
 type
-
-  { TJCoreOPFOID }
-
-  TJCoreOPFOID = class(TObject)
-  protected
-    function GetAsInt64: Int64; virtual; abstract;
-    function GetAsInteger: Integer; virtual; abstract;
-    function GetAsString: string; virtual; abstract;
-  public
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
-    property AsInteger: Integer read GetAsInteger;
-    property AsInt64: Int64 read GetAsInt64;
-    property AsString: string read GetAsString;
-  end;
 
   { TJCoreOPFIntegerOID }
 
