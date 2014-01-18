@@ -24,8 +24,15 @@ type
   { TJCoreOPFOID }
 
   TJCoreOPFOID = class(TObject)
+  protected
+    function GetAsInt64: Int64; virtual; abstract;
+    function GetAsInteger: Integer; virtual; abstract;
+    function GetAsString: string; virtual; abstract;
   public
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    property AsInteger: Integer read GetAsInteger;
+    property AsInt64: Int64 read GetAsInt64;
+    property AsString: string read GetAsString;
   end;
 
   { TJCoreOPFIntegerOID }
@@ -33,6 +40,10 @@ type
   TJCoreOPFIntegerOID = class(TJCoreOPFOID)
   private
     FValue: Integer;
+  protected
+    function GetAsInt64: Int64; override;
+    function GetAsInteger: Integer; override;
+    function GetAsString: string; override;
   public
     constructor Create(const AValue: Integer);
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
@@ -44,6 +55,10 @@ type
   TJCoreOPFStringOID = class(TJCoreOPFOID)
   private
     FValue: string;
+  protected
+    function GetAsInt64: Int64; override;
+    function GetAsInteger: Integer; override;
+    function GetAsString: string; override;
   public
     constructor Create(const AValue: string);
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
@@ -52,7 +67,25 @@ type
 
 implementation
 
+uses
+  sysutils;
+
 { TJCoreOPFIntegerOID }
+
+function TJCoreOPFIntegerOID.GetAsInt64: Int64;
+begin
+  Result := Value;
+end;
+
+function TJCoreOPFIntegerOID.GetAsInteger: Integer;
+begin
+  Result := Value;
+end;
+
+function TJCoreOPFIntegerOID.GetAsString: string;
+begin
+  Result := IntToStr(Value);
+end;
 
 constructor TJCoreOPFIntegerOID.Create(const AValue: Integer);
 begin
@@ -66,6 +99,21 @@ begin
 end;
 
 { TJCoreOPFStringOID }
+
+function TJCoreOPFStringOID.GetAsInt64: Int64;
+begin
+  Result := StrToInt(Value);
+end;
+
+function TJCoreOPFStringOID.GetAsInteger: Integer;
+begin
+  Result := StrToInt(Value);
+end;
+
+function TJCoreOPFStringOID.GetAsString: string;
+begin
+  Result := Value;
+end;
 
 constructor TJCoreOPFStringOID.Create(const AValue: string);
 begin

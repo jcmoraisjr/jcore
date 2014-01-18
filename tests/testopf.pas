@@ -625,7 +625,7 @@ begin
     AssertEquals('ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[1]);
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
-    AssertEquals(15, (VCity._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals(15, VCity._PID.OID.AsInteger);
     AssertEquals('thecityname', VCity.Name);
   finally
     FreeAndNil(VCity);
@@ -654,13 +654,13 @@ begin
     AssertEquals('ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[3]);
     AssertNotNull(VPerson);
     AssertNotNull(VPerson._PID);
-    AssertEquals(8, (VPerson._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals(8, VPerson._PID.OID.AsInteger);
     AssertEquals('thepersonname', VPerson.Name);
     AssertEquals(30, VPerson.Age);
     VCity := VPerson.City;
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
-    AssertEquals(5, (VCity._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals(5, VCity._PID.OID.AsInteger);
     AssertEquals('nameofcity', VCity.Name);
   finally
     FreeAndNil(VPerson);
@@ -684,7 +684,7 @@ begin
     AssertEquals('ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
     AssertNotNull(VPerson);
     AssertNotNull(VPerson._PID);
-    AssertEquals(18, (VPerson._PID.OID as TJCoreOPFIntegerOID).Value);
+    AssertEquals(18, VPerson._PID.OID.AsInteger);
     AssertEquals('personname', VPerson.Name);
     AssertEquals(22, VPerson.Age);
     AssertNull(VPerson.City);
