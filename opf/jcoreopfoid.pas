@@ -102,7 +102,7 @@ end;
 
 function TJCoreOPFStringOID.GetAsInt64: Int64;
 begin
-  Result := StrToInt(Value);
+  Result := StrToInt64(Value);
 end;
 
 function TJCoreOPFStringOID.GetAsInteger: Integer;
