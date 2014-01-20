@@ -148,9 +148,9 @@ type
     procedure StoreInsertPersonManualMapping;
     procedure StoreInsertPersonCityManualMapping;
     procedure StoreUpdateCityManualMapping;
-    procedure StoreUpdatePersonManualMapping;
+    procedure StoreUpdatePersonCityManualMapping;
     procedure SelectCityManualMapping;
-    procedure SelectPersonManualMapping;
+    procedure SelectPersonCityManualMapping;
     procedure SelectPersonNullCityManualMapping;
   end;
 
@@ -343,7 +343,7 @@ end;
 
 class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
-  Result := TTestPerson.InheritsFrom(AClass);
+  Result := AClass = TTestPerson;
 end;
 
 { TTestCitySQLMapping }
@@ -388,7 +388,7 @@ end;
 
 class function TTestCitySQLMapping.Apply(const AClass: TClass): Boolean;
 begin
-  Result := TTestCity.InheritsFrom(AClass);
+  Result := AClass = TTestCity;
 end;
 
 { TTestOPF }
@@ -553,15 +553,19 @@ begin
     VPerson.City := TTestCity.Create;
     VPerson.City.Name := 'CityName';
     FSession.Store(VPerson);
-    AssertEquals(8, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('WriteString SomeName', TTestSQLDriver.Commands[1]);
-    AssertEquals('WriteInteger 25', TTestSQLDriver.Commands[2]);
-    AssertEquals('WriteInteger 2', TTestSQLDriver.Commands[3]);
-    AssertEquals('WriteString CityName', TTestSQLDriver.Commands[4]);
-    AssertEquals('ExecSQL ' + CSQLINSERTCITY, TTestSQLDriver.Commands[5]);
-    AssertEquals('WriteInteger 2', TTestSQLDriver.Commands[6]);
-    AssertEquals('ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[7]);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertNotNull('city pid', VPerson.City._PID);
+    AssertEquals('city oid', 2, VPerson.City._PID.OID.AsInteger);
+    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteString SomeName', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteInteger 25', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteInteger 2', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'WriteString CityName', TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'ExecSQL ' + CSQLINSERTCITY, TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'WriteInteger 2', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[7]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -587,7 +591,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreUpdatePersonManualMapping;
+procedure TTestOPF.StoreUpdatePersonCityManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -632,7 +636,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.SelectPersonManualMapping;
+procedure TTestOPF.SelectPersonCityManualMapping;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -645,23 +649,23 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   VPerson := FSession.Retrieve(TTestPerson, '8') as TTestPerson;
   try
-    AssertEquals(0, TTestSQLDriver.Data.Count);
-    AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals(4, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteInteger 8', TTestSQLDriver.Commands[0]);
-    AssertEquals('ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
-    AssertEquals('WriteInteger 5', TTestSQLDriver.Commands[2]);
-    AssertEquals('ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[3]);
-    AssertNotNull(VPerson);
-    AssertNotNull(VPerson._PID);
-    AssertEquals(8, VPerson._PID.OID.AsInteger);
-    AssertEquals('thepersonname', VPerson.Name);
-    AssertEquals(30, VPerson.Age);
+    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('cmd count', 4, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteInteger 8', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteInteger 5', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[3]);
+    AssertNotNull('person', VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 8, VPerson._PID.OID.AsInteger);
+    AssertEquals('person name', 'thepersonname', VPerson.Name);
+    AssertEquals('person age', 30, VPerson.Age);
     VCity := VPerson.City;
-    AssertNotNull(VCity);
-    AssertNotNull(VCity._PID);
-    AssertEquals(5, VCity._PID.OID.AsInteger);
-    AssertEquals('nameofcity', VCity.Name);
+    AssertNotNull('city', VCity);
+    AssertNotNull('city pid', VCity._PID);
+    AssertEquals('city oid', 5, VCity._PID.OID.AsInteger);
+    AssertEquals('city name', 'nameofcity', VCity.Name);
   finally
     FreeAndNil(VPerson);
   end;
