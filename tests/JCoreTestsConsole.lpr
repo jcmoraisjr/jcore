@@ -4,7 +4,8 @@ program JCoreTestsConsole;
 
 uses
   heaptrc, Classes, consoletestrunner,
-  TestExpression, TestDIC, TestOPF, TestLogger;
+  TestExpression, TestDIC, TestOPF, TestLogger,
+  JCoreDIC, JCoreLogger;
 
 type
 
@@ -19,6 +20,7 @@ var
   Application: TMyTestRunner;
 
 begin
+  TJCoreDIC.LazyRegister(IJCoreLogFactory, TJCoreConsoleLogFactory);
   Application := TMyTestRunner.Create(nil);
   Application.Initialize;
   Application.Run;

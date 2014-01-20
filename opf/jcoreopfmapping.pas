@@ -27,6 +27,7 @@ type
     function AcquirePID(AEntity: TObject): IJCoreOPFPID;
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
+    procedure StorePID(const APID: IJCoreOPFPID);
   end;
 
   { TJCoreOPFMapping }
@@ -69,6 +70,7 @@ type
   protected
     function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
+    procedure StoreOwnedObjectList(const AOwner: IJCoreOPFPID; const AList: TFPSList);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); override;
@@ -136,6 +138,23 @@ begin
     APID.OID.WriteToDriver(Driver);
     WriteToDriver(APID);
     Driver.ExecSQL(GenerateInsertStatement(APID));
+  end;
+end;
+
+procedure TJCoreOPFSQLMapping.StoreOwnedObjectList(const AOwner: IJCoreOPFPID; const AList: TFPSList);
+var
+  VEntity: TObject;
+  VPID: IJCoreOPFPID;
+  I: Integer;
+begin
+  if not Assigned(AList) then
+    Exit;
+  for I := 0 to Pred(AList.Count) do
+  begin
+    VEntity := TObject(AList[I]^);
+    VPID := Mapper.AcquirePID(VEntity);
+    VPID.Owner := AOwner;
+    Mapper.StorePID(VPID);
   end;
 end;
 

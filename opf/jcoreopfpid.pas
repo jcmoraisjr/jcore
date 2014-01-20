@@ -32,8 +32,11 @@ type
   private
     FEntity: TObject;
     FOID: TJCoreOPFOID;
+    FOwner: IJCoreOPFPID;
     function GetEntity: TObject;
     function GetOID: TJCoreOPFOID;
+    function GetOwner: IJCoreOPFPID;
+    procedure SetOwner(const AValue: IJCoreOPFPID);
   public
     constructor Create(const AEntity: TObject);
     destructor Destroy; override;
@@ -41,6 +44,7 @@ type
     function IsPersistent: Boolean;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
+    property Owner: IJCoreOPFPID read GetOwner write SetOwner;
   end;
 
 implementation
@@ -60,6 +64,23 @@ end;
 function TJCoreOPFPID.GetOID: TJCoreOPFOID;
 begin
   Result := FOID;
+end;
+
+function TJCoreOPFPID.GetOwner: IJCoreOPFPID;
+begin
+  Result := FOwner;
+end;
+
+procedure TJCoreOPFPID.SetOwner(const AValue: IJCoreOPFPID);
+begin
+  if not Assigned(AValue) then
+    FOwner := nil
+  else if not Assigned(FOwner) then
+  begin
+    { TODO : Check circular reference }
+    FOwner := AValue;
+  end else if FOwner <> AValue then
+    raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
 end;
 
 constructor TJCoreOPFPID.Create(const AEntity: TObject);

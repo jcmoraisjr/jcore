@@ -83,6 +83,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreOPFObjectAlreadyOwned }
+
+  EJCoreOPFObjectAlreadyOwned = class(EJCoreOPF)
+  public
+    constructor Create(const AOwnedClassName, AOwnerClassName: string);
+  end;
+
 implementation
 
 { EJCoreOPFDriverNotFound }
@@ -131,6 +138,13 @@ end;
 { EJCoreOPFCannotAssignOIDPersistent }
 
 constructor EJCoreOPFCannotAssignOIDPersistent.Create;
+begin
+end;
+
+{ EJCoreOPFObjectAlreadyOwned }
+
+constructor EJCoreOPFObjectAlreadyOwned.Create(const AOwnedClassName,
+  AOwnerClassName: string);
 begin
 end;
 

@@ -47,9 +47,12 @@ type
     procedure AssignOID(const AOID: TJCoreOPFOID);
     function GetEntity: TObject;
     function GetOID: TJCoreOPFOID;
+    function GetOwner: IJCoreOPFPID;
     function IsPersistent: Boolean;
+    procedure SetOwner(const AValue: IJCoreOPFPID);
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read GetOID;
+    property Owner: IJCoreOPFPID read GetOwner write SetOwner;
   end;
 
 implementation
