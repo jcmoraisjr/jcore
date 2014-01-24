@@ -90,6 +90,13 @@ type
     constructor Create(const AOwnedClassName, AOwnerClassName: string);
   end;
 
+  { EJCoreOPFUnsupportedOwnedOperations }
+
+  EJCoreOPFUnsupportedOwnedOperations = class(EJCoreOPF)
+  public
+    constructor Create;
+  end;
+
 implementation
 
 { EJCoreOPFDriverNotFound }
@@ -145,6 +152,12 @@ end;
 
 constructor EJCoreOPFObjectAlreadyOwned.Create(const AOwnedClassName,
   AOwnerClassName: string);
+begin
+end;
+
+{ EJCoreOPFUnsupportedOwnedOperations }
+
+constructor EJCoreOPFUnsupportedOwnedOperations.Create;
 begin
 end;
 

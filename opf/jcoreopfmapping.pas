@@ -68,11 +68,11 @@ type
     function CreateEntity(const AClass: TClass): TObject; virtual;
     function CreateOID(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
-    function GenerateSelectOwnedListStatement(const AClass: TClass): string; virtual; abstract;
+    function GenerateSelectOwnedListStatement(const AClass: TClass): string; virtual;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
-    procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual; abstract;
-    function ReadOwnedOIDFromDriver: TJCoreOPFOID; virtual; abstract;
+    procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual;
+    function ReadOwnedOIDFromDriver: TJCoreOPFOID; virtual;
     procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
   protected
@@ -123,6 +123,25 @@ end;
 function TJCoreOPFSQLMapping.CreateEntity(const AClass: TClass): TObject;
 begin
   Result := AClass.Create;
+end;
+
+function TJCoreOPFSQLMapping.GenerateSelectOwnedListStatement(
+  const AClass: TClass): string;
+begin
+  { TODO : Owned objects, like Phone list, need some special methods. Perhaps
+           move these methods to a subclass? But this will cause a misuse of
+           user's manual mappings that inherit from a common abstract mapping
+           class. Ideas for another approach is welcome. }
+  raise EJCoreOPFUnsupportedOwnedOperations.Create;
+end;
+
+procedure TJCoreOPFSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+begin
+end;
+
+function TJCoreOPFSQLMapping.ReadOwnedOIDFromDriver: TJCoreOPFOID;
+begin
+  raise EJCoreOPFUnsupportedOwnedOperations.Create;
 end;
 
 procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
