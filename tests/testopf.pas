@@ -17,6 +17,34 @@ uses
 
 type
 
+  { TTestOPF }
+
+  TTestOPF = class(TTestCase)
+  private
+    FConfiguration: IJCoreOPFConfiguration;
+    FSession: IJCoreOPFSession;
+    class var FLOG: IJCoreLogger;
+  protected
+    function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
+    procedure SetUp; override;
+    procedure TearDown; override;
+    class property LOG: IJCoreLogger read FLOG;
+  published
+    procedure CreatePID;
+    procedure DriverNotFound;
+    procedure MappingNotFound;
+    procedure StoreInsertPersonManualMapping;
+    procedure StoreInsertPersonCityManualMapping;
+    procedure StoreInsertPersonPhonesManualMapping;
+    procedure StoreUpdateCityManualMapping;
+    procedure StoreUpdatePersonCityManualMapping;
+    procedure StoreUpdatePersonPhonesManualMapping;
+    procedure SelectCityManualMapping;
+    procedure SelectPersonCityManualMapping;
+    procedure SelectPersonNullCityManualMapping;
+    procedure SelectPersonPhonesManualMapping;
+  end;
+
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
@@ -158,34 +186,6 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestOPF }
-
-  TTestOPF = class(TTestCase)
-  private
-    FConfiguration: IJCoreOPFConfiguration;
-    FSession: IJCoreOPFSession;
-    class var FLOG: IJCoreLogger;
-  protected
-    function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
-    procedure SetUp; override;
-    procedure TearDown; override;
-    class property LOG: IJCoreLogger read FLOG;
-  published
-    procedure CreatePID;
-    procedure DriverNotFound;
-    procedure MappingNotFound;
-    procedure StoreInsertPersonManualMapping;
-    procedure StoreInsertPersonCityManualMapping;
-    procedure StoreInsertPersonPhonesManualMapping;
-    procedure StoreUpdateCityManualMapping;
-    procedure StoreUpdatePersonCityManualMapping;
-    procedure StoreUpdatePersonPhonesManualMapping;
-    procedure SelectCityManualMapping;
-    procedure SelectPersonCityManualMapping;
-    procedure SelectPersonNullCityManualMapping;
-    procedure SelectPersonPhonesManualMapping;
-  end;
-
 implementation
 
 uses
@@ -204,272 +204,6 @@ const
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
-
-{ TTestPerson }
-
-destructor TTestPerson.Destroy;
-begin
-  FreeAndNil(FPhones);
-  FreeAndNil(FCity);
-  inherited Destroy;
-end;
-
-{ TTestEmptyDriver }
-
-class function TTestEmptyDriver.DriverName: string;
-begin
-  Result := 'TestEmptyDriver';
-end;
-
-{ TTestEmptyMapping }
-
-class function TTestEmptyMapping.Apply(const AClass: TClass): Boolean;
-begin
-  Result := True;
-end;
-
-procedure TTestEmptyMapping.InternalStore(const APID: IJCoreOPFPID);
-begin
-end;
-
-{ TTestSQLDriver }
-
-function TTestSQLDriver.PopData(const APopFromQueue: Boolean): string;
-begin
-  if Data.Count = 0 then
-    raise Exception.Create('Trying to read an empty data queue');
-  Result := Data[0];
-  if APopFromQueue then
-    Data.Delete(0);
-end;
-
-function TTestSQLDriver.InternalExecSQL(const ASQL: string): Integer;
-begin
-  FCommands.Add('ExecSQL ' + ASQL);
-  if ExpectedResultsets.Count > 0 then
-  begin
-    Result := ExpectedResultsets[0];
-    ExpectedResultsets.Delete(0);
-  end else
-    Result := 0;
-end;
-
-class constructor TTestSQLDriver.Create;
-begin
-  FCommands := TStringList.Create;
-  FData := TStringList.Create;
-  FExpectedResultsets := TTestIntegerList.Create;
-end;
-
-class destructor TTestSQLDriver.Destroy;
-begin
-  FreeAndNil(FCommands);
-  FreeAndNil(FData);
-  FreeAndNil(FExpectedResultsets);
-end;
-
-class function TTestSQLDriver.DriverName: string;
-begin
-  Result := 'TestSQLDriver';
-end;
-
-function TTestSQLDriver.ReadInteger: Integer;
-begin
-  Result := StrToInt(PopData);
-end;
-
-function TTestSQLDriver.ReadNull: Boolean;
-begin
-  Result := PopData(False) = 'null';
-  if Result then
-    PopData;
-end;
-
-function TTestSQLDriver.ReadString: string;
-begin
-  Result := PopData;
-end;
-
-procedure TTestSQLDriver.WriteInteger(const AValue: Integer);
-begin
-  FCommands.Add('WriteInteger ' + IntToStr(AValue));
-end;
-
-procedure TTestSQLDriver.WriteString(const AValue: string);
-begin
-  FCommands.Add('WriteString ' + AValue);
-end;
-
-procedure TTestSQLDriver.WriteNull;
-begin
-  FCommands.Add('WriteNull');
-end;
-
-{ TTestAbstractSQLMapping }
-
-function TTestAbstractSQLMapping.CreateOID(const AOID: string): TJCoreOPFOID;
-var
-  VOID: Integer;
-begin
-  if AOID = '' then
-    VOID := GenerateOID
-  else
-    VOID := StrToInt(AOID);
-  Result := TJCoreOPFIntegerOID.Create(VOID);
-end;
-
-function TTestAbstractSQLMapping.GenerateOID: Integer;
-begin
-  Inc(FCurrentOID);
-  Result := FCurrentOID;
-end;
-
-class procedure TTestAbstractSQLMapping.ClearOID;
-begin
-  FCurrentOID := 0;
-end;
-
-{ TTestPersonSQLMapping }
-
-function TTestPersonSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
-begin
-  Result := CSQLINSERTPERSON;
-end;
-
-function TTestPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
-begin
-  Result := CSQLSELECTPERSON;
-end;
-
-function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
-begin
-  Result := CSQLUPDATEPERSON;
-end;
-
-procedure TTestPersonSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
-var
-  VPerson: TTestPerson;
-begin
-  VPerson := APID.Entity as TTestPerson;
-  VPerson.Name := Driver.ReadString;
-  VPerson.Age := Driver.ReadInteger;
-  if not Driver.ReadNull then
-    VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
-  VPerson.Phones := TTestPhoneList(Mapper.RetrieveOwnedListPID(TTestPhone, VPerson._PID));
-end;
-
-procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
-var
-  VPerson: TTestPerson;
-begin
-  VPerson := APID.Entity as TTestPerson;
-  StoreOwnedObjectList(VPerson._PID, VPerson.Phones);
-end;
-
-procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
-var
-  VPerson: TTestPerson;
-begin
-  VPerson := APID.Entity as TTestPerson;
-  Driver.WriteString(VPerson.Name);
-  Driver.WriteInteger(VPerson.Age);
-  if Assigned(VPerson.City) then
-  begin
-    Mapper.Store(VPerson.City);
-    VPerson.City._PID.OID.WriteToDriver(Driver);
-  end else
-  begin
-    { TODO : Need as much calls as the size of the FK }
-    Driver.WriteNull;
-  end;
-end;
-
-class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
-begin
-  Result := AClass = TTestPerson;
-end;
-
-{ TTestCitySQLMapping }
-
-function TTestCitySQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
-begin
-  Result := CSQLINSERTCITY;
-end;
-
-function TTestCitySQLMapping.GenerateSelectStatement(const AClass: TClass): string;
-begin
-  Result := CSQLSELECTCITY;
-end;
-
-function TTestCitySQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
-begin
-  Result := CSQLUPDATECITY;
-end;
-
-procedure TTestCitySQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
-var
-  VCity: TTestCity;
-begin
-  VCity := APID.Entity as TTestCity;
-  VCity.Name := Driver.ReadString;
-end;
-
-procedure TTestCitySQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
-var
-  VCity: TTestCity;
-begin
-  VCity := APID.Entity as TTestCity;
-  Driver.WriteString(VCity.Name);
-end;
-
-class function TTestCitySQLMapping.Apply(const AClass: TClass): Boolean;
-begin
-  Result := AClass = TTestCity;
-end;
-
-{ TTestPhoneSQLMapping }
-
-function TTestPhoneSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
-begin
-  Result := CSQLINSERTPHONE;
-end;
-
-function TTestPhoneSQLMapping.GenerateSelectOwnedListStatement(const AClass: TClass): string;
-begin
-  Result := CSQLSELECTOWNEDPHONES;
-end;
-
-function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
-begin
-  Result := CSQLUPDATEPHONE;
-end;
-
-procedure TTestPhoneSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
-var
-  VPhone: TTestPhone;
-begin
-  VPhone := APID.Entity as TTestPhone;
-  VPhone.Number := Driver.ReadString;
-end;
-
-function TTestPhoneSQLMapping.ReadOwnedOIDFromDriver: TJCoreOPFOID;
-begin
-  Result := TJCoreOPFIntegerOID.Create(Driver.ReadInteger);
-end;
-
-procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
-var
-  VPhone: TTestPhone;
-begin
-  VPhone := APID.Entity as TTestPhone;
-  APID.Owner.OID.WriteToDriver(Driver);
-  Driver.WriteString(VPhone.Number);
-end;
-
-class function TTestPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
-begin
-  Result := AClass = TTestPhone;
-end;
 
 { TTestOPF }
 
@@ -893,6 +627,272 @@ begin
   finally
     FreeAndNil(VPerson);
   end;
+end;
+
+{ TTestPerson }
+
+destructor TTestPerson.Destroy;
+begin
+  FreeAndNil(FPhones);
+  FreeAndNil(FCity);
+  inherited Destroy;
+end;
+
+{ TTestEmptyDriver }
+
+class function TTestEmptyDriver.DriverName: string;
+begin
+  Result := 'TestEmptyDriver';
+end;
+
+{ TTestEmptyMapping }
+
+class function TTestEmptyMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := True;
+end;
+
+procedure TTestEmptyMapping.InternalStore(const APID: IJCoreOPFPID);
+begin
+end;
+
+{ TTestSQLDriver }
+
+function TTestSQLDriver.PopData(const APopFromQueue: Boolean): string;
+begin
+  if Data.Count = 0 then
+    raise Exception.Create('Trying to read an empty data queue');
+  Result := Data[0];
+  if APopFromQueue then
+    Data.Delete(0);
+end;
+
+function TTestSQLDriver.InternalExecSQL(const ASQL: string): Integer;
+begin
+  FCommands.Add('ExecSQL ' + ASQL);
+  if ExpectedResultsets.Count > 0 then
+  begin
+    Result := ExpectedResultsets[0];
+    ExpectedResultsets.Delete(0);
+  end else
+    Result := 0;
+end;
+
+class constructor TTestSQLDriver.Create;
+begin
+  FCommands := TStringList.Create;
+  FData := TStringList.Create;
+  FExpectedResultsets := TTestIntegerList.Create;
+end;
+
+class destructor TTestSQLDriver.Destroy;
+begin
+  FreeAndNil(FCommands);
+  FreeAndNil(FData);
+  FreeAndNil(FExpectedResultsets);
+end;
+
+class function TTestSQLDriver.DriverName: string;
+begin
+  Result := 'TestSQLDriver';
+end;
+
+function TTestSQLDriver.ReadInteger: Integer;
+begin
+  Result := StrToInt(PopData);
+end;
+
+function TTestSQLDriver.ReadNull: Boolean;
+begin
+  Result := PopData(False) = 'null';
+  if Result then
+    PopData;
+end;
+
+function TTestSQLDriver.ReadString: string;
+begin
+  Result := PopData;
+end;
+
+procedure TTestSQLDriver.WriteInteger(const AValue: Integer);
+begin
+  FCommands.Add('WriteInteger ' + IntToStr(AValue));
+end;
+
+procedure TTestSQLDriver.WriteString(const AValue: string);
+begin
+  FCommands.Add('WriteString ' + AValue);
+end;
+
+procedure TTestSQLDriver.WriteNull;
+begin
+  FCommands.Add('WriteNull');
+end;
+
+{ TTestAbstractSQLMapping }
+
+function TTestAbstractSQLMapping.CreateOID(const AOID: string): TJCoreOPFOID;
+var
+  VOID: Integer;
+begin
+  if AOID = '' then
+    VOID := GenerateOID
+  else
+    VOID := StrToInt(AOID);
+  Result := TJCoreOPFIntegerOID.Create(VOID);
+end;
+
+function TTestAbstractSQLMapping.GenerateOID: Integer;
+begin
+  Inc(FCurrentOID);
+  Result := FCurrentOID;
+end;
+
+class procedure TTestAbstractSQLMapping.ClearOID;
+begin
+  FCurrentOID := 0;
+end;
+
+{ TTestPersonSQLMapping }
+
+function TTestPersonSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLINSERTPERSON;
+end;
+
+function TTestPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+begin
+  Result := CSQLSELECTPERSON;
+end;
+
+function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLUPDATEPERSON;
+end;
+
+procedure TTestPersonSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := APID.Entity as TTestPerson;
+  VPerson.Name := Driver.ReadString;
+  VPerson.Age := Driver.ReadInteger;
+  if not Driver.ReadNull then
+    VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
+  VPerson.Phones := TTestPhoneList(Mapper.RetrieveOwnedListPID(TTestPhone, VPerson._PID));
+end;
+
+procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := APID.Entity as TTestPerson;
+  StoreOwnedObjectList(VPerson._PID, VPerson.Phones);
+end;
+
+procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := APID.Entity as TTestPerson;
+  Driver.WriteString(VPerson.Name);
+  Driver.WriteInteger(VPerson.Age);
+  if Assigned(VPerson.City) then
+  begin
+    Mapper.Store(VPerson.City);
+    VPerson.City._PID.OID.WriteToDriver(Driver);
+  end else
+  begin
+    { TODO : Need as much calls as the size of the FK }
+    Driver.WriteNull;
+  end;
+end;
+
+class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestPerson;
+end;
+
+{ TTestCitySQLMapping }
+
+function TTestCitySQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLINSERTCITY;
+end;
+
+function TTestCitySQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+begin
+  Result := CSQLSELECTCITY;
+end;
+
+function TTestCitySQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLUPDATECITY;
+end;
+
+procedure TTestCitySQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+var
+  VCity: TTestCity;
+begin
+  VCity := APID.Entity as TTestCity;
+  VCity.Name := Driver.ReadString;
+end;
+
+procedure TTestCitySQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+var
+  VCity: TTestCity;
+begin
+  VCity := APID.Entity as TTestCity;
+  Driver.WriteString(VCity.Name);
+end;
+
+class function TTestCitySQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestCity;
+end;
+
+{ TTestPhoneSQLMapping }
+
+function TTestPhoneSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLINSERTPHONE;
+end;
+
+function TTestPhoneSQLMapping.GenerateSelectOwnedListStatement(const AClass: TClass): string;
+begin
+  Result := CSQLSELECTOWNEDPHONES;
+end;
+
+function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLUPDATEPHONE;
+end;
+
+procedure TTestPhoneSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+var
+  VPhone: TTestPhone;
+begin
+  VPhone := APID.Entity as TTestPhone;
+  VPhone.Number := Driver.ReadString;
+end;
+
+function TTestPhoneSQLMapping.ReadOwnedOIDFromDriver: TJCoreOPFOID;
+begin
+  Result := TJCoreOPFIntegerOID.Create(Driver.ReadInteger);
+end;
+
+procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+var
+  VPhone: TTestPhone;
+begin
+  VPhone := APID.Entity as TTestPhone;
+  APID.Owner.OID.WriteToDriver(Driver);
+  Driver.WriteString(VPhone.Number);
+end;
+
+class function TTestPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestPhone;
 end;
 
 initialization
