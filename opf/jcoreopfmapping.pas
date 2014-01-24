@@ -61,12 +61,14 @@ type
     { TODO : Generics? }
     FSQLDriver: TJCoreOPFSQLDriver;
   protected
+    function CreateEntity(const AClass: TClass): TObject; virtual;
     function CreateOID(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
-    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; virtual; abstract;
-    procedure WriteToDriver(const APID: IJCoreOPFPID); virtual; abstract;
+    procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual; abstract;
+    procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
+    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
   protected
     function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
@@ -106,6 +108,19 @@ end;
 
 { TJCoreOPFSQLMapping }
 
+function TJCoreOPFSQLMapping.CreateEntity(const AClass: TClass): TObject;
+begin
+  Result := AClass.Create;
+end;
+
+procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
+begin
+end;
+
+procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+begin
+end;
+
 function TJCoreOPFSQLMapping.InternalRetrieve(const AClass: TClass;
   const AOID: string): TObject;
 var
@@ -116,9 +131,15 @@ begin
   try
     VOID.WriteToDriver(Driver);
     Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
-    Result := ReadFromDriver(AClass, AOID);
-    VPID := Mapper.AcquirePID(Result);
-    VPID.AssignOID(VOID);
+    Result := CreateEntity(AClass);
+    try
+      VPID := Mapper.AcquirePID(Result);
+      VPID.AssignOID(VOID);
+      ReadFromDriver(VPID);
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
   except
     FreeAndNil(VOID);
     raise;
@@ -129,15 +150,17 @@ procedure TJCoreOPFSQLMapping.InternalStore(const APID: IJCoreOPFPID);
 begin
   if APID.IsPersistent then
   begin
-    WriteToDriver(APID);
+    WriteInternalsToDriver(APID);
     APID.OID.WriteToDriver(Driver);
     Driver.ExecSQL(GenerateUpdateStatement(APID));
+    WriteExternalsToDriver(APID);
   end else
   begin
     APID.AssignOID(CreateOID(''));
     APID.OID.WriteToDriver(Driver);
-    WriteToDriver(APID);
+    WriteInternalsToDriver(APID);
     Driver.ExecSQL(GenerateInsertStatement(APID));
+    WriteExternalsToDriver(APID);
   end;
 end;
 

@@ -124,8 +124,9 @@ type
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; override;
-    procedure WriteToDriver(const APID: IJCoreOPFPID); override;
+    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
+    procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -137,8 +138,8 @@ type
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; override;
-    procedure WriteToDriver(const APID: IJCoreOPFPID); override;
+    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -148,10 +149,9 @@ type
   TTestPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
-    function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    function ReadFromDriver(const AClass: TClass; const AOID: string): TObject; override;
-    procedure WriteToDriver(const APID: IJCoreOPFPID); override;
+    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -341,24 +341,26 @@ begin
   Result := CSQLUPDATEPERSON;
 end;
 
-function TTestPersonSQLMapping.ReadFromDriver(const AClass: TClass; const AOID: string): TObject;
+procedure TTestPersonSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
 var
   VPerson: TTestPerson;
 begin
-  VPerson := TTestPerson.Create;
-  try
-    VPerson.Name := Driver.ReadString;
-    VPerson.Age := Driver.ReadInteger;
-    if not Driver.ReadNull then
-      VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
-    Result := VPerson;
-  except
-    FreeAndNil(VPerson);
-    raise;
-  end;
+  VPerson := APID.Entity as TTestPerson;
+  VPerson.Name := Driver.ReadString;
+  VPerson.Age := Driver.ReadInteger;
+  if not Driver.ReadNull then
+    VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
 end;
 
-procedure TTestPersonSQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
+procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := APID.Entity as TTestPerson;
+  StoreOwnedObjectList(VPerson._PID, VPerson.Phones);
+end;
+
+procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
 var
   VPerson: TTestPerson;
 begin
@@ -374,7 +376,6 @@ begin
     { TODO : Need as much calls as the size of the FK }
     Driver.WriteNull;
   end;
-  StoreOwnedObjectList(VPerson._PID, VPerson.Phones);
 end;
 
 class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
@@ -399,22 +400,15 @@ begin
   Result := CSQLUPDATECITY;
 end;
 
-function TTestCitySQLMapping.ReadFromDriver(const AClass: TClass;
-  const AOID: string): TObject;
+procedure TTestCitySQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
 var
   VCity: TTestCity;
 begin
-  VCity := TTestCity.Create;
-  try
-    VCity.Name := Driver.ReadString;
-    Result := VCity;
-  except
-    FreeAndNil(VCity);
-    raise;
-  end;
+  VCity := APID.Entity as TTestCity;
+  VCity.Name := Driver.ReadString;
 end;
 
-procedure TTestCitySQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
+procedure TTestCitySQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
 var
   VCity: TTestCity;
 begin
@@ -434,32 +428,20 @@ begin
   Result := CSQLINSERTPHONE;
 end;
 
-function TTestPhoneSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
-begin
-  //Result := CSQLSELECTPHONES;
-end;
-
 function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEPHONE;
 end;
 
-function TTestPhoneSQLMapping.ReadFromDriver(const AClass: TClass;
-  const AOID: string): TObject;
+procedure TTestPhoneSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
 var
   VPhone: TTestPhone;
 begin
-  VPhone := TTestPhone.Create;
-  try
-    VPhone.Number := Driver.ReadString;
-    Result := VPhone;
-  except
-    FreeAndNil(VPhone);
-    raise;
-  end;
+  VPhone := APID.Entity as TTestPhone;
+  VPhone.Number := Driver.ReadString;
 end;
 
-procedure TTestPhoneSQLMapping.WriteToDriver(const APID: IJCoreOPFPID);
+procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
 var
   VPhone: TTestPhone;
 begin
@@ -678,15 +660,15 @@ begin
     AssertEquals('cmd1', 'WriteString thename', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteInteger 10', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteNull', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteInteger 2', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteString 636-3626', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'WriteInteger 3', TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'WriteInteger 1', TTestSQLDriver.Commands[9]);
-    AssertEquals('cmd10', 'WriteString 212-4321', TTestSQLDriver.Commands[10]);
-    AssertEquals('cmd11', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[11]);
-    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[12]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 2', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'WriteInteger 1', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'WriteString 636-3626', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'WriteInteger 3', TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
+    AssertEquals('cmd11', 'WriteString 212-4321', TTestSQLDriver.Commands[11]);
+    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[12]);
   finally
     FreeAndNil(VPerson);
   end;
