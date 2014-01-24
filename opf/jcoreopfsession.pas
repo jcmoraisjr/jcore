@@ -17,6 +17,7 @@ unit JCoreOPFSession;
 interface
 
 uses
+  JCoreClasses,
   JCoreOPFID,
   JCoreOPFDriver,
   JCoreOPFMapping;
@@ -43,6 +44,7 @@ type
     function CreateMapping(const AMappingClass: TJCoreOPFMappingClass): TJCoreOPFMapping;
   protected
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
+    function RetrieveOwnedListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure StorePID(const APID: IJCoreOPFPID);
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
   public
@@ -58,7 +60,6 @@ implementation
 uses
   sysutils,
   typinfo,
-  JCoreClasses,
   JCoreOPFConsts,
   JCoreOPFException,
   JCoreOPFPID;
@@ -90,6 +91,12 @@ begin
       Exit;
     end;
   raise EJCoreOPFMappingNotFound.Create(AClass.ClassName);
+end;
+
+function TJCoreOPFSession.RetrieveOwnedListPID(const AClass: TClass;
+  const AOwner: IJCoreOPFPID): TJCoreObjectList;
+begin
+  Result := AcquireMapping(AClass).RetrieveOwnedList(AClass, AOwner);
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);

@@ -18,6 +18,7 @@ interface
 
 uses
   fgl,
+  JCoreClasses,
   JCoreOPFDriver,
   JCoreOPFID;
 
@@ -26,6 +27,7 @@ type
   IJCoreOPFMapper = interface
     function AcquirePID(AEntity: TObject): IJCoreOPFPID;
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
+    function RetrieveOwnedListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure Store(const AEntity: TObject);
     procedure StorePID(const APID: IJCoreOPFPID);
   end;
@@ -38,6 +40,7 @@ type
     FMapper: IJCoreOPFMapper;
   protected
     function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; virtual; abstract;
+    function InternalRetrieveOwnedList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList; virtual; abstract;
     procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
@@ -45,6 +48,7 @@ type
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); virtual;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
+    function RetrieveOwnedList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure Store(const APID: IJCoreOPFPID);
   end;
 
@@ -64,13 +68,16 @@ type
     function CreateEntity(const AClass: TClass): TObject; virtual;
     function CreateOID(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
+    function GenerateSelectOwnedListStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual; abstract;
+    function ReadOwnedOIDFromDriver: TJCoreOPFOID; virtual; abstract;
     procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
   protected
     function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; override;
+    function InternalRetrieveOwnedList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
     procedure StoreOwnedObjectList(const AOwner: IJCoreOPFPID; const AList: TFPSList);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
@@ -82,7 +89,6 @@ implementation
 
 uses
   sysutils,
-  JCoreClasses,
   JCoreOPFException;
 
 { TJCoreOPFMapping }
@@ -99,6 +105,12 @@ end;
 function TJCoreOPFMapping.Retrieve(const AClass: TClass; const AOID: string): TObject;
 begin
   Result := InternalRetrieve(AClass, AOID);
+end;
+
+function TJCoreOPFMapping.RetrieveOwnedList(const AClass: TClass;
+  const AOwner: IJCoreOPFPID): TJCoreObjectList;
+begin
+  Result := InternalRetrieveOwnedList(AClass, AOwner);
 end;
 
 procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
@@ -142,6 +154,37 @@ begin
     end;
   except
     FreeAndNil(VOID);
+    raise;
+  end;
+end;
+
+function TJCoreOPFSQLMapping.InternalRetrieveOwnedList(const AClass: TClass;
+  const AOwner: IJCoreOPFPID): TJCoreObjectList;
+var
+  VPID: IJCoreOPFPID;
+  VOID: TJCoreOPFOID;
+  VCount: Integer;
+  I: Integer;
+begin
+  AOwner.OID.WriteToDriver(Driver);
+  VCount := Driver.ExecSQL(GenerateSelectOwnedListStatement(AClass));
+  Result := TJCoreObjectList.Create(True);
+  try
+    for I := 1 to VCount do
+    begin
+      VOID := ReadOwnedOIDFromDriver;
+      try
+        Result.Add(CreateEntity(AClass));
+        VPID := Mapper.AcquirePID(Result.Last);
+        VPID.AssignOID(VOID);
+        ReadFromDriver(VPID);
+      except
+        FreeAndNil(VOID);
+        raise;
+      end;
+    end;
+  except
+    FreeAndNil(Result);
     raise;
   end;
 end;
