@@ -283,7 +283,10 @@ begin
     VEntity := TObject(AList[I]^);
     VPID := Mapper.AcquirePID(VEntity);
     VPID.Owner := AOwner;
-    Mapper.StorePID(VPID);
+    if Apply(VEntity.ClassType) then
+      Store(VPID)
+    else
+      Mapper.StorePID(VPID);
   end;
 end;
 
@@ -292,9 +295,11 @@ procedure TJCoreOPFSQLMapping.InternalStoreSharedList(const APID: IJCoreOPFPID;
 var
   I: Integer;
 begin
-  { TODO : Don't need to call mapper if the list doesn't have objects of descendant classes }
   for I := Low(APIDArray) to High(APIDArray) do
-    Mapper.StorePID(APIDArray[I]);
+    if Apply(APIDArray[I].Entity.ClassType) then
+      Store(APIDArray[I])
+    else
+      Mapper.StorePID(APIDArray[I]);
   for I := Low(APIDArray) to High(APIDArray) do
     WriteSharedListItemToDriver(APID, APIDArray[I]);
 end;
