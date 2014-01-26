@@ -46,6 +46,7 @@ type
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     function RetrieveOwnedListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure StorePID(const APID: IJCoreOPFPID);
+    procedure StoreSharedListPID(const AListBaseClass: TClass; const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
   public
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
@@ -102,6 +103,13 @@ end;
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);
 begin
   AcquireMapping(APID.Entity.ClassType).Store(APID);
+end;
+
+procedure TJCoreOPFSession.StoreSharedListPID(const AListBaseClass: TClass;
+  const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
+begin
+  if Assigned(APIDArray) then
+    AcquireMapping(AListBaseClass).StoreSharedList(APID, APIDArray);
 end;
 
 constructor TJCoreOPFSession.Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);

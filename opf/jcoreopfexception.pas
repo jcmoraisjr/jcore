@@ -97,6 +97,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreOPFUnsupportedSharedOperations }
+
+  EJCoreOPFUnsupportedSharedOperations = class(EJCoreOPF)
+  public
+    constructor Create;
+  end;
+
 implementation
 
 { EJCoreOPFDriverNotFound }
@@ -158,6 +165,12 @@ end;
 { EJCoreOPFUnsupportedOwnedOperations }
 
 constructor EJCoreOPFUnsupportedOwnedOperations.Create;
+begin
+end;
+
+{ EJCoreOPFUnsupportedSharedOperations }
+
+constructor EJCoreOPFUnsupportedSharedOperations.Create;
 begin
 end;
 

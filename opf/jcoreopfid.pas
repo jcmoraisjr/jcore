@@ -55,6 +55,8 @@ type
     property Owner: IJCoreOPFPID read GetOwner write SetOwner;
   end;
 
+  TJCoreOPFPIDArray = array of IJCoreOPFPID;
+
 implementation
 
 end.

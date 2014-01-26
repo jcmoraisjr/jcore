@@ -36,6 +36,7 @@ type
     procedure StoreInsertPersonManualMapping;
     procedure StoreInsertPersonCityManualMapping;
     procedure StoreInsertPersonPhonesManualMapping;
+    procedure StoreInsertPersonLanguagesManualMapping;
     procedure StoreUpdateCityManualMapping;
     procedure StoreUpdatePersonCityManualMapping;
     procedure StoreUpdatePersonPhonesManualMapping;
@@ -64,7 +65,7 @@ type
 
   TTestBase = class(TObject)
   private
-     FPID: IJCoreOPFPID;
+    FPID: IJCoreOPFPID;
   published
     property _PID: IJCoreOPFPID read FPID write FPID;
   end;
@@ -89,6 +90,19 @@ type
 
   TTestPhoneList = specialize TFPGObjectList<TTestPhone>;
 
+  { TTestLanguage }
+
+  TTestLanguage = class(TTestBase)
+  private
+    FName: string;
+  public
+    constructor Create(const AName: string);
+  published
+    property Name: string read FName write FName;
+  end;
+
+  TTestLanguageList = specialize TFPGObjectList<TTestLanguage>;
+
   { TTestPerson }
 
   TTestPerson = class(TTestBase)
@@ -97,6 +111,7 @@ type
     FAge: Integer;
     FPhones: TTestPhoneList;
     FCity: TTestCity;
+    FLanguages: TTestLanguageList;
   public
     destructor Destroy; override;
   published
@@ -104,6 +119,7 @@ type
     property Age: Integer read FAge write FAge;
     property Phones: TTestPhoneList read FPhones write FPhones;
     property City: TTestCity read FCity write FCity;
+    property Languages: TTestLanguageList read FLanguages write FLanguages;
   end;
 
   TTestIntegerList = specialize TFPGList<Integer>;
@@ -186,6 +202,19 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
+  { TTestLanguageSQLMapping }
+
+  TTestLanguageSQLMapping = class(TTestAbstractSQLMapping)
+  protected
+    function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; override;
+    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
+  end;
+
 implementation
 
 uses
@@ -198,12 +227,15 @@ const
   CSQLINSERTCITY = 'INSERT INTO CITY (ID,NAME) VALUES (?,?)';
   CSQLINSERTPERSON = 'INSERT INTO PERSON (ID,NAME,AGE,CITY) VALUES (?,?,?,?)';
   CSQLINSERTPHONE = 'INSERT INTO PHONE (ID,PERSON,NUMBER) VALUES (?,?,?)';
+  CSQLINSERTLANG = 'INSERT INTO LANG (ID,NAME) VALUES (?,?)';
+  CSQLINSERTPERSON_LANG = 'INSERT INTO PERSON_LANG (ID_PERSON,ID_LANG) VALUES (?,?)';
   CSQLSELECTCITY = 'SELECT NAME FROM CITY WHERE ID=?';
   CSQLSELECTPERSON = 'SELECT NAME,AGE,CITY FROM PERSON WHERE ID=?';
   CSQLSELECTOWNEDPHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
+  CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
 
 { TTestOPF }
 
@@ -234,7 +266,8 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   FConfiguration := CreateConfiguration([TTestSQLDriver], [
-   TTestPersonSQLMapping, TTestCitySQLMapping, TTestPhoneSQLMapping]);
+   TTestPersonSQLMapping, TTestCitySQLMapping, TTestPhoneSQLMapping,
+   TTestLanguageSQLMapping]);
   FSession := FConfiguration.CreateSession;
 end;
 
@@ -419,6 +452,46 @@ begin
     AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
     AssertEquals('cmd11', 'WriteString 212-4321', TTestSQLDriver.Commands[11]);
     AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[12]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPF.StoreInsertPersonLanguagesManualMapping;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'SomeName';
+    VPerson.Languages := TTestLanguageList.Create(True);
+    VPerson.Languages.Add(TTestLanguage.Create('English'));
+    VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertNotNull('lang0 pid', VPerson.Languages[0]._PID);
+    AssertEquals('lang0 oid', 2, VPerson.Languages[0]._PID.OID.AsInteger);
+    AssertNotNull('lang1 pid', VPerson.Languages[1]._PID);
+    AssertEquals('lang1 oid', 3, VPerson.Languages[1]._PID.OID.AsInteger);
+    AssertEquals('cmd count', 17, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteString SomeName', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteInteger 0', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteNull', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 2', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'WriteString English', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteInteger 3', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'WriteString Spanish', TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd10', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[10]);
+    AssertEquals('cmd11', 'WriteInteger 1', TTestSQLDriver.Commands[11]);
+    AssertEquals('cmd12', 'WriteInteger 2', TTestSQLDriver.Commands[12]);
+    AssertEquals('cmd13', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[13]);
+    AssertEquals('cmd14', 'WriteInteger 1', TTestSQLDriver.Commands[14]);
+    AssertEquals('cmd15', 'WriteInteger 3', TTestSQLDriver.Commands[15]);
+    AssertEquals('cmd16', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[16]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -629,12 +702,21 @@ begin
   end;
 end;
 
+{ TTestLanguage }
+
+constructor TTestLanguage.Create(const AName: string);
+begin
+  inherited Create;
+  FName := AName;
+end;
+
 { TTestPerson }
 
 destructor TTestPerson.Destroy;
 begin
   FreeAndNil(FPhones);
   FreeAndNil(FCity);
+  FreeAndNil(FLanguages);
   inherited Destroy;
 end;
 
@@ -788,6 +870,7 @@ var
 begin
   VPerson := APID.Entity as TTestPerson;
   StoreOwnedObjectList(VPerson._PID, VPerson.Phones);
+  Mapper.StoreSharedListPID(TTestLanguage, VPerson._PID, CreatePIDArray(VPerson.Languages));
 end;
 
 procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
@@ -893,6 +976,51 @@ end;
 class function TTestPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestPhone;
+end;
+
+{ TTestLanguageSQLMapping }
+
+function TTestLanguageSQLMapping.GenerateInsertSharedItemStatement(
+  const AOwnerPID, ASharedPID: IJCoreOPFPID): string;
+begin
+  if AOwnerPID.Entity.ClassType = TTestPerson then
+    Result := CSQLINSERTPERSON_LANG
+  else
+    Result := inherited GenerateInsertSharedItemStatement(AOwnerPID, ASharedPID);
+end;
+
+function TTestLanguageSQLMapping.GenerateInsertStatement(
+  const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLINSERTLANG;
+end;
+
+function TTestLanguageSQLMapping.GenerateUpdateStatement(
+  const APID: IJCoreOPFPID): string;
+begin
+  Result := CSQLUPDATELANG;
+end;
+
+procedure TTestLanguageSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+var
+  VLang: TTestLanguage;
+begin
+  VLang := APID.Entity as TTestLanguage;
+  VLang.Name := Driver.ReadString;
+end;
+
+procedure TTestLanguageSQLMapping.WriteInternalsToDriver(
+  const APID: IJCoreOPFPID);
+var
+  VLang: TTestLanguage;
+begin
+  VLang := APID.Entity as TTestLanguage;
+  Driver.WriteString(VLang.Name);
+end;
+
+class function TTestLanguageSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestLanguage;
 end;
 
 initialization
