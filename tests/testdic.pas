@@ -383,6 +383,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestDIC);
+  RegisterTest('jcore.core.dic', TTestDIC);
+
 end.
 

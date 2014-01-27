@@ -29,17 +29,40 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
     class property LOG: IJCoreLogger read FLOG;
+  end;
+
+  { TTestOPFCore }
+
+  TTestOPFCore = class(TTestOPF)
   published
     procedure CreatePID;
     procedure DriverNotFound;
     procedure MappingNotFound;
+  end;
+
+  { TTestOPFInsertManualMapping }
+
+  TTestOPFInsertManualMapping = class(TTestOPF)
+  published
     procedure StoreInsertPersonManualMapping;
     procedure StoreInsertPersonCityManualMapping;
     procedure StoreInsertPersonPhonesManualMapping;
     procedure StoreInsertPersonLanguagesManualMapping;
+  end;
+
+  { TTestOPFUpdateManualMapping }
+
+  TTestOPFUpdateManualMapping = class(TTestOPF)
+  published
     procedure StoreUpdateCityManualMapping;
     procedure StoreUpdatePersonCityManualMapping;
     procedure StoreUpdatePersonPhonesManualMapping;
+  end;
+
+  { TTestOPFSelectManualMapping }
+
+  TTestOPFSelectManualMapping = class(TTestOPF)
+  published
     procedure SelectCityManualMapping;
     procedure SelectPersonCityManualMapping;
     procedure SelectPersonNullCityManualMapping;
@@ -280,7 +303,9 @@ begin
   TTestSQLDriver.Data.Clear;
 end;
 
-procedure TTestOPF.CreatePID;
+{ TTestOPFCore }
+
+procedure TTestOPFCore.CreatePID;
 var
   VPerson: TTestPerson;
   VPID: IJCoreOPFPID;
@@ -297,7 +322,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.DriverNotFound;
+procedure TTestOPFCore.DriverNotFound;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -337,7 +362,7 @@ begin
   AssertNotNull(VSession);
 end;
 
-procedure TTestOPF.MappingNotFound;
+procedure TTestOPFCore.MappingNotFound;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -369,7 +394,9 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreInsertPersonManualMapping;
+{ TTestOPFInsertManualMapping }
+
+procedure TTestOPFInsertManualMapping.StoreInsertPersonManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -389,7 +416,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreInsertPersonCityManualMapping;
+procedure TTestOPFInsertManualMapping.StoreInsertPersonCityManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -418,7 +445,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreInsertPersonPhonesManualMapping;
+procedure TTestOPFInsertManualMapping.StoreInsertPersonPhonesManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -457,7 +484,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreInsertPersonLanguagesManualMapping;
+procedure TTestOPFInsertManualMapping.StoreInsertPersonLanguagesManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -497,7 +524,9 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreUpdateCityManualMapping;
+{ TTestOPFUpdateManualMapping }
+
+procedure TTestOPFUpdateManualMapping.StoreUpdateCityManualMapping;
 var
   VCity: TTestCity;
 begin
@@ -517,7 +546,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreUpdatePersonCityManualMapping;
+procedure TTestOPFUpdateManualMapping.StoreUpdatePersonCityManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -540,7 +569,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.StoreUpdatePersonPhonesManualMapping;
+procedure TTestOPFUpdateManualMapping.StoreUpdatePersonPhonesManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -575,7 +604,9 @@ begin
   end;
 end;
 
-procedure TTestOPF.SelectCityManualMapping;
+{ TTestOPFSelectManualMapping }
+
+procedure TTestOPFSelectManualMapping.SelectCityManualMapping;
 var
   VCity: TTestCity;
 begin
@@ -597,7 +628,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.SelectPersonCityManualMapping;
+procedure TTestOPFSelectManualMapping.SelectPersonCityManualMapping;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -634,7 +665,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.SelectPersonNullCityManualMapping;
+procedure TTestOPFSelectManualMapping.SelectPersonNullCityManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -662,7 +693,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.SelectPersonPhonesManualMapping;
+procedure TTestOPFSelectManualMapping.SelectPersonPhonesManualMapping;
 var
   VPerson: TTestPerson;
 begin
@@ -1024,7 +1055,10 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestOPF);
+  RegisterTest('jcore.opf.core', TTestOPFCore);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);
 
 end.
 

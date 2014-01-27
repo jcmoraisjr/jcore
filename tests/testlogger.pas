@@ -177,7 +177,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestLogger);
+  RegisterTest('jcore.core.logger', TTestLogger);
 
 end.
 

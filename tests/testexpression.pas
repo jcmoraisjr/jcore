@@ -499,6 +499,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestExpression);
+  RegisterTest('jcore.core.expression', TTestExpression);
+
 end.
 
