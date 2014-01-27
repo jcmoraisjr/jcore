@@ -24,6 +24,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
+        <CommandLineParams Value="-a --format=plain"/>
       </local>
     </RunParams>
     <RequiredPackages Count="4">
@@ -82,7 +83,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="3">
+    <Exceptions Count="12">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -92,6 +93,33 @@
       <Item3>
         <Name Value="EFOpenError"/>
       </Item3>
+      <Item4>
+        <Name Value="ETestExpressionError"/>
+      </Item4>
+      <Item5>
+        <Name Value="EJCoreReadError"/>
+      </Item5>
+      <Item6>
+        <Name Value="EAssertionFailedError"/>
+      </Item6>
+      <Item7>
+        <Name Value="EJCoreDICIntfNotFoundException"/>
+      </Item7>
+      <Item8>
+        <Name Value="EJCoreDICAmbiguousImplementationException"/>
+      </Item8>
+      <Item9>
+        <Name Value="EJCoreOPFUndefinedDriver"/>
+      </Item9>
+      <Item10>
+        <Name Value="EJCoreOPFDriverNotFound"/>
+      </Item10>
+      <Item11>
+        <Name Value="EJCoreOPFUndefinedMapping"/>
+      </Item11>
+      <Item12>
+        <Name Value="EJCoreOPFMappingNotFound"/>
+      </Item12>
     </Exceptions>
   </Debugging>
 </CONFIG>
