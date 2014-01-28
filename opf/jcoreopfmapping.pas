@@ -25,7 +25,7 @@ uses
 type
 
   IJCoreOPFMapper = interface
-    function AcquirePID(AEntity: TObject): IJCoreOPFPID;
+    function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     function RetrieveOwnedListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure Store(const AEntity: TObject);

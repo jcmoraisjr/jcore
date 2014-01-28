@@ -45,12 +45,14 @@ type
   IJCoreOPFPID = interface(IInterface)
   ['{C2E47A60-B063-1FC0-D566-BAAC73195623}']
     procedure AssignOID(const AOID: TJCoreOPFOID);
+    procedure Commit;
     function GetEntity: TObject;
+    function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
     function GetOwner: IJCoreOPFPID;
-    function IsPersistent: Boolean;
     procedure SetOwner(const AValue: IJCoreOPFPID);
     property Entity: TObject read GetEntity;
+    property IsPersistent: Boolean read GetIsPersistent;
     property OID: TJCoreOPFOID read GetOID;
     property Owner: IJCoreOPFPID read GetOwner write SetOwner;
   end;

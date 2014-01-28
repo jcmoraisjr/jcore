@@ -31,9 +31,11 @@ type
   TJCoreOPFPID = class(TInterfacedObject, IJCoreOPFPID)
   private
     FEntity: TObject;
+    FIsPersistent: Boolean;
     FOID: TJCoreOPFOID;
     FOwner: IJCoreOPFPID;
     function GetEntity: TObject;
+    function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
     function GetOwner: IJCoreOPFPID;
     procedure SetOwner(const AValue: IJCoreOPFPID);
@@ -41,7 +43,8 @@ type
     constructor Create(const AEntity: TObject);
     destructor Destroy; override;
     procedure AssignOID(const AOID: TJCoreOPFOID);
-    function IsPersistent: Boolean;
+    procedure Commit;
+    property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
     property Owner: IJCoreOPFPID read GetOwner write SetOwner;
@@ -59,6 +62,11 @@ uses
 function TJCoreOPFPID.GetEntity: TObject;
 begin
   Result := FEntity;
+end;
+
+function TJCoreOPFPID.GetIsPersistent: Boolean;
+begin
+  Result := FIsPersistent;
 end;
 
 function TJCoreOPFPID.GetOID: TJCoreOPFOID;
@@ -89,6 +97,7 @@ begin
     raise EJCoreNilPointerException.Create;
   inherited Create;
   FEntity := AEntity;
+  FIsPersistent := False;
 end;
 
 destructor TJCoreOPFPID.Destroy;
@@ -101,12 +110,13 @@ procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);
 begin
   if IsPersistent then
     raise EJCoreOPFCannotAssignOIDPersistent.Create;
+  FreeAndNil(FOID);
   FOID := AOID;
 end;
 
-function TJCoreOPFPID.IsPersistent: Boolean;
+procedure TJCoreOPFPID.Commit;
 begin
-  Result := Assigned(OID);
+  FIsPersistent := Assigned(OID);
 end;
 
 end.
