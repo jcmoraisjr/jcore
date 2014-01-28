@@ -57,6 +57,7 @@ type
     procedure StoreUpdateCityManualMapping;
     procedure StoreUpdatePersonCityManualMapping;
     procedure StoreUpdatePersonPhonesManualMapping;
+    procedure StoreUpdatePersonInsertDeleteLanguagesManualMapping;
   end;
 
   { TTestOPFSelectManualMapping }
@@ -229,6 +230,7 @@ type
 
   TTestLanguageSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; override;
     function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; override;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
@@ -259,6 +261,7 @@ const
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, CITY=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
   CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
+  CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=?';
 
 { TTestOPF }
 
@@ -600,6 +603,43 @@ begin
     AssertEquals('cmd10', 'WriteString 987', TTestSQLDriver.Commands[10]);
     AssertEquals('cmd11', 'WriteInteger 3', TTestSQLDriver.Commands[11]);
     AssertEquals('cmd12', 'ExecSQL ' + CSQLUPDATEPHONE, TTestSQLDriver.Commands[12]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMapping.StoreUpdatePersonInsertDeleteLanguagesManualMapping;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'aname';
+    VPerson.Languages := TTestLanguageList.Create(True);
+    VPerson.Languages.Add(TTestLanguage.Create('English'));
+    VPerson.Languages.Add(TTestLanguage.Create('Brazilian portuguese'));
+    FSession.Store(VPerson);
+    VPerson.Languages.Delete(0);
+    VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
+    TTestSQLDriver.Commands.Clear;
+    FSession.Store(VPerson);
+    AssertEquals('cmd count', 16, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteString aname', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'WriteInteger 4', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteString Spanish', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
+    AssertEquals('cmd11', 'WriteInteger 3', TTestSQLDriver.Commands[11]);
+    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[12]);
+    AssertEquals('cmd13', 'WriteInteger 1', TTestSQLDriver.Commands[13]);
+    AssertEquals('cmd14', 'WriteInteger 4', TTestSQLDriver.Commands[14]);
+    AssertEquals('cmd15', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[15]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1011,6 +1051,15 @@ begin
 end;
 
 { TTestLanguageSQLMapping }
+
+function TTestLanguageSQLMapping.GenerateDeleteSharedItemStatement(
+  const AOwnerPID: IJCoreOPFPID): string;
+begin
+  if AOwnerPID.Entity.ClassType = TTestPerson then
+    Result := CSQLDELETEPERSON_LANG
+  else
+    Result := inherited GenerateDeleteSharedItemStatement(AOwnerPID);
+end;
 
 function TTestLanguageSQLMapping.GenerateInsertSharedItemStatement(
   const AOwnerPID, ASharedPID: IJCoreOPFPID): string;

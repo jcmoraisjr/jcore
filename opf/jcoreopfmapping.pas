@@ -70,6 +70,7 @@ type
   protected
     function CreateEntity(const AClass: TClass): TObject; virtual;
     function CreateOID(const AOID: string): TJCoreOPFOID; virtual; abstract;
+    function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; virtual;
     function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; virtual;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectOwnedListStatement(const AClass: TClass): string; virtual;
@@ -136,6 +137,12 @@ end;
 function TJCoreOPFSQLMapping.CreateEntity(const AClass: TClass): TObject;
 begin
   Result := AClass.Create;
+end;
+
+function TJCoreOPFSQLMapping.GenerateDeleteSharedItemStatement(
+  const AOwnerPID: IJCoreOPFPID): string;
+begin
+  raise EJCoreOPFUnsupportedSharedOperations.Create;
 end;
 
 function TJCoreOPFSQLMapping.GenerateInsertSharedItemStatement(const AOwnerPID,
@@ -295,11 +302,19 @@ procedure TJCoreOPFSQLMapping.InternalStoreSharedList(const APID: IJCoreOPFPID;
 var
   I: Integer;
 begin
+  if APID.IsPersistent then
+  begin
+    APID.OID.WriteToDriver(Driver);
+    Driver.ExecSQL(GenerateDeleteSharedItemStatement(APID));
+  end;
   for I := Low(APIDArray) to High(APIDArray) do
-    if Apply(APIDArray[I].Entity.ClassType) then
-      Store(APIDArray[I])
-    else
-      Mapper.StorePID(APIDArray[I]);
+    if not APIDArray[I].IsPersistent then
+    begin
+      if Apply(APIDArray[I].Entity.ClassType) then
+        Store(APIDArray[I])
+      else
+        Mapper.StorePID(APIDArray[I]);
+    end;
   for I := Low(APIDArray) to High(APIDArray) do
     WriteSharedListItemToDriver(APID, APIDArray[I]);
 end;
