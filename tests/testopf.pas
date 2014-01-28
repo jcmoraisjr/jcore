@@ -44,30 +44,30 @@ type
 
   TTestOPFInsertManualMapping = class(TTestOPF)
   published
-    procedure StoreInsertPersonManualMapping;
-    procedure StoreInsertPersonCityManualMapping;
-    procedure StoreInsertPersonPhonesManualMapping;
-    procedure StoreInsertPersonLanguagesManualMapping;
+    procedure Person;
+    procedure PersonCity;
+    procedure PersonPhones;
+    procedure PersonLanguages;
   end;
 
   { TTestOPFUpdateManualMapping }
 
   TTestOPFUpdateManualMapping = class(TTestOPF)
   published
-    procedure StoreUpdateCityManualMapping;
-    procedure StoreUpdatePersonCityManualMapping;
-    procedure StoreUpdatePersonPhonesManualMapping;
-    procedure StoreUpdatePersonInsertDeleteLanguagesManualMapping;
+    procedure City;
+    procedure PersonCity;
+    procedure PersonPhones;
+    procedure PersonInsertDeleteLanguages;
   end;
 
   { TTestOPFSelectManualMapping }
 
   TTestOPFSelectManualMapping = class(TTestOPF)
   published
-    procedure SelectCityManualMapping;
-    procedure SelectPersonCityManualMapping;
-    procedure SelectPersonNullCityManualMapping;
-    procedure SelectPersonPhonesManualMapping;
+    procedure City;
+    procedure PersonCity;
+    procedure PersonNullCity;
+    procedure PersonPhones;
   end;
 
   { TTestEmptyDriver }
@@ -400,7 +400,7 @@ end;
 
 { TTestOPFInsertManualMapping }
 
-procedure TTestOPFInsertManualMapping.StoreInsertPersonManualMapping;
+procedure TTestOPFInsertManualMapping.Person;
 var
   VPerson: TTestPerson;
 begin
@@ -420,7 +420,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.StoreInsertPersonCityManualMapping;
+procedure TTestOPFInsertManualMapping.PersonCity;
 var
   VPerson: TTestPerson;
 begin
@@ -449,7 +449,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.StoreInsertPersonPhonesManualMapping;
+procedure TTestOPFInsertManualMapping.PersonPhones;
 var
   VPerson: TTestPerson;
 begin
@@ -488,7 +488,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.StoreInsertPersonLanguagesManualMapping;
+procedure TTestOPFInsertManualMapping.PersonLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -530,7 +530,7 @@ end;
 
 { TTestOPFUpdateManualMapping }
 
-procedure TTestOPFUpdateManualMapping.StoreUpdateCityManualMapping;
+procedure TTestOPFUpdateManualMapping.City;
 var
   VCity: TTestCity;
 begin
@@ -550,7 +550,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.StoreUpdatePersonCityManualMapping;
+procedure TTestOPFUpdateManualMapping.PersonCity;
 var
   VPerson: TTestPerson;
 begin
@@ -573,7 +573,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.StoreUpdatePersonPhonesManualMapping;
+procedure TTestOPFUpdateManualMapping.PersonPhones;
 var
   VPerson: TTestPerson;
 begin
@@ -608,7 +608,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.StoreUpdatePersonInsertDeleteLanguagesManualMapping;
+procedure TTestOPFUpdateManualMapping.PersonInsertDeleteLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -647,7 +647,7 @@ end;
 
 { TTestOPFSelectManualMapping }
 
-procedure TTestOPFSelectManualMapping.SelectCityManualMapping;
+procedure TTestOPFSelectManualMapping.City;
 var
   VCity: TTestCity;
 begin
@@ -669,7 +669,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.SelectPersonCityManualMapping;
+procedure TTestOPFSelectManualMapping.PersonCity;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -706,7 +706,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.SelectPersonNullCityManualMapping;
+procedure TTestOPFSelectManualMapping.PersonNullCity;
 var
   VPerson: TTestPerson;
 begin
@@ -734,7 +734,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.SelectPersonPhonesManualMapping;
+procedure TTestOPFSelectManualMapping.PersonPhones;
 var
   VPerson: TTestPerson;
 begin
