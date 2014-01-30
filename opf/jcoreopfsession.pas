@@ -48,7 +48,7 @@ type
     procedure AddInTransactionPID(const APID: IJCoreOPFPID);
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit;
-    function RetrieveOwnedListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
+    function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure StorePID(const APID: IJCoreOPFPID);
     procedure StoreSharedListPID(const AListBaseClass: TClass; const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
     property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
@@ -114,10 +114,10 @@ begin
   InTransactionPIDList.Clear;
 end;
 
-function TJCoreOPFSession.RetrieveOwnedListPID(const AClass: TClass;
+function TJCoreOPFSession.RetrieveListPID(const AClass: TClass;
   const AOwner: IJCoreOPFPID): TJCoreObjectList;
 begin
-  Result := AcquireMapping(AClass).RetrieveOwnedList(AClass, AOwner);
+  Result := AcquireMapping(AClass).RetrieveList(AClass, AOwner);
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);

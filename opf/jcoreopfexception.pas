@@ -90,16 +90,9 @@ type
     constructor Create(const AOwnedClassName, AOwnerClassName: string);
   end;
 
-  { EJCoreOPFUnsupportedOwnedOperations }
+  { EJCoreOPFUnsupportedListOperations }
 
-  EJCoreOPFUnsupportedOwnedOperations = class(EJCoreOPF)
-  public
-    constructor Create;
-  end;
-
-  { EJCoreOPFUnsupportedSharedOperations }
-
-  EJCoreOPFUnsupportedSharedOperations = class(EJCoreOPF)
+  EJCoreOPFUnsupportedListOperations = class(EJCoreOPF)
   public
     constructor Create;
   end;
@@ -162,15 +155,9 @@ constructor EJCoreOPFObjectAlreadyOwned.Create(const AOwnedClassName,
 begin
 end;
 
-{ EJCoreOPFUnsupportedOwnedOperations }
+{ EJCoreOPFUnsupportedListOperations }
 
-constructor EJCoreOPFUnsupportedOwnedOperations.Create;
-begin
-end;
-
-{ EJCoreOPFUnsupportedSharedOperations }
-
-constructor EJCoreOPFUnsupportedSharedOperations.Create;
+constructor EJCoreOPFUnsupportedListOperations.Create;
 begin
 end;
 

@@ -58,6 +58,7 @@ type
     procedure PersonCity;
     procedure PersonPhones;
     procedure PersonInsertDeleteLanguages;
+    procedure PersonNoLanguagesChange;
   end;
 
   { TTestOPFSelectManualMapping }
@@ -68,6 +69,7 @@ type
     procedure PersonCity;
     procedure PersonNullCity;
     procedure PersonPhones;
+    procedure PersonLanguages;
   end;
 
   { TTestEmptyDriver }
@@ -217,10 +219,10 @@ type
   TTestPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
-    function GenerateSelectOwnedListStatement(const AClass: TClass): string; override;
+    function GenerateSelectListFromStatement(const AClass, AOwnerClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
-    function ReadOwnedOIDFromDriver: TJCoreOPFOID; override;
+    function ReadOIDFromDriver: TJCoreOPFOID; override;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
@@ -233,6 +235,7 @@ type
     function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; override;
     function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; override;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateSelectListFromStatement(const AClass, AOwnerClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
@@ -257,6 +260,7 @@ const
   CSQLSELECTCITY = 'SELECT NAME FROM CITY WHERE ID=?';
   CSQLSELECTPERSON = 'SELECT NAME,AGE,CITY FROM PERSON WHERE ID=?';
   CSQLSELECTOWNEDPHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
+  CSQLSELECTPERSON_LANG = 'SELECT L.ID,L.NAME FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON=?';
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, CITY=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
@@ -645,14 +649,46 @@ begin
   end;
 end;
 
+procedure TTestOPFUpdateManualMapping.PersonNoLanguagesChange;
+var
+  VPerson: TTestPerson;
+  i: Integer;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'SomeName';
+    VPerson.Languages := TTestLanguageList.Create(True);
+    VPerson.Languages.Add(TTestLanguage.Create('English'));
+    FSession.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    VPerson.Name := 'anothername';
+    FSession.Store(VPerson);
+    AssertEquals('cmd count', 10, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteString anothername', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'WriteInteger 1', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteInteger 2', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[9]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
 { TTestOPFSelectManualMapping }
 
 procedure TTestOPFSelectManualMapping.City;
 var
   VCity: TTestCity;
 begin
-  TTestSQLDriver.Data.Add('thecityname');
+  // city
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('thecityname');
+
   VCity := FSession.Retrieve(TTestCity, '15') as TTestCity;
   try
     AssertEquals(0, TTestSQLDriver.Data.Count);
@@ -674,23 +710,29 @@ var
   VPerson: TTestPerson;
   VCity: TTestCity;
 begin
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('thepersonname');
   TTestSQLDriver.Data.Add('30');
   TTestSQLDriver.Data.Add('5');
+
+  // city
+  TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('nameofcity');
-  TTestSQLDriver.ExpectedResultsets.Add(1);
-  TTestSQLDriver.ExpectedResultsets.Add(1);
+
   VPerson := FSession.Retrieve(TTestPerson, '8') as TTestPerson;
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('cmd count', 6, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteInteger 8', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteInteger 5', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'WriteInteger 8', TTestSQLDriver.Commands[4]);
     AssertEquals('cmd5', 'ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'WriteInteger 8', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[7]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 8, VPerson._PID.OID.AsInteger);
@@ -710,19 +752,23 @@ procedure TTestOPFSelectManualMapping.PersonNullCity;
 var
   VPerson: TTestPerson;
 begin
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('personname');
   TTestSQLDriver.Data.Add('22');
   TTestSQLDriver.Data.Add('null');
-  TTestSQLDriver.ExpectedResultsets.Add(1);
+
   VPerson := FSession.Retrieve(TTestPerson, '18') as TTestPerson;
   try
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals(4, TTestSQLDriver.Commands.Count);
+    AssertEquals(6, TTestSQLDriver.Commands.Count);
     AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[0]);
     AssertEquals('ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
     AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[2]);
     AssertEquals('ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[3]);
+    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[4]);
+    AssertEquals('ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[5]);
     AssertNotNull(VPerson);
     AssertNotNull(VPerson._PID);
     AssertEquals(18, VPerson._PID.OID.AsInteger);
@@ -738,24 +784,30 @@ procedure TTestOPFSelectManualMapping.PersonPhones;
 var
   VPerson: TTestPerson;
 begin
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('aname');
   TTestSQLDriver.Data.Add('5');
   TTestSQLDriver.Data.Add('null');
+
+  // two phone objects
+  TTestSQLDriver.ExpectedResultsets.Add(2);
   TTestSQLDriver.Data.Add('11');
   TTestSQLDriver.Data.Add('212');
   TTestSQLDriver.Data.Add('12');
   TTestSQLDriver.Data.Add('555');
-  TTestSQLDriver.ExpectedResultsets.Add(1);
-  TTestSQLDriver.ExpectedResultsets.Add(2);
+
   VPerson := FSession.Retrieve(TTestPerson, '9') as TTestPerson;
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('cmd count', 4, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 6, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteInteger 9', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteInteger 9', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'WriteInteger 9', TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[5]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 9, VPerson._PID.OID.AsInteger);
@@ -769,6 +821,59 @@ begin
     AssertNotNull('phone1 pid', VPerson.Phones[0]._PID);
     AssertEquals('phone1 oid', 12, VPerson.Phones[1]._PID.OID.AsInteger);
     AssertEquals('phone1 number', '555', VPerson.Phones[1].Number);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFSelectManualMapping.PersonLanguages;
+var
+  VPerson: TTestPerson;
+  i: Integer;
+begin
+  exit;
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('personname');
+  TTestSQLDriver.Data.Add('0');
+  TTestSQLDriver.Data.Add('null');
+
+  // phones
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+
+  // language
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('3');
+  TTestSQLDriver.Data.Add('spanish');
+  TTestSQLDriver.Data.Add('8');
+  TTestSQLDriver.Data.Add('german');
+
+  // let's go
+  VPerson := FSession.Retrieve(TTestPerson, '5') as TTestPerson;
+  try
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('cmd cnt', 6, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteInteger 5', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteInteger 5', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'WriteInteger 5', TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[5]);
+    AssertNotNull('person', VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 5, VPerson._PID.OID.AsInteger);
+    AssertEquals('person name', 'personname', VPerson.Name);
+    AssertEquals('person age', 0, VPerson.Age);
+    AssertNull('city', VPerson.City);
+    AssertEquals('phone cnt', 0, VPerson.Phones.Count);
+    AssertEquals('lang cnt', 2, VPerson.Languages.Count);
+    AssertNotNull('lang0 pid', VPerson.Languages[0]);
+    AssertEquals('lang0 oid', 3, VPerson.Languages[0]._PID.OID.AsInteger);
+    AssertEquals('lang0 name', 'spanish', VPerson.Languages[0].Name);
+    AssertNotNull('lang1 pid', VPerson.Languages[1]);
+    AssertEquals('lang1 oid', 8, VPerson.Languages[1]._PID.OID.AsInteger);
+    AssertEquals('lang1 name', 'german', VPerson.Languages[1].Name);
   finally
     FreeAndNil(VPerson);
   end;
@@ -933,7 +1038,8 @@ begin
   VPerson.Age := Driver.ReadInteger;
   if not Driver.ReadNull then
     VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
-  VPerson.Phones := TTestPhoneList(Mapper.RetrieveOwnedListPID(TTestPhone, VPerson._PID));
+  VPerson.Phones := TTestPhoneList(Mapper.RetrieveListPID(TTestPhone, VPerson._PID));
+  VPerson.Languages := TTestLanguageList(Mapper.RetrieveListPID(TTestLanguage, VPerson._PID));
 end;
 
 procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
@@ -1013,9 +1119,13 @@ begin
   Result := CSQLINSERTPHONE;
 end;
 
-function TTestPhoneSQLMapping.GenerateSelectOwnedListStatement(const AClass: TClass): string;
+function TTestPhoneSQLMapping.GenerateSelectListFromStatement(
+  const AClass, AOwnerClass: TClass): string;
 begin
-  Result := CSQLSELECTOWNEDPHONES;
+  if AOwnerClass = TTestPerson then
+    Result := CSQLSELECTOWNEDPHONES
+  else
+    Result := inherited GenerateSelectListFromStatement(AClass, AOwnerClass);
 end;
 
 function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
@@ -1031,7 +1141,7 @@ begin
   VPhone.Number := Driver.ReadString;
 end;
 
-function TTestPhoneSQLMapping.ReadOwnedOIDFromDriver: TJCoreOPFOID;
+function TTestPhoneSQLMapping.ReadOIDFromDriver: TJCoreOPFOID;
 begin
   Result := TJCoreOPFIntegerOID.Create(Driver.ReadInteger);
 end;
@@ -1074,6 +1184,15 @@ function TTestLanguageSQLMapping.GenerateInsertStatement(
   const APID: IJCoreOPFPID): string;
 begin
   Result := CSQLINSERTLANG;
+end;
+
+function TTestLanguageSQLMapping.GenerateSelectListFromStatement(
+  const AClass, AOwnerClass: TClass): string;
+begin
+  if AOwnerClass = TTestPerson then
+    Result := CSQLSELECTPERSON_LANG
+  else
+    Result := inherited GenerateSelectListFromStatement(AClass, AOwnerClass);
 end;
 
 function TTestLanguageSQLMapping.GenerateUpdateStatement(

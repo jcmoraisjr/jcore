@@ -88,7 +88,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="12">
+    <Exceptions Count="13">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -125,6 +125,9 @@
       <Item12>
         <Name Value="EJCoreOPFMappingNotFound"/>
       </Item12>
+      <Item13>
+        <Name Value="EJCoreOPFUnsupportedListOperations"/>
+      </Item13>
     </Exceptions>
   </Debugging>
 </CONFIG>
