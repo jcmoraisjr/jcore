@@ -50,9 +50,9 @@ type
     procedure Commit;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure StorePID(const APID: IJCoreOPFPID);
     procedure StoreSharedListPID(const AListBaseClass: TClass; const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
+    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
   public
@@ -128,18 +128,6 @@ begin
   Result := AcquireMapping(AClass).RetrieveList(AClass, AOwner);
 end;
 
-procedure TJCoreOPFSession.StoreToDriver(const AClass: TClass;
-  const AEntity: TObject; const ADriver: TJCoreOPFDriver);
-var
-  VMapping: TJCoreOPFMapping;
-begin
-  if Assigned(AEntity) then
-    VMapping := AcquireMapping(AEntity.ClassType)
-  else
-    VMapping := AcquireMapping(AClass);
-  VMapping.StoreToDriver(AClass, AEntity, ADriver);
-end;
-
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);
 begin
   AcquireMapping(APID.Entity.ClassType).Store(APID);
@@ -150,6 +138,18 @@ procedure TJCoreOPFSession.StoreSharedListPID(const AListBaseClass: TClass;
 begin
   if Assigned(APIDArray) then
     AcquireMapping(AListBaseClass).StoreSharedList(APID, APIDArray);
+end;
+
+procedure TJCoreOPFSession.StoreToDriver(const AClass: TClass;
+  const AEntity: TObject; const ADriver: TJCoreOPFDriver);
+var
+  VMapping: TJCoreOPFMapping;
+begin
+  if Assigned(AEntity) then
+    VMapping := AcquireMapping(AEntity.ClassType)
+  else
+    VMapping := AcquireMapping(AClass);
+  VMapping.StoreToDriver(AClass, AEntity, ADriver);
 end;
 
 constructor TJCoreOPFSession.Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);

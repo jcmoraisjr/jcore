@@ -58,8 +58,8 @@ type
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveFromString(const AClass: TClass; const AStringOID: string): TObject;
     function RetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure Store(const APID: IJCoreOPFPID);
+    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure StoreSharedList(const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
   end;
 
@@ -156,6 +156,11 @@ begin
   Result := InternalRetrieveList(AClass, AOwner);
 end;
 
+procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
+begin
+  InternalStore(APID);
+end;
+
 procedure TJCoreOPFMapping.StoreToDriver(const AClass: TClass;
   const AEntity: TObject; const ADriver: TJCoreOPFDriver);
 var
@@ -168,11 +173,6 @@ begin
     VPID.OID.WriteToDriver(ADriver);
   end else
     WriteNullOIDToDriver(AClass);
-end;
-
-procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
-begin
-  InternalStore(APID);
 end;
 
 procedure TJCoreOPFMapping.StoreSharedList(const APID: IJCoreOPFPID;
