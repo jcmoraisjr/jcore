@@ -28,9 +28,9 @@ type
 
   IJCoreOPFMapper = interface
     function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
-    function Retrieve(const AClass: TClass; const AOID: string): TObject;
+    function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
-    procedure Store(const AEntity: TObject);
+    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure StorePID(const APID: IJCoreOPFPID);
     procedure StoreSharedListPID(const AListBaseClass: TClass; const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
   end;
@@ -42,7 +42,11 @@ type
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
   protected
-    function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; virtual; abstract;
+    procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
+  protected
+    function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
+    function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID; virtual; abstract;
+    function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; virtual; abstract;
     function InternalRetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList; virtual; abstract;
     procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
     procedure InternalStoreSharedList(const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); virtual; abstract;
@@ -51,8 +55,10 @@ type
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); virtual;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
-    function Retrieve(const AClass: TClass; const AOID: string): TObject;
+    function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
+    function RetrieveFromString(const AClass: TClass; const AStringOID: string): TObject;
     function RetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
+    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure Store(const APID: IJCoreOPFPID);
     procedure StoreSharedList(const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
   end;
@@ -71,7 +77,6 @@ type
     FSQLDriver: TJCoreOPFSQLDriver;
   protected
     function CreateEntity(const AClass: TClass): TObject; virtual;
-    function CreateOID(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; virtual;
     function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; virtual;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
@@ -79,13 +84,12 @@ type
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual;
-    function ReadOIDFromDriver: TJCoreOPFOID; virtual;
     procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteSharedListItemToDriver(const AOwnerPID, ASharedPID: IJCoreOPFPID); virtual;
   protected
     function CreatePIDArray(const AList: TFPSList): TJCoreOPFPIDArray;
-    function InternalRetrieve(const AClass: TClass; const AOID: string): TObject; override;
+    function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; override;
     function InternalRetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
     procedure StoreOwnedObjectList(const AOwner: IJCoreOPFPID; const AList: TFPSList);
@@ -103,6 +107,12 @@ uses
 
 { TJCoreOPFMapping }
 
+procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
+begin
+  { TODO : Evaluate after attr metadata implementation }
+  Driver.WriteNull;
+end;
+
 constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver);
 begin
   if not Assigned(ADriver) or not Assigned(AMapper) then
@@ -112,15 +122,52 @@ begin
   FDriver := ADriver;
 end;
 
-function TJCoreOPFMapping.Retrieve(const AClass: TClass; const AOID: string): TObject;
+function TJCoreOPFMapping.RetrieveFromDriver(const AClass: TClass;
+  const ADriverOID: TJCoreOPFDriver): TObject;
+var
+  VOID: TJCoreOPFOID;
 begin
-  Result := InternalRetrieve(AClass, AOID);
+  VOID := CreateOIDFromDriver(ADriverOID);
+  try
+    Result := InternalRetrieve(AClass, VOID);
+  except
+    FreeAndNil(VOID);
+    raise;
+  end;
+end;
+
+function TJCoreOPFMapping.RetrieveFromString(const AClass: TClass;
+  const AStringOID: string): TObject;
+var
+  VOID: TJCoreOPFOID;
+begin
+  VOID := CreateOIDFromString(AStringOID);
+  try
+    Result := InternalRetrieve(AClass, VOID);
+  except
+    FreeAndNil(VOID);
+    raise;
+  end;
 end;
 
 function TJCoreOPFMapping.RetrieveList(const AClass: TClass;
   const AOwner: IJCoreOPFPID): TJCoreObjectList;
 begin
   Result := InternalRetrieveList(AClass, AOwner);
+end;
+
+procedure TJCoreOPFMapping.StoreToDriver(const AClass: TClass;
+  const AEntity: TObject; const ADriver: TJCoreOPFDriver);
+var
+  VPID: IJCoreOPFPID;
+begin
+  if Assigned(AEntity) then
+  begin
+    VPID := Mapper.AcquirePID(AEntity);
+    Store(VPID);
+    VPID.OID.WriteToDriver(ADriver);
+  end else
+    WriteNullOIDToDriver(AClass);
 end;
 
 procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
@@ -163,11 +210,6 @@ procedure TJCoreOPFSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
 begin
 end;
 
-function TJCoreOPFSQLMapping.ReadOIDFromDriver: TJCoreOPFOID;
-begin
-  raise EJCoreOPFUnsupportedListOperations.Create;
-end;
-
 procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
 begin
 end;
@@ -202,26 +244,20 @@ begin
 end;
 
 function TJCoreOPFSQLMapping.InternalRetrieve(const AClass: TClass;
-  const AOID: string): TObject;
+  const AOID: TJCoreOPFOID): TObject;
 var
-  VOID: TJCoreOPFOID;
   VPID: IJCoreOPFPID;
 begin
-  VOID := CreateOID(AOID);
+  AOID.WriteToDriver(Driver);
+  Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
+  Result := CreateEntity(AClass);
   try
-    VOID.WriteToDriver(Driver);
-    Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
-    Result := CreateEntity(AClass);
-    try
-      VPID := Mapper.AcquirePID(Result);
-      VPID.AssignOID(VOID);
-      ReadFromDriver(VPID);
-    except
-      FreeAndNil(Result);
-      raise;
-    end;
+    VPID := Mapper.AcquirePID(Result);
+    { TODO : Two owners for the same OID if an exception raises }
+    VPID.AssignOID(AOID);
+    ReadFromDriver(VPID);
   except
-    FreeAndNil(VOID);
+    FreeAndNil(Result);
     raise;
   end;
 end;
@@ -240,7 +276,7 @@ begin
   try
     for I := 1 to VCount do
     begin
-      VOID := ReadOIDFromDriver;
+      VOID := CreateOIDFromDriver(Driver);
       try
         Result.Add(CreateEntity(AClass));
         VPID := Mapper.AcquirePID(Result.Last);
@@ -267,7 +303,7 @@ begin
     WriteExternalsToDriver(APID);
   end else
   begin
-    APID.AssignOID(CreateOID(''));
+    APID.AssignOID(CreateOIDFromString(''));
     APID.OID.WriteToDriver(Driver);
     WriteInternalsToDriver(APID);
     Driver.ExecSQL(GenerateInsertStatement(APID));

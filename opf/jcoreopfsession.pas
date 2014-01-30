@@ -48,7 +48,9 @@ type
     procedure AddInTransactionPID(const APID: IJCoreOPFPID);
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit;
+    function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
+    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure StorePID(const APID: IJCoreOPFPID);
     procedure StoreSharedListPID(const AListBaseClass: TClass; const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
     property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
@@ -114,10 +116,28 @@ begin
   InTransactionPIDList.Clear;
 end;
 
+function TJCoreOPFSession.RetrieveFromDriver(const AClass: TClass;
+  const ADriverOID: TJCoreOPFDriver): TObject;
+begin
+  Result := AcquireMapping(AClass).RetrieveFromDriver(AClass, ADriverOID);
+end;
+
 function TJCoreOPFSession.RetrieveListPID(const AClass: TClass;
   const AOwner: IJCoreOPFPID): TJCoreObjectList;
 begin
   Result := AcquireMapping(AClass).RetrieveList(AClass, AOwner);
+end;
+
+procedure TJCoreOPFSession.StoreToDriver(const AClass: TClass;
+  const AEntity: TObject; const ADriver: TJCoreOPFDriver);
+var
+  VMapping: TJCoreOPFMapping;
+begin
+  if Assigned(AEntity) then
+    VMapping := AcquireMapping(AEntity.ClassType)
+  else
+    VMapping := AcquireMapping(AClass);
+  VMapping.StoreToDriver(AClass, AEntity, ADriver);
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);
@@ -172,7 +192,7 @@ end;
 
 function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;
 begin
-  Result := AcquireMapping(AClass).Retrieve(AClass, AOID);
+  Result := AcquireMapping(AClass).RetrieveFromString(AClass, AOID);
   Commit;
 end;
 

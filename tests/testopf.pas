@@ -181,7 +181,8 @@ type
   private
     class var FCurrentOID: Integer;
   protected
-    function CreateOID(const AOID: string): TJCoreOPFOID; override;
+    function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID; override;
+    function CreateOIDFromString(const AOID: string): TJCoreOPFOID; override;
     function GenerateOID: Integer;
   public
     class procedure ClearOID;
@@ -222,7 +223,6 @@ type
     function GenerateSelectListFromStatement(const AClass, AOwnerClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
-    function ReadOIDFromDriver: TJCoreOPFOID; override;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
@@ -652,7 +652,6 @@ end;
 procedure TTestOPFUpdateManualMapping.PersonNoLanguagesChange;
 var
   VPerson: TTestPerson;
-  i: Integer;
 begin
   VPerson := TTestPerson.Create;
   try
@@ -829,7 +828,6 @@ end;
 procedure TTestOPFSelectManualMapping.PersonLanguages;
 var
   VPerson: TTestPerson;
-  i: Integer;
 begin
   exit;
   // person
@@ -990,7 +988,13 @@ end;
 
 { TTestAbstractSQLMapping }
 
-function TTestAbstractSQLMapping.CreateOID(const AOID: string): TJCoreOPFOID;
+function TTestAbstractSQLMapping.CreateOIDFromDriver(
+  const ADriver: TJCoreOPFDriver): TJCoreOPFOID;
+begin
+  Result := TJCoreOPFIntegerOID.Create(ADriver.ReadInteger);
+end;
+
+function TTestAbstractSQLMapping.CreateOIDFromString(const AOID: string): TJCoreOPFOID;
 var
   VOID: Integer;
 begin
@@ -1037,7 +1041,7 @@ begin
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
   if not Driver.ReadNull then
-    VPerson.City := Mapper.Retrieve(TTestCity, IntToStr(Driver.ReadInteger)) as TTestCity;
+    VPerson.City := Mapper.RetrieveFromDriver(TTestCity, Driver) as TTestCity;
   VPerson.Phones := TTestPhoneList(Mapper.RetrieveListPID(TTestPhone, VPerson._PID));
   VPerson.Languages := TTestLanguageList(Mapper.RetrieveListPID(TTestLanguage, VPerson._PID));
 end;
@@ -1058,15 +1062,7 @@ begin
   VPerson := APID.Entity as TTestPerson;
   Driver.WriteString(VPerson.Name);
   Driver.WriteInteger(VPerson.Age);
-  if Assigned(VPerson.City) then
-  begin
-    Mapper.Store(VPerson.City);
-    VPerson.City._PID.OID.WriteToDriver(Driver);
-  end else
-  begin
-    { TODO : Need as much calls as the size of the FK }
-    Driver.WriteNull;
-  end;
+  Mapper.StoreToDriver(TTestCity, VPerson.City, Driver);
 end;
 
 class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
@@ -1139,11 +1135,6 @@ var
 begin
   VPhone := APID.Entity as TTestPhone;
   VPhone.Number := Driver.ReadString;
-end;
-
-function TTestPhoneSQLMapping.ReadOIDFromDriver: TJCoreOPFOID;
-begin
-  Result := TJCoreOPFIntegerOID.Create(Driver.ReadInteger);
 end;
 
 procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);

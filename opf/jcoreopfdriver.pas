@@ -71,6 +71,7 @@ type
     constructor Create; virtual;
     procedure WriteString(const AValue: string); virtual; abstract;
     procedure WriteInteger(const AValue: Integer); virtual; abstract;
+    procedure WriteNull; virtual; abstract;
     class function DriverName: string; virtual; abstract;
     function ReadInteger: Integer; virtual; abstract;
     function ReadNull: Boolean; virtual; abstract;
@@ -91,7 +92,6 @@ type
     class property LOGSQL: IJCoreLogger read FLOGSQL;
   public
     constructor Create; override;
-    procedure WriteNull; virtual; abstract;
     function ExecSQL(const ASQL: string): Integer;
     procedure ExecSQL(const ASQL: string; const AExpectedSize: Integer);
   end;
