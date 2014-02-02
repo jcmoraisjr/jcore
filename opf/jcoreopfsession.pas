@@ -51,7 +51,7 @@ type
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
     procedure StorePID(const APID: IJCoreOPFPID);
-    procedure StoreSharedListPID(const AListBaseClass: TClass; const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
+    procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
@@ -135,11 +135,12 @@ begin
   AcquireMapping(APID.Entity.ClassType).Store(APID);
 end;
 
-procedure TJCoreOPFSession.StoreSharedListPID(const AListBaseClass: TClass;
-  const APID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray);
+procedure TJCoreOPFSession.StoreListPID(const AListBaseClass: TClass;
+  const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray;
+  const ALinkType: TJCoreOPFLinkType);
 begin
   if Assigned(APIDArray) then
-    AcquireMapping(AListBaseClass).StoreSharedList(APID, APIDArray);
+    AcquireMapping(AListBaseClass).StoreList(AOwnerPID, APIDArray, ALinkType);
 end;
 
 procedure TJCoreOPFSession.StoreToDriver(const AClass: TClass;

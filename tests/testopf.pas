@@ -1051,8 +1051,8 @@ var
   VPerson: TTestPerson;
 begin
   VPerson := APID.Entity as TTestPerson;
-  StoreOwnedObjectList(VPerson._PID, VPerson.Phones);
-  Mapper.StoreSharedListPID(TTestLanguage, VPerson._PID, CreatePIDArray(VPerson.Languages));
+  Mapper.StoreListPID(TTestPhone, VPerson._PID, CreatePIDArray(VPerson.Phones), jltEmbedded);
+  Mapper.StoreListPID(TTestLanguage, VPerson._PID, CreatePIDArray(VPerson.Languages), jltExternal);
 end;
 
 procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
