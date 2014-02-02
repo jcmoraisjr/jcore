@@ -59,6 +59,8 @@ type
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
     function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
+    procedure Dispose(const AEntity: TObject);
+    procedure Dispose(const AClass: TClass; const AOID: string);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
@@ -188,6 +190,16 @@ begin
   { TODO : Check duplications and avoid useless calls }
   if AAddToInTransactionPIDList then
     AddInTransactionPID(Result);
+end;
+
+procedure TJCoreOPFSession.Dispose(const AEntity: TObject);
+begin
+  AcquireMapping(AEntity.ClassType).Dispose(AcquirePID(AEntity));
+end;
+
+procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AOID: string);
+begin
+  AcquireMapping(AClass).DisposeFromString(AClass, AOID);
 end;
 
 function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;
