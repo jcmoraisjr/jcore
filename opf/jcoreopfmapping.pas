@@ -305,9 +305,13 @@ begin
   Result := CreateEntity(AClass);
   try
     VPID := Mapper.AcquirePID(Result);
-    { TODO : Two owners for the same OID if an exception raises }
-    VPID.AssignOID(AOID);
-    ReadFromDriver(VPID);
+    try
+      VPID.AssignOID(AOID);
+      ReadFromDriver(VPID);
+    except
+      VPID.ReleaseOID(AOID);
+      raise;
+    end;
   except
     FreeAndNil(Result);
     raise;
@@ -332,8 +336,13 @@ begin
       try
         Result.Add(CreateEntity(AClass));
         VPID := Mapper.AcquirePID(Result.Last);
-        VPID.AssignOID(VOID);
-        ReadFromDriver(VPID);
+        try
+          VPID.AssignOID(VOID);
+          ReadFromDriver(VPID);
+        except
+          VPID.ReleaseOID(VOID);
+          raise;
+        end;
       except
         FreeAndNil(VOID);
         raise;

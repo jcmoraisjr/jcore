@@ -50,6 +50,7 @@ type
     function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
     function GetOwner: IJCoreOPFPID;
+    procedure ReleaseOID(const AOID: TJCoreOPFOID);
     procedure SetOwner(const AValue: IJCoreOPFPID);
     property Entity: TObject read GetEntity;
     property IsPersistent: Boolean read GetIsPersistent;

@@ -44,6 +44,7 @@ type
     destructor Destroy; override;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
+    procedure ReleaseOID(const AOID: TJCoreOPFOID);
     property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
@@ -117,6 +118,15 @@ end;
 procedure TJCoreOPFPID.Commit;
 begin
   FIsPersistent := Assigned(OID);
+end;
+
+procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
+begin
+  { TODO : Used to release the OID if an exception raises just after the OID
+           was assigned. A refcounted object (intf or a jcore managed obj) is
+           a better approach }
+  if FOID = AOID then
+    FOID := nil;
 end;
 
 end.
