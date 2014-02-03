@@ -31,7 +31,7 @@ type
   IJCoreOPFMapper = interface
     function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
-    function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
+    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     procedure StorePID(const APID: IJCoreOPFPID);
     procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
@@ -50,7 +50,7 @@ type
     function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID; virtual; abstract;
     procedure InternalDispose(const AClass: TClass; const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; virtual; abstract;
-    function InternalRetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList; virtual; abstract;
+    function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList; virtual; abstract;
     procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
     procedure InternalStoreOwnedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); virtual; abstract;
     procedure InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); virtual; abstract;
@@ -63,7 +63,7 @@ type
     procedure DisposeFromString(const AClass: TClass; const AOID: string);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveFromString(const AClass: TClass; const AStringOID: string): TObject;
-    function RetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
+    function RetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
     procedure Store(const APID: IJCoreOPFPID);
     procedure StoreList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
@@ -86,7 +86,7 @@ type
     function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; virtual;
     function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; virtual;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
-    function GenerateSelectListFromStatement(const AClass, AOwnerClass: TClass): string; virtual;
+    function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; virtual;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual;
@@ -98,7 +98,7 @@ type
     function CreatePIDArray(const AList: TFPSList): TJCoreOPFPIDArray;
     procedure InternalDispose(const AClass: TClass; const AOIDArray: array of TJCoreOPFOID); override;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; override;
-    function InternalRetrieveList(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList; override;
+    function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
     procedure InternalStoreOwnedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); override;
     procedure InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); override;
@@ -176,10 +176,10 @@ begin
   end;
 end;
 
-function TJCoreOPFMapping.RetrieveList(const AClass: TClass;
-  const AOwner: IJCoreOPFPID): TJCoreObjectList;
+function TJCoreOPFMapping.RetrieveList(const AListBaseClass: TClass;
+  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
 begin
-  Result := InternalRetrieveList(AClass, AOwner);
+  Result := InternalRetrieveList(AListBaseClass, AOwnerPID);
 end;
 
 procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
@@ -223,14 +223,14 @@ begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
 
-function TJCoreOPFSQLMapping.GenerateInsertSharedItemStatement(const AOwnerPID,
-  ASharedPID: IJCoreOPFPID): string;
+function TJCoreOPFSQLMapping.GenerateInsertSharedItemStatement(
+  const AOwnerPID, ASharedPID: IJCoreOPFPID): string;
 begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
 
 function TJCoreOPFSQLMapping.GenerateSelectListFromStatement(
-  const AClass, AOwnerClass: TClass): string;
+  const AListBaseClass: TClass): string;
 begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
@@ -318,23 +318,23 @@ begin
   end;
 end;
 
-function TJCoreOPFSQLMapping.InternalRetrieveList(const AClass: TClass;
-  const AOwner: IJCoreOPFPID): TJCoreObjectList;
+function TJCoreOPFSQLMapping.InternalRetrieveList(const AListBaseClass: TClass;
+  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
 var
   VPID: IJCoreOPFPID;
   VOID: TJCoreOPFOID;
   VCount: Integer;
   I: Integer;
 begin
-  AOwner.OID.WriteToDriver(Driver);
-  VCount := Driver.ExecSQL(GenerateSelectListFromStatement(AClass, AOwner.Entity.ClassType));
+  AOwnerPID.OID.WriteToDriver(Driver);
+  VCount := Driver.ExecSQL(GenerateSelectListFromStatement(AListBaseClass));
   Result := TJCoreObjectList.Create(True);
   try
     for I := 1 to VCount do
     begin
       VOID := CreateOIDFromDriver(Driver);
       try
-        Result.Add(CreateEntity(AClass));
+        Result.Add(CreateEntity(AListBaseClass));
         VPID := Mapper.AcquirePID(Result.Last);
         try
           VPID.AssignOID(VOID);

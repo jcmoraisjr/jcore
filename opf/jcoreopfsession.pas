@@ -49,7 +49,7 @@ type
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
-    function RetrieveListPID(const AClass: TClass; const AOwner: IJCoreOPFPID): TJCoreObjectList;
+    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
     procedure StorePID(const APID: IJCoreOPFPID);
     procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
@@ -124,10 +124,10 @@ begin
   Result := AcquireMapping(AClass).RetrieveFromDriver(AClass, ADriverOID);
 end;
 
-function TJCoreOPFSession.RetrieveListPID(const AClass: TClass;
-  const AOwner: IJCoreOPFPID): TJCoreObjectList;
+function TJCoreOPFSession.RetrieveListPID(const AListBaseClass: TClass;
+  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
 begin
-  Result := AcquireMapping(AClass).RetrieveList(AClass, AOwner);
+  Result := AcquireMapping(AListBaseClass).RetrieveList(AListBaseClass, AOwnerPID);
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);

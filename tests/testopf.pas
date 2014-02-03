@@ -220,7 +220,7 @@ type
   TTestPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
-    function GenerateSelectListFromStatement(const AClass, AOwnerClass: TClass): string; override;
+    function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
@@ -235,7 +235,7 @@ type
     function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; override;
     function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; override;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
-    function GenerateSelectListFromStatement(const AClass, AOwnerClass: TClass): string; override;
+    function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
@@ -1116,12 +1116,12 @@ begin
 end;
 
 function TTestPhoneSQLMapping.GenerateSelectListFromStatement(
-  const AClass, AOwnerClass: TClass): string;
+  const AListBaseClass: TClass): string;
 begin
-  if AOwnerClass = TTestPerson then
+  if AListBaseClass = TTestPhone then
     Result := CSQLSELECTOWNEDPHONES
   else
-    Result := inherited GenerateSelectListFromStatement(AClass, AOwnerClass);
+    Result := inherited GenerateSelectListFromStatement(AListBaseClass);
 end;
 
 function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
@@ -1178,12 +1178,12 @@ begin
 end;
 
 function TTestLanguageSQLMapping.GenerateSelectListFromStatement(
-  const AClass, AOwnerClass: TClass): string;
+  const AListBaseClass: TClass): string;
 begin
-  if AOwnerClass = TTestPerson then
+  if AListBaseClass = TTestLanguage then
     Result := CSQLSELECTPERSON_LANG
   else
-    Result := inherited GenerateSelectListFromStatement(AClass, AOwnerClass);
+    Result := inherited GenerateSelectListFromStatement(AListBaseClass);
 end;
 
 function TTestLanguageSQLMapping.GenerateUpdateStatement(
