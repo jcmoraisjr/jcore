@@ -192,6 +192,8 @@ type
 
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function GenerateDeleteSharedItemStatement(const AListBaseClass: TClass): string; override;
+    function GenerateInsertSharedItemStatement(const AListBaseClass: TClass): string; override;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
@@ -232,8 +234,6 @@ type
 
   TTestLanguageSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; override;
-    function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; override;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
@@ -566,7 +566,8 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Age := 18;
     FSession.Store(VPerson);
-    AssertEquals(5, TTestSQLDriver.Commands.Count);
+    // +2 -- delete from person_lang
+    AssertEquals(5+2, TTestSQLDriver.Commands.Count);
     AssertEquals('WriteString TheName', TTestSQLDriver.Commands[0]);
     AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[1]);
     AssertEquals('WriteNull', TTestSQLDriver.Commands[2]);
@@ -593,7 +594,8 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Phones[1].Number := '987';
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 13, TTestSQLDriver.Commands.Count);
+    // +2 -- delete from person_lang
+    AssertEquals('cmd count', 13+2, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString somename', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
@@ -1018,6 +1020,24 @@ end;
 
 { TTestPersonSQLMapping }
 
+function TTestPersonSQLMapping.GenerateDeleteSharedItemStatement(
+  const AListBaseClass: TClass): string;
+begin
+  if AListBaseClass = TTestLanguage then
+    Result := CSQLDELETEPERSON_LANG
+  else
+    Result := inherited GenerateDeleteSharedItemStatement(AListBaseClass);
+end;
+
+function TTestPersonSQLMapping.GenerateInsertSharedItemStatement(
+  const AListBaseClass: TClass): string;
+begin
+  if AListBaseClass = TTestLanguage then
+    Result := CSQLINSERTPERSON_LANG
+  else
+    Result := inherited GenerateInsertSharedItemStatement(AListBaseClass);
+end;
+
 function TTestPersonSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
 begin
   Result := CSQLINSERTPERSON;
@@ -1042,8 +1062,8 @@ begin
   VPerson.Age := Driver.ReadInteger;
   if not Driver.ReadNull then
     VPerson.City := Mapper.RetrieveFromDriver(TTestCity, Driver) as TTestCity;
-  VPerson.Phones := TTestPhoneList(Mapper.RetrieveListPID(TTestPhone, VPerson._PID));
-  VPerson.Languages := TTestLanguageList(Mapper.RetrieveListPID(TTestLanguage, VPerson._PID));
+  VPerson.Phones := TTestPhoneList(RetrieveListPID(TTestPhone, VPerson._PID));
+  VPerson.Languages := TTestLanguageList(RetrieveListPID(TTestLanguage, VPerson._PID));
 end;
 
 procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
@@ -1051,8 +1071,8 @@ var
   VPerson: TTestPerson;
 begin
   VPerson := APID.Entity as TTestPerson;
-  Mapper.StoreListPID(TTestPhone, VPerson._PID, CreatePIDArray(VPerson.Phones), jltEmbedded);
-  Mapper.StoreListPID(TTestLanguage, VPerson._PID, CreatePIDArray(VPerson.Languages), jltExternal);
+  StoreListPID(TTestPhone, VPerson._PID, CreatePIDArray(VPerson.Phones), jltEmbedded);
+  StoreListPID(TTestLanguage, VPerson._PID, CreatePIDArray(VPerson.Languages), jltExternal);
 end;
 
 procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
@@ -1152,24 +1172,6 @@ begin
 end;
 
 { TTestLanguageSQLMapping }
-
-function TTestLanguageSQLMapping.GenerateDeleteSharedItemStatement(
-  const AOwnerPID: IJCoreOPFPID): string;
-begin
-  if AOwnerPID.Entity.ClassType = TTestPerson then
-    Result := CSQLDELETEPERSON_LANG
-  else
-    Result := inherited GenerateDeleteSharedItemStatement(AOwnerPID);
-end;
-
-function TTestLanguageSQLMapping.GenerateInsertSharedItemStatement(
-  const AOwnerPID, ASharedPID: IJCoreOPFPID): string;
-begin
-  if AOwnerPID.Entity.ClassType = TTestPerson then
-    Result := CSQLINSERTPERSON_LANG
-  else
-    Result := inherited GenerateInsertSharedItemStatement(AOwnerPID, ASharedPID);
-end;
 
 function TTestLanguageSQLMapping.GenerateInsertStatement(
   const APID: IJCoreOPFPID): string;

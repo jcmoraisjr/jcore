@@ -83,8 +83,8 @@ type
     FSQLDriver: TJCoreOPFSQLDriver;
   protected
     function CreateEntity(const AClass: TClass): TObject; virtual;
-    function GenerateDeleteSharedItemStatement(const AOwnerPID: IJCoreOPFPID): string; virtual;
-    function GenerateInsertSharedItemStatement(const AOwnerPID, ASharedPID: IJCoreOPFPID): string; virtual;
+    function GenerateDeleteSharedItemStatement(const AListBaseClass: TClass): string; virtual;
+    function GenerateInsertSharedItemStatement(const AListBaseClass: TClass): string; virtual;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; virtual;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
@@ -92,7 +92,7 @@ type
     procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
-    procedure WriteSharedListItemToDriver(const AOwnerPID, ASharedPID: IJCoreOPFPID); virtual;
+    procedure WriteSharedListItemToDriver(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const ASharedPIDArray: TJCoreOPFPIDArray); virtual;
   protected
     function BuildParams(const ASize: Integer): string;
     function CreatePIDArray(const AList: TFPSList): TJCoreOPFPIDArray;
@@ -102,6 +102,9 @@ type
     procedure InternalStore(const APID: IJCoreOPFPID); override;
     procedure InternalStoreOwnedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); override;
     procedure InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); override;
+  protected
+    function RetrieveListPID(const AListBaseClass: TClass; AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+    procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); override;
@@ -218,13 +221,13 @@ begin
 end;
 
 function TJCoreOPFSQLMapping.GenerateDeleteSharedItemStatement(
-  const AOwnerPID: IJCoreOPFPID): string;
+  const AListBaseClass: TClass): string;
 begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
 
 function TJCoreOPFSQLMapping.GenerateInsertSharedItemStatement(
-  const AOwnerPID, ASharedPID: IJCoreOPFPID): string;
+  const AListBaseClass: TClass): string;
 begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
@@ -247,12 +250,20 @@ procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
 begin
 end;
 
-procedure TJCoreOPFSQLMapping.WriteSharedListItemToDriver(const AOwnerPID,
-  ASharedPID: IJCoreOPFPID);
+procedure TJCoreOPFSQLMapping.WriteSharedListItemToDriver(
+  const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID;
+  const ASharedPIDArray: TJCoreOPFPIDArray);
+var
+  VInsertStatement: string;
+  I: Integer;
 begin
-  AOwnerPID.OID.WriteToDriver(Driver);
-  ASharedPID.OID.WriteToDriver(Driver);
-  Driver.ExecSQL(GenerateInsertSharedItemStatement(AOwnerPID, ASharedPID));
+  VInsertStatement := GenerateInsertSharedItemStatement(AListBaseClass);
+  for I := Low(ASharedPIDArray) to High(ASharedPIDArray) do
+  begin
+    AOwnerPID.OID.WriteToDriver(Driver);
+    ASharedPIDArray[I].OID.WriteToDriver(Driver);
+    Driver.ExecSQL(VInsertStatement);
+  end;
 end;
 
 function TJCoreOPFSQLMapping.BuildParams(const ASize: Integer): string;
@@ -392,12 +403,6 @@ procedure TJCoreOPFSQLMapping.InternalStoreSharedList(const AOwnerPID: IJCoreOPF
 var
   I: Integer;
 begin
-  if AOwnerPID.IsPersistent then
-  begin
-    { TODO : Implement change analyzer }
-    AOwnerPID.OID.WriteToDriver(Driver);
-    Driver.ExecSQL(GenerateDeleteSharedItemStatement(AOwnerPID));
-  end;
   for I := Low(APIDArray) to High(APIDArray) do
     if not APIDArray[I].IsPersistent then
     begin
@@ -406,8 +411,29 @@ begin
       else
         Mapper.StorePID(APIDArray[I]);
     end;
-  for I := Low(APIDArray) to High(APIDArray) do
-    WriteSharedListItemToDriver(AOwnerPID, APIDArray[I]);
+end;
+
+function TJCoreOPFSQLMapping.RetrieveListPID(const AListBaseClass: TClass;
+  AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+begin
+  Result := Mapper.RetrieveListPID(AListBaseClass, AOwnerPID);
+end;
+
+procedure TJCoreOPFSQLMapping.StoreListPID(const AListBaseClass: TClass;
+  const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray;
+  const ALinkType: TJCoreOPFLinkType);
+var
+  I: Integer;
+begin
+  if (ALinkType = jltExternal) and AOwnerPID.IsPersistent then
+  begin
+    { TODO : Implement change analyzer }
+    AOwnerPID.OID.WriteToDriver(Driver);
+    Driver.ExecSQL(GenerateDeleteSharedItemStatement(AListBaseClass));
+  end;
+  Mapper.StoreListPID(AListBaseClass, AOwnerPID, APIDArray, ALinkType);
+  if ALinkType = jltExternal then
+    WriteSharedListItemToDriver(AListBaseClass, AOwnerPID, APIDArray);
 end;
 
 constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver);
