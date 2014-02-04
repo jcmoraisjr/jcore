@@ -831,7 +831,6 @@ procedure TTestOPFSelectManualMapping.PersonLanguages;
 var
   VPerson: TTestPerson;
 begin
-  exit;
   // person
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('personname');
