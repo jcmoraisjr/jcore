@@ -138,12 +138,14 @@ type
     FPhones: TTestPhoneList;
     FCity: TTestCity;
     FLanguages: TTestLanguageList;
+    function GetPhones: TTestPhoneList;
+    procedure SetPhones(AValue: TTestPhoneList);
   public
     destructor Destroy; override;
   published
     property Name: string read FName write FName;
     property Age: Integer read FAge write FAge;
-    property Phones: TTestPhoneList read FPhones write FPhones;
+    property Phones: TTestPhoneList read GetPhones write SetPhones;
     property City: TTestCity read FCity write FCity;
     property Languages: TTestLanguageList read FLanguages write FLanguages;
   end;
@@ -461,7 +463,6 @@ begin
   try
     VPerson.Name := 'thename';
     VPerson.Age := 10;
-    VPerson.Phones := TTestPhoneList.Create(True);
     VPerson.Phones.Add(TTestPhone.Create);
     VPerson.Phones[0].Number := '636-3626';
     VPerson.Phones.Add(TTestPhone.Create);
@@ -585,7 +586,6 @@ begin
   VPerson := TTestPerson.Create;
   try
     VPerson.Name := 'somename';
-    VPerson.Phones := TTestPhoneList.Create(True);
     VPerson.Phones.Add(TTestPhone.Create);
     VPerson.Phones.Add(TTestPhone.Create);
     VPerson.Phones[0].Number := '123';
@@ -887,6 +887,19 @@ begin
 end;
 
 { TTestPerson }
+
+function TTestPerson.GetPhones: TTestPhoneList;
+begin
+  if not Assigned(FPhones) then
+    FPhones := TTestPhoneList.Create;
+  Result := FPhones;
+end;
+
+procedure TTestPerson.SetPhones(AValue: TTestPhoneList);
+begin
+  FreeAndNil(FPhones);
+  FPhones := AValue;
+end;
 
 destructor TTestPerson.Destroy;
 begin
