@@ -29,7 +29,7 @@ type
   { IJCoreOPFMapper }
 
   IJCoreOPFMapper = interface
-    function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
+    procedure AddInTransactionPID(const APID: IJCoreOPFPID);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
@@ -58,6 +58,7 @@ type
     property Mapper: IJCoreOPFMapper read FMapper;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); virtual;
+    function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
     procedure Dispose(const APID: IJCoreOPFPID);
     procedure DisposeFromString(const AClass: TClass; const AOID: string);
@@ -113,8 +114,11 @@ type
 implementation
 
 uses
+  typinfo,
   sysutils,
-  JCoreOPFException;
+  JCoreOPFConsts,
+  JCoreOPFException,
+  JCoreOPFPID;
 
 { TJCoreOPFMapping }
 
@@ -131,6 +135,28 @@ begin
   inherited Create;
   FMapper := AMapper;
   FDriver := ADriver;
+end;
+
+function TJCoreOPFMapping.AcquirePID(AEntity: TObject;
+  const AAddToInTransactionPIDList: Boolean): IJCoreOPFPID;
+var
+  VPropInfo: PPropInfo;
+begin
+  { TODO : User defined PID class }
+  if not Assigned(AEntity) then
+    raise EJCoreNilPointerException.Create;
+  VPropInfo := GetPropInfo(AEntity, SPID);
+  if not Assigned(VPropInfo) then
+    raise EJCoreOPFPersistentIDFieldNotFound.Create(AEntity.ClassName);
+  Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
+  if not Assigned(Result) then
+  begin
+    Result := TJCoreOPFPID.Create(AEntity);
+    SetInterfaceProp(AEntity, VPropInfo, Result);
+  end;
+  { TODO : Check duplications and avoid useless calls }
+  if AAddToInTransactionPIDList then
+    Mapper.AddInTransactionPID(Result);
 end;
 
 procedure TJCoreOPFMapping.Dispose(const APID: IJCoreOPFPID);
@@ -206,7 +232,7 @@ var
 begin
   if Assigned(AEntity) then
   begin
-    VPID := Mapper.AcquirePID(AEntity);
+    VPID := AcquirePID(AEntity);
     Store(VPID);
     VPID.OID.WriteToDriver(ADriver);
   end else
@@ -294,7 +320,7 @@ begin
     for I := 0 to Pred(AList.Count) do
     begin
       VEntity := TObject(AList[I]^);
-      Result[I] := Mapper.AcquirePID(VEntity);
+      Result[I] := AcquirePID(VEntity);
     end;
   end else
     Result := nil;
@@ -315,7 +341,7 @@ begin
   Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
   Result := CreateEntity(AClass);
   try
-    VPID := Mapper.AcquirePID(Result);
+    VPID := AcquirePID(Result);
     try
       VPID.AssignOID(AOID);
       ReadFromDriver(VPID);
@@ -346,7 +372,7 @@ begin
       VOID := CreateOIDFromDriver(Driver);
       try
         Result.Add(CreateEntity(AListBaseClass));
-        VPID := Mapper.AcquirePID(Result.Last);
+        VPID := AcquirePID(Result.Last);
         try
           VPID.AssignOID(VOID);
           ReadFromDriver(VPID);
@@ -422,8 +448,6 @@ end;
 procedure TJCoreOPFSQLMapping.StoreListPID(const AListBaseClass: TClass;
   const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray;
   const ALinkType: TJCoreOPFLinkType);
-var
-  I: Integer;
 begin
   if (ALinkType = jltExternal) and AOwnerPID.IsPersistent then
   begin

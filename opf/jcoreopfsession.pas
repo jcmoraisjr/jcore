@@ -58,7 +58,6 @@ type
   public
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
-    function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
     procedure Dispose(const AEntity: TObject);
     procedure Dispose(const AClass: TClass; const AOID: string);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
@@ -69,10 +68,7 @@ implementation
 
 uses
   sysutils,
-  typinfo,
-  JCoreOPFConsts,
-  JCoreOPFException,
-  JCoreOPFPID;
+  JCoreOPFException;
 
 { TJCoreOPFSession }
 
@@ -172,30 +168,12 @@ begin
   inherited Destroy;
 end;
 
-function TJCoreOPFSession.AcquirePID(AEntity: TObject;
-  const AAddToInTransactionPIDList: Boolean): IJCoreOPFPID;
-var
-  VPropInfo: PPropInfo;
-begin
-  if not Assigned(AEntity) then
-    raise EJCoreNilPointerException.Create;
-  VPropInfo := GetPropInfo(AEntity, SPID);
-  if not Assigned(VPropInfo) then
-    raise EJCoreOPFPersistentIDFieldNotFound.Create(AEntity.ClassName);
-  Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
-  if not Assigned(Result) then
-  begin
-    Result := TJCoreOPFPID.Create(AEntity);
-    SetInterfaceProp(AEntity, VPropInfo, Result);
-  end;
-  { TODO : Check duplications and avoid useless calls }
-  if AAddToInTransactionPIDList then
-    AddInTransactionPID(Result);
-end;
-
 procedure TJCoreOPFSession.Dispose(const AEntity: TObject);
+var
+  VMapping: TJCoreOPFMapping;
 begin
-  AcquireMapping(AEntity.ClassType).Dispose(AcquirePID(AEntity));
+  VMapping := AcquireMapping(AEntity.ClassType);
+  VMapping.Dispose(VMapping.AcquirePID(AEntity));
 end;
 
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AOID: string);
@@ -210,9 +188,11 @@ begin
 end;
 
 procedure TJCoreOPFSession.Store(const AEntity: TObject);
+var
+  VMapping: TJCoreOPFMapping;
 begin
-  { TODO : User defined PID class }
-  StorePID(AcquirePID(AEntity));
+  VMapping := AcquireMapping(AEntity.ClassType);
+  VMapping.Store(VMapping.AcquirePID(AEntity));
   Commit;
 end;
 
