@@ -17,10 +17,13 @@ unit JCoreOPFMapping;
 interface
 
 uses
+  typinfo,
   fgl,
   JCoreClasses,
   JCoreOPFDriver,
-  JCoreOPFID;
+  JCoreOPFID,
+  JCoreOPFPID,
+  JCoreOPFEDM;
 
 type
 
@@ -39,11 +42,14 @@ type
 
   { TJCoreOPFMapping }
 
-  TJCoreOPFMapping = class(TObject)
+  TJCoreOPFMapping = class(TObject, IJCoreOPFPIDManager)
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
+    FEDMClassArray: TJCoreOPFEDMClassArray;
   protected
+    function AcquireEDMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFEDMClass;
+    function CreateEDMClassArray: TJCoreOPFEDMClassArray; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
@@ -114,13 +120,31 @@ type
 implementation
 
 uses
-  typinfo,
   sysutils,
   JCoreOPFConsts,
-  JCoreOPFException,
-  JCoreOPFPID;
+  JCoreOPFException;
 
 { TJCoreOPFMapping }
+
+function TJCoreOPFMapping.AcquireEDMClass(
+  const AAttrTypeInfo: PTypeInfo): TJCoreOPFEDMClass;
+begin
+  for Result in FEDMClassArray do
+    if Result.Apply(AAttrTypeInfo) then
+      Exit;
+  raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
+end;
+
+function TJCoreOPFMapping.CreateEDMClassArray: TJCoreOPFEDMClassArray;
+begin
+  { TODO : could be better }
+  SetLength(Result, 5);
+  Result[0] := TJCoreOPFEDMType32;
+  Result[1] := TJCoreOPFEDMType64;
+  Result[2] := TJCoreOPFEDMFloat;
+  Result[3] := TJCoreOPFEDMAnsiString;
+  Result[4] := TJCoreOPFEDMCollection;
+end;
 
 procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
 begin
@@ -135,6 +159,7 @@ begin
   inherited Create;
   FMapper := AMapper;
   FDriver := ADriver;
+  FEDMClassArray := CreateEDMClassArray;
 end;
 
 function TJCoreOPFMapping.AcquirePID(AEntity: TObject;
@@ -151,7 +176,7 @@ begin
   Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
   if not Assigned(Result) then
   begin
-    Result := TJCoreOPFPID.Create(AEntity);
+    Result := TJCoreOPFPID.Create(Self, AEntity);
     SetInterfaceProp(AEntity, VPropInfo, Result);
   end;
   { TODO : Check duplications and avoid useless calls }

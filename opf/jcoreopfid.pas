@@ -50,8 +50,10 @@ type
     function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
     function GetOwner: IJCoreOPFPID;
+    function IsDirty(const AAttributeName: string): Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
     procedure SetOwner(const AValue: IJCoreOPFPID);
+    procedure UpdateCache(const AAttributeNameArray: array of string);
     property Entity: TObject read GetEntity;
     property IsPersistent: Boolean read GetIsPersistent;
     property OID: TJCoreOPFOID read GetOID;

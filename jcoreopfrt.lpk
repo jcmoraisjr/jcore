@@ -16,7 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="10">
       <Item1>
         <Filename Value="opf/jcoreopfconsts.pas"/>
         <UnitName Value="JCoreOPFConsts"/>
@@ -53,6 +53,10 @@
         <Filename Value="opf/jcoreopfconfig.pas"/>
         <UnitName Value="JCoreOPFConfig"/>
       </Item9>
+      <Item10>
+        <Filename Value="opf/jcoreopfedm.pas"/>
+        <UnitName Value="jcoreopfedm"/>
+      </Item10>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

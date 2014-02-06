@@ -17,7 +17,9 @@ unit JCoreOPFPID;
 interface
 
 uses
-  JCoreOPFID;
+  typinfo,
+  JCoreOPFID,
+  JCoreOPFEDM;
 
 type
 
@@ -26,25 +28,37 @@ type
     iow, the same entity may be persistent to a configuration
     and nonpersistent to another one }
 
+  IJCoreOPFPIDManager = interface
+    function AcquireEDMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFEDMClass;
+  end;
+
   { TJCoreOPFPID }
 
   TJCoreOPFPID = class(TInterfacedObject, IJCoreOPFPID)
   private
+    FEDMMap: TJCoreOPFEDMMap;
     FEntity: TObject;
     FIsPersistent: Boolean;
     FOID: TJCoreOPFOID;
     FOwner: IJCoreOPFPID;
+    FPIDManager: IJCoreOPFPIDManager;
+    function AcquireEDM(const AAttributeName: string): TJCoreOPFEDM;
+    function CreateEDM(const AAttributeName: string): TJCoreOPFEDM;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
     function GetOwner: IJCoreOPFPID;
     procedure SetOwner(const AValue: IJCoreOPFPID);
+  protected
+    property PIDManager: IJCoreOPFPIDManager read FPIDManager;
   public
-    constructor Create(const AEntity: TObject);
+    constructor Create(const APIDManager: IJCoreOPFPIDManager; const AEntity: TObject);
     destructor Destroy; override;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
+    function IsDirty(const AAttributeName: string): Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
+    procedure UpdateCache(const AAttributeNameArray: array of string);
     property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
@@ -59,6 +73,31 @@ uses
   JCoreOPFException;
 
 { TJCoreOPFPID }
+
+function TJCoreOPFPID.AcquireEDM(const AAttributeName: string): TJCoreOPFEDM;
+var
+  VIndex: Integer;
+begin
+  VIndex := FEDMMap.IndexOf(AAttributeName);
+  if VIndex = -1 then
+    VIndex := FEDMMap.Add(AAttributeName, CreateEDM(AAttributeName));
+  Result := FEDMMap.Data[VIndex];
+end;
+
+function TJCoreOPFPID.CreateEDM(const AAttributeName: string): TJCoreOPFEDM;
+var
+  VAttrPropInfo: PPropInfo;
+  VEDMClass: TJCoreOPFEDMClass;
+begin
+  { TODO : delegate propinfo and mediator search to the attribute metadata.
+           Search metadata here, metadata search everything ONCE and
+           save a reference }
+  VAttrPropInfo := GetPropInfo(FEntity, AAttributeName);
+  if not Assigned(VAttrPropInfo) then
+    raise EJCoreOPFAttributeNotFound.Create(FEntity.ClassName, AAttributeName);
+  VEDMClass := PIDManager.AcquireEDMClass(VAttrPropInfo^.PropType);
+  Result := VEDMClass.Create(FEntity, VAttrPropInfo);
+end;
 
 function TJCoreOPFPID.GetEntity: TObject;
 begin
@@ -92,17 +131,25 @@ begin
     raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
 end;
 
-constructor TJCoreOPFPID.Create(const AEntity: TObject);
+constructor TJCoreOPFPID.Create(const APIDManager: IJCoreOPFPIDManager;
+  const AEntity: TObject);
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
   inherited Create;
+  FPIDManager := APIDManager;
   FEntity := AEntity;
   FIsPersistent := False;
+  FEDMMap := TJCoreOPFEDMMap.Create;
 end;
 
 destructor TJCoreOPFPID.Destroy;
+var
+  I: Integer;
 begin
+  for I := 0 to Pred(FEDMMap.Count) do
+    FEDMMap.Data[I].Free;
+  FreeAndNil(FEDMMap);
   FreeAndNil(FOID);
   inherited Destroy;
 end;
@@ -120,6 +167,11 @@ begin
   FIsPersistent := Assigned(OID);
 end;
 
+function TJCoreOPFPID.IsDirty(const AAttributeName: string): Boolean;
+begin
+  Result := AcquireEDM(AAttributeName).IsDirty;
+end;
+
 procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
 begin
   { TODO : Used to release the OID if an exception raises just after the OID
@@ -127,6 +179,15 @@ begin
            a better approach }
   if FOID = AOID then
     FOID := nil;
+end;
+
+procedure TJCoreOPFPID.UpdateCache(const AAttributeNameArray: array of string);
+var
+  VAttributeName: string;
+begin
+  { TODO : call all attributes if array is empty }
+  for VAttributeName in AAttributeNameArray do
+    AcquireEDM(VAttributeName).UpdateCache;
 end;
 
 end.

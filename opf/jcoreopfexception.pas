@@ -17,6 +17,7 @@ unit JCoreOPFException;
 interface
 
 uses
+  typinfo,
   sysutils,
   JCoreClasses;
 
@@ -97,6 +98,20 @@ type
     constructor Create;
   end;
 
+  { EJCoreOPFAttributeNotFound }
+
+  EJCoreOPFAttributeNotFound = class(EJCoreOPF)
+  public
+    constructor Create(const AClassName, AAttributeName: string);
+  end;
+
+  { EJCoreOPFUnsupportedAttributeType }
+
+  EJCoreOPFUnsupportedAttributeType = class(EJCoreOPF)
+  public
+    constructor Create(const AAttrTypeInfo: PTypeInfo);
+  end;
+
 implementation
 
 { EJCoreOPFDriverNotFound }
@@ -159,6 +174,21 @@ end;
 
 constructor EJCoreOPFUnsupportedListOperations.Create;
 begin
+end;
+
+{ EJCoreOPFAttributeNotFound }
+
+constructor EJCoreOPFAttributeNotFound.Create(const AClassName,
+  AAttributeName: string);
+begin
+end;
+
+{ EJCoreOPFUnsupportedAttributeType }
+
+constructor EJCoreOPFUnsupportedAttributeType.Create(
+  const AAttrTypeInfo: PTypeInfo);
+begin
+  inherited Create(AAttrTypeInfo^.Name);
 end;
 
 end.

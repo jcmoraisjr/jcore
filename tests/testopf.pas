@@ -72,6 +72,19 @@ type
     procedure PersonLanguages;
   end;
 
+  { TTestOPFCleanDirtyAttribute }
+
+  TTestOPFCleanDirtyAttribute = class(TTestOPF)
+  published
+    procedure CacheNotUpdated;
+    procedure IntegerClear;
+    procedure StringClean;
+    procedure OwnedObjectChangedClean;
+    procedure OwnedObjectAddedClean;
+    procedure OwnedObjectRemovedClean;
+    procedure OwnedObjectRemovedAddedClean;
+  end;
+
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
@@ -878,6 +891,168 @@ begin
   end;
 end;
 
+{ TTestOPFCleanDirtyAttribute }
+
+procedure TTestOPFCleanDirtyAttribute.CacheNotUpdated;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Age := 0;
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertTrue('person.age dirty1', VPerson._PID.IsDirty('age'));
+    VPerson._PID.UpdateCache(['age']);
+    AssertFalse('person.age dirty2', VPerson._PID.IsDirty('age'));
+    VPerson.Age := 10;
+    AssertTrue('person.age dirty3', VPerson._PID.IsDirty('age'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.IntegerClear;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Age := 30;
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    VPerson._PID.UpdateCache(['age']);
+    AssertFalse('person.age dirty1', VPerson._PID.IsDirty('age'));
+    VPerson.Age := 33;
+    AssertTrue('person.age dirty2', VPerson._PID.IsDirty('age'));
+    VPerson.Age := 30;
+    AssertFalse('person.age dirty3', VPerson._PID.IsDirty('age'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.StringClean;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'Some name';
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    VPerson._PID.UpdateCache(['name']);
+    AssertFalse('person.name dirty1', VPerson._PID.IsDirty('name'));
+    VPerson.Name := 'Other name';
+    AssertTrue('person.name dirty2', VPerson._PID.IsDirty('name'));
+    VPerson.Name := 'Some name';
+    AssertFalse('person.name dirty3', VPerson._PID.IsDirty('name'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.OwnedObjectChangedClean;
+var
+  VPerson: TTestPerson;
+  VPhone: TTestPhone;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '123';
+    VPerson.Phones.Add(VPhone);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    VPerson._PID.UpdateCache(['phones']);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson.Phones[0].Number := '123-123';
+    { TODO : waiting EDMObjectList.InternalIsDirty impl }
+    //AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+    VPerson.Phones[0].Number := '123';
+    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty('phones'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.OwnedObjectAddedClean;
+var
+  VPerson: TTestPerson;
+  VPhone: TTestPhone;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '321';
+    VPerson.Phones.Add(VPhone);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    VPerson._PID.UpdateCache(['phones']);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '321-321';
+    VPerson.Phones.Add(VPhone);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+    VPerson.Phones.Delete(1);
+    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty('phones'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.OwnedObjectRemovedClean;
+var
+  VPerson: TTestPerson;
+  VPhone: TTestPhone;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '456';
+    VPerson.Phones.Add(VPhone);
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '456-789';
+    VPerson.Phones.Add(VPhone);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    VPerson._PID.UpdateCache(['phones']);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson.Phones.Delete(0);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.OwnedObjectRemovedAddedClean;
+var
+  VPerson: TTestPerson;
+  VPhone: TTestPhone;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '456';
+    VPerson.Phones.Add(VPhone);
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '456-789';
+    VPerson.Phones.Add(VPhone);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    VPerson._PID.UpdateCache(['phones']);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson.Phones.Delete(1);
+    VPhone := TTestPhone.Create;
+    VPhone.Number := '456-7890';
+    VPerson.Phones.Add(VPhone);
+    { TODO : waiting EDMObjectList.InternalIsDirty impl }
+    //AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
 { TTestLanguage }
 
 constructor TTestLanguage.Create(const AName: string);
@@ -1233,6 +1408,7 @@ initialization
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);
+  RegisterTest('jcore.opf.mapping.cleandirty', TTestOPFCleanDirtyAttribute);
 
 end.
 
