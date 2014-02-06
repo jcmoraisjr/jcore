@@ -1,5 +1,5 @@
 (*
-  JCore, OPF Entity Driver Mediator Classes
+  JCore, OPF Attribute-Driver Mediator Classes
   Copyright (C) 2014 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
@@ -10,7 +10,7 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *)
 
-unit JCoreOPFEDM;
+unit JCoreOPFADM;
 
 {$I jcore.inc}
 
@@ -22,9 +22,9 @@ uses
 
 type
 
-  { TJCoreOPFEDM }
+  { TJCoreOPFADM }
 
-  TJCoreOPFEDM = class(TObject)
+  TJCoreOPFADM = class(TObject)
   private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
@@ -41,15 +41,15 @@ type
     procedure UpdateCache;
   end;
 
-  TJCoreOPFEDMClass = class of TJCoreOPFEDM;
+  TJCoreOPFADMClass = class of TJCoreOPFADM;
 
-  TJCoreOPFEDMClassArray = array of TJCoreOPFEDMClass;
+  TJCoreOPFADMClassArray = array of TJCoreOPFADMClass;
 
-  TJCoreOPFEDMMap = specialize TFPGMap<string, TJCoreOPFEDM>;
+  TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
 
-  { TJCoreOPFEDMType32 }
+  { TJCoreOPFADMType32 }
 
-  TJCoreOPFEDMType32 = class(TJCoreOPFEDM)
+  TJCoreOPFADMType32 = class(TJCoreOPFADM)
   private
     FCache: Longint;
   protected
@@ -59,9 +59,9 @@ type
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFEDMType64 }
+  { TJCoreOPFADMType64 }
 
-  TJCoreOPFEDMType64 = class(TJCoreOPFEDM)
+  TJCoreOPFADMType64 = class(TJCoreOPFADM)
   private
     FCache: Int64;
   protected
@@ -71,9 +71,9 @@ type
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFEDMFloat }
+  { TJCoreOPFADMFloat }
 
-  TJCoreOPFEDMFloat = class(TJCoreOPFEDM)
+  TJCoreOPFADMFloat = class(TJCoreOPFADM)
   private
     FCache: Extended;
   protected
@@ -83,9 +83,9 @@ type
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFEDMAnsiString }
+  { TJCoreOPFADMAnsiString }
 
-  TJCoreOPFEDMAnsiString = class(TJCoreOPFEDM)
+  TJCoreOPFADMAnsiString = class(TJCoreOPFADM)
   private
     FCache: AnsiString;
   protected
@@ -95,9 +95,9 @@ type
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFEDMCollection }
+  { TJCoreOPFADMCollection }
 
-  TJCoreOPFEDMCollection = class(TJCoreOPFEDM)
+  TJCoreOPFADMCollection = class(TJCoreOPFADM)
   private
     FListSizeCache: Integer;
   protected
@@ -109,9 +109,9 @@ type
 
 implementation
 
-{ TJCoreOPFEDM }
+{ TJCoreOPFADM }
 
-constructor TJCoreOPFEDM.Create(const AEntity: TObject;
+constructor TJCoreOPFADM.Create(const AEntity: TObject;
   const AAttrPropInfo: PPropInfo);
 begin
   inherited Create;
@@ -120,90 +120,90 @@ begin
   FCacheUpdated := False;
 end;
 
-function TJCoreOPFEDM.IsDirty: Boolean;
+function TJCoreOPFADM.IsDirty: Boolean;
 begin
   Result := not FCacheUpdated or InternalIsDirty;
 end;
 
-procedure TJCoreOPFEDM.UpdateCache;
+procedure TJCoreOPFADM.UpdateCache;
 begin
   InternalUpdateCache;
   FCacheUpdated := True;
 end;
 
-{ TJCoreOPFEDMType32 }
+{ TJCoreOPFADMType32 }
 
-function TJCoreOPFEDMType32.InternalIsDirty: Boolean;
+function TJCoreOPFADMType32.InternalIsDirty: Boolean;
 begin
   Result := GetOrdProp(Entity, AttrPropInfo) <> FCache;
 end;
 
-procedure TJCoreOPFEDMType32.InternalUpdateCache;
+procedure TJCoreOPFADMType32.InternalUpdateCache;
 begin
   FCache := GetOrdProp(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFEDMType32.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMType32.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInteger, tkChar, tkEnumeration, tkBool];
 end;
 
-{ TJCoreOPFEDMType64 }
+{ TJCoreOPFADMType64 }
 
-function TJCoreOPFEDMType64.InternalIsDirty: Boolean;
+function TJCoreOPFADMType64.InternalIsDirty: Boolean;
 begin
   Result := GetInt64Prop(Entity, AttrPropInfo) <> FCache;
 end;
 
-procedure TJCoreOPFEDMType64.InternalUpdateCache;
+procedure TJCoreOPFADMType64.InternalUpdateCache;
 begin
   FCache := GetInt64Prop(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFEDMType64.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMType64.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInt64, tkQWord];
 end;
 
-{ TJCoreOPFEDMFloat }
+{ TJCoreOPFADMFloat }
 
-function TJCoreOPFEDMFloat.InternalIsDirty: Boolean;
+function TJCoreOPFADMFloat.InternalIsDirty: Boolean;
 begin
   Result := GetFloatProp(Entity, AttrPropInfo) <> FCache;
 end;
 
-procedure TJCoreOPFEDMFloat.InternalUpdateCache;
+procedure TJCoreOPFADMFloat.InternalUpdateCache;
 begin
   FCache := GetFloatProp(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFEDMFloat.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMFloat.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkFloat;
 end;
 
-{ TJCoreOPFEDMAnsiString }
+{ TJCoreOPFADMAnsiString }
 
-function TJCoreOPFEDMAnsiString.InternalIsDirty: Boolean;
+function TJCoreOPFADMAnsiString.InternalIsDirty: Boolean;
 begin
   { TODO : use hash for long strings }
   Result := GetStrProp(Entity, AttrPropInfo) <> FCache;
 end;
 
-procedure TJCoreOPFEDMAnsiString.InternalUpdateCache;
+procedure TJCoreOPFADMAnsiString.InternalUpdateCache;
 begin
   { TODO : use hash for long strings }
   FCache := GetStrProp(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFEDMAnsiString.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMAnsiString.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkAString;
 end;
 
-{ TJCoreOPFEDMCollection }
+{ TJCoreOPFADMCollection }
 
-function TJCoreOPFEDMCollection.InternalIsDirty: Boolean;
+function TJCoreOPFADMCollection.InternalIsDirty: Boolean;
 var
   VItems: TFPSList;
   VItemCount: Integer;
@@ -222,7 +222,7 @@ begin
   Result := False;
 end;
 
-procedure TJCoreOPFEDMCollection.InternalUpdateCache;
+procedure TJCoreOPFADMCollection.InternalUpdateCache;
 var
   VItems: TFPSList;
 begin
@@ -234,7 +234,7 @@ begin
     FListSizeCache := 0;
 end;
 
-class function TJCoreOPFEDMCollection.Apply(const ATypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMCollection.Apply(const ATypeInfo: PTypeInfo): Boolean;
 var
   VTypeData: PTypeData;
 begin

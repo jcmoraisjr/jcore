@@ -54,8 +54,8 @@
         <UnitName Value="JCoreOPFConfig"/>
       </Item9>
       <Item10>
-        <Filename Value="opf/jcoreopfedm.pas"/>
-        <UnitName Value="jcoreopfedm"/>
+        <Filename Value="opf/jcoreopfadm.pas"/>
+        <UnitName Value="jcoreopfadm"/>
       </Item10>
     </Files>
     <RequiredPkgs Count="2">

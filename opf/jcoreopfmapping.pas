@@ -23,7 +23,7 @@ uses
   JCoreOPFDriver,
   JCoreOPFID,
   JCoreOPFPID,
-  JCoreOPFEDM;
+  JCoreOPFADM;
 
 type
 
@@ -46,10 +46,10 @@ type
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
-    FEDMClassArray: TJCoreOPFEDMClassArray;
+    FADMClassArray: TJCoreOPFADMClassArray;
   protected
-    function AcquireEDMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFEDMClass;
-    function CreateEDMClassArray: TJCoreOPFEDMClassArray; virtual;
+    function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
+    function CreateADMClassArray: TJCoreOPFADMClassArray; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
@@ -126,24 +126,24 @@ uses
 
 { TJCoreOPFMapping }
 
-function TJCoreOPFMapping.AcquireEDMClass(
-  const AAttrTypeInfo: PTypeInfo): TJCoreOPFEDMClass;
+function TJCoreOPFMapping.AcquireADMClass(
+  const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
 begin
-  for Result in FEDMClassArray do
+  for Result in FADMClassArray do
     if Result.Apply(AAttrTypeInfo) then
       Exit;
   raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
 end;
 
-function TJCoreOPFMapping.CreateEDMClassArray: TJCoreOPFEDMClassArray;
+function TJCoreOPFMapping.CreateADMClassArray: TJCoreOPFADMClassArray;
 begin
   { TODO : could be better }
   SetLength(Result, 5);
-  Result[0] := TJCoreOPFEDMType32;
-  Result[1] := TJCoreOPFEDMType64;
-  Result[2] := TJCoreOPFEDMFloat;
-  Result[3] := TJCoreOPFEDMAnsiString;
-  Result[4] := TJCoreOPFEDMCollection;
+  Result[0] := TJCoreOPFADMType32;
+  Result[1] := TJCoreOPFADMType64;
+  Result[2] := TJCoreOPFADMFloat;
+  Result[3] := TJCoreOPFADMAnsiString;
+  Result[4] := TJCoreOPFADMCollection;
 end;
 
 procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
@@ -159,7 +159,7 @@ begin
   inherited Create;
   FMapper := AMapper;
   FDriver := ADriver;
-  FEDMClassArray := CreateEDMClassArray;
+  FADMClassArray := CreateADMClassArray;
 end;
 
 function TJCoreOPFMapping.AcquirePID(AEntity: TObject;

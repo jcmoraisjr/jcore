@@ -19,7 +19,7 @@ interface
 uses
   typinfo,
   JCoreOPFID,
-  JCoreOPFEDM;
+  JCoreOPFADM;
 
 type
 
@@ -29,21 +29,21 @@ type
     and nonpersistent to another one }
 
   IJCoreOPFPIDManager = interface
-    function AcquireEDMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFEDMClass;
+    function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
   end;
 
   { TJCoreOPFPID }
 
   TJCoreOPFPID = class(TInterfacedObject, IJCoreOPFPID)
   private
-    FEDMMap: TJCoreOPFEDMMap;
+    FADMMap: TJCoreOPFADMMap;
     FEntity: TObject;
     FIsPersistent: Boolean;
     FOID: TJCoreOPFOID;
     FOwner: IJCoreOPFPID;
     FPIDManager: IJCoreOPFPIDManager;
-    function AcquireEDM(const AAttributeName: string): TJCoreOPFEDM;
-    function CreateEDM(const AAttributeName: string): TJCoreOPFEDM;
+    function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
+    function CreateADM(const AAttributeName: string): TJCoreOPFADM;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
@@ -74,20 +74,20 @@ uses
 
 { TJCoreOPFPID }
 
-function TJCoreOPFPID.AcquireEDM(const AAttributeName: string): TJCoreOPFEDM;
+function TJCoreOPFPID.AcquireADM(const AAttributeName: string): TJCoreOPFADM;
 var
   VIndex: Integer;
 begin
-  VIndex := FEDMMap.IndexOf(AAttributeName);
+  VIndex := FADMMap.IndexOf(AAttributeName);
   if VIndex = -1 then
-    VIndex := FEDMMap.Add(AAttributeName, CreateEDM(AAttributeName));
-  Result := FEDMMap.Data[VIndex];
+    VIndex := FADMMap.Add(AAttributeName, CreateADM(AAttributeName));
+  Result := FADMMap.Data[VIndex];
 end;
 
-function TJCoreOPFPID.CreateEDM(const AAttributeName: string): TJCoreOPFEDM;
+function TJCoreOPFPID.CreateADM(const AAttributeName: string): TJCoreOPFADM;
 var
   VAttrPropInfo: PPropInfo;
-  VEDMClass: TJCoreOPFEDMClass;
+  VADMClass: TJCoreOPFADMClass;
 begin
   { TODO : delegate propinfo and mediator search to the attribute metadata.
            Search metadata here, metadata search everything ONCE and
@@ -95,8 +95,8 @@ begin
   VAttrPropInfo := GetPropInfo(FEntity, AAttributeName);
   if not Assigned(VAttrPropInfo) then
     raise EJCoreOPFAttributeNotFound.Create(FEntity.ClassName, AAttributeName);
-  VEDMClass := PIDManager.AcquireEDMClass(VAttrPropInfo^.PropType);
-  Result := VEDMClass.Create(FEntity, VAttrPropInfo);
+  VADMClass := PIDManager.AcquireADMClass(VAttrPropInfo^.PropType);
+  Result := VADMClass.Create(FEntity, VAttrPropInfo);
 end;
 
 function TJCoreOPFPID.GetEntity: TObject;
@@ -140,16 +140,16 @@ begin
   FPIDManager := APIDManager;
   FEntity := AEntity;
   FIsPersistent := False;
-  FEDMMap := TJCoreOPFEDMMap.Create;
+  FADMMap := TJCoreOPFADMMap.Create;
 end;
 
 destructor TJCoreOPFPID.Destroy;
 var
   I: Integer;
 begin
-  for I := 0 to Pred(FEDMMap.Count) do
-    FEDMMap.Data[I].Free;
-  FreeAndNil(FEDMMap);
+  for I := 0 to Pred(FADMMap.Count) do
+    FADMMap.Data[I].Free;
+  FreeAndNil(FADMMap);
   FreeAndNil(FOID);
   inherited Destroy;
 end;
@@ -169,7 +169,7 @@ end;
 
 function TJCoreOPFPID.IsDirty(const AAttributeName: string): Boolean;
 begin
-  Result := AcquireEDM(AAttributeName).IsDirty;
+  Result := AcquireADM(AAttributeName).IsDirty;
 end;
 
 procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
@@ -187,7 +187,7 @@ var
 begin
   { TODO : call all attributes if array is empty }
   for VAttributeName in AAttributeNameArray do
-    AcquireEDM(VAttributeName).UpdateCache;
+    AcquireADM(VAttributeName).UpdateCache;
 end;
 
 end.
