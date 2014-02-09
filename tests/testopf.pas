@@ -13,16 +13,36 @@ uses
   JCoreOPFDriver,
   JCoreOPFMapping,
   JCoreOPFSession,
-  JCoreOPFConfig;
+  JCoreOPFConfig,
+  JCoreOPFMetadata;
 
 type
+
+  { TTestOPFConfig }
+
+  TTestOPFConfig = class(TJCoreOPFConfiguration)
+  protected
+    function InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession; override;
+  end;
+
+  ITestOPFSession = interface(IJCoreOPFSession)
+  ['{641946FC-586B-F7CA-5B84-25C3DC812F08}']
+    function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+  end;
+
+  { TTestOPFSession }
+
+  TTestOPFSession = class(TJCoreOPFSession, ITestOPFSession)
+  public
+    function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+  end;
 
   { TTestOPF }
 
   TTestOPF = class(TTestCase)
   private
     FConfiguration: IJCoreOPFConfiguration;
-    FSession: IJCoreOPFSession;
+    FSession: ITestOPFSession;
     class var FLOG: IJCoreLogger;
   protected
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
@@ -38,6 +58,13 @@ type
     procedure CreatePID;
     procedure DriverNotFound;
     procedure MappingNotFound;
+  end;
+
+  { TTestOPFMetadata }
+
+  TTestOPFMetadata = class(TTestOPF)
+  published
+    procedure AttributeList;
   end;
 
   { TTestOPFInsertManualMapping }
@@ -282,6 +309,20 @@ const
   CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
   CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=?';
 
+{ TTestOPFConfig }
+
+function TTestOPFConfig.InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession;
+begin
+  Result := TTestOPFSession.Create(Self, Model, ADriver);
+end;
+
+{ TTestOPFSession }
+
+function TTestOPFSession.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+begin
+  Result := AcquireMapping(AClass).AcquireMetadata(AClass);
+end;
+
 { TTestOPF }
 
 function TTestOPF.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
@@ -290,7 +331,7 @@ var
   VDriverClass: TJCoreOPFDriverClass;
   VMappingClass: TJCoreOPFMappingClass;
 begin
-  Result := TJCoreOPFConfiguration.Create;
+  Result := TTestOPFConfig.Create;
   try
     for VDriverClass in ADriverClassArray do
       Result.AddDriverClass(VDriverClass);
@@ -313,7 +354,7 @@ begin
   FConfiguration := CreateConfiguration([TTestSQLDriver], [
    TTestPersonSQLMapping, TTestCitySQLMapping, TTestPhoneSQLMapping,
    TTestLanguageSQLMapping]);
-  FSession := FConfiguration.CreateSession;
+  FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 
 procedure TTestOPF.TearDown;
@@ -415,6 +456,21 @@ begin
   finally
     FreeAndNil(VPerson);
   end;
+end;
+
+{ TTestOPFMetadata }
+
+procedure TTestOPFMetadata.AttributeList;
+var
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  VMetadata := FSession.AcquireMetadata(TTestPerson);
+  AssertEquals('meta.cnt', 5, VMetadata.AttributeCount);
+  AssertEquals('meta0.name', 'Name', VMetadata[0].Name);
+  AssertEquals('meta1.name', 'Age', VMetadata[1].Name);
+  AssertEquals('meta2.name', 'Phones', VMetadata[2].Name);
+  AssertEquals('meta3.name', 'City', VMetadata[3].Name);
+  AssertEquals('meta4.name', 'Languages', VMetadata[4].Name);
 end;
 
 { TTestOPFInsertManualMapping }
@@ -1405,6 +1461,7 @@ end;
 
 initialization
   RegisterTest('jcore.opf.core', TTestOPFCore);
+  RegisterTest('jcore.opf.mapping.metadata', TTestOPFMetadata);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);

@@ -20,6 +20,7 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
+  JCoreOPFMetadata,
   JCoreOPFDriver,
   JCoreOPFID,
   JCoreOPFPID,
@@ -42,14 +43,16 @@ type
 
   { TJCoreOPFMapping }
 
-  TJCoreOPFMapping = class(TObject, IJCoreOPFPIDManager)
+  TJCoreOPFMapping = class(TObject, IJCoreOPFPIDManager, IJCoreOPFMetadataBuilder)
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
+    FModel: TJCoreOPFModel;
     FADMClassArray: TJCoreOPFADMClassArray;
   protected
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function CreateADMClassArray: TJCoreOPFADMClassArray; virtual;
+    function CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
@@ -62,8 +65,10 @@ type
     procedure InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
+    property Model: TJCoreOPFModel read FModel;
   public
-    constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); virtual;
+    constructor Create(const AMapper: IJCoreOPFMapper; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver); virtual;
+    function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
     procedure Dispose(const APID: IJCoreOPFPID);
@@ -114,7 +119,7 @@ type
     procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
-    constructor Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver); override;
+    constructor Create(const AMapper: IJCoreOPFMapper; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver); override;
   end;
 
 implementation
@@ -135,6 +140,11 @@ begin
   raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
 end;
 
+function TJCoreOPFMapping.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+begin
+  Result := Model.AcquireMetadata(AClass, Self);
+end;
+
 function TJCoreOPFMapping.CreateADMClassArray: TJCoreOPFADMClassArray;
 begin
   { TODO : could be better }
@@ -146,18 +156,31 @@ begin
   Result[4] := TJCoreOPFADMCollection;
 end;
 
+function TJCoreOPFMapping.CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+begin
+  Result := TJCoreOPFClassMetadata.Create(AClass);
+  try
+    Result.AutoBuild;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
 procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
 begin
   { TODO : Evaluate after attr metadata implementation }
   Driver.WriteNull;
 end;
 
-constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver);
+constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper;
+  const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver);
 begin
   if not Assigned(ADriver) or not Assigned(AMapper) then
     raise EJCoreNilPointerException.Create;
   inherited Create;
   FMapper := AMapper;
+  FModel := AModel;
   FDriver := ADriver;
   FADMClassArray := CreateADMClassArray;
 end;
@@ -485,11 +508,12 @@ begin
     WriteSharedListItemToDriver(AListBaseClass, AOwnerPID, APIDArray);
 end;
 
-constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper; const ADriver: TJCoreOPFDriver);
+constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper;
+  const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver);
 begin
   if not (ADriver is TJCoreOPFSQLDriver) then
     raise EJCoreOPFUnsupportedDriver.Create(ADriver.ClassName);
-  inherited Create(AMapper, ADriver);
+  inherited Create(AMapper, AModel, ADriver);
   FSQLDriver := TJCoreOPFSQLDriver(ADriver);
 end;
 

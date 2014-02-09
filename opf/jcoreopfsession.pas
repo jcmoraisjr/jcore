@@ -19,6 +19,7 @@ interface
 uses
   Classes,
   JCoreClasses,
+  JCoreOPFMetadata,
   JCoreOPFID,
   JCoreOPFDriver,
   JCoreOPFMapping;
@@ -42,6 +43,7 @@ type
     FDriver: TJCoreOPFDriver;
     FInTransactionPIDList: TInterfaceList;
     FMappingList: TJCoreOPFMappingList;
+    FModel: TJCoreOPFModel;
     FSessionManager: IJCoreOPFSessionManager;
     function CreateMapping(const AMappingClass: TJCoreOPFMappingClass): TJCoreOPFMapping;
   protected
@@ -54,9 +56,10 @@ type
     procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
+    property Model: TJCoreOPFModel read FModel;
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
   public
-    constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
+    constructor Create(const ASessionManager: IJCoreOPFSessionManager; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
     procedure Dispose(const AEntity: TObject);
     procedure Dispose(const AClass: TClass; const AOID: string);
@@ -74,7 +77,7 @@ uses
 
 function TJCoreOPFSession.CreateMapping(const AMappingClass: TJCoreOPFMappingClass): TJCoreOPFMapping;
 begin
-  Result := AMappingClass.Create(Self, FDriver);
+  Result := AMappingClass.Create(Self, Model, FDriver);
   try
     FMappingList.Add(Result);
   except
@@ -151,10 +154,12 @@ begin
   VMapping.StoreToDriver(AClass, AEntity, ADriver);
 end;
 
-constructor TJCoreOPFSession.Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
+constructor TJCoreOPFSession.Create(const ASessionManager: IJCoreOPFSessionManager;
+  const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver);
 begin
   inherited Create;
   FSessionManager := ASessionManager;
+  FModel := AModel;
   FDriver := ADriver;
   FMappingList := TJCoreOPFMappingList.Create(True);
   FInTransactionPIDList := TInterfaceList.Create;

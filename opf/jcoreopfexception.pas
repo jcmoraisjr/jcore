@@ -28,6 +28,13 @@ type
   EJCoreOPF = class(EJCoreException)
   end;
 
+  { EJCoreOPFMetadataNotFound }
+
+  EJCoreOPFMetadataNotFound = class(EJCoreOPF)
+  public
+    constructor Create(const AClass: TClass);
+  end;
+
   { EJCoreOPFDriverNotFound }
 
   EJCoreOPFDriverNotFound = class(EJCoreOPF)
@@ -113,6 +120,12 @@ type
   end;
 
 implementation
+
+{ EJCoreOPFMetadataNotFound }
+
+constructor EJCoreOPFMetadataNotFound.Create(const AClass: TClass);
+begin
+end;
 
 { EJCoreOPFDriverNotFound }
 

@@ -17,6 +17,7 @@ unit JCoreOPFConfig;
 interface
 
 uses
+  JCoreOPFMetadata,
   JCoreOPFDriver,
   JCoreOPFMapping,
   JCoreOPFSession;
@@ -43,6 +44,7 @@ type
     FDriverName: string;
     FHost: string;
     FMappingClassList: TJCoreOPFMappingClassList;
+    FModel: TJCoreOPFModel;
     FPassword: string;
     FUsername: string;
     function GetDriverName: string;
@@ -50,15 +52,17 @@ type
     procedure SetDriverName(AValue: string);
   protected
     function CreateDriver: TJCoreOPFDriver;
+    function InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession; virtual;
     property MappingClassList: TJCoreOPFMappingClassList read GetMappingClassList;
   public
-    constructor Create;
+    constructor Create(const AModel: TJCoreOPFModel = nil);
     destructor Destroy; override;
     procedure AddDriverClass(const ADriverClass: TJCoreOPFDriverClass);
     procedure AddMappingClass(const AMappingClass: TJCoreOPFMappingClass);
     function CreateSession: IJCoreOPFSession;
     property DriverName: string read GetDriverName write SetDriverName;
     property Host: string write FHost;
+    property Model: TJCoreOPFModel read FModel;
     property Password: string write FPassword;
     property Username: string write FUsername;
   end;
@@ -104,15 +108,27 @@ begin
   Result := FDriverClass.Create;
 end;
 
-constructor TJCoreOPFConfiguration.Create;
+function TJCoreOPFConfiguration.InternalCreateSession(
+  const ADriver: TJCoreOPFDriver): IJCoreOPFSession;
+begin
+  Result := TJCoreOPFSession.Create(Self, Model, ADriver);
+end;
+
+constructor TJCoreOPFConfiguration.Create(
+  const AModel: TJCoreOPFModel = nil);
 begin
   inherited Create;
+  if Assigned(AModel) then
+    FModel := TJCoreOPFModel.AcquireModel
+  else
+    FModel := TJCoreOPFModel.Create;
   FDriverClassList := TJCoreOPFDriverClassList.Create;
   FMappingClassList := TJCoreOPFMappingClassList.Create;
 end;
 
 destructor TJCoreOPFConfiguration.Destroy;
 begin
+  FreeAndNil(FModel);
   FreeAndNil(FMappingClassList);
   FreeAndNil(FDriverClassList);
   inherited Destroy;
@@ -135,7 +151,7 @@ var
 begin
   VDriver := CreateDriver;
   try
-    Result := TJCoreOPFSession.Create(Self, VDriver);
+    Result := InternalCreateSession(VDriver);
   except
     FreeAndNil(VDriver);
     raise;
