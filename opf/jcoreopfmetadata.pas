@@ -19,7 +19,8 @@ interface
 uses
   typinfo,
   fgl,
-  JCoreClasses;
+  JCoreClasses,
+  JCoreOPFADM;
 
 type
 
@@ -27,10 +28,12 @@ type
 
   TJCoreOPFAttrMetadata = class(TObject)
   private
+    FADMClass: TJCoreOPFADMClass;
     FName: string;
     FPropInfo: PPropInfo;
   public
     constructor Create(const APropInfo: PPropInfo);
+    function CreateADM(const AEntity: TObject): TJCoreOPFADM;
     property Name: string read FName;
   end;
 
@@ -54,6 +57,7 @@ type
   public
     constructor Create(const AClass: TClass);
     destructor Destroy; override;
+    function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
     function AttributeCount: Integer;
     procedure AutoBuild;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
@@ -96,6 +100,13 @@ begin
   FName := APropInfo^.Name;
 end;
 
+function TJCoreOPFAttrMetadata.CreateADM(const AEntity: TObject): TJCoreOPFADM;
+begin
+  if not Assigned(FADMClass) then
+    FADMClass := TJCoreOPFADM.AcquireADMClass(FPropInfo^.PropType);
+  Result := FADMClass.Create(AEntity, FPropInfo);
+end;
+
 { TJCoreOPFAttrMetadataList }
 
 function TJCoreOPFAttrMetadataList.Add(const APropInfo: PPropInfo): TJCoreOPFAttrMetadata;
@@ -128,6 +139,15 @@ destructor TJCoreOPFClassMetadata.Destroy;
 begin
   FreeAndNil(FAttrList);
   inherited Destroy;
+end;
+
+function TJCoreOPFClassMetadata.AttributeByName(
+  const AAttributeName: string): TJCoreOPFAttrMetadata;
+begin
+  for Result in AttrList do
+    if SameText(AAttributeName, Result.Name) then
+      Exit;
+  raise EJCoreOPFAttributeNotFound.Create(TheClass.ClassName, AAttributeName);
 end;
 
 function TJCoreOPFClassMetadata.AttributeCount: Integer;

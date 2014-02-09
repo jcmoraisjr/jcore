@@ -22,9 +22,17 @@ uses
 
 type
 
+  TJCoreOPFADM = class;
+  TJCoreOPFADMClass = class of TJCoreOPFADM;
+  TJCoreOPFADMClassList = specialize TFPGList<TJCoreOPFADMClass>;
+  TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
+
   { TJCoreOPFADM }
 
   TJCoreOPFADM = class(TObject)
+  private
+    { TODO : abstract registry/acquire implementation }
+    class var FADMList: TJCoreOPFADMClassList;
   private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
@@ -35,17 +43,15 @@ type
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
     property Entity: TObject read FEntity;
   public
+    class constructor Create;
+    class destructor Destroy;
     constructor Create(const AEntity: TObject; const AAttrPropInfo: PPropInfo); virtual;
+    class function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     function IsDirty: Boolean;
+    class procedure RegisterADM;
     procedure UpdateCache;
   end;
-
-  TJCoreOPFADMClass = class of TJCoreOPFADM;
-
-  TJCoreOPFADMClassArray = array of TJCoreOPFADMClass;
-
-  TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
 
   { TJCoreOPFADMType32 }
 
@@ -104,12 +110,26 @@ type
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
   public
-    class function Apply(const ATypeInfo: PTypeInfo): Boolean; override;
+    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
 implementation
 
+uses
+  sysutils,
+  JCoreOPFException;
+
 { TJCoreOPFADM }
+
+class constructor TJCoreOPFADM.Create;
+begin
+  FADMList := TJCoreOPFADMClassList.Create;
+end;
+
+class destructor TJCoreOPFADM.Destroy;
+begin
+  FreeAndNil(FADMList);
+end;
 
 constructor TJCoreOPFADM.Create(const AEntity: TObject;
   const AAttrPropInfo: PPropInfo);
@@ -120,9 +140,23 @@ begin
   FCacheUpdated := False;
 end;
 
+class function TJCoreOPFADM.AcquireADMClass(
+  const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
+begin
+  for Result in FADMList do
+    if Result.Apply(AAttrTypeInfo) then
+      Exit;
+  raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
+end;
+
 function TJCoreOPFADM.IsDirty: Boolean;
 begin
   Result := not FCacheUpdated or InternalIsDirty;
+end;
+
+class procedure TJCoreOPFADM.RegisterADM;
+begin
+  FADMList.Add(Self);
 end;
 
 procedure TJCoreOPFADM.UpdateCache;
@@ -234,17 +268,24 @@ begin
     FListSizeCache := 0;
 end;
 
-class function TJCoreOPFADMCollection.Apply(const ATypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMCollection.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
 var
   VTypeData: PTypeData;
 begin
-  if ATypeInfo^.Kind = tkClass then
+  if AAttrTypeInfo^.Kind = tkClass then
   begin
-    VTypeData := GetTypeData(ATypeInfo);
+    VTypeData := GetTypeData(AAttrTypeInfo);
     Result := Assigned(VTypeData) and VTypeData^.ClassType.InheritsFrom(TFPSList);
   end else
     Result := False;
 end;
+
+initialization
+  TJCoreOPFADMType32.RegisterADM;
+  TJCoreOPFADMType64.RegisterADM;
+  TJCoreOPFADMFloat.RegisterADM;
+  TJCoreOPFADMAnsiString.RegisterADM;
+  TJCoreOPFADMCollection.RegisterADM;
 
 end.
 

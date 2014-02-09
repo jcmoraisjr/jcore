@@ -19,6 +19,7 @@ interface
 uses
   typinfo,
   JCoreOPFID,
+  JCoreOPFMetadata,
   JCoreOPFADM;
 
 type
@@ -28,10 +29,6 @@ type
     iow, the same entity may be persistent to a configuration
     and nonpersistent to another one }
 
-  IJCoreOPFPIDManager = interface
-    function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
-  end;
-
   { TJCoreOPFPID }
 
   TJCoreOPFPID = class(TInterfacedObject, IJCoreOPFPID)
@@ -39,20 +36,19 @@ type
     FADMMap: TJCoreOPFADMMap;
     FEntity: TObject;
     FIsPersistent: Boolean;
+    FMetadata: TJCoreOPFClassMetadata;
     FOID: TJCoreOPFOID;
     FOwner: IJCoreOPFPID;
-    FPIDManager: IJCoreOPFPIDManager;
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
-    function CreateADM(const AAttributeName: string): TJCoreOPFADM;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
     function GetOwner: IJCoreOPFPID;
     procedure SetOwner(const AValue: IJCoreOPFPID);
   protected
-    property PIDManager: IJCoreOPFPIDManager read FPIDManager;
+    property Metadata: TJCoreOPFClassMetadata read FMetadata;
   public
-    constructor Create(const APIDManager: IJCoreOPFPIDManager; const AEntity: TObject);
+    constructor Create(const AMetadata: TJCoreOPFClassMetadata; const AEntity: TObject);
     destructor Destroy; override;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
@@ -80,23 +76,9 @@ var
 begin
   VIndex := FADMMap.IndexOf(AAttributeName);
   if VIndex = -1 then
-    VIndex := FADMMap.Add(AAttributeName, CreateADM(AAttributeName));
+    VIndex := FADMMap.Add(AAttributeName,
+     Metadata.AttributeByName(AAttributeName).CreateADM(Entity));
   Result := FADMMap.Data[VIndex];
-end;
-
-function TJCoreOPFPID.CreateADM(const AAttributeName: string): TJCoreOPFADM;
-var
-  VAttrPropInfo: PPropInfo;
-  VADMClass: TJCoreOPFADMClass;
-begin
-  { TODO : delegate propinfo and mediator search to the attribute metadata.
-           Search metadata here, metadata search everything ONCE and
-           save a reference }
-  VAttrPropInfo := GetPropInfo(FEntity, AAttributeName);
-  if not Assigned(VAttrPropInfo) then
-    raise EJCoreOPFAttributeNotFound.Create(FEntity.ClassName, AAttributeName);
-  VADMClass := PIDManager.AcquireADMClass(VAttrPropInfo^.PropType);
-  Result := VADMClass.Create(FEntity, VAttrPropInfo);
 end;
 
 function TJCoreOPFPID.GetEntity: TObject;
@@ -131,14 +113,14 @@ begin
     raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
 end;
 
-constructor TJCoreOPFPID.Create(const APIDManager: IJCoreOPFPIDManager;
+constructor TJCoreOPFPID.Create(const AMetadata: TJCoreOPFClassMetadata;
   const AEntity: TObject);
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
   inherited Create;
-  FPIDManager := APIDManager;
   FEntity := AEntity;
+  FMetadata := AMetadata;
   FIsPersistent := False;
   FADMMap := TJCoreOPFADMMap.Create;
 end;

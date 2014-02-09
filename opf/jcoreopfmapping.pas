@@ -23,8 +23,7 @@ uses
   JCoreOPFMetadata,
   JCoreOPFDriver,
   JCoreOPFID,
-  JCoreOPFPID,
-  JCoreOPFADM;
+  JCoreOPFPID;
 
 type
 
@@ -43,15 +42,12 @@ type
 
   { TJCoreOPFMapping }
 
-  TJCoreOPFMapping = class(TObject, IJCoreOPFPIDManager, IJCoreOPFMetadataBuilder)
+  TJCoreOPFMapping = class(TObject, IJCoreOPFMetadataBuilder)
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
     FModel: TJCoreOPFModel;
-    FADMClassArray: TJCoreOPFADMClassArray;
   protected
-    function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
-    function CreateADMClassArray: TJCoreOPFADMClassArray; virtual;
     function CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
@@ -131,29 +127,9 @@ uses
 
 { TJCoreOPFMapping }
 
-function TJCoreOPFMapping.AcquireADMClass(
-  const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
-begin
-  for Result in FADMClassArray do
-    if Result.Apply(AAttrTypeInfo) then
-      Exit;
-  raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
-end;
-
 function TJCoreOPFMapping.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
   Result := Model.AcquireMetadata(AClass, Self);
-end;
-
-function TJCoreOPFMapping.CreateADMClassArray: TJCoreOPFADMClassArray;
-begin
-  { TODO : could be better }
-  SetLength(Result, 5);
-  Result[0] := TJCoreOPFADMType32;
-  Result[1] := TJCoreOPFADMType64;
-  Result[2] := TJCoreOPFADMFloat;
-  Result[3] := TJCoreOPFADMAnsiString;
-  Result[4] := TJCoreOPFADMCollection;
 end;
 
 function TJCoreOPFMapping.CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
@@ -182,7 +158,6 @@ begin
   FMapper := AMapper;
   FModel := AModel;
   FDriver := ADriver;
-  FADMClassArray := CreateADMClassArray;
 end;
 
 function TJCoreOPFMapping.AcquirePID(AEntity: TObject;
@@ -199,7 +174,7 @@ begin
   Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
   if not Assigned(Result) then
   begin
-    Result := TJCoreOPFPID.Create(Self, AEntity);
+    Result := TJCoreOPFPID.Create(AcquireMetadata(AEntity.ClassType), AEntity);
     SetInterfaceProp(AEntity, VPropInfo, Result);
   end;
   { TODO : Check duplications and avoid useless calls }
