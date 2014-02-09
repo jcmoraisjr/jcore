@@ -66,7 +66,7 @@ type
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver); virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
-    function AcquirePID(AEntity: TObject; const AAddToInTransactionPIDList: Boolean = True): IJCoreOPFPID;
+    function AcquirePID(AEntity: TObject): IJCoreOPFPID;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
     procedure Dispose(const APID: IJCoreOPFPID);
     procedure DisposeFromString(const AClass: TClass; const AOID: string);
@@ -166,8 +166,7 @@ begin
   FDriver := ADriver;
 end;
 
-function TJCoreOPFMapping.AcquirePID(AEntity: TObject;
-  const AAddToInTransactionPIDList: Boolean): IJCoreOPFPID;
+function TJCoreOPFMapping.AcquirePID(AEntity: TObject): IJCoreOPFPID;
 var
   VPropInfo: PPropInfo;
 begin
@@ -182,9 +181,7 @@ begin
     Result := CreatePID(AEntity);
     SetInterfaceProp(AEntity, VPropInfo, Result);
   end;
-  { TODO : Check duplications and avoid useless calls }
-  if AAddToInTransactionPIDList then
-    Mapper.AddInTransactionPID(Result);
+  Mapper.AddInTransactionPID(Result);
 end;
 
 procedure TJCoreOPFMapping.Dispose(const APID: IJCoreOPFPID);

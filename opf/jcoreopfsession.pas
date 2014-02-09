@@ -40,6 +40,7 @@ type
   TJCoreOPFSession = class(TInterfacedObject, IJCoreOPFSession, IJCoreOPFMapper)
   private
     FDriver: TJCoreOPFDriver;
+    { TODO : non thread safe list }
     FInTransactionPIDList: TInterfaceList;
     FMappingList: TJCoreOPFMappingList;
     FModel: TJCoreOPFModel;
@@ -48,7 +49,7 @@ type
   protected
     procedure AddInTransactionPID(const APID: IJCoreOPFPID);
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
-    procedure Commit;
+    procedure Commit; virtual;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
     procedure StorePID(const APID: IJCoreOPFPID);
@@ -87,7 +88,8 @@ end;
 
 procedure TJCoreOPFSession.AddInTransactionPID(const APID: IJCoreOPFPID);
 begin
-  InTransactionPIDList.Add(APID);
+  if InTransactionPIDList.IndexOf(APID) = -1 then
+    InTransactionPIDList.Add(APID);
 end;
 
 function TJCoreOPFSession.AcquireMapping(const AClass: TClass): TJCoreOPFMapping;

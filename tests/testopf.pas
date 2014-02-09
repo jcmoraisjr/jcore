@@ -8,6 +8,7 @@ uses
   Classes,
   fgl,
   fpcunit,
+  JCoreClasses,
   JCoreLogger,
   JCoreOPFID,
   JCoreOPFDriver,
@@ -33,8 +34,17 @@ type
   { TTestOPFSession }
 
   TTestOPFSession = class(TJCoreOPFSession, ITestOPFSession)
+  private
+    class var FCommitCount: Integer;
+    class var FLastCommitPIDList: TInterfaceList;
+  protected
+    procedure Commit; override;
   public
+    class constructor Create;
+    class destructor Destroy;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+    class property CommitCount: Integer read FCommitCount write FCommitCount;
+    class property LastCommitPIDList: TInterfaceList read FLastCommitPIDList;
   end;
 
   { TTestOPF }
@@ -66,6 +76,13 @@ type
   published
     procedure AttributeList;
     procedure InheritedAttributeList;
+  end;
+
+  { TTestOPFTransaction }
+
+  TTestOPFTransaction = class(TTestOPF)
+  published
+    procedure TransactionPIDList;
   end;
 
   { TTestOPFInsertManualMapping }
@@ -130,7 +147,7 @@ type
 
   { TTestBase }
 
-  TTestBase = class(TObject)
+  TTestBase = class(TJCoreManagedObject)
   private
     FPID: IJCoreOPFPID;
   published
@@ -179,16 +196,19 @@ type
     FPhones: TTestPhoneList;
     FCity: TTestCity;
     FLanguages: TTestLanguageList;
+    function GetLanguages: TTestLanguageList;
     function GetPhones: TTestPhoneList;
+    procedure SetCity(AValue: TTestCity);
+    procedure SetLanguages(AValue: TTestLanguageList);
     procedure SetPhones(AValue: TTestPhoneList);
-  public
-    destructor Destroy; override;
+  protected
+    procedure Finit; override;
   published
     property Name: string read FName write FName;
     property Age: Integer read FAge write FAge;
     property Phones: TTestPhoneList read GetPhones write SetPhones;
-    property City: TTestCity read FCity write FCity;
-    property Languages: TTestLanguageList read FLanguages write FLanguages;
+    property City: TTestCity read FCity write SetCity;
+    property Languages: TTestLanguageList read GetLanguages write SetLanguages;
   end;
 
   TTestEmployee = class(TTestPerson)
@@ -332,6 +352,27 @@ begin
 end;
 
 { TTestOPFSession }
+
+procedure TTestOPFSession.Commit;
+var
+  I: Integer;
+begin
+  Inc(FCommitCount);
+  LastCommitPIDList.Clear;
+  for I := 0 to Pred(InTransactionPIDList.Count) do
+    LastCommitPIDList.Add(InTransactionPIDList[I]);
+  inherited Commit;
+end;
+
+class constructor TTestOPFSession.Create;
+begin
+  FLastCommitPIDList := TInterfaceList.Create;
+end;
+
+class destructor TTestOPFSession.Destroy;
+begin
+  FreeAndNil(FLastCommitPIDList);
+end;
 
 function TTestOPFSession.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
@@ -491,11 +532,62 @@ end;
 procedure TTestOPFMetadata.InheritedAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
-  i: Integer;
 begin
   VMetadata := FSession.AcquireMetadata(TTestEmployee);
   AssertEquals('meta.cnt', 1, VMetadata.AttributeCount);
   AssertEquals('meta0.name', 'Salary', VMetadata[0].Name);
+end;
+
+{ TTestOPFTransaction }
+
+procedure TTestOPFTransaction.TransactionPIDList;
+var
+  VPerson: TTestPerson;
+  VCity: TTestCity;
+  VPhone1: TTestPhone;
+  VPhone2: TTestPhone;
+  VLang1: TTestLanguage;
+  VLang2: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VCity := TTestCity.Create;
+    VPerson.City := VCity;
+    VPhone1 := TTestPhone.Create;
+    VPerson.Phones.Add(VPhone1);
+    VPhone2 := TTestPhone.Create;
+    VPerson.Phones.Add(VPhone2);
+    VLang1 := TTestLanguage.Create('1');
+    VPerson.Languages.Add(VLang1);
+    VLang2 := TTestLanguage.Create('2');
+    VPerson.Languages.Add(VLang2);
+    VPerson.Languages.Add(VLang2);
+    VLang2.AddRef;
+    TTestOPFSession.CommitCount := 0;
+    FSession.Store(VPerson);
+    AssertEquals('commit cnt', 1, TTestOPFSession.CommitCount);
+    AssertEquals('pid cnt', 6, TTestOPFSession.LastCommitPIDList.Count);
+    AssertNotNull('vperson pid', VPerson._PID);
+    AssertTrue('vperson.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VPerson._PID) >= 0);
+    AssertNotNull('vcity pid', VCity._PID);
+    AssertTrue('vcity.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VCity._PID) >= 0);
+    AssertNotNull('vphone1 pid', VPhone1._PID);
+    AssertTrue('vphone1.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VPhone1._PID) >= 0);
+    AssertNotNull('vphone2 pid', VPhone2._PID);
+    AssertTrue('vphone2.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VPhone2._PID) >= 0);
+    AssertNotNull('vlang1 pid', VLang1._PID);
+    AssertTrue('vlang1.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VLang1._PID) >= 0);
+    AssertNotNull('vlang2 pid', VLang2._PID);
+    AssertTrue('vlang2.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VLang2._PID) >= 0);
+    VPerson.City := nil;
+    VCity := nil;
+    TTestOPFSession.CommitCount := 0;
+    FSession.Store(VPerson);
+    AssertEquals('commit cnt', 1, TTestOPFSession.CommitCount);
+    AssertEquals('pid cnt', 5, TTestOPFSession.LastCommitPIDList.Count);
+  finally
+    FreeAndNil(VPerson);
+  end;
 end;
 
 { TTestOPFInsertManualMapping }
@@ -1151,18 +1243,40 @@ begin
   Result := FPhones;
 end;
 
+procedure TTestPerson.SetCity(AValue: TTestCity);
+begin
+  if FCity <> AValue then
+  begin
+    FreeAndNil(FCity);
+    FCity := AValue;
+  end;
+end;
+
+function TTestPerson.GetLanguages: TTestLanguageList;
+begin
+  if not Assigned(FLanguages) then
+    FLanguages := TTestLanguageList.Create;
+  Result := FLanguages;
+end;
+
+procedure TTestPerson.SetLanguages(AValue: TTestLanguageList);
+begin
+  FreeAndNil(FLanguages);
+  FLanguages := AValue;
+end;
+
 procedure TTestPerson.SetPhones(AValue: TTestPhoneList);
 begin
   FreeAndNil(FPhones);
   FPhones := AValue;
 end;
 
-destructor TTestPerson.Destroy;
+procedure TTestPerson.Finit;
 begin
   FreeAndNil(FPhones);
   FreeAndNil(FCity);
   FreeAndNil(FLanguages);
-  inherited Destroy;
+  inherited Finit;
 end;
 
 { TTestEmployeeSQLMapping }
@@ -1494,6 +1608,7 @@ end;
 initialization
   RegisterTest('jcore.opf.core', TTestOPFCore);
   RegisterTest('jcore.opf.mapping.metadata', TTestOPFMetadata);
+  RegisterTest('jcore.opf.mapping.transaction', TTestOPFTransaction);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);
