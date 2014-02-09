@@ -49,6 +49,7 @@ type
     FModel: TJCoreOPFModel;
   protected
     function CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata; virtual;
+    function CreatePID(const AEntity: TObject): IJCoreOPFPID; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
@@ -143,6 +144,11 @@ begin
   end;
 end;
 
+function TJCoreOPFMapping.CreatePID(const AEntity: TObject): IJCoreOPFPID;
+begin
+  Result := TJCoreOPFPID.Create(AcquireMetadata(AEntity.ClassType), AEntity);
+end;
+
 procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
 begin
   { TODO : Evaluate after attr metadata implementation }
@@ -165,7 +171,6 @@ function TJCoreOPFMapping.AcquirePID(AEntity: TObject;
 var
   VPropInfo: PPropInfo;
 begin
-  { TODO : User defined PID class }
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
   VPropInfo := GetPropInfo(AEntity, SPID);
@@ -174,7 +179,7 @@ begin
   Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
   if not Assigned(Result) then
   begin
-    Result := TJCoreOPFPID.Create(AcquireMetadata(AEntity.ClassType), AEntity);
+    Result := CreatePID(AEntity);
     SetInterfaceProp(AEntity, VPropInfo, Result);
   end;
   { TODO : Check duplications and avoid useless calls }
