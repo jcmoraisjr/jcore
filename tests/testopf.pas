@@ -65,6 +65,7 @@ type
   TTestOPFMetadata = class(TTestOPF)
   published
     procedure AttributeList;
+    procedure InheritedAttributeList;
   end;
 
   { TTestOPFInsertManualMapping }
@@ -190,6 +191,13 @@ type
     property Languages: TTestLanguageList read FLanguages write FLanguages;
   end;
 
+  TTestEmployee = class(TTestPerson)
+  private
+    FSalary: Currency;
+  published
+    property Salary: Currency read FSalary;
+  end;
+
   TTestIntegerList = specialize TFPGList<Integer>;
 
   { TTestSQLDriver }
@@ -242,6 +250,13 @@ type
     procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
     procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
+  end;
+
+  { TTestEmployeeSQLMapping }
+
+  TTestEmployeeSQLMapping = class(TTestPersonSQLMapping)
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -352,8 +367,8 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   FConfiguration := CreateConfiguration([TTestSQLDriver], [
-   TTestPersonSQLMapping, TTestCitySQLMapping, TTestPhoneSQLMapping,
-   TTestLanguageSQLMapping]);
+   TTestPersonSQLMapping, TTestEmployeeSQLMapping, TTestCitySQLMapping,
+   TTestPhoneSQLMapping, TTestLanguageSQLMapping]);
   FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 
@@ -471,6 +486,16 @@ begin
   AssertEquals('meta2.name', 'Phones', VMetadata[2].Name);
   AssertEquals('meta3.name', 'City', VMetadata[3].Name);
   AssertEquals('meta4.name', 'Languages', VMetadata[4].Name);
+end;
+
+procedure TTestOPFMetadata.InheritedAttributeList;
+var
+  VMetadata: TJCoreOPFClassMetadata;
+  i: Integer;
+begin
+  VMetadata := FSession.AcquireMetadata(TTestEmployee);
+  AssertEquals('meta.cnt', 1, VMetadata.AttributeCount);
+  AssertEquals('meta0.name', 'Salary', VMetadata[0].Name);
 end;
 
 { TTestOPFInsertManualMapping }
@@ -1138,6 +1163,13 @@ begin
   FreeAndNil(FCity);
   FreeAndNil(FLanguages);
   inherited Destroy;
+end;
+
+{ TTestEmployeeSQLMapping }
+
+class function TTestEmployeeSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestEmployee;
 end;
 
 { TTestEmptyDriver }

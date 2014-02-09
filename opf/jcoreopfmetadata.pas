@@ -159,13 +159,18 @@ procedure TJCoreOPFClassMetadata.AutoBuild;
 var
   VPropList: PPropList;
   VPropListCount: Integer;
+  VParentPropCount: Integer;
   I: Integer;
 begin
   AttrList.Clear;
+  if TheClass = TObject then
+    Exit;
   VPropListCount := GetPropList(TheClass, VPropList);
   if Assigned(VPropList) then
     try
-      for I := 0 to Pred(VPropListCount) do
+      VParentPropCount :=
+       GetTypeData(PTypeInfo(TheClass.ClassParent.ClassInfo))^.PropCount;
+      for I := VParentPropCount to Pred(VPropListCount) do
         if not SameText(SPID, VPropList^[I]^.Name) then
           AttrList.Add(VPropList^[I]);
     finally
