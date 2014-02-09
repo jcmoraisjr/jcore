@@ -27,8 +27,7 @@ uses
 type
 
   IJCoreOPFSessionManager = interface
-    function GetMappingClassList: TJCoreOPFMappingClassList;
-    property MappingClassList: TJCoreOPFMappingClassList read GetMappingClassList;
+    function FindMappingClass(const AClass: TClass): TJCoreOPFMappingClass;
   end;
 
   IJCoreOPFSession = interface(IInterface)
@@ -98,13 +97,10 @@ begin
   for Result in FMappingList do
     if Result.Apply(AClass) then
       Exit;
-  for VMappingClass in SessionManager.MappingClassList do
-    if VMappingClass.Apply(AClass) then
-    begin
-      Result := CreateMapping(VMappingClass);
-      Exit;
-    end;
-  raise EJCoreOPFMappingNotFound.Create(AClass.ClassName);
+  VMappingClass := SessionManager.FindMappingClass(AClass);
+  if not Assigned(VMappingClass) then
+    raise EJCoreOPFMappingNotFound.Create(AClass.ClassName);
+  Result := CreateMapping(VMappingClass);
 end;
 
 procedure TJCoreOPFSession.Commit;

@@ -48,12 +48,12 @@ type
     FPassword: string;
     FUsername: string;
     function GetDriverName: string;
-    function GetMappingClassList: TJCoreOPFMappingClassList;
     procedure SetDriverName(AValue: string);
   protected
     function CreateDriver: TJCoreOPFDriver;
+    function FindMappingClass(const AClass: TClass): TJCoreOPFMappingClass;
     function InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession; virtual;
-    property MappingClassList: TJCoreOPFMappingClassList read GetMappingClassList;
+    property MappingClassList: TJCoreOPFMappingClassList read FMappingClassList;
   public
     constructor Create(const AModel: TJCoreOPFModel = nil);
     destructor Destroy; override;
@@ -95,17 +95,20 @@ begin
   Result := FDriverName;
 end;
 
-function TJCoreOPFConfiguration.GetMappingClassList: TJCoreOPFMappingClassList;
-begin
-  Result := FMappingClassList;
-end;
-
 function TJCoreOPFConfiguration.CreateDriver: TJCoreOPFDriver;
 begin
   { TODO : thread safe }
   if not Assigned(FDriverClass) then
     raise EJCoreOPFUndefinedDriver.Create;
   Result := FDriverClass.Create;
+end;
+
+function TJCoreOPFConfiguration.FindMappingClass(const AClass: TClass): TJCoreOPFMappingClass;
+begin
+  for Result in MappingClassList do
+    if Result.Apply(AClass) then
+      Exit;
+  Result := nil;
 end;
 
 function TJCoreOPFConfiguration.InternalCreateSession(
