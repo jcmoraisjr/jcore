@@ -207,13 +207,17 @@ function TJCoreOPFMapping.RetrieveFromDriver(const AClass: TClass;
 var
   VOID: TJCoreOPFOID;
 begin
-  VOID := CreateOIDFromDriver(ADriverOID);
-  try
-    Result := InternalRetrieve(AClass, VOID);
-  except
-    FreeAndNil(VOID);
-    raise;
-  end;
+  if not ADriverOID.ReadNull then
+  begin
+    VOID := CreateOIDFromDriver(ADriverOID);
+    try
+      Result := InternalRetrieve(AClass, VOID);
+    except
+      FreeAndNil(VOID);
+      raise;
+    end;
+  end else
+    Result := nil;
 end;
 
 function TJCoreOPFMapping.RetrieveFromString(const AClass: TClass;
@@ -221,13 +225,17 @@ function TJCoreOPFMapping.RetrieveFromString(const AClass: TClass;
 var
   VOID: TJCoreOPFOID;
 begin
-  VOID := CreateOIDFromString(AStringOID);
-  try
-    Result := InternalRetrieve(AClass, VOID);
-  except
-    FreeAndNil(VOID);
-    raise;
-  end;
+  if AStringOID <> '' then
+  begin
+    VOID := CreateOIDFromString(AStringOID);
+    try
+      Result := InternalRetrieve(AClass, VOID);
+    except
+      FreeAndNil(VOID);
+      raise;
+    end;
+  end else
+    Result := nil;
 end;
 
 function TJCoreOPFMapping.RetrieveList(const AListBaseClass: TClass;

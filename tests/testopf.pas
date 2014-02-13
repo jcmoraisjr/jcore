@@ -1449,8 +1449,7 @@ begin
   VPerson := APID.Entity as TTestPerson;
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
-  if not Driver.ReadNull then
-    VPerson.City := Mapper.RetrieveFromDriver(TTestCity, Driver) as TTestCity;
+  VPerson.City := Mapper.RetrieveFromDriver(TTestCity, Driver) as TTestCity;
   VPerson.Phones := TTestPhoneList(RetrieveListPID(TTestPhone, VPerson._PID));
   VPerson.Languages := TTestLanguageList(RetrieveListPID(TTestLanguage, VPerson._PID));
 end;
