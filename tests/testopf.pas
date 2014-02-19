@@ -76,6 +76,7 @@ type
   published
     procedure AttributeList;
     procedure InheritedAttributeList;
+    procedure NonPidAttributeList;
   end;
 
   { TTestOPFTransaction }
@@ -152,6 +153,17 @@ type
     FPID: IJCoreOPFPID;
   published
     property _PID: IJCoreOPFPID read FPID write FPID;
+  end;
+
+  { TTestSimple }
+
+  TTestSimple = class(TObject)
+  private
+    FPID: IJCoreOPFPID;
+    FField1: Integer;
+  published
+    property _PID: IJCoreOPFPID read FPID write FPID;
+    property Field1: Integer read FField1 write FField1;
   end;
 
   { TTestCity }
@@ -256,6 +268,13 @@ type
     function GenerateOID: Integer;
   public
     class procedure ClearOID;
+  end;
+
+  { TTestSimpleSQLMapping }
+
+  TTestSimpleSQLMapping = class(TTestAbstractSQLMapping)
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
   end;
 
   { TTestPersonSQLMapping }
@@ -408,8 +427,8 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   FConfiguration := CreateConfiguration([TTestSQLDriver], [
-   TTestPersonSQLMapping, TTestEmployeeSQLMapping, TTestCitySQLMapping,
-   TTestPhoneSQLMapping, TTestLanguageSQLMapping]);
+   TTestSimpleSQLMapping, TTestPersonSQLMapping, TTestEmployeeSQLMapping,
+   TTestCitySQLMapping, TTestPhoneSQLMapping, TTestLanguageSQLMapping]);
   FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 
@@ -536,6 +555,15 @@ begin
   VMetadata := FSession.AcquireMetadata(TTestEmployee);
   AssertEquals('meta.cnt', 1, VMetadata.AttributeCount);
   AssertEquals('meta0.name', 'Salary', VMetadata[0].Name);
+end;
+
+procedure TTestOPFMetadata.NonPidAttributeList;
+var
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  VMetadata := FSession.AcquireMetadata(TTestSimple);
+  AssertEquals('meta.cnt', 1, VMetadata.AttributeCount);
+  AssertEquals('meta0.name', 'Field1', VMetadata[0].Name);
 end;
 
 { TTestOPFTransaction }
@@ -1405,6 +1433,13 @@ end;
 class procedure TTestAbstractSQLMapping.ClearOID;
 begin
   FCurrentOID := 0;
+end;
+
+{ TTestSimpleSQLMapping }
+
+class function TTestSimpleSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestSimple;
 end;
 
 { TTestPersonSQLMapping }

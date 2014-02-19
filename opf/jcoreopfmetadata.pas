@@ -37,6 +37,7 @@ type
   protected
     { TODO : Generics? }
     function InternalAttributeMetadataClass: TJCoreAttrMetadataClass; override;
+    function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
   public
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
   end;
@@ -54,6 +55,10 @@ type
 
 implementation
 
+uses
+  sysutils,
+  JCoreOPFConsts;
+
 { TJCoreOPFAttrMetadata }
 
 function TJCoreOPFAttrMetadata.CreateADM(const AEntity: TObject): TJCoreOPFADM;
@@ -68,6 +73,11 @@ end;
 function TJCoreOPFClassMetadata.InternalAttributeMetadataClass: TJCoreAttrMetadataClass;
 begin
   Result := TJCoreOPFAttrMetadata;
+end;
+
+function TJCoreOPFClassMetadata.IsReservedAttr(const AAttrName: ShortString): Boolean;
+begin
+  Result := SameText(SPID, AAttrName) or inherited IsReservedAttr(AAttrName);
 end;
 
 function TJCoreOPFClassMetadata.AttributeByName(

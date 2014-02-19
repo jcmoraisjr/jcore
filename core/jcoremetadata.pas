@@ -57,6 +57,7 @@ type
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
   protected
     function InternalAttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
+    function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
     property AttrList: TJCoreAttrMetadataList read FAttrList;
     property TheClass: TClass read FClass;
   public
@@ -136,6 +137,11 @@ begin
   Result := TJCoreAttrMetadata;
 end;
 
+function TJCoreClassMetadata.IsReservedAttr(const AAttrName: ShortString): Boolean;
+begin
+  Result := False;
+end;
+
 constructor TJCoreClassMetadata.Create(const AClass: TClass);
 begin
   inherited Create;
@@ -179,7 +185,8 @@ begin
       VParentPropCount :=
        GetTypeData(PTypeInfo(TheClass.ClassParent.ClassInfo))^.PropCount;
       for I := VParentPropCount to Pred(VPropListCount) do
-        AttrList.Add(VPropList^[I]);
+        if not IsReservedAttr(VPropList^[I]^.Name) then
+          AttrList.Add(VPropList^[I]);
     finally
       Freemem(VPropList);
     end;
