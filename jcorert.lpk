@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <Package Version="4">
     <Name Value="JCoreRT"/>
@@ -16,7 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="10">
+    <Files Count="11">
       <Item1>
         <Filename Value="core/jcore.inc"/>
         <Type Value="Include"/>
@@ -57,6 +57,10 @@
         <Filename Value="core/jcoreexpressionlib.pas"/>
         <UnitName Value="JCoreExpressionLib"/>
       </Item10>
+      <Item11>
+        <Filename Value="core/jcoremetadata.pas"/>
+        <UnitName Value="JCoreMetadata"/>
+      </Item11>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

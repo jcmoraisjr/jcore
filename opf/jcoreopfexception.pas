@@ -28,13 +28,6 @@ type
   EJCoreOPF = class(EJCoreException)
   end;
 
-  { EJCoreOPFMetadataNotFound }
-
-  EJCoreOPFMetadataNotFound = class(EJCoreOPF)
-  public
-    constructor Create(const AClass: TClass);
-  end;
-
   { EJCoreOPFDriverNotFound }
 
   EJCoreOPFDriverNotFound = class(EJCoreOPF)
@@ -105,13 +98,6 @@ type
     constructor Create;
   end;
 
-  { EJCoreOPFAttributeNotFound }
-
-  EJCoreOPFAttributeNotFound = class(EJCoreOPF)
-  public
-    constructor Create(const AClassName, AAttributeName: string);
-  end;
-
   { EJCoreOPFUnsupportedAttributeType }
 
   EJCoreOPFUnsupportedAttributeType = class(EJCoreOPF)
@@ -120,12 +106,6 @@ type
   end;
 
 implementation
-
-{ EJCoreOPFMetadataNotFound }
-
-constructor EJCoreOPFMetadataNotFound.Create(const AClass: TClass);
-begin
-end;
 
 { EJCoreOPFDriverNotFound }
 
@@ -186,13 +166,6 @@ end;
 { EJCoreOPFUnsupportedListOperations }
 
 constructor EJCoreOPFUnsupportedListOperations.Create;
-begin
-end;
-
-{ EJCoreOPFAttributeNotFound }
-
-constructor EJCoreOPFAttributeNotFound.Create(const AClassName,
-  AAttributeName: string);
 begin
 end;
 

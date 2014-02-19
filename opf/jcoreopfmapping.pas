@@ -42,13 +42,12 @@ type
 
   { TJCoreOPFMapping }
 
-  TJCoreOPFMapping = class(TObject, IJCoreOPFMetadataBuilder)
+  TJCoreOPFMapping = class(TObject)
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
     FModel: TJCoreOPFModel;
   protected
-    function CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata; virtual;
     function CreatePID(const AEntity: TObject): IJCoreOPFPID; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
@@ -130,18 +129,7 @@ uses
 
 function TJCoreOPFMapping.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
-  Result := Model.AcquireMetadata(AClass, Self);
-end;
-
-function TJCoreOPFMapping.CreateMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
-begin
-  Result := TJCoreOPFClassMetadata.Create(AClass);
-  try
-    Result.AutoBuild;
-  except
-    FreeAndNil(Result);
-    raise;
-  end;
+  Result := Model.AcquireMetadata(AClass);
 end;
 
 function TJCoreOPFMapping.CreatePID(const AEntity: TObject): IJCoreOPFPID;

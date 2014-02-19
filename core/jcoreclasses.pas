@@ -51,6 +51,13 @@ type
     property GUID: TGuid read FGUID;
   end;
 
+  { EJCoreAttributeNotFound }
+
+  EJCoreAttributeNotFound = class(EJCoreException)
+  public
+    constructor Create(const AClassName, AAttributeName: string);
+  end;
+
   EJCoreConversionError = class(EJCoreError);
 
   TJCoreTextPos = record
@@ -175,6 +182,13 @@ begin
   CreateFmt(SJCoreUnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
   FClass := AClass;
   FGUID := AGUID;
+end;
+
+{ EJCoreAttributeNotFound }
+
+constructor EJCoreAttributeNotFound.Create(const AClassName,
+  AAttributeName: string);
+begin
 end;
 
 { EJCoreReadError }
