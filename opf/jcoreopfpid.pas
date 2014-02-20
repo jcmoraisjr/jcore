@@ -19,8 +19,7 @@ interface
 uses
   typinfo,
   JCoreOPFID,
-  JCoreOPFMetadata,
-  JCoreOPFADM;
+  JCoreOPFMetadata;
 
 type
 

@@ -16,7 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="10">
       <Item1>
         <Filename Value="opf/jcoreopfconsts.pas"/>
         <UnitName Value="JCoreOPFConsts"/>
@@ -46,21 +46,17 @@
         <UnitName Value="JCoreOPFDriver"/>
       </Item7>
       <Item8>
-        <Filename Value="opf/jcoreopfadm.pas"/>
-        <UnitName Value="JCoreOPFADM"/>
-      </Item8>
-      <Item9>
         <Filename Value="opf/jcoreopfmapping.pas"/>
         <UnitName Value="JCoreOPFMapping"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="opf/jcoreopfsession.pas"/>
         <UnitName Value="JCoreOPFSession"/>
-      </Item10>
-      <Item11>
+      </Item9>
+      <Item10>
         <Filename Value="opf/jcoreopfconfig.pas"/>
         <UnitName Value="JCoreOPFConfig"/>
-      </Item11>
+      </Item10>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
