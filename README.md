@@ -1,10 +1,29 @@
 JCore
 =====
 
-Some utilitary classes
+Some utility classes
 
+* OPF (drafts)
 * Dependency Injection Container
 * Expression Parser
+
+OPF
+---
+
+Drafts of a persistence framework. Features being implemented:
+
+* Entities inherits from TObject and declares native data types
+* Support of any data type, registering new data mediators for unsupported PPropInfos
+* Auto and manual mapping (object <-> storage mechanism)
+* Auto and manual model (class infos; metadata)
+* Native drivers -- mapping straight to database: no mediators or conversions
+* Bulk retrieve -- instantiate lots of objects with one query
+* Lazy loading -- load objects or attributes only on demand
+* TDD -- test driven development
+* Lazarus wizards for manual mappings, manual model and persistence configuration
+* API docs
+
+First alpha: Dec/2014
 
 Dependency Injection Container
 ------------------------------
