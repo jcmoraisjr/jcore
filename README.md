@@ -13,7 +13,7 @@ OPF
 Drafts of a persistence framework. Features being implemented:
 
 * Entities inherits from TObject and declares native data types
-* Support of any data type, registering new data mediators for unsupported PPropInfos
+* Support of any data type, registering new data mediators for unsupported PTypeInfos
 * Auto and manual mapping (object <-> storage mechanism)
 * Auto and manual model (class infos; metadata)
 * Native drivers -- mapping straight to database: no mediators or conversions
