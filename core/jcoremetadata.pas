@@ -23,30 +23,25 @@ uses
 
 type
 
+  TJCoreMetadataCompositionType = (jctComposition, jctAggregation);
+
   { TJCoreAttrMetadata }
 
   TJCoreAttrMetadata = class(TObject)
   private
+    FCompositionClass: TClass;
+    FCompositionType: TJCoreMetadataCompositionType;
     FName: string;
     FPropInfo: PPropInfo;
-  protected
-    property PropInfo: PPropInfo read FPropInfo;
   public
     constructor Create(const APropInfo: PPropInfo);
+    property CompositionClass: TClass read FCompositionClass;
+    property CompositionType: TJCoreMetadataCompositionType read FCompositionType;
     property Name: string read FName;
+    property PropInfo: PPropInfo read FPropInfo;
   end;
 
-  TJCoreAttrMetadataClass = class of TJCoreAttrMetadata;
-
-  { TJCoreAttrMetadataList }
-
-  TJCoreAttrMetadataList = class(specialize TFPGObjectList<TJCoreAttrMetadata>)
-  private
-    FAttrMetadataClass: TJCoreAttrMetadataClass;
-  public
-    constructor Create(const AAttrMetadataClass: TJCoreAttrMetadataClass);
-    function Add(const APropInfo: PPropInfo): TJCoreAttrMetadata; overload;
-  end;
+  TJCoreAttrMetadataList = specialize TFPGObjectList<TJCoreAttrMetadata>;
 
   { TJCoreClassMetadata }
 
@@ -56,20 +51,16 @@ type
     FClass: TClass;
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
   protected
-    function InternalAttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
-    function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
     property AttrList: TJCoreAttrMetadataList read FAttrList;
     property TheClass: TClass read FClass;
   public
     constructor Create(const AClass: TClass);
     destructor Destroy; override;
+    procedure AddAttribute(const AAttribute: TJCoreAttrMetadata);
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
     function AttributeCount: Integer;
-    procedure AutoBuild;
     property Attributes[const AIndex: Integer]: TJCoreAttrMetadata read GetAttributes; default;
   end;
-
-  TJCoreClassMetadataClass = class of TJCoreClassMetadata;
 
   TJCoreClassMetadataMap = specialize TFPGMap<Pointer, TJCoreClassMetadata>;
 
@@ -81,11 +72,14 @@ type
   private
     FMetadataMap: TJCoreClassMetadataMap;
   protected
+    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
+    function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; virtual;
     function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
-    function InternalMetadataClass: TJCoreClassMetadataClass; virtual;
     procedure Finit; override;
+    procedure InitRegistry; virtual;
+    function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
   public
-    constructor Create;
+    constructor Create; virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
     class function AcquireModel: TJCoreModel;
   end;
@@ -104,26 +98,6 @@ begin
   FName := APropInfo^.Name;
 end;
 
-{ TJCoreAttrMetadataList }
-
-constructor TJCoreAttrMetadataList.Create(
-  const AAttrMetadataClass: TJCoreAttrMetadataClass);
-begin
-  inherited Create(True);
-  FAttrMetadataClass := AAttrMetadataClass;
-end;
-
-function TJCoreAttrMetadataList.Add(const APropInfo: PPropInfo): TJCoreAttrMetadata;
-begin
-  Result := FAttrMetadataClass.Create(APropInfo);
-  try
-    inherited Add(Result);
-  except
-    FreeAndNil(Result);
-    raise;
-  end;
-end;
-
 { TJCoreClassMetadata }
 
 function TJCoreClassMetadata.GetAttributes(
@@ -132,27 +106,22 @@ begin
   Result := AttrList[AIndex];
 end;
 
-function TJCoreClassMetadata.InternalAttributeMetadataClass: TJCoreAttrMetadataClass;
-begin
-  Result := TJCoreAttrMetadata;
-end;
-
-function TJCoreClassMetadata.IsReservedAttr(const AAttrName: ShortString): Boolean;
-begin
-  Result := False;
-end;
-
 constructor TJCoreClassMetadata.Create(const AClass: TClass);
 begin
   inherited Create;
   FClass := AClass;
-  FAttrList := TJCoreAttrMetadataList.Create(InternalAttributeMetadataClass);
+  FAttrList := TJCoreAttrMetadataList.Create(True);
 end;
 
 destructor TJCoreClassMetadata.Destroy;
 begin
   FreeAndNil(FAttrList);
   inherited Destroy;
+end;
+
+procedure TJCoreClassMetadata.AddAttribute(const AAttribute: TJCoreAttrMetadata);
+begin
+  AttrList.Add(AAttribute);
 end;
 
 function TJCoreClassMetadata.AttributeByName(
@@ -169,45 +138,47 @@ begin
   Result := AttrList.Count;
 end;
 
-procedure TJCoreClassMetadata.AutoBuild;
+{ TJCoreModel }
+
+function TJCoreModel.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
 var
   VPropList: PPropList;
   VPropListCount: Integer;
   VParentPropCount: Integer;
   I: Integer;
 begin
-  AttrList.Clear;
-  if TheClass = TObject then
+  Result := CreateMetadata(AClass);
+  if AClass = TObject then
     Exit;
-  VPropListCount := GetPropList(TheClass, VPropList);
-  if Assigned(VPropList) then
-    try
-      VParentPropCount :=
-       GetTypeData(PTypeInfo(TheClass.ClassParent.ClassInfo))^.PropCount;
-      for I := VParentPropCount to Pred(VPropListCount) do
-        if not IsReservedAttr(VPropList^[I]^.Name) then
-          AttrList.Add(VPropList^[I]);
-    finally
-      Freemem(VPropList);
-    end;
-end;
-
-{ TJCoreModel }
-
-function TJCoreModel.CreateMetadata(const AClass: TClass): TJCoreClassMetadata;
-begin
-  Result := InternalMetadataClass.Create(AClass);
   try
-    Result.AutoBuild;
+    VPropListCount := GetPropList(AClass, VPropList);
+    if Assigned(VPropList) then
+    begin
+      try
+        VParentPropCount :=
+         GetTypeData(PTypeInfo(AClass.ClassParent.ClassInfo))^.PropCount;
+        for I := VParentPropCount to Pred(VPropListCount) do
+          if not IsReservedAttr(VPropList^[I]^.Name) then
+            Result.AddAttribute(CreateAttribute(VPropList^[I]));
+      finally
+        Freemem(VPropList);
+      end;
+    end;
   except
     FreeAndNil(Result);
     raise;
   end;
 end;
 
-function TJCoreModel.InternalMetadataClass: TJCoreClassMetadataClass;
+function TJCoreModel.CreateAttribute(
+  const APropInfo: PPropInfo): TJCoreAttrMetadata;
 begin
-  Result := TJCoreClassMetadata;
+  Result := TJCoreAttrMetadata.Create(APropInfo);
+end;
+
+function TJCoreModel.CreateMetadata(const AClass: TClass): TJCoreClassMetadata;
+begin
+  Result := TJCoreClassMetadata.Create(AClass);
 end;
 
 procedure TJCoreModel.Finit;
@@ -222,10 +193,20 @@ begin
   inherited Finit;
 end;
 
+procedure TJCoreModel.InitRegistry;
+begin
+end;
+
+function TJCoreModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
+begin
+  Result := False;
+end;
+
 constructor TJCoreModel.Create;
 begin
   inherited Create;
   FMetadataMap := TJCoreClassMetadataMap.Create;
+  InitRegistry;
 end;
 
 function TJCoreModel.AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
@@ -235,7 +216,7 @@ begin
   { TODO : Thread safe }
   VIndex := FMetadataMap.IndexOf(AClass);
   if VIndex = -1 then
-    VIndex := FMetadataMap.Add(AClass, CreateMetadata(AClass));
+    VIndex := FMetadataMap.Add(AClass, BuildMetadata(AClass));
   Result := FMetadataMap.Data[VIndex];
 end;
 

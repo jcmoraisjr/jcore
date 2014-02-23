@@ -32,9 +32,6 @@ type
 
   TJCoreOPFADM = class(TObject)
   private
-    { TODO : abstract registry/acquire implementation }
-    class var FADMList: TJCoreOPFADMClassList;
-  private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
     FEntity: TObject;
@@ -44,13 +41,9 @@ type
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
     property Entity: TObject read FEntity;
   public
-    class constructor Create;
-    class destructor Destroy;
     constructor Create(const AEntity: TObject; const AAttrPropInfo: PPropInfo); virtual;
-    class function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     function IsDirty: Boolean;
-    class procedure RegisterADM;
     procedure UpdateCache;
   end;
 
@@ -114,33 +107,44 @@ type
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
+  TJCoreOPFModel = class;
+
   { TJCoreOPFAttrMetadata }
 
   TJCoreOPFAttrMetadata = class(TJCoreAttrMetadata)
   private
     FADMClass: TJCoreOPFADMClass;
+    FModel: TJCoreOPFModel;
+  protected
+    property Model: TJCoreOPFModel read FModel;
   public
+    constructor Create(const AModel: TJCoreOPFModel; const APropInfo: PPropInfo);
     function CreateADM(const AEntity: TObject): TJCoreOPFADM;
   end;
 
   { TJCoreOPFClassMetadata }
 
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)
-  protected
-    { TODO : Generics? }
-    function InternalAttributeMetadataClass: TJCoreAttrMetadataClass; override;
-    function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
   public
+    { TODO : Generics? }
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
   end;
 
   { TJCoreOPFModel }
 
   TJCoreOPFModel = class(TJCoreModel)
+  private
+    FADMList: TJCoreOPFADMClassList;
   protected
-    { TODO : Generics? }
-    function InternalMetadataClass: TJCoreClassMetadataClass; override;
+    function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; override;
+    function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; override;
+    procedure Finit; override;
+    procedure InitRegistry; override;
+    function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
+    property ADMList: TJCoreOPFADMClassList read FADMList;
   public
+    constructor Create; override;
+    function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     class function AcquireModel: TJCoreOPFModel;
   end;
@@ -154,16 +158,6 @@ uses
 
 { TJCoreOPFADM }
 
-class constructor TJCoreOPFADM.Create;
-begin
-  FADMList := TJCoreOPFADMClassList.Create;
-end;
-
-class destructor TJCoreOPFADM.Destroy;
-begin
-  FreeAndNil(FADMList);
-end;
-
 constructor TJCoreOPFADM.Create(const AEntity: TObject;
   const AAttrPropInfo: PPropInfo);
 begin
@@ -173,23 +167,9 @@ begin
   FCacheUpdated := False;
 end;
 
-class function TJCoreOPFADM.AcquireADMClass(
-  const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
-begin
-  for Result in FADMList do
-    if Result.Apply(AAttrTypeInfo) then
-      Exit;
-  raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
-end;
-
 function TJCoreOPFADM.IsDirty: Boolean;
 begin
   Result := not FCacheUpdated or InternalIsDirty;
-end;
-
-class procedure TJCoreOPFADM.RegisterADM;
-begin
-  FADMList.Add(Self);
 end;
 
 procedure TJCoreOPFADM.UpdateCache;
@@ -315,24 +295,21 @@ end;
 
 { TJCoreOPFAttrMetadata }
 
+constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
+  const APropInfo: PPropInfo);
+begin
+  inherited Create(APropInfo);
+  FModel := AModel;
+end;
+
 function TJCoreOPFAttrMetadata.CreateADM(const AEntity: TObject): TJCoreOPFADM;
 begin
   if not Assigned(FADMClass) then
-    FADMClass := TJCoreOPFADM.AcquireADMClass(PropInfo^.PropType);
+    FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
   Result := FADMClass.Create(AEntity, PropInfo);
 end;
 
 { TJCoreOPFClassMetadata }
-
-function TJCoreOPFClassMetadata.InternalAttributeMetadataClass: TJCoreAttrMetadataClass;
-begin
-  Result := TJCoreOPFAttrMetadata;
-end;
-
-function TJCoreOPFClassMetadata.IsReservedAttr(const AAttrName: ShortString): Boolean;
-begin
-  Result := SameText(SPID, AAttrName) or inherited IsReservedAttr(AAttrName);
-end;
 
 function TJCoreOPFClassMetadata.AttributeByName(
   const AAttributeName: string): TJCoreOPFAttrMetadata;
@@ -342,13 +319,52 @@ end;
 
 { TJCoreOPFModel }
 
-function TJCoreOPFModel.InternalMetadataClass: TJCoreClassMetadataClass;
+function TJCoreOPFModel.CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata;
 begin
-  Result := TJCoreOPFClassMetadata;
+  Result := TJCoreOPFAttrMetadata.Create(Self, APropInfo);
 end;
 
-function TJCoreOPFModel.AcquireMetadata(const AClass: TClass
-  ): TJCoreOPFClassMetadata;
+function TJCoreOPFModel.CreateMetadata(const AClass: TClass): TJCoreClassMetadata;
+begin
+  Result := TJCoreOPFClassMetadata.Create(AClass);
+end;
+
+procedure TJCoreOPFModel.Finit;
+begin
+  FreeAndNil(FADMList);
+  inherited Finit;
+end;
+
+procedure TJCoreOPFModel.InitRegistry;
+begin
+  inherited InitRegistry;
+  ADMList.Add(TJCoreOPFADMType32);
+  ADMList.Add(TJCoreOPFADMType64);
+  ADMList.Add(TJCoreOPFADMFloat);
+  ADMList.Add(TJCoreOPFADMAnsiString);
+  ADMList.Add(TJCoreOPFADMCollection);
+end;
+
+function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
+begin
+  Result := SameText(SPID, AAttrName) or inherited IsReservedAttr(AAttrName);
+end;
+
+constructor TJCoreOPFModel.Create;
+begin
+  FADMList := TJCoreOPFADMClassList.Create;
+  inherited Create;
+end;
+
+function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
+begin
+  for Result in ADMList do
+    if Result.Apply(AAttrTypeInfo) then
+      Exit;
+  raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
+end;
+
+function TJCoreOPFModel.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
   Result := inherited AcquireMetadata(AClass) as TJCoreOPFClassMetadata;
 end;
@@ -357,13 +373,6 @@ class function TJCoreOPFModel.AcquireModel: TJCoreOPFModel;
 begin
   Result := inherited AcquireModel as TJCoreOPFModel;
 end;
-
-initialization
-  TJCoreOPFADMType32.RegisterADM;
-  TJCoreOPFADMType64.RegisterADM;
-  TJCoreOPFADMFloat.RegisterADM;
-  TJCoreOPFADMAnsiString.RegisterADM;
-  TJCoreOPFADMCollection.RegisterADM;
 
 end.
 
