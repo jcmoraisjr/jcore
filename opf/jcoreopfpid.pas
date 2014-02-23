@@ -38,7 +38,6 @@ type
     FMetadata: TJCoreOPFClassMetadata;
     FOID: TJCoreOPFOID;
     FOwner: IJCoreOPFPID;
-    function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
     function GetOID: TJCoreOPFOID;
@@ -49,6 +48,7 @@ type
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata; const AEntity: TObject);
     destructor Destroy; override;
+    function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
     function IsDirty(const AAttributeName: string): Boolean;
@@ -68,17 +68,6 @@ uses
   JCoreOPFException;
 
 { TJCoreOPFPID }
-
-function TJCoreOPFPID.AcquireADM(const AAttributeName: string): TJCoreOPFADM;
-var
-  VIndex: Integer;
-begin
-  VIndex := FADMMap.IndexOf(AAttributeName);
-  if VIndex = -1 then
-    VIndex := FADMMap.Add(AAttributeName,
-     Metadata.AttributeByName(AAttributeName).CreateADM(Entity));
-  Result := FADMMap.Data[VIndex];
-end;
 
 function TJCoreOPFPID.GetEntity: TObject;
 begin
@@ -133,6 +122,17 @@ begin
   FreeAndNil(FADMMap);
   FreeAndNil(FOID);
   inherited Destroy;
+end;
+
+function TJCoreOPFPID.AcquireADM(const AAttributeName: string): TJCoreOPFADM;
+var
+  VIndex: Integer;
+begin
+  VIndex := FADMMap.IndexOf(AAttributeName);
+  if VIndex = -1 then
+    VIndex := FADMMap.Add(AAttributeName,
+     Metadata.AttributeByName(AAttributeName).CreateADM(Entity));
+  Result := FADMMap.Data[VIndex];
 end;
 
 procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);

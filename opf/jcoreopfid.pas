@@ -17,7 +17,8 @@ unit JCoreOPFID;
 interface
 
 uses
-  JCoreOPFDriver;
+  JCoreOPFDriver,
+  JCoreOPFMetadata;
 
 type
 
@@ -44,6 +45,7 @@ type
 
   IJCoreOPFPID = interface(IInterface)
   ['{C2E47A60-B063-1FC0-D566-BAAC73195623}']
+    function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
     function GetEntity: TObject;
