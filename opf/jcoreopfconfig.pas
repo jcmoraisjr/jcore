@@ -122,9 +122,9 @@ constructor TJCoreOPFConfiguration.Create(
 begin
   inherited Create;
   if Assigned(AModel) then
-    FModel := TJCoreOPFModel.AcquireModel
+    FModel := AModel
   else
-    FModel := TJCoreOPFModel.Create;
+    FModel := TJCoreOPFModel.AcquireModel;
   FDriverClassList := TJCoreOPFDriverClassList.Create;
   FMappingClassList := TJCoreOPFMappingClassList.Create;
 end;
