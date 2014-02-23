@@ -105,6 +105,13 @@ type
     constructor Create(const AAttrTypeInfo: PTypeInfo);
   end;
 
+  { EJCoreOPFCollectionADMExpected }
+
+  EJCoreOPFCollectionADMExpected = class(EJCoreOPF)
+  public
+    constructor Create(const AClassName, AAttributeName: string);
+  end;
+
 implementation
 
 { EJCoreOPFDriverNotFound }
@@ -175,6 +182,13 @@ constructor EJCoreOPFUnsupportedAttributeType.Create(
   const AAttrTypeInfo: PTypeInfo);
 begin
   inherited Create(AAttrTypeInfo^.Name);
+end;
+
+{ EJCoreOPFCollectionADMExpected }
+
+constructor EJCoreOPFCollectionADMExpected.Create(const AClassName,
+  AAttributeName: string);
+begin
 end;
 
 end.

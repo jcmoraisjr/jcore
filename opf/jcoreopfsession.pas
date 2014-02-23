@@ -52,8 +52,8 @@ type
     procedure Commit; virtual;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+    procedure StoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
     procedure StorePID(const APID: IJCoreOPFPID);
-    procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
     property Model: TJCoreOPFModel read FModel;
@@ -99,6 +99,11 @@ begin
   for Result in FMappingList do
     if Result.Apply(AClass) then
       Exit;
+  { TODO : several classes per mapping instance }
+  { TODO :
+      ambiguity (choose the subclass)
+      apply override (user mapping for one class, default mapping for other classes)
+      abstract registry implementations and analyzer (dic?) }
   VMappingClass := SessionManager.FindMappingClass(AClass);
   if not Assigned(VMappingClass) then
     raise EJCoreOPFMappingNotFound.Create(AClass.ClassName);
@@ -127,17 +132,15 @@ begin
   Result := AcquireMapping(AListBaseClass).RetrieveList(AListBaseClass, AOwnerPID);
 end;
 
+procedure TJCoreOPFSession.StoreElements(const AOwnerPID: IJCoreOPFPID;
+  const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
+begin
+  AcquireMapping(AMetadata.CompositionClass).StoreElements(AOwnerPID, AMetadata, AItems);
+end;
+
 procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);
 begin
   AcquireMapping(APID.Entity.ClassType).Store(APID);
-end;
-
-procedure TJCoreOPFSession.StoreListPID(const AListBaseClass: TClass;
-  const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray;
-  const ALinkType: TJCoreOPFLinkType);
-begin
-  if Assigned(APIDArray) then
-    AcquireMapping(AListBaseClass).StoreList(AOwnerPID, APIDArray, ALinkType);
 end;
 
 procedure TJCoreOPFSession.StoreToDriver(const AClass: TClass;

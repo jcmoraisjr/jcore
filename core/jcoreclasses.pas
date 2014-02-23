@@ -82,6 +82,7 @@ type
   TJCoreStringArray = array of string;
 
   TJCoreObjectList = specialize TFPGObjectList<TObject>;
+  TJCoreObjectArray = array of TObject;
 
   IJCoreInterface = interface(IInterface)
   ['{CB83C7A1-B07E-40C4-B70B-964C14A8F94E}']

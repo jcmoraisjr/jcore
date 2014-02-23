@@ -19,6 +19,7 @@ interface
 uses
   typinfo,
   fgl,
+  JCoreClasses,
   JCoreMetadata;
 
 type
@@ -28,6 +29,8 @@ type
   TJCoreOPFADMClassList = specialize TFPGList<TJCoreOPFADMClass>;
   TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
 
+  TJCoreOPFAttrMetadata = class;
+
   { TJCoreOPFADM }
 
   TJCoreOPFADM = class(TObject)
@@ -35,16 +38,18 @@ type
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
     FEntity: TObject;
+    FMetadata: TJCoreOPFAttrMetadata;
   protected
     function InternalIsDirty: Boolean; virtual; abstract;
     procedure InternalUpdateCache; virtual; abstract;
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
     property Entity: TObject read FEntity;
   public
-    constructor Create(const AEntity: TObject; const AAttrPropInfo: PPropInfo); virtual;
+    constructor Create(const AEntity: TObject; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     function IsDirty: Boolean;
     procedure UpdateCache;
+    property Metadata: TJCoreOPFAttrMetadata read FMetadata;
   end;
 
   { TJCoreOPFADMType32 }
@@ -104,22 +109,33 @@ type
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
   public
+    function CreateArray: TJCoreObjectArray; virtual; abstract;
+  end;
+
+  { TJCoreOPFADMFPSListCollection }
+
+  TJCoreOPFADMFPSListCollection = class(TJCoreOPFADMCollection)
+  public
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    function CreateArray: TJCoreObjectArray; override;
   end;
 
   TJCoreOPFModel = class;
+  TJCoreOPFMetadataCompositionLinkType = (jcltEmbedded, jcltExternal);
 
   { TJCoreOPFAttrMetadata }
 
   TJCoreOPFAttrMetadata = class(TJCoreAttrMetadata)
   private
     FADMClass: TJCoreOPFADMClass;
+    FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
     FModel: TJCoreOPFModel;
   protected
     property Model: TJCoreOPFModel read FModel;
   public
     constructor Create(const AModel: TJCoreOPFModel; const APropInfo: PPropInfo);
     function CreateADM(const AEntity: TObject): TJCoreOPFADM;
+    property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
   end;
 
   { TJCoreOPFClassMetadata }
@@ -159,12 +175,13 @@ uses
 { TJCoreOPFADM }
 
 constructor TJCoreOPFADM.Create(const AEntity: TObject;
-  const AAttrPropInfo: PPropInfo);
+  const AMetadata: TJCoreOPFAttrMetadata);
 begin
   inherited Create;
   FEntity := AEntity;
-  FAttrPropInfo := AAttrPropInfo;
+  FAttrPropInfo := AMetadata.PropInfo;
   FCacheUpdated := False;
+  FMetadata := AMetadata;
 end;
 
 function TJCoreOPFADM.IsDirty: Boolean;
@@ -252,36 +269,28 @@ end;
 
 function TJCoreOPFADMCollection.InternalIsDirty: Boolean;
 var
-  VItems: TFPSList;
-  VItemCount: Integer;
+  VItems: TJCoreObjectArray;
 begin
   { TODO : evaluate after lazy loading implementation }
-  VItems := TFPSList(GetObjectProp(Entity, AttrPropInfo, TFPSList));
-  Result := True;
-  if Assigned(VItems) then
-    VItemCount := VItems.Count
-  else
-    VItemCount := 0;
-  if VItemCount <> FListSizeCache then
-    Exit;
+  VItems := CreateArray;
   { TODO : implement same qty added/removed check }
   { TODO : implement item dirty check }
-  Result := False;
+  Result := Length(VItems) <> FListSizeCache;
 end;
 
 procedure TJCoreOPFADMCollection.InternalUpdateCache;
 var
-  VItems: TFPSList;
+  VItems: TJCoreObjectArray;
 begin
   { TODO : evaluate after lazy loading implementation }
-  VItems := TFPSList(GetObjectProp(Entity, AttrPropInfo, TFPSList));
-  if Assigned(VItems) then
-    FListSizeCache := VItems.Count
-  else
-    FListSizeCache := 0;
+  VItems := CreateArray;
+  FListSizeCache := Length(VItems);
 end;
 
-class function TJCoreOPFADMCollection.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+{ TJCoreOPFADMFPSListCollection }
+
+class function TJCoreOPFADMFPSListCollection.Apply(
+  const AAttrTypeInfo: PTypeInfo): Boolean;
 var
   VTypeData: PTypeData;
 begin
@@ -293,6 +302,23 @@ begin
     Result := False;
 end;
 
+function TJCoreOPFADMFPSListCollection.CreateArray: TJCoreObjectArray;
+var
+  VItems: TFPSList;
+  I: Integer;
+begin
+  { TODO : evaluate after lazy loading implementation }
+  VItems := TFPSList(GetObjectProp(Entity, AttrPropInfo, TFPSList));
+  if Assigned(VItems) then
+  begin
+    SetLength(Result, VItems.Count);
+    { TODO : Thread safe }
+    for I := 0 to Pred(VItems.Count) do
+      Result[I] := TObject(VItems[I]^);
+  end else
+    SetLength(Result, 0);
+end;
+
 { TJCoreOPFAttrMetadata }
 
 constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
@@ -300,13 +326,14 @@ constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
 begin
   inherited Create(APropInfo);
   FModel := AModel;
+  FCompositionLinkType := jcltEmbedded;
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const AEntity: TObject): TJCoreOPFADM;
 begin
   if not Assigned(FADMClass) then
     FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
-  Result := FADMClass.Create(AEntity, PropInfo);
+  Result := FADMClass.Create(AEntity, Self);
 end;
 
 { TJCoreOPFClassMetadata }
@@ -342,7 +369,7 @@ begin
   ADMList.Add(TJCoreOPFADMType64);
   ADMList.Add(TJCoreOPFADMFloat);
   ADMList.Add(TJCoreOPFADMAnsiString);
-  ADMList.Add(TJCoreOPFADMCollection);
+  ADMList.Add(TJCoreOPFADMFPSListCollection);
 end;
 
 function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;

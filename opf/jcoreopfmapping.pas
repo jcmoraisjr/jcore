@@ -27,17 +27,15 @@ uses
 
 type
 
-  TJCoreOPFLinkType = (jltEmbedded, jltExternal);
-
   { IJCoreOPFMapper }
 
   IJCoreOPFMapper = interface
     procedure AddInTransactionPID(const APID: IJCoreOPFPID);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
+    procedure StoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
     procedure StorePID(const APID: IJCoreOPFPID);
-    procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
+    procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
 
   { TJCoreOPFMapping }
@@ -57,8 +55,7 @@ type
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; virtual; abstract;
     function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList; virtual; abstract;
     procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
-    procedure InternalStoreOwnedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); virtual; abstract;
-    procedure InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); virtual; abstract;
+    procedure InternalStoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
     property Model: TJCoreOPFModel read FModel;
@@ -73,7 +70,7 @@ type
     function RetrieveFromString(const AClass: TClass; const AStringOID: string): TObject;
     function RetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
     procedure Store(const APID: IJCoreOPFPID);
-    procedure StoreList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
+    procedure StoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
 
@@ -91,28 +88,27 @@ type
     FSQLDriver: TJCoreOPFSQLDriver;
   protected
     function CreateEntity(const AClass: TClass): TObject; virtual;
-    function GenerateDeleteSharedItemStatement(const AListBaseClass: TClass): string; virtual;
-    function GenerateInsertSharedItemStatement(const AListBaseClass: TClass): string; virtual;
+    function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
+    function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; virtual;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
     procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual;
+    procedure WriteExternalLinksToDriver(const AOwnerPID: IJCoreOPFPID; const ACompositionClass: TClass; const AItems: TJCoreOPFPIDArray); virtual;
     procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
     procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
-    procedure WriteSharedListItemToDriver(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const ASharedPIDArray: TJCoreOPFPIDArray); virtual;
   protected
     function BuildParams(const ASize: Integer): string;
-    function CreatePIDArray(const AList: TFPSList): TJCoreOPFPIDArray;
+    function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     procedure InternalDispose(const AClass: TClass; const AOIDArray: array of TJCoreOPFOID); override;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; override;
     function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList; override;
     procedure InternalStore(const APID: IJCoreOPFPID); override;
-    procedure InternalStoreOwnedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); override;
-    procedure InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray); override;
+    procedure InternalStoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray); override;
   protected
     function RetrieveListPID(const AListBaseClass: TClass; AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
+    procedure StoreList(const APID: IJCoreOPFPID; const AAttributeName: string);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver); override;
@@ -122,6 +118,7 @@ implementation
 
 uses
   sysutils,
+  JCoreMetadata,
   JCoreOPFConsts,
   JCoreOPFException;
 
@@ -237,13 +234,10 @@ begin
   InternalStore(APID);
 end;
 
-procedure TJCoreOPFMapping.StoreList(const AOwnerPID: IJCoreOPFPID;
-  const APIDArray: TJCoreOPFPIDArray; const ALinkType: TJCoreOPFLinkType);
+procedure TJCoreOPFMapping.StoreElements(const AOwnerPID: IJCoreOPFPID;
+  const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
 begin
-  case ALinkType of
-    jltEmbedded: InternalStoreOwnedList(AOwnerPID, APIDArray);
-    jltExternal: InternalStoreSharedList(AOwnerPID, APIDArray);
-  end;
+  InternalStoreElements(AOwnerPID, AMetadata, AItems);
 end;
 
 procedure TJCoreOPFMapping.StoreToDriver(const AClass: TClass;
@@ -267,14 +261,14 @@ begin
   Result := AClass.Create;
 end;
 
-function TJCoreOPFSQLMapping.GenerateDeleteSharedItemStatement(
-  const AListBaseClass: TClass): string;
+function TJCoreOPFSQLMapping.GenerateDeleteExternalLinksStatement(
+  const ACompositionClass: TClass): string;
 begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
 
-function TJCoreOPFSQLMapping.GenerateInsertSharedItemStatement(
-  const AListBaseClass: TClass): string;
+function TJCoreOPFSQLMapping.GenerateInsertExternalLinksStatement(
+  const ACompositionClass: TClass): string;
 begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
@@ -289,28 +283,28 @@ procedure TJCoreOPFSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
 begin
 end;
 
+procedure TJCoreOPFSQLMapping.WriteExternalLinksToDriver(
+  const AOwnerPID: IJCoreOPFPID; const ACompositionClass: TClass;
+  const AItems: TJCoreOPFPIDArray);
+var
+  VInsertStatement: string;
+  I: Integer;
+begin
+  VInsertStatement := GenerateInsertExternalLinksStatement(ACompositionClass);
+  for I := Low(AItems) to High(AItems) do
+  begin
+    AOwnerPID.OID.WriteToDriver(Driver);
+    AItems[I].OID.WriteToDriver(Driver);
+    Driver.ExecSQL(VInsertStatement);
+  end;
+end;
+
 procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
 begin
 end;
 
 procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
 begin
-end;
-
-procedure TJCoreOPFSQLMapping.WriteSharedListItemToDriver(
-  const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID;
-  const ASharedPIDArray: TJCoreOPFPIDArray);
-var
-  VInsertStatement: string;
-  I: Integer;
-begin
-  VInsertStatement := GenerateInsertSharedItemStatement(AListBaseClass);
-  for I := Low(ASharedPIDArray) to High(ASharedPIDArray) do
-  begin
-    AOwnerPID.OID.WriteToDriver(Driver);
-    ASharedPIDArray[I].OID.WriteToDriver(Driver);
-    Driver.ExecSQL(VInsertStatement);
-  end;
 end;
 
 function TJCoreOPFSQLMapping.BuildParams(const ASize: Integer): string;
@@ -330,21 +324,14 @@ begin
     Result := '';
 end;
 
-function TJCoreOPFSQLMapping.CreatePIDArray(const AList: TFPSList): TJCoreOPFPIDArray;
+function TJCoreOPFSQLMapping.CreatePIDArray(
+  const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
 var
-  VEntity: TObject;
   I: Integer;
 begin
-  if Assigned(AList) and (AList.Count > 0) then
-  begin
-    SetLength(Result, AList.Count);
-    for I := 0 to Pred(AList.Count) do
-    begin
-      VEntity := TObject(AList[I]^);
-      Result[I] := AcquirePID(VEntity);
-    end;
-  end else
-    Result := nil;
+  SetLength(Result, Length(AItems));
+  for I := Low(AItems) to High(AItems) do
+    Result[I] := AcquirePID(AItems[I]);
 end;
 
 procedure TJCoreOPFSQLMapping.InternalDispose(const AClass: TClass;
@@ -430,34 +417,24 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLMapping.InternalStoreOwnedList(const AOwnerPID: IJCoreOPFPID;
-  const APIDArray: TJCoreOPFPIDArray);
+procedure TJCoreOPFSQLMapping.InternalStoreElements(
+  const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata;
+  const AItems: TJCoreOPFPIDArray);
 var
   I: Integer;
 begin
-  for I := Low(APIDArray) to High(APIDArray) do
+  for I := Low(AItems) to High(AItems) do
   begin
-    APIDArray[I].Owner := AOwnerPID;
-    if Apply(APIDArray[I].Entity.ClassType) then
-      Store(APIDArray[I])
-    else
-      Mapper.StorePID(APIDArray[I]);
-  end;
-end;
-
-procedure TJCoreOPFSQLMapping.InternalStoreSharedList(const AOwnerPID: IJCoreOPFPID;
-  const APIDArray: TJCoreOPFPIDArray);
-var
-  I: Integer;
-begin
-  for I := Low(APIDArray) to High(APIDArray) do
-    if not APIDArray[I].IsPersistent then
+    AItems[I].Owner := AOwnerPID;
+    if (AMetadata.CompositionType = jctComposition) or
+     not AItems[I].IsPersistent then
     begin
-      if Apply(APIDArray[I].Entity.ClassType) then
-        Store(APIDArray[I])
+      if Apply(AItems[I].Entity.ClassType) then
+        Store(AItems[I])
       else
-        Mapper.StorePID(APIDArray[I]);
+        Mapper.StorePID(AItems[I]);
     end;
+  end;
 end;
 
 function TJCoreOPFSQLMapping.RetrieveListPID(const AListBaseClass: TClass;
@@ -466,19 +443,43 @@ begin
   Result := Mapper.RetrieveListPID(AListBaseClass, AOwnerPID);
 end;
 
-procedure TJCoreOPFSQLMapping.StoreListPID(const AListBaseClass: TClass;
-  const AOwnerPID: IJCoreOPFPID; const APIDArray: TJCoreOPFPIDArray;
-  const ALinkType: TJCoreOPFLinkType);
+{ Sequence diagram - include in the API doc
+    user mapping
+    -> Mapping.StoreList
+      -> Session(from Mapper intf).StoreElements
+        -> Mapping(of the CompositionClass).StoreElements
+          -> Mapping.InternalStoreElements (loop)
+    Conventions:
+      StoreList == the attribute list, in the owner mapping
+      StoreElements == the elements of the list, in the base class list mapping }
+procedure TJCoreOPFSQLMapping.StoreList(const APID: IJCoreOPFPID;
+  const AAttributeName: string);
+var
+  VADM: TJCoreOPFADM;
+  VCollection: TJCoreOPFADMCollection;
+  VMetadata: TJCoreOPFAttrMetadata;
+  VNeedRebuildLinks: Boolean;
+  VItems: TJCoreOPFPIDArray;
 begin
-  if (ALinkType = jltExternal) and AOwnerPID.IsPersistent then
+  { TODO : Improve the change analyzer and partial update }
+  VADM := APID.AcquireADM(AAttributeName);
+  if not (VADM is TJCoreOPFADMCollection) then
+    raise EJCoreOPFCollectionADMExpected.Create(
+     APID.Entity.ClassName, AAttributeName);
+  VCollection := TJCoreOPFADMCollection(VADM);
+  VMetadata := VCollection.Metadata;
+  VNeedRebuildLinks := APID.IsPersistent and
+   (VMetadata.CompositionLinkType = jcltExternal);
+  if VNeedRebuildLinks then
   begin
-    { TODO : Implement change analyzer }
-    AOwnerPID.OID.WriteToDriver(Driver);
-    Driver.ExecSQL(GenerateDeleteSharedItemStatement(AListBaseClass));
+    APID.OID.WriteToDriver(Driver);
+    Driver.ExecSQL(GenerateDeleteExternalLinksStatement(VMetadata.CompositionClass));
   end;
-  Mapper.StoreListPID(AListBaseClass, AOwnerPID, APIDArray, ALinkType);
-  if ALinkType = jltExternal then
-    WriteSharedListItemToDriver(AListBaseClass, AOwnerPID, APIDArray);
+  VItems := CreatePIDArray(VCollection.CreateArray);
+  Mapper.StoreElements(APID, VMetadata, VItems);
+  if VMetadata.CompositionLinkType = jcltExternal then
+    WriteExternalLinksToDriver(
+     APID, VMetadata.CompositionClass, VItems);
 end;
 
 constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper;

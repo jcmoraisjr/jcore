@@ -10,6 +10,7 @@ uses
   fpcunit,
   JCoreClasses,
   JCoreLogger,
+  JCoreMetadata,
   JCoreOPFID,
   JCoreOPFDriver,
   JCoreOPFMapping,
@@ -45,6 +46,13 @@ type
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     class property CommitCount: Integer read FCommitCount write FCommitCount;
     class property LastCommitPIDList: TInterfaceList read FLastCommitPIDList;
+  end;
+
+  { TTestOPFModel }
+
+  TTestOPFModel = class(TJCoreOPFModel)
+  protected
+    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
   end;
 
   { TTestOPF }
@@ -281,8 +289,8 @@ type
 
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteSharedItemStatement(const AListBaseClass: TClass): string; override;
-    function GenerateInsertSharedItemStatement(const AListBaseClass: TClass): string; override;
+    function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; override;
+    function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; override;
     function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
@@ -398,6 +406,28 @@ begin
   Result := AcquireMapping(AClass).AcquireMetadata(AClass);
 end;
 
+{ TTestOPFModel }
+
+function TTestOPFModel.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+var
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  VMetadata := inherited BuildMetadata(AClass) as TJCoreOPFClassMetadata;
+  try
+    if AClass = TTestPerson then
+    begin
+      VMetadata.AttributeByName('phones').CompositionClass := TTestPhone;
+      VMetadata.AttributeByName('languages').CompositionClass := TTestLanguage;
+      VMetadata.AttributeByName('languages').CompositionType := jctAggregation;
+      VMetadata.AttributeByName('languages').CompositionLinkType := jcltExternal;
+    end;
+  except
+    FreeAndNil(VMetadata);
+    raise;
+  end;
+  Result := VMetadata;
+end;
+
 { TTestOPF }
 
 function TTestOPF.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
@@ -406,7 +436,7 @@ var
   VDriverClass: TJCoreOPFDriverClass;
   VMappingClass: TJCoreOPFMappingClass;
 begin
-  Result := TTestOPFConfig.Create;
+  Result := TTestOPFConfig.Create(TTestOPFModel.Create);
   try
     for VDriverClass in ADriverClassArray do
       Result.AddDriverClass(VDriverClass);
@@ -781,6 +811,7 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Age := 18;
     FSession.Store(VPerson);
+    { TODO : fix aggregation persistence }
     // +2 -- delete from person_lang
     AssertEquals(5+2, TTestSQLDriver.Commands.Count);
     AssertEquals('WriteString TheName', TTestSQLDriver.Commands[0]);
@@ -808,6 +839,7 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Phones[1].Number := '987';
     FSession.Store(VPerson);
+    { TODO : fix aggregation persistence }
     // +2 -- delete from person_lang
     AssertEquals('cmd count', 13+2, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString somename', TTestSQLDriver.Commands[0]);
@@ -1444,22 +1476,22 @@ end;
 
 { TTestPersonSQLMapping }
 
-function TTestPersonSQLMapping.GenerateDeleteSharedItemStatement(
-  const AListBaseClass: TClass): string;
+function TTestPersonSQLMapping.GenerateDeleteExternalLinksStatement(
+  const ACompositionClass: TClass): string;
 begin
-  if AListBaseClass = TTestLanguage then
+  if ACompositionClass = TTestLanguage then
     Result := CSQLDELETEPERSON_LANG
   else
-    Result := inherited GenerateDeleteSharedItemStatement(AListBaseClass);
+    Result := inherited GenerateDeleteExternalLinksStatement(ACompositionClass);
 end;
 
-function TTestPersonSQLMapping.GenerateInsertSharedItemStatement(
-  const AListBaseClass: TClass): string;
+function TTestPersonSQLMapping.GenerateInsertExternalLinksStatement(
+  const ACompositionClass: TClass): string;
 begin
-  if AListBaseClass = TTestLanguage then
+  if ACompositionClass = TTestLanguage then
     Result := CSQLINSERTPERSON_LANG
   else
-    Result := inherited GenerateInsertSharedItemStatement(AListBaseClass);
+    Result := inherited GenerateInsertExternalLinksStatement(ACompositionClass);
 end;
 
 function TTestPersonSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
@@ -1490,12 +1522,9 @@ begin
 end;
 
 procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
-var
-  VPerson: TTestPerson;
 begin
-  VPerson := APID.Entity as TTestPerson;
-  StoreListPID(TTestPhone, VPerson._PID, CreatePIDArray(VPerson.Phones), jltEmbedded);
-  StoreListPID(TTestLanguage, VPerson._PID, CreatePIDArray(VPerson.Languages), jltExternal);
+  StoreList(APID, 'phones');
+  StoreList(APID, 'languages');
 end;
 
 procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);

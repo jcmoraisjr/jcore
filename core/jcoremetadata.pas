@@ -35,8 +35,8 @@ type
     FPropInfo: PPropInfo;
   public
     constructor Create(const APropInfo: PPropInfo);
-    property CompositionClass: TClass read FCompositionClass;
-    property CompositionType: TJCoreMetadataCompositionType read FCompositionType;
+    property CompositionClass: TClass read FCompositionClass write FCompositionClass;
+    property CompositionType: TJCoreMetadataCompositionType read FCompositionType write FCompositionType;
     property Name: string read FName;
     property PropInfo: PPropInfo read FPropInfo;
   end;
@@ -96,6 +96,7 @@ begin
   inherited Create;
   FPropInfo := APropInfo;
   FName := APropInfo^.Name;
+  FCompositionType := jctComposition;
 end;
 
 { TJCoreClassMetadata }
