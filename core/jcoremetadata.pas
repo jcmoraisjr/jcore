@@ -68,8 +68,6 @@ type
 
   TJCoreModel = class(TJCoreManagedObject)
   private
-    class var FInstance: TJCoreModel;
-  private
     FMetadataMap: TJCoreClassMetadataMap;
   protected
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
@@ -81,7 +79,6 @@ type
   public
     constructor Create; virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
-    class function AcquireModel: TJCoreModel;
   end;
 
 implementation
@@ -219,15 +216,6 @@ begin
   if VIndex = -1 then
     VIndex := FMetadataMap.Add(AClass, BuildMetadata(AClass));
   Result := FMetadataMap.Data[VIndex];
-end;
-
-class function TJCoreModel.AcquireModel: TJCoreModel;
-begin
-  Result := FInstance;
-  if not Assigned(Result) then
-    Result := Create
-  else
-    Result.AddRef;
 end;
 
 end.

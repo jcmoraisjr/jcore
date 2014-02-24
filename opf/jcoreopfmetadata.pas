@@ -166,7 +166,6 @@ type
     constructor Create; override;
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
-    class function AcquireModel: TJCoreOPFModel;
     function FindClass(const AClassName: string): TClass;
   end;
 
@@ -422,11 +421,6 @@ end;
 function TJCoreOPFModel.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
   Result := inherited AcquireMetadata(AClass) as TJCoreOPFClassMetadata;
-end;
-
-class function TJCoreOPFModel.AcquireModel: TJCoreOPFModel;
-begin
-  Result := inherited AcquireModel as TJCoreOPFModel;
 end;
 
 function TJCoreOPFModel.FindClass(const AClassName: string): TClass;

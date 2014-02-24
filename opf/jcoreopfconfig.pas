@@ -124,7 +124,7 @@ begin
   if Assigned(AModel) then
     FModel := AModel
   else
-    FModel := TJCoreOPFModel.AcquireModel;
+    FModel := TJCoreOPFModel.Create;
   FDriverClassList := TJCoreOPFDriverClassList.Create;
   FMappingClassList := TJCoreOPFMappingClassList.Create;
 end;
