@@ -151,16 +151,17 @@ type
 
   TJCoreOPFModel = class(TJCoreModel)
   private
-    FADMList: TJCoreOPFADMClassList;
+    FADMClassList: TJCoreOPFADMClassList;
     FClassMap: TJCoreClassMap;
   protected
+    procedure AddADMClass(const AADMClass: TJCoreOPFADMClass);
     procedure AddClass(const AClass: TClass);
     function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; override;
     function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure Finit; override;
     procedure InitRegistry; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
-    property ADMList: TJCoreOPFADMClassList read FADMList;
+    property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
     property ClassMap: TJCoreClassMap read FClassMap;
   public
     constructor Create; override;
@@ -366,6 +367,11 @@ end;
 
 { TJCoreOPFModel }
 
+procedure TJCoreOPFModel.AddADMClass(const AADMClass: TJCoreOPFADMClass);
+begin
+  ADMClassList.Add(AADMClass);
+end;
+
 procedure TJCoreOPFModel.AddClass(const AClass: TClass);
 begin
   ClassMap.Add(AClass.ClassName, AClass);
@@ -383,7 +389,7 @@ end;
 
 procedure TJCoreOPFModel.Finit;
 begin
-  FreeAndNil(FADMList);
+  FreeAndNil(FADMClassList);
   FreeAndNil(FClassMap);
   inherited Finit;
 end;
@@ -391,11 +397,11 @@ end;
 procedure TJCoreOPFModel.InitRegistry;
 begin
   inherited InitRegistry;
-  ADMList.Add(TJCoreOPFADMType32);
-  ADMList.Add(TJCoreOPFADMType64);
-  ADMList.Add(TJCoreOPFADMFloat);
-  ADMList.Add(TJCoreOPFADMAnsiString);
-  ADMList.Add(TJCoreOPFADMFPSListCollection);
+  AddADMClass(TJCoreOPFADMType32);
+  AddADMClass(TJCoreOPFADMType64);
+  AddADMClass(TJCoreOPFADMFloat);
+  AddADMClass(TJCoreOPFADMAnsiString);
+  AddADMClass(TJCoreOPFADMFPSListCollection);
 end;
 
 function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
@@ -405,14 +411,14 @@ end;
 
 constructor TJCoreOPFModel.Create;
 begin
-  FADMList := TJCoreOPFADMClassList.Create;
+  FADMClassList := TJCoreOPFADMClassList.Create;
   FClassMap := TJCoreClassMap.Create;
   inherited Create;
 end;
 
 function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
 begin
-  for Result in ADMList do
+  for Result in ADMClassList do
     if Result.Apply(AAttrTypeInfo) then
       Exit;
   raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
