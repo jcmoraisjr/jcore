@@ -130,6 +130,7 @@ type
     FADMClass: TJCoreOPFADMClass;
     FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
     FModel: TJCoreOPFModel;
+    function ReadGenericsComposition(const AClassName: string): TClass;
   protected
     property Model: TJCoreOPFModel read FModel;
   public
@@ -151,18 +152,22 @@ type
   TJCoreOPFModel = class(TJCoreModel)
   private
     FADMList: TJCoreOPFADMClassList;
+    FClassMap: TJCoreClassMap;
   protected
+    procedure AddClass(const AClass: TClass);
     function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; override;
     function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure Finit; override;
     procedure InitRegistry; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
     property ADMList: TJCoreOPFADMClassList read FADMList;
+    property ClassMap: TJCoreClassMap read FClassMap;
   public
     constructor Create; override;
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     class function AcquireModel: TJCoreOPFModel;
+    function FindClass(const AClassName: string): TClass;
   end;
 
 implementation
@@ -321,11 +326,27 @@ end;
 
 { TJCoreOPFAttrMetadata }
 
+function TJCoreOPFAttrMetadata.ReadGenericsComposition(const AClassName: string): TClass;
+var
+  VClassName: string;
+  VPos: Integer;
+begin
+  // Sample of ClassName: TFPGList$TListType
+  VPos := Pos('$', AClassName);
+  if VPos > 0 then
+  begin
+    VClassName := Copy(AClassName, VPos + 1, Length(AClassName));
+    Result := Model.FindClass(VClassName);
+  end else
+    Result := nil;
+end;
+
 constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
   const APropInfo: PPropInfo);
 begin
   inherited Create(APropInfo);
   FModel := AModel;
+  CompositionClass := ReadGenericsComposition(APropInfo^.PropType^.Name);
   FCompositionLinkType := jcltEmbedded;
 end;
 
@@ -346,6 +367,11 @@ end;
 
 { TJCoreOPFModel }
 
+procedure TJCoreOPFModel.AddClass(const AClass: TClass);
+begin
+  ClassMap.Add(AClass.ClassName, AClass);
+end;
+
 function TJCoreOPFModel.CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata;
 begin
   Result := TJCoreOPFAttrMetadata.Create(Self, APropInfo);
@@ -359,6 +385,7 @@ end;
 procedure TJCoreOPFModel.Finit;
 begin
   FreeAndNil(FADMList);
+  FreeAndNil(FClassMap);
   inherited Finit;
 end;
 
@@ -380,6 +407,7 @@ end;
 constructor TJCoreOPFModel.Create;
 begin
   FADMList := TJCoreOPFADMClassList.Create;
+  FClassMap := TJCoreClassMap.Create;
   inherited Create;
 end;
 
@@ -399,6 +427,17 @@ end;
 class function TJCoreOPFModel.AcquireModel: TJCoreOPFModel;
 begin
   Result := inherited AcquireModel as TJCoreOPFModel;
+end;
+
+function TJCoreOPFModel.FindClass(const AClassName: string): TClass;
+var
+  VIndex: Integer;
+begin
+  VIndex := ClassMap.IndexOf(AClassName);
+  if VIndex >= 0 then
+    Result := ClassMap.Data[VIndex]
+  else
+    Result := nil;
 end;
 
 end.

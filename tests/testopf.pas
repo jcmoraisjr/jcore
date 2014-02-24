@@ -53,6 +53,7 @@ type
   TTestOPFModel = class(TJCoreOPFModel)
   protected
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
+    procedure InitRegistry; override;
   end;
 
   { TTestOPF }
@@ -416,8 +417,6 @@ begin
   try
     if AClass = TTestPerson then
     begin
-      VMetadata.AttributeByName('phones').CompositionClass := TTestPhone;
-      VMetadata.AttributeByName('languages').CompositionClass := TTestLanguage;
       VMetadata.AttributeByName('languages').CompositionType := jctAggregation;
       VMetadata.AttributeByName('languages').CompositionLinkType := jcltExternal;
     end;
@@ -426,6 +425,15 @@ begin
     raise;
   end;
   Result := VMetadata;
+end;
+
+procedure TTestOPFModel.InitRegistry;
+begin
+  inherited InitRegistry;
+  AddClass(TTestPerson);
+  AddClass(TTestPhone);
+  AddClass(TTestLanguage);
+  AddClass(TTestCity);
 end;
 
 { TTestOPF }
