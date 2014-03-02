@@ -11,7 +11,9 @@ uses
   JCoreClasses,
   JCoreLogger,
   JCoreMetadata,
-  JCoreOPFID,
+  JCoreOPFEntity,
+  JCoreOPFOID,
+  JCoreOPFPID,
   JCoreOPFDriver,
   JCoreOPFMapping,
   JCoreOPFSession,
@@ -37,15 +39,16 @@ type
   TTestOPFSession = class(TJCoreOPFSession, ITestOPFSession)
   private
     class var FCommitCount: Integer;
-    class var FLastCommitPIDList: TInterfaceList;
+    class var FLastCommitPIDList: TJCoreOPFPIDList;
   protected
     procedure Commit; override;
   public
     class constructor Create;
     class destructor Destroy;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+    class function ExistPIDInCommitPIDList(const APID: IJCoreOPFPID): Boolean;
     class property CommitCount: Integer read FCommitCount write FCommitCount;
-    class property LastCommitPIDList: TInterfaceList read FLastCommitPIDList;
+    class property LastCommitPIDList: TJCoreOPFPIDList read FLastCommitPIDList;
   end;
 
   { TTestOPFModel }
@@ -152,7 +155,7 @@ type
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   public
     class function Apply(const AClass: TClass): Boolean; override;
-    procedure InternalStore(const APID: IJCoreOPFPID); override;
+    procedure InternalStore(const APID: TJCoreOPFPID); override;
   end;
 
   { TTestBase }
@@ -292,12 +295,12 @@ type
   protected
     function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; override;
     function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; override;
-    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
-    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
-    procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); override;
-    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
+    function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteExternalsToDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -313,11 +316,11 @@ type
 
   TTestCitySQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
-    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
-    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
+    function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -326,11 +329,11 @@ type
 
   TTestPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; override;
-    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
-    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
+    function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -339,11 +342,11 @@ type
 
   TTestLanguageSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; override;
+    function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; override;
-    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; override;
-    procedure ReadFromDriver(const APID: IJCoreOPFPID); override;
-    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); override;
+    function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
@@ -353,8 +356,7 @@ implementation
 uses
   sysutils,
   testregistry,
-  JCoreOPFException,
-  JCoreOPFOID;
+  JCoreOPFException;
 
 const
   CSQLINSERTCITY = 'INSERT INTO CITY (ID,NAME) VALUES (?,?)';
@@ -394,7 +396,7 @@ end;
 
 class constructor TTestOPFSession.Create;
 begin
-  FLastCommitPIDList := TInterfaceList.Create;
+  FLastCommitPIDList := TJCoreOPFPIDList.Create(False);
 end;
 
 class destructor TTestOPFSession.Destroy;
@@ -405,6 +407,11 @@ end;
 function TTestOPFSession.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
   Result := AcquireMapping(AClass).AcquireMetadata(AClass);
+end;
+
+class function TTestOPFSession.ExistPIDInCommitPIDList(const APID: IJCoreOPFPID): Boolean;
+begin
+  Result := LastCommitPIDList.IndexOf(APID as TJCoreOPFPID) >= 0;
 end;
 
 { TTestOPFModel }
@@ -493,7 +500,7 @@ begin
     FSession.Store(VPerson);
     VPID := VPerson._PID;
     AssertNotNull(VPID);
-    AssertSame(VPID.GetEntity, VPerson);
+    AssertSame(VPID.Entity, VPerson);
   finally
     FreeAndNil(VPerson);
   end;
@@ -634,17 +641,17 @@ begin
     AssertEquals('commit cnt', 1, TTestOPFSession.CommitCount);
     AssertEquals('pid cnt', 6, TTestOPFSession.LastCommitPIDList.Count);
     AssertNotNull('vperson pid', VPerson._PID);
-    AssertTrue('vperson.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VPerson._PID) >= 0);
+    AssertTrue('vperson.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VPerson._PID));
     AssertNotNull('vcity pid', VCity._PID);
-    AssertTrue('vcity.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VCity._PID) >= 0);
+    AssertTrue('vcity.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VCity._PID));
     AssertNotNull('vphone1 pid', VPhone1._PID);
-    AssertTrue('vphone1.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VPhone1._PID) >= 0);
+    AssertTrue('vphone1.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VPhone1._PID));
     AssertNotNull('vphone2 pid', VPhone2._PID);
-    AssertTrue('vphone2.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VPhone2._PID) >= 0);
+    AssertTrue('vphone2.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VPhone2._PID));
     AssertNotNull('vlang1 pid', VLang1._PID);
-    AssertTrue('vlang1.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VLang1._PID) >= 0);
+    AssertTrue('vlang1.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VLang1._PID));
     AssertNotNull('vlang2 pid', VLang2._PID);
-    AssertTrue('vlang2.pid in list', TTestOPFSession.LastCommitPIDList.IndexOf(VLang2._PID) >= 0);
+    AssertTrue('vlang2.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VLang2._PID));
     VPerson.City := nil;
     VCity := nil;
     TTestOPFSession.CommitCount := 0;
@@ -1368,7 +1375,7 @@ begin
   Result := True;
 end;
 
-procedure TTestEmptyMapping.InternalStore(const APID: IJCoreOPFPID);
+procedure TTestEmptyMapping.InternalStore(const APID: TJCoreOPFPID);
 begin
 end;
 
@@ -1502,7 +1509,7 @@ begin
     Result := inherited GenerateInsertExternalLinksStatement(ACompositionClass);
 end;
 
-function TTestPersonSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
+function TTestPersonSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTPERSON;
 end;
@@ -1512,12 +1519,12 @@ begin
   Result := CSQLSELECTPERSON;
 end;
 
-function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
+function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEPERSON;
 end;
 
-procedure TTestPersonSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+procedure TTestPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VPerson: TTestPerson;
 begin
@@ -1529,13 +1536,13 @@ begin
   VPerson.Languages := TTestLanguageList(RetrieveListPID(TTestLanguage, VPerson._PID));
 end;
 
-procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
+procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: TJCoreOPFPID);
 begin
   StoreList(APID, 'phones');
   StoreList(APID, 'languages');
 end;
 
-procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VPerson: TTestPerson;
 begin
@@ -1552,7 +1559,7 @@ end;
 
 { TTestCitySQLMapping }
 
-function TTestCitySQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
+function TTestCitySQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTCITY;
 end;
@@ -1562,12 +1569,12 @@ begin
   Result := CSQLSELECTCITY;
 end;
 
-function TTestCitySQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
+function TTestCitySQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATECITY;
 end;
 
-procedure TTestCitySQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+procedure TTestCitySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VCity: TTestCity;
 begin
@@ -1575,7 +1582,7 @@ begin
   VCity.Name := Driver.ReadString;
 end;
 
-procedure TTestCitySQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+procedure TTestCitySQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VCity: TTestCity;
 begin
@@ -1590,7 +1597,7 @@ end;
 
 { TTestPhoneSQLMapping }
 
-function TTestPhoneSQLMapping.GenerateInsertStatement(const APID: IJCoreOPFPID): string;
+function TTestPhoneSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTPHONE;
 end;
@@ -1604,12 +1611,12 @@ begin
     Result := inherited GenerateSelectListFromStatement(AListBaseClass);
 end;
 
-function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: IJCoreOPFPID): string;
+function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEPHONE;
 end;
 
-procedure TTestPhoneSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+procedure TTestPhoneSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VPhone: TTestPhone;
 begin
@@ -1617,7 +1624,7 @@ begin
   VPhone.Number := Driver.ReadString;
 end;
 
-procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VPhone: TTestPhone;
 begin
@@ -1634,7 +1641,7 @@ end;
 { TTestLanguageSQLMapping }
 
 function TTestLanguageSQLMapping.GenerateInsertStatement(
-  const APID: IJCoreOPFPID): string;
+  const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTLANG;
 end;
@@ -1649,12 +1656,12 @@ begin
 end;
 
 function TTestLanguageSQLMapping.GenerateUpdateStatement(
-  const APID: IJCoreOPFPID): string;
+  const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATELANG;
 end;
 
-procedure TTestLanguageSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+procedure TTestLanguageSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VLang: TTestLanguage;
 begin
@@ -1663,7 +1670,7 @@ begin
 end;
 
 procedure TTestLanguageSQLMapping.WriteInternalsToDriver(
-  const APID: IJCoreOPFPID);
+  const APID: TJCoreOPFPID);
 var
   VLang: TTestLanguage;
 begin

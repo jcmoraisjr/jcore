@@ -20,9 +20,10 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
+  JCoreOPFEntity,
   JCoreOPFMetadata,
   JCoreOPFDriver,
-  JCoreOPFID,
+  JCoreOPFOID,
   JCoreOPFPID;
 
 type
@@ -30,11 +31,11 @@ type
   { IJCoreOPFMapper }
 
   IJCoreOPFMapper = interface
-    procedure AddInTransactionPID(const APID: IJCoreOPFPID);
+    procedure AddInTransactionPID(const APID: TJCoreOPFPID);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
-    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
-    procedure StorePID(const APID: IJCoreOPFPID);
+    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
+    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
+    procedure StorePID(const APID: TJCoreOPFPID);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
 
@@ -46,31 +47,31 @@ type
     FMapper: IJCoreOPFMapper;
     FModel: TJCoreOPFModel;
   protected
-    function CreatePID(const AEntity: TObject): IJCoreOPFPID; virtual;
+    function CreatePID(const AEntity: TObject): TJCoreOPFPID; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID; virtual; abstract;
     procedure InternalDispose(const AClass: TClass; const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; virtual; abstract;
-    function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList; virtual; abstract;
-    procedure InternalStore(const APID: IJCoreOPFPID); virtual; abstract;
-    procedure InternalStoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray); virtual; abstract;
+    function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList; virtual; abstract;
+    procedure InternalStore(const APID: TJCoreOPFPID); virtual; abstract;
+    procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
     property Model: TJCoreOPFModel read FModel;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver); virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
-    function AcquirePID(AEntity: TObject): IJCoreOPFPID;
+    function AcquirePID(AEntity: TObject): TJCoreOPFPID;
     class function Apply(const AClass: TClass): Boolean; virtual; abstract;
-    procedure Dispose(const APID: IJCoreOPFPID);
+    procedure Dispose(const APID: TJCoreOPFPID);
     procedure DisposeFromString(const AClass: TClass; const AOID: string);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveFromString(const AClass: TClass; const AStringOID: string): TObject;
-    function RetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
-    procedure Store(const APID: IJCoreOPFPID);
-    procedure StoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
+    function RetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
+    procedure Store(const APID: TJCoreOPFPID);
+    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
 
@@ -90,25 +91,25 @@ type
     function CreateEntity(const AClass: TClass): TObject; virtual;
     function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
     function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
-    function GenerateInsertStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
+    function GenerateInsertStatement(const APID: TJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; virtual;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
-    function GenerateUpdateStatement(const APID: IJCoreOPFPID): string; virtual; abstract;
-    procedure ReadFromDriver(const APID: IJCoreOPFPID); virtual;
-    procedure WriteExternalLinksToDriver(const AOwnerPID: IJCoreOPFPID; const ACompositionClass: TClass; const AItems: TJCoreOPFPIDArray); virtual;
-    procedure WriteExternalsToDriver(const APID: IJCoreOPFPID); virtual;
-    procedure WriteInternalsToDriver(const APID: IJCoreOPFPID); virtual;
+    function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; virtual; abstract;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); virtual;
+    procedure WriteExternalLinksToDriver(const AOwnerPID: TJCoreOPFPID; const ACompositionClass: TClass; const AItems: TJCoreOPFPIDArray); virtual;
+    procedure WriteExternalsToDriver(const APID: TJCoreOPFPID); virtual;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); virtual;
   protected
     function BuildParams(const ASize: Integer): string;
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     procedure InternalDispose(const AClass: TClass; const AOIDArray: array of TJCoreOPFOID); override;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; override;
-    function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList; override;
-    procedure InternalStore(const APID: IJCoreOPFPID); override;
-    procedure InternalStoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray); override;
+    function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList; override;
+    procedure InternalStore(const APID: TJCoreOPFPID); override;
+    procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray); override;
   protected
-    function RetrieveListPID(const AListBaseClass: TClass; AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreList(const APID: IJCoreOPFPID; const AAttributeName: string);
+    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+    procedure StoreList(const APID: TJCoreOPFPID; const AAttributeName: string);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver); override;
@@ -129,7 +130,7 @@ begin
   Result := Model.AcquireMetadata(AClass);
 end;
 
-function TJCoreOPFMapping.CreatePID(const AEntity: TObject): IJCoreOPFPID;
+function TJCoreOPFMapping.CreatePID(const AEntity: TObject): TJCoreOPFPID;
 begin
   Result := TJCoreOPFPID.Create(AcquireMetadata(AEntity.ClassType), AEntity);
 end;
@@ -151,8 +152,9 @@ begin
   FDriver := ADriver;
 end;
 
-function TJCoreOPFMapping.AcquirePID(AEntity: TObject): IJCoreOPFPID;
+function TJCoreOPFMapping.AcquirePID(AEntity: TObject): TJCoreOPFPID;
 var
+  VPID: IJCoreOPFPID;
   VPropInfo: PPropInfo;
 begin
   if not Assigned(AEntity) then
@@ -160,16 +162,20 @@ begin
   VPropInfo := GetPropInfo(AEntity, SPID);
   if not Assigned(VPropInfo) then
     raise EJCoreOPFPersistentIDFieldNotFound.Create(AEntity.ClassName);
-  Result := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
-  if not Assigned(Result) then
+  VPID := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
+  if Assigned(VPID) then
+  begin
+    Result := VPID as TJCoreOPFPID;
+  end else
   begin
     Result := CreatePID(AEntity);
-    SetInterfaceProp(AEntity, VPropInfo, Result);
+    VPID := Result as IJCoreOPFPID;
+    SetInterfaceProp(AEntity, VPropInfo, VPID);
   end;
   Mapper.AddInTransactionPID(Result);
 end;
 
-procedure TJCoreOPFMapping.Dispose(const APID: IJCoreOPFPID);
+procedure TJCoreOPFMapping.Dispose(const APID: TJCoreOPFPID);
 begin
   InternalDispose(APID.Entity.ClassType, [APID.OID]);
 end;
@@ -224,17 +230,17 @@ begin
 end;
 
 function TJCoreOPFMapping.RetrieveList(const AListBaseClass: TClass;
-  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+  const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
 begin
   Result := InternalRetrieveList(AListBaseClass, AOwnerPID);
 end;
 
-procedure TJCoreOPFMapping.Store(const APID: IJCoreOPFPID);
+procedure TJCoreOPFMapping.Store(const APID: TJCoreOPFPID);
 begin
   InternalStore(APID);
 end;
 
-procedure TJCoreOPFMapping.StoreElements(const AOwnerPID: IJCoreOPFPID;
+procedure TJCoreOPFMapping.StoreElements(const AOwnerPID: TJCoreOPFPID;
   const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
 begin
   InternalStoreElements(AOwnerPID, AMetadata, AItems);
@@ -243,7 +249,7 @@ end;
 procedure TJCoreOPFMapping.StoreToDriver(const AClass: TClass;
   const AEntity: TObject; const ADriver: TJCoreOPFDriver);
 var
-  VPID: IJCoreOPFPID;
+  VPID: TJCoreOPFPID;
 begin
   if Assigned(AEntity) then
   begin
@@ -279,12 +285,12 @@ begin
   raise EJCoreOPFUnsupportedListOperations.Create;
 end;
 
-procedure TJCoreOPFSQLMapping.ReadFromDriver(const APID: IJCoreOPFPID);
+procedure TJCoreOPFSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 begin
 end;
 
 procedure TJCoreOPFSQLMapping.WriteExternalLinksToDriver(
-  const AOwnerPID: IJCoreOPFPID; const ACompositionClass: TClass;
+  const AOwnerPID: TJCoreOPFPID; const ACompositionClass: TClass;
   const AItems: TJCoreOPFPIDArray);
 var
   VInsertStatement: string;
@@ -299,11 +305,11 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const APID: IJCoreOPFPID);
+procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const APID: TJCoreOPFPID);
 begin
 end;
 
-procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const APID: IJCoreOPFPID);
+procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 begin
 end;
 
@@ -343,7 +349,7 @@ end;
 function TJCoreOPFSQLMapping.InternalRetrieve(const AClass: TClass;
   const AOID: TJCoreOPFOID): TObject;
 var
-  VPID: IJCoreOPFPID;
+  VPID: TJCoreOPFPID;
 begin
   AOID.WriteToDriver(Driver);
   Driver.ExecSQL(GenerateSelectStatement(AClass), 1);
@@ -364,9 +370,9 @@ begin
 end;
 
 function TJCoreOPFSQLMapping.InternalRetrieveList(const AListBaseClass: TClass;
-  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+  const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
 var
-  VPID: IJCoreOPFPID;
+  VPID: TJCoreOPFPID;
   VOID: TJCoreOPFOID;
   VCount: Integer;
   I: Integer;
@@ -399,7 +405,7 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLMapping.InternalStore(const APID: IJCoreOPFPID);
+procedure TJCoreOPFSQLMapping.InternalStore(const APID: TJCoreOPFPID);
 begin
   if APID.IsPersistent then
   begin
@@ -418,7 +424,7 @@ begin
 end;
 
 procedure TJCoreOPFSQLMapping.InternalStoreElements(
-  const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata;
+  const AOwnerPID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata;
   const AItems: TJCoreOPFPIDArray);
 var
   I: Integer;
@@ -438,9 +444,9 @@ begin
 end;
 
 function TJCoreOPFSQLMapping.RetrieveListPID(const AListBaseClass: TClass;
-  AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
 begin
-  Result := Mapper.RetrieveListPID(AListBaseClass, AOwnerPID);
+  Result := Mapper.RetrieveListPID(AListBaseClass, AOwnerPID as TJCoreOPFPID);
 end;
 
 { Sequence diagram - include in the API doc
@@ -452,7 +458,7 @@ end;
     Conventions:
       StoreList == the attribute list, in the owner mapping
       StoreElements == the elements of the list, in the base class list mapping }
-procedure TJCoreOPFSQLMapping.StoreList(const APID: IJCoreOPFPID;
+procedure TJCoreOPFSQLMapping.StoreList(const APID: TJCoreOPFPID;
   const AAttributeName: string);
 var
   VADM: TJCoreOPFADM;

@@ -18,7 +18,9 @@ interface
 
 uses
   typinfo,
-  JCoreOPFID,
+  fgl,
+  JCoreOPFEntity,
+  JCoreOPFOID,
   JCoreOPFMetadata;
 
 type
@@ -37,18 +39,21 @@ type
     FIsPersistent: Boolean;
     FMetadata: TJCoreOPFClassMetadata;
     FOID: TJCoreOPFOID;
-    FOwner: IJCoreOPFPID;
+    FOwner: TJCoreOPFPID;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
-    function GetOID: TJCoreOPFOID;
-    function GetOwner: IJCoreOPFPID;
-    procedure SetOwner(const AValue: IJCoreOPFPID);
+    function GetOIDIntf: IJCoreOPFOID;
+    function GetOwnerIntf: IJCoreOPFPID;
+    procedure SetOwner(const AValue: TJCoreOPFPID);
+    function IJCoreOPFPID.OID = GetOIDIntf;
+    function IJCoreOPFPID.Owner = GetOwnerIntf;
   protected
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata; const AEntity: TObject);
     destructor Destroy; override;
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
+    function ADMByName(const AAttributeName: string): IJCoreOPFADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
     function IsDirty(const AAttributeName: string): Boolean;
@@ -57,8 +62,11 @@ type
     property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
-    property Owner: IJCoreOPFPID read GetOwner write SetOwner;
+    property Owner: TJCoreOPFPID read FOwner write SetOwner;
   end;
+
+  TJCoreOPFPIDList = specialize TFPGObjectList<TJCoreOPFPID>;
+  TJCoreOPFPIDArray = array of TJCoreOPFPID;
 
 implementation
 
@@ -79,20 +87,20 @@ begin
   Result := FIsPersistent;
 end;
 
-function TJCoreOPFPID.GetOID: TJCoreOPFOID;
+function TJCoreOPFPID.GetOIDIntf: IJCoreOPFOID;
 begin
-  Result := FOID;
+  Result := FOID as IJCoreOPFOID
 end;
 
-function TJCoreOPFPID.GetOwner: IJCoreOPFPID;
+function TJCoreOPFPID.GetOwnerIntf: IJCoreOPFPID;
 begin
-  Result := FOwner;
+  Result := FOwner as IJCoreOPFPID;
 end;
 
-procedure TJCoreOPFPID.SetOwner(const AValue: IJCoreOPFPID);
+procedure TJCoreOPFPID.SetOwner(const AValue: TJCoreOPFPID);
 begin
   if not Assigned(AValue) then
-    FOwner := nil
+    FreeAndNil(FOwner)
   else if not Assigned(FOwner) then
   begin
     { TODO : Check circular reference }
@@ -135,6 +143,11 @@ begin
   Result := FADMMap.Data[VIndex];
 end;
 
+function TJCoreOPFPID.ADMByName(const AAttributeName: string): IJCoreOPFADM;
+begin
+  Result := AcquireADM(AAttributeName) as IJCoreOPFADM;
+end;
+
 procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);
 begin
   if IsPersistent then
@@ -145,7 +158,7 @@ end;
 
 procedure TJCoreOPFPID.Commit;
 begin
-  FIsPersistent := Assigned(OID);
+  FIsPersistent := Assigned(FOID);
 end;
 
 function TJCoreOPFPID.IsDirty(const AAttributeName: string): Boolean;

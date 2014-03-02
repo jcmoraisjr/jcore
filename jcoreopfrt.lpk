@@ -26,12 +26,12 @@
         <UnitName Value="JCoreOPFException"/>
       </Item2>
       <Item3>
-        <Filename Value="opf/jcoreopfmetadata.pas"/>
-        <UnitName Value="JCoreOPFMetadata"/>
+        <Filename Value="opf/jcoreopfentity.pas"/>
+        <UnitName Value="JCoreOPFEntity"/>
       </Item3>
       <Item4>
-        <Filename Value="opf/jcoreopfid.pas"/>
-        <UnitName Value="JCoreOPFID"/>
+        <Filename Value="opf/jcoreopfmetadata.pas"/>
+        <UnitName Value="JCoreOPFMetadata"/>
       </Item4>
       <Item5>
         <Filename Value="opf/jcoreopfpid.pas"/>

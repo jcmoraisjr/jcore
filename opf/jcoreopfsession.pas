@@ -20,7 +20,7 @@ uses
   Classes,
   JCoreClasses,
   JCoreOPFMetadata,
-  JCoreOPFID,
+  JCoreOPFPID,
   JCoreOPFDriver,
   JCoreOPFMapping;
 
@@ -40,22 +40,21 @@ type
   TJCoreOPFSession = class(TInterfacedObject, IJCoreOPFSession, IJCoreOPFMapper)
   private
     FDriver: TJCoreOPFDriver;
-    { TODO : non thread safe list }
-    FInTransactionPIDList: TInterfaceList;
+    FInTransactionPIDList: TJCoreOPFPIDList;
     FMappingList: TJCoreOPFMappingList;
     FModel: TJCoreOPFModel;
     FSessionManager: IJCoreOPFSessionManager;
     function CreateMapping(const AMappingClass: TJCoreOPFMappingClass): TJCoreOPFMapping;
   protected
-    procedure AddInTransactionPID(const APID: IJCoreOPFPID);
+    procedure AddInTransactionPID(const APID: TJCoreOPFPID);
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit; virtual;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
-    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
-    procedure StoreElements(const AOwnerPID: IJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
-    procedure StorePID(const APID: IJCoreOPFPID);
+    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
+    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
+    procedure StorePID(const APID: TJCoreOPFPID);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
-    property InTransactionPIDList: TInterfaceList read FInTransactionPIDList;
+    property InTransactionPIDList: TJCoreOPFPIDList read FInTransactionPIDList;
     property Model: TJCoreOPFModel read FModel;
     property SessionManager: IJCoreOPFSessionManager read FSessionManager;
   public
@@ -86,7 +85,7 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSession.AddInTransactionPID(const APID: IJCoreOPFPID);
+procedure TJCoreOPFSession.AddInTransactionPID(const APID: TJCoreOPFPID);
 begin
   if InTransactionPIDList.IndexOf(APID) = -1 then
     InTransactionPIDList.Add(APID);
@@ -116,7 +115,7 @@ var
 begin
   { TODO : Implement failure check }
   for I := 0 to Pred(InTransactionPIDList.Count) do
-    IJCoreOPFPID(InTransactionPIDList[I]).Commit;
+    InTransactionPIDList[I].Commit;
   InTransactionPIDList.Clear;
 end;
 
@@ -127,18 +126,18 @@ begin
 end;
 
 function TJCoreOPFSession.RetrieveListPID(const AListBaseClass: TClass;
-  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+  const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
 begin
   Result := AcquireMapping(AListBaseClass).RetrieveList(AListBaseClass, AOwnerPID);
 end;
 
-procedure TJCoreOPFSession.StoreElements(const AOwnerPID: IJCoreOPFPID;
+procedure TJCoreOPFSession.StoreElements(const AOwnerPID: TJCoreOPFPID;
   const AMetadata: TJCoreOPFAttrMetadata; const AItems: TJCoreOPFPIDArray);
 begin
   AcquireMapping(AMetadata.CompositionClass).StoreElements(AOwnerPID, AMetadata, AItems);
 end;
 
-procedure TJCoreOPFSession.StorePID(const APID: IJCoreOPFPID);
+procedure TJCoreOPFSession.StorePID(const APID: TJCoreOPFPID);
 begin
   AcquireMapping(APID.Entity.ClassType).Store(APID);
 end;
@@ -163,7 +162,7 @@ begin
   FModel := AModel;
   FDriver := ADriver;
   FMappingList := TJCoreOPFMappingList.Create(True);
-  FInTransactionPIDList := TInterfaceList.Create;
+  FInTransactionPIDList := TJCoreOPFPIDList.Create(False);
 end;
 
 destructor TJCoreOPFSession.Destroy;
