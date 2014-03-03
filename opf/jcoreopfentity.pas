@@ -35,6 +35,7 @@ type
   IJCoreOPFADM = interface
   ['{BB774071-F57D-AFB8-70BC-3A2B0DD69690}']
     function IsDirty: Boolean;
+    procedure UpdateCache;
   end;
 
   { IJCoreOPFPID }
@@ -44,10 +45,8 @@ type
     function ADMByName(const AAttributeName: string): IJCoreOPFADM;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
-    function IsDirty(const AAttributeName: string): Boolean;
     function OID: IJCoreOPFOID;
     function Owner: IJCoreOPFPID;
-    procedure UpdateCache(const AAttributeNameArray: array of string);
     property Entity: TObject read GetEntity;
     property IsPersistent: Boolean read GetIsPersistent;
   end;

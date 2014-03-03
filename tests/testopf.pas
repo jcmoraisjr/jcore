@@ -1150,11 +1150,11 @@ begin
     VPerson.Age := 0;
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertTrue('person.age dirty1', VPerson._PID.IsDirty('age'));
-    VPerson._PID.UpdateCache(['age']);
-    AssertFalse('person.age dirty2', VPerson._PID.IsDirty('age'));
+    AssertTrue('person.age dirty1', VPerson._PID.ADMByName('age').IsDirty);
+    VPerson._PID.ADMByName('age').UpdateCache;
+    AssertFalse('person.age dirty2', VPerson._PID.ADMByName('age').IsDirty);
     VPerson.Age := 10;
-    AssertTrue('person.age dirty3', VPerson._PID.IsDirty('age'));
+    AssertTrue('person.age dirty3', VPerson._PID.ADMByName('age').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1169,12 +1169,12 @@ begin
     VPerson.Age := 30;
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.UpdateCache(['age']);
-    AssertFalse('person.age dirty1', VPerson._PID.IsDirty('age'));
+    VPerson._PID.ADMByName('age').UpdateCache;
+    AssertFalse('person.age dirty1', VPerson._PID.ADMByName('age').IsDirty);
     VPerson.Age := 33;
-    AssertTrue('person.age dirty2', VPerson._PID.IsDirty('age'));
+    AssertTrue('person.age dirty2', VPerson._PID.ADMByName('age').IsDirty);
     VPerson.Age := 30;
-    AssertFalse('person.age dirty3', VPerson._PID.IsDirty('age'));
+    AssertFalse('person.age dirty3', VPerson._PID.ADMByName('age').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1189,12 +1189,12 @@ begin
     VPerson.Name := 'Some name';
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.UpdateCache(['name']);
-    AssertFalse('person.name dirty1', VPerson._PID.IsDirty('name'));
+    VPerson._PID.ADMByName('name').UpdateCache;
+    AssertFalse('person.name dirty1', VPerson._PID.ADMByName('name').IsDirty);
     VPerson.Name := 'Other name';
-    AssertTrue('person.name dirty2', VPerson._PID.IsDirty('name'));
+    AssertTrue('person.name dirty2', VPerson._PID.ADMByName('name').IsDirty);
     VPerson.Name := 'Some name';
-    AssertFalse('person.name dirty3', VPerson._PID.IsDirty('name'));
+    AssertFalse('person.name dirty3', VPerson._PID.ADMByName('name').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1212,13 +1212,13 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.UpdateCache(['phones']);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson._PID.ADMByName('phones').UpdateCache;
+    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('phones').IsDirty);
     VPerson.Phones[0].Number := '123-123';
     { TODO : waiting ADMCollection.InternalIsDirty impl }
-    //AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+    //AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('phones').IsDirty);
     VPerson.Phones[0].Number := '123';
-    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty('phones'));
+    AssertFalse('person.phones dirty3', VPerson._PID.ADMByName('phones').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1236,14 +1236,14 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.UpdateCache(['phones']);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson._PID.ADMByName('phones').UpdateCache;
+    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('phones').IsDirty);
     VPhone := TTestPhone.Create;
     VPhone.Number := '321-321';
     VPerson.Phones.Add(VPhone);
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('phones').IsDirty);
     VPerson.Phones.Delete(1);
-    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty('phones'));
+    AssertFalse('person.phones dirty3', VPerson._PID.ADMByName('phones').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1264,10 +1264,10 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.UpdateCache(['phones']);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson._PID.ADMByName('phones').UpdateCache;
+    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('phones').IsDirty);
     VPerson.Phones.Delete(0);
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('phones').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1288,14 +1288,14 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.UpdateCache(['phones']);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty('phones'));
+    VPerson._PID.ADMByName('phones').UpdateCache;
+    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('phones').IsDirty);
     VPerson.Phones.Delete(1);
     VPhone := TTestPhone.Create;
     VPhone.Number := '456-7890';
     VPerson.Phones.Add(VPhone);
     { TODO : waiting ADMCollection.InternalIsDirty impl }
-    //AssertTrue('person.phones dirty2', VPerson._PID.IsDirty('phones'));
+    //AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('phones').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;

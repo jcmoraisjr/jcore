@@ -20,7 +20,8 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
-  JCoreMetadata;
+  JCoreMetadata,
+  JCoreOPFEntity;
 
 type
 
@@ -33,7 +34,7 @@ type
 
   { TJCoreOPFADM }
 
-  TJCoreOPFADM = class(TObject)
+  TJCoreOPFADM = class(TObject, IJCoreOPFADM)
   private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;

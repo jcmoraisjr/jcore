@@ -56,9 +56,7 @@ type
     function ADMByName(const AAttributeName: string): IJCoreOPFADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure Commit;
-    function IsDirty(const AAttributeName: string): Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
-    procedure UpdateCache(const AAttributeNameArray: array of string);
     property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
@@ -161,11 +159,6 @@ begin
   FIsPersistent := Assigned(FOID);
 end;
 
-function TJCoreOPFPID.IsDirty(const AAttributeName: string): Boolean;
-begin
-  Result := AcquireADM(AAttributeName).IsDirty;
-end;
-
 procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
 begin
   { TODO : Used to release the OID if an exception raises just after the OID
@@ -173,15 +166,6 @@ begin
            a better approach }
   if FOID = AOID then
     FOID := nil;
-end;
-
-procedure TJCoreOPFPID.UpdateCache(const AAttributeNameArray: array of string);
-var
-  VAttributeName: string;
-begin
-  { TODO : call all attributes if array is empty }
-  for VAttributeName in AAttributeNameArray do
-    AcquireADM(VAttributeName).UpdateCache;
 end;
 
 end.
