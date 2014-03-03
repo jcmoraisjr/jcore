@@ -17,8 +17,8 @@ unit JCoreOPFConfig;
 interface
 
 uses
-  JCoreOPFMetadata,
   JCoreOPFDriver,
+  JCoreOPFMetadata,
   JCoreOPFMapping,
   JCoreOPFSession;
 

@@ -12,13 +12,12 @@ uses
   JCoreLogger,
   JCoreMetadata,
   JCoreOPFEntity,
-  JCoreOPFOID,
-  JCoreOPFPID,
   JCoreOPFDriver,
+  JCoreOPFOID,
+  JCoreOPFMetadata,
   JCoreOPFMapping,
   JCoreOPFSession,
-  JCoreOPFConfig,
-  JCoreOPFMetadata;
+  JCoreOPFConfig;
 
 type
 

@@ -19,9 +19,8 @@ interface
 uses
   Classes,
   JCoreClasses,
-  JCoreOPFMetadata,
-  JCoreOPFPID,
   JCoreOPFDriver,
+  JCoreOPFMetadata,
   JCoreOPFMapping;
 
 type

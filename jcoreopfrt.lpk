@@ -16,7 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="10">
+    <Files Count="9">
       <Item1>
         <Filename Value="opf/jcoreopfconsts.pas"/>
         <UnitName Value="JCoreOPFConsts"/>
@@ -30,33 +30,29 @@
         <UnitName Value="JCoreOPFEntity"/>
       </Item3>
       <Item4>
-        <Filename Value="opf/jcoreopfmetadata.pas"/>
-        <UnitName Value="JCoreOPFMetadata"/>
-      </Item4>
-      <Item5>
-        <Filename Value="opf/jcoreopfpid.pas"/>
-        <UnitName Value="JCoreOPFPID"/>
-      </Item5>
-      <Item6>
         <Filename Value="opf/jcoreopfoid.pas"/>
         <UnitName Value="JCoreOPFOID"/>
-      </Item6>
-      <Item7>
+      </Item4>
+      <Item5>
         <Filename Value="opf/jcoreopfdriver.pas"/>
         <UnitName Value="JCoreOPFDriver"/>
-      </Item7>
-      <Item8>
+      </Item5>
+      <Item6>
+        <Filename Value="opf/jcoreopfmetadata.pas"/>
+        <UnitName Value="JCoreOPFMetadata"/>
+      </Item6>
+      <Item7>
         <Filename Value="opf/jcoreopfmapping.pas"/>
         <UnitName Value="JCoreOPFMapping"/>
-      </Item8>
-      <Item9>
+      </Item7>
+      <Item8>
         <Filename Value="opf/jcoreopfsession.pas"/>
         <UnitName Value="JCoreOPFSession"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="opf/jcoreopfconfig.pas"/>
         <UnitName Value="JCoreOPFConfig"/>
-      </Item10>
+      </Item9>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

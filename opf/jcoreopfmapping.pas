@@ -21,10 +21,9 @@ uses
   fgl,
   JCoreClasses,
   JCoreOPFEntity,
-  JCoreOPFMetadata,
   JCoreOPFDriver,
   JCoreOPFOID,
-  JCoreOPFPID;
+  JCoreOPFMetadata;
 
 type
 
