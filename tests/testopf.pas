@@ -1205,8 +1205,7 @@ begin
     VPerson._PID.ADMByName('Phones').UpdateCache;
     AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('Phones').IsDirty);
     VPerson.Phones[0].Number := '123-123';
-    { TODO : waiting ADMCollection.InternalIsDirty impl }
-    //AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
     VPerson.Phones[0].Number := '123';
     AssertFalse('person.phones dirty3', VPerson._PID.ADMByName('Phones').IsDirty);
   finally
@@ -1284,8 +1283,7 @@ begin
     VPhone := TTestPhone.Create;
     VPhone.Number := '456-7890';
     VPerson.Phones.Add(VPhone);
-    { TODO : waiting ADMCollection.InternalIsDirty impl }
-    //AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
