@@ -30,6 +30,7 @@ type
 
   ITestOPFSession = interface(IJCoreOPFSession)
   ['{641946FC-586B-F7CA-5B84-25C3DC812F08}']
+    function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
   end;
 
@@ -637,9 +638,9 @@ begin
     VLang2.AddRef;
     TTestOPFSession.CommitCount := 0;
     FSession.Store(VPerson);
-    AssertEquals('commit cnt', 1, TTestOPFSession.CommitCount);
-    AssertEquals('pid cnt', 6, TTestOPFSession.LastCommitPIDList.Count);
-    AssertNotNull('vperson pid', VPerson._PID);
+    AssertEquals('commit1 cnt', 1, TTestOPFSession.CommitCount);
+    AssertEquals('pid1 cnt', 6, TTestOPFSession.LastCommitPIDList.Count);
+    AssertNotNull('vperson1 pid', VPerson._PID);
     AssertTrue('vperson.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VPerson._PID));
     AssertNotNull('vcity pid', VCity._PID);
     AssertTrue('vcity.pid in list', TTestOPFSession.ExistPIDInCommitPIDList(VCity._PID));
@@ -655,8 +656,9 @@ begin
     VCity := nil;
     TTestOPFSession.CommitCount := 0;
     FSession.Store(VPerson);
-    AssertEquals('commit cnt', 1, TTestOPFSession.CommitCount);
-    AssertEquals('pid cnt', 5, TTestOPFSession.LastCommitPIDList.Count);
+    AssertEquals('commit2 cnt', 1, TTestOPFSession.CommitCount);
+    AssertEquals('pid2 cnt', 5, TTestOPFSession.LastCommitPIDList.Count);
+    AssertSame('vperson2 pid', TTestOPFSession.LastCommitPIDList[0], VPerson._PID as TJCoreOPFPID);
   finally
     FreeAndNil(VPerson);
   end;
@@ -825,9 +827,7 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Age := 18;
     FSession.Store(VPerson);
-    { TODO : fix aggregation persistence }
-    // +2 -- delete from person_lang
-    AssertEquals(5+2, TTestSQLDriver.Commands.Count);
+    AssertEquals(5, TTestSQLDriver.Commands.Count);
     AssertEquals('WriteString TheName', TTestSQLDriver.Commands[0]);
     AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[1]);
     AssertEquals('WriteNull', TTestSQLDriver.Commands[2]);
@@ -853,22 +853,16 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Phones[1].Number := '987';
     FSession.Store(VPerson);
-    { TODO : fix aggregation persistence }
-    // +2 -- delete from person_lang
-    AssertEquals('cmd count', 13+2, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 9, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString somename', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
     AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteString 123', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteInteger 2', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd6', 'WriteString 987', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'WriteInteger 3', TTestSQLDriver.Commands[7]);
     AssertEquals('cmd8', 'ExecSQL ' + CSQLUPDATEPHONE, TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'WriteInteger 1', TTestSQLDriver.Commands[9]);
-    AssertEquals('cmd10', 'WriteString 987', TTestSQLDriver.Commands[10]);
-    AssertEquals('cmd11', 'WriteInteger 3', TTestSQLDriver.Commands[11]);
-    AssertEquals('cmd12', 'ExecSQL ' + CSQLUPDATEPHONE, TTestSQLDriver.Commands[12]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -924,17 +918,12 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Name := 'anothername';
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 10, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 5, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString anothername', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteInteger 1', TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'WriteInteger 2', TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[9]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1143,14 +1132,16 @@ end;
 procedure TTestOPFCleanDirtyAttribute.CacheNotUpdated;
 var
   VPerson: TTestPerson;
+  VPID: TJCoreOPFPID;
 begin
   VPerson := TTestPerson.Create;
   try
     VPerson.Age := 0;
+    VPID := FSession.AcquireMapping(VPerson.ClassType).AcquirePID(VPerson);
+    AssertTrue('person.age dirty1', VPID.ADMByName('Age').IsDirty);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertTrue('person.age dirty1', VPerson._PID.ADMByName('Age').IsDirty);
-    VPerson._PID.ADMByName('Age').UpdateCache;
+    AssertSame('same pid instance', VPID, VPerson._PID as TJCoreOPFPID);
     AssertFalse('person.age dirty2', VPerson._PID.ADMByName('Age').IsDirty);
     VPerson.Age := 10;
     AssertTrue('person.age dirty3', VPerson._PID.ADMByName('Age').IsDirty);
