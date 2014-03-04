@@ -424,8 +424,8 @@ begin
   try
     if AClass = TTestPerson then
     begin
-      VMetadata.AttributeByName('languages').CompositionType := jctAggregation;
-      VMetadata.AttributeByName('languages').CompositionLinkType := jcltExternal;
+      VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
+      VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
     end;
   except
     FreeAndNil(VMetadata);
