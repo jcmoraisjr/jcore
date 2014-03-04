@@ -516,7 +516,7 @@ begin
 
   try
     VSession := VConfiguration.CreateSession;
-    Fail('EJCoreOPFUndefinedDriver expected');
+    Fail(EJCoreOPFUndefinedDriver.ClassName + ' expected');
   except
     on E: EAssertionFailedError do
       raise;
@@ -530,7 +530,7 @@ begin
   VConfiguration.AddDriverClass(TTestEmptyDriver);
   try
     VConfiguration.DriverName := TTestEmptyDriver.DriverName + ' invalid';
-    Fail('EJCoreOPFDriverNotFound expected');
+    Fail(EJCoreOPFDriverNotFound.ClassName + ' expected');
   except
     on E: EAssertionFailedError do
       raise;
@@ -561,7 +561,7 @@ begin
   try
     try
       VSession.Store(VPerson);
-      Fail('EJCoreOPFMappingNotFound expected');
+      Fail(EJCoreOPFMappingNotFound.ClassName + ' expected');
     except
       on E: EAssertionFailedError do
         raise;
