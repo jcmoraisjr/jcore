@@ -5,6 +5,7 @@ unit TestOPF;
 interface
 
 uses
+  sysutils,
   Classes,
   fgl,
   fpcunit,
@@ -67,6 +68,7 @@ type
     FSession: ITestOPFSession;
     class var FLOG: IJCoreLogger;
   protected
+    procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
     procedure SetUp; override;
     procedure TearDown; override;
@@ -91,11 +93,13 @@ type
     procedure NonPidAttributeList;
   end;
 
-  { TTestOPFTransaction }
+  { TTestOPFPersistence }
 
-  TTestOPFTransaction = class(TTestOPF)
+  TTestOPFPersistence = class(TTestOPF)
   published
     procedure TransactionPIDList;
+    procedure StoreOwnerDontUpdateAggregations;
+    procedure FailOwnOwnedComposition;
   end;
 
   { TTestOPFInsertManualMapping }
@@ -137,10 +141,12 @@ type
     procedure CacheNotUpdated;
     procedure IntegerClear;
     procedure StringClean;
-    procedure OwnedObjectChangedClean;
-    procedure OwnedObjectAddedClean;
-    procedure OwnedObjectRemovedClean;
-    procedure OwnedObjectRemovedAddedClean;
+    procedure CompositionChangedClean;
+    procedure CompositionAddedClean;
+    procedure CompositionRemovedClean;
+    procedure CompositionRemovedAddedClean;
+    procedure CompositionChangedOrderClean;
+    { TODO : Aggregation }
   end;
 
   { TTestEmptyDriver }
@@ -354,7 +360,6 @@ type
 implementation
 
 uses
-  sysutils,
   testregistry,
   JCoreOPFException;
 
@@ -444,6 +449,23 @@ begin
 end;
 
 { TTestOPF }
+
+procedure TTestOPF.AssertExceptionStore(const ASession: IJCoreOPFSession;
+  const AEntity: TObject; const AException: ExceptClass);
+begin
+  try
+    ASession.Store(AEntity);
+    Fail(AException.ClassName + ' expected');
+  except
+    on E: EAssertionFailedError do
+      raise;
+    on E: Exception do
+    begin
+      LOG.Debug('', E);
+      AssertEquals(AException.ClassType, E.ClassType);
+    end;
+  end;
+end;
 
 function TTestOPF.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
   const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
@@ -559,18 +581,7 @@ begin
   AssertNotNull(VSession);
   VPerson := TTestPerson.Create;
   try
-    try
-      VSession.Store(VPerson);
-      Fail(EJCoreOPFMappingNotFound.ClassName + ' expected');
-    except
-      on E: EAssertionFailedError do
-        raise;
-      on E: Exception do
-      begin
-        LOG.Debug('', E);
-        AssertEquals(EJCoreOPFMappingNotFound.ClassType, E.ClassType);
-      end;
-    end;
+    AssertExceptionStore(VSession, VPerson, EJCoreOPFMappingNotFound);
     VConfiguration.AddMappingClass(TTestEmptyMapping);
     VSession.Store(VPerson);
   finally
@@ -611,9 +622,9 @@ begin
   AssertEquals('meta0.name', 'Field1', VMetadata[0].Name);
 end;
 
-{ TTestOPFTransaction }
+{ TTestOPFPersistence }
 
-procedure TTestOPFTransaction.TransactionPIDList;
+procedure TTestOPFPersistence.TransactionPIDList;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -659,6 +670,51 @@ begin
     AssertEquals('commit2 cnt', 1, TTestOPFSession.CommitCount);
     AssertEquals('pid2 cnt', 5, TTestOPFSession.LastCommitPIDList.Count);
     AssertSame('vperson2 pid', TTestOPFSession.LastCommitPIDList[0], VPerson._PID as TJCoreOPFPID);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFPersistence.StoreOwnerDontUpdateAggregations;
+var
+  VPerson: TTestPerson;
+  VLang: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang := TTestLanguage.Create('english');
+    VPerson.Languages.Add(VLang);
+    FSession.Store(VPerson);
+    AssertNotNull('lang pid', VLang._PID);
+    AssertTrue('lang clean', not VLang._PID.IsDirty);
+    VPerson.Name := 'SomeName';
+    VLang.Name := 'spanish';
+    FSession.Store(VPerson);
+    AssertTrue('lang dirty', VLang._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFPersistence.FailOwnOwnedComposition;
+var
+  VPerson: TTestPerson;
+  VLang: TTestLanguage;
+  VPhone: TTestPhone;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang := TTestLanguage.Create('english');
+    VPerson.Languages.Add(VLang);
+    VPerson.Languages.Add(VLang);
+    VLang.AddRef;
+    FSession.Store(VPerson);
+    VPhone := TTestPhone.Create;
+    VPerson.Phones.Add(VPhone);
+    VPerson.Phones.Add(VPhone);
+    VPhone.AddRef;
+    { TODO : Implement check duplication in the same admcollection }
+    // AssertExceptionStore(FSession, VPerson, EJCoreOPFObjectAlreadyOwned);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1138,13 +1194,13 @@ begin
   try
     VPerson.Age := 0;
     VPID := FSession.AcquireMapping(VPerson.ClassType).AcquirePID(VPerson);
-    AssertTrue('person.age dirty1', VPID.ADMByName('Age').IsDirty);
+    AssertTrue('person.age dirty1', VPID.IsDirty);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertSame('same pid instance', VPID, VPerson._PID as TJCoreOPFPID);
-    AssertFalse('person.age dirty2', VPerson._PID.ADMByName('Age').IsDirty);
+    AssertFalse('person.age dirty2', VPerson._PID.IsDirty);
     VPerson.Age := 10;
-    AssertTrue('person.age dirty3', VPerson._PID.ADMByName('Age').IsDirty);
+    AssertTrue('person.age dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1159,12 +1215,11 @@ begin
     VPerson.Age := 30;
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.ADMByName('Age').UpdateCache;
-    AssertFalse('person.age dirty1', VPerson._PID.ADMByName('Age').IsDirty);
+    AssertFalse('person.age dirty1', VPerson._PID.IsDirty);
     VPerson.Age := 33;
-    AssertTrue('person.age dirty2', VPerson._PID.ADMByName('Age').IsDirty);
+    AssertTrue('person.age dirty2', VPerson._PID.IsDirty);
     VPerson.Age := 30;
-    AssertFalse('person.age dirty3', VPerson._PID.ADMByName('Age').IsDirty);
+    AssertFalse('person.age dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1179,18 +1234,17 @@ begin
     VPerson.Name := 'Some name';
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.ADMByName('Name').UpdateCache;
-    AssertFalse('person.name dirty1', VPerson._PID.ADMByName('Name').IsDirty);
+    AssertFalse('person.name dirty1', VPerson._PID.IsDirty);
     VPerson.Name := 'Other name';
-    AssertTrue('person.name dirty2', VPerson._PID.ADMByName('Name').IsDirty);
+    AssertTrue('person.name dirty2', VPerson._PID.IsDirty);
     VPerson.Name := 'Some name';
-    AssertFalse('person.name dirty3', VPerson._PID.ADMByName('Name').IsDirty);
+    AssertFalse('person.name dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.OwnedObjectChangedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionChangedClean;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1202,18 +1256,17 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.ADMByName('Phones').UpdateCache;
-    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
     VPerson.Phones[0].Number := '123-123';
-    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
     VPerson.Phones[0].Number := '123';
-    AssertFalse('person.phones dirty3', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.OwnedObjectAddedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionAddedClean;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1225,20 +1278,19 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.ADMByName('Phones').UpdateCache;
-    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
     VPhone := TTestPhone.Create;
     VPhone.Number := '321-321';
     VPerson.Phones.Add(VPhone);
-    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(1);
-    AssertFalse('person.phones dirty3', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.OwnedObjectRemovedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionRemovedClean;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1253,16 +1305,15 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.ADMByName('Phones').UpdateCache;
-    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(0);
-    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.OwnedObjectRemovedAddedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionRemovedAddedClean;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1277,13 +1328,39 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    VPerson._PID.ADMByName('Phones').UpdateCache;
-    AssertFalse('person.phones dirty1', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(1);
     VPhone := TTestPhone.Create;
     VPhone.Number := '456-7890';
     VPerson.Phones.Add(VPhone);
-    AssertTrue('person.phones dirty2', VPerson._PID.ADMByName('Phones').IsDirty);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.CompositionChangedOrderClean;
+var
+  VPerson: TTestPerson;
+  VPhone1, VPhone2: TTestPhone;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPhone1 := TTestPhone.Create;
+    VPhone1.Number := '456';
+    VPhone2 := TTestPhone.Create;
+    VPhone2.Number := '789';
+    VPerson.Phones.Add(VPhone1);
+    VPerson.Phones.Add(VPhone2);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VPhone1.AddRef;
+    VPhone2.AddRef;
+    VPerson.Phones.Clear;
+    VPerson.Phones.Add(VPhone2);
+    VPerson.Phones.Add(VPhone1);
+    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1673,8 +1750,8 @@ end;
 
 initialization
   RegisterTest('jcore.opf.core', TTestOPFCore);
-  RegisterTest('jcore.opf.mapping.metadata', TTestOPFMetadata);
-  RegisterTest('jcore.opf.mapping.transaction', TTestOPFTransaction);
+  RegisterTest('jcore.opf.metadata', TTestOPFMetadata);
+  RegisterTest('jcore.opf.persistence', TTestOPFPersistence);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);

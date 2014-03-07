@@ -45,6 +45,7 @@ type
     function ADMByName(const AAttributeName: string): IJCoreOPFADM;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
+    function IsDirty: Boolean;
     function OID: IJCoreOPFOID;
     function Owner: IJCoreOPFPID;
     property Entity: TObject read GetEntity;

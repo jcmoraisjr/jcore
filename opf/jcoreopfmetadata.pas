@@ -125,7 +125,7 @@ type
 
   TJCoreOPFADMCollection = class(TJCoreOPFADM)
   private
-    FListSizeCache: Integer;
+    FPIDCache: TJCoreOPFPIDArray;
     function ArrayContentIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
     function ArrayOrderIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
     function ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
@@ -163,12 +163,13 @@ type
     FMetadata: TJCoreOPFClassMetadata;
     FOID: TJCoreOPFOID;
     FOwner: TJCoreOPFPID;
+    FOwnerAttr: TJCoreOPFADMCollection;
+    FStored: Boolean;
     procedure CreateADMs;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
     function GetOIDIntf: IJCoreOPFOID;
     function GetOwnerIntf: IJCoreOPFPID;
-    procedure SetOwner(const AValue: TJCoreOPFPID);
     function IJCoreOPFPID.OID = GetOIDIntf;
     function IJCoreOPFPID.Owner = GetOwnerIntf;
   protected
@@ -181,14 +182,16 @@ type
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function ADMByName(const AAttributeName: string): IJCoreOPFADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
+    procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerAttr: TJCoreOPFADMCollection);
     procedure Commit;
     function IsDirty: Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
+    procedure Stored;
     procedure UpdateCache;
     property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read GetEntity;
     property OID: TJCoreOPFOID read FOID;
-    property Owner: TJCoreOPFPID read FOwner write SetOwner;
+    property Owner: TJCoreOPFPID read FOwner;
   end;
 
   TJCoreOPFModel = class;
@@ -351,7 +354,8 @@ end;
 
 function TJCoreOPFADMObject.InternalIsDirty: Boolean;
 begin
-  Result := True;
+  { TODO : Implement }
+  Result := False;
 end;
 
 procedure TJCoreOPFADMObject.InternalUpdateCache;
@@ -360,14 +364,11 @@ begin
 end;
 
 class function TJCoreOPFADMObject.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
-var
-  VTypeData: PTypeData;
 begin
+  { TODO : Implement }
   if AAttrTypeInfo^.Kind = tkClass then
-  begin
-    VTypeData := GetTypeData(AAttrTypeInfo);
-    Result := Assigned(VTypeData) and not VTypeData^.ClassType.InheritsFrom(TFPSList);
-  end else
+    Result := not GetTypeData(AAttrTypeInfo)^.ClassType.InheritsFrom(TFPSList)
+  else
     Result := False;
 end;
 
@@ -385,14 +386,22 @@ begin
 end;
 
 function TJCoreOPFADMCollection.ArrayOrderIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
+var
+  I: Integer;
 begin
-  { TODO : Implement }
+  // SizeIsDirty checks that APIDArray and FPIDCache has the same size
+  Result := True;
+  { TODO : Check also PID+OID content? }
+  // Note that FPIDCache might have some invalid pointers
+  for I := Low(APIDArray) to High(APIDArray) do
+    if APIDArray[I] <> FPIDCache[I] then
+      Exit;
   Result := False;
 end;
 
 function TJCoreOPFADMCollection.ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
 begin
-  Result := FListSizeCache <> Length(AItems);
+  Result := Length(FPIDCache) <> Length(AItems);
 end;
 
 function TJCoreOPFADMCollection.CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
@@ -420,26 +429,19 @@ begin
 end;
 
 procedure TJCoreOPFADMCollection.InternalUpdateCache;
-var
-  VItems: TJCoreObjectArray;
 begin
   { TODO : evaluate after lazy loading implementation }
-  VItems := CreateArray;
-  FListSizeCache := Length(VItems);
+  FPIDCache := CreatePIDArray(CreateArray);
 end;
 
 { TJCoreOPFADMFPSListCollection }
 
 class function TJCoreOPFADMFPSListCollection.Apply(
   const AAttrTypeInfo: PTypeInfo): Boolean;
-var
-  VTypeData: PTypeData;
 begin
   if AAttrTypeInfo^.Kind = tkClass then
-  begin
-    VTypeData := GetTypeData(AAttrTypeInfo);
-    Result := Assigned(VTypeData) and VTypeData^.ClassType.InheritsFrom(TFPSList);
-  end else
+    Result := GetTypeData(AAttrTypeInfo)^.ClassType.InheritsFrom(TFPSList)
+  else
     Result := False;
 end;
 
@@ -494,18 +496,6 @@ begin
   Result := FOwner as IJCoreOPFPID;
 end;
 
-procedure TJCoreOPFPID.SetOwner(const AValue: TJCoreOPFPID);
-begin
-  if not Assigned(AValue) then
-    FreeAndNil(FOwner)
-  else if not Assigned(FOwner) then
-  begin
-    { TODO : Check circular reference }
-    FOwner := AValue;
-  end else if FOwner <> AValue then
-    raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
-end;
-
 constructor TJCoreOPFPID.Create(const AMapping: IJCoreOPFPIDMapping;
   const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
 begin
@@ -554,10 +544,34 @@ begin
   FOID := AOID;
 end;
 
+procedure TJCoreOPFPID.AssignOwner(const AOwner: TJCoreOPFPID;
+  const AOwnerAttr: TJCoreOPFADMCollection);
+begin
+  if AOwnerAttr.Metadata.CompositionType = jctComposition then
+  begin
+    if not Assigned(AOwner) then
+    begin
+      FOwner := nil;
+      FOwnerAttr := nil;
+    end else if not Assigned(FOwner) then
+    begin
+      { TODO : Check circular reference }
+      FOwner := AOwner;
+      FOwnerAttr := AOwnerAttr;
+    end else if (AOwner <> FOwner) or (AOwnerAttr <> FOwnerAttr) then
+      { TODO : Check duplication in the same admcollection }
+      raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
+  end;
+end;
+
 procedure TJCoreOPFPID.Commit;
 begin
-  FIsPersistent := Assigned(FOID);
-  UpdateCache;
+  if FStored then
+  begin
+    FIsPersistent := Assigned(FOID);
+    UpdateCache;
+    FStored := False;
+  end;
 end;
 
 function TJCoreOPFPID.IsDirty: Boolean;
@@ -578,6 +592,11 @@ begin
            a better approach }
   if FOID = AOID then
     FOID := nil;
+end;
+
+procedure TJCoreOPFPID.Stored;
+begin
+  FStored := True;
 end;
 
 procedure TJCoreOPFPID.UpdateCache;
