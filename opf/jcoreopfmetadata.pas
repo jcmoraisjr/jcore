@@ -378,10 +378,13 @@ function TJCoreOPFADMCollection.ArrayContentIsDirty(const APIDArray: TJCoreOPFPI
 var
   VPID: TJCoreOPFPID;
 begin
-  Result := True;
-  for VPID in APIDArray do
-    if VPID.IsDirty then
-      Exit;
+  if Metadata.CompositionType = jctComposition then
+  begin
+    Result := True;
+    for VPID in APIDArray do
+      if VPID.IsDirty then
+        Exit;
+  end;
   Result := False;
 end;
 
@@ -391,7 +394,7 @@ var
 begin
   // SizeIsDirty checks that APIDArray and FPIDCache has the same size
   Result := True;
-  { TODO : Check also PID+OID content? }
+  { TODO : Validate with a hash or increase refcount (own) PID cache }
   // Note that FPIDCache might have some invalid pointers
   for I := Low(APIDArray) to High(APIDArray) do
     if APIDArray[I] <> FPIDCache[I] then

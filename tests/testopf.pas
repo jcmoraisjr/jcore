@@ -110,6 +110,7 @@ type
     procedure PersonCity;
     procedure PersonPhones;
     procedure PersonLanguages;
+    procedure PersonAggregationChange;
   end;
 
   { TTestOPFUpdateManualMapping }
@@ -121,6 +122,7 @@ type
     procedure PersonPhones;
     procedure PersonInsertDeleteLanguages;
     procedure PersonNoLanguagesChange;
+    procedure PersonAggregationChange;
   end;
 
   { TTestOPFSelectManualMapping }
@@ -146,7 +148,11 @@ type
     procedure CompositionRemovedClean;
     procedure CompositionRemovedAddedClean;
     procedure CompositionChangedOrderClean;
-    { TODO : Aggregation }
+    procedure AggregationChangedClean;
+    procedure AggregationAddedClean;
+    procedure AggregationRemovedClean;
+    procedure AggregationRemovedAddedClean;
+    procedure AggregationChangedOrderClean;
   end;
 
   { TTestEmptyDriver }
@@ -713,7 +719,7 @@ begin
     VPerson.Phones.Add(VPhone);
     VPerson.Phones.Add(VPhone);
     VPhone.AddRef;
-    { TODO : Implement check duplication in the same admcollection }
+    { TODO : Implement duplication check in the same admcollection }
     // AssertExceptionStore(FSession, VPerson, EJCoreOPFObjectAlreadyOwned);
   finally
     FreeAndNil(VPerson);
@@ -844,6 +850,38 @@ begin
     AssertEquals('cmd14', 'WriteInteger 1', TTestSQLDriver.Commands[14]);
     AssertEquals('cmd15', 'WriteInteger 3', TTestSQLDriver.Commands[15]);
     AssertEquals('cmd16', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[16]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFInsertManualMapping.PersonAggregationChange;
+var
+  VPerson: TTestPerson;
+  VLang: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang := TTestLanguage.Create('portuguese');
+    FSession.Store(VLang);
+    AssertNotNull('lang pid', VLang._PID);
+    AssertEquals('lang oid', 1, VLang._PID.OID.AsInteger);
+    VPerson.Name := 'name';
+    VPerson.Languages.Add(VLang);
+    VLang.Name := 'german';
+    TTestSQLDriver.Commands.Clear;
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 2, VPerson._PID.OID.AsInteger);
+    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteInteger 2', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteString name', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteInteger 0', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteNull', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 2', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'WriteInteger 1', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[7]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -980,6 +1018,27 @@ begin
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMapping.PersonAggregationChange;
+var
+  VPerson: TTestPerson;
+  VLang: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'name';
+    VPerson.Languages := TTestLanguageList.Create(True);
+    VLang := TTestLanguage.Create('english');
+    VPerson.Languages.Add(VLang);
+    FSession.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    VLang.Name := 'italian';
+    FSession.Store(VPerson);
+    AssertEquals('cmd count', 0, TTestSQLDriver.Commands.Count);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1194,13 +1253,13 @@ begin
   try
     VPerson.Age := 0;
     VPID := FSession.AcquireMapping(VPerson.ClassType).AcquirePID(VPerson);
-    AssertTrue('person.age dirty1', VPID.IsDirty);
+    AssertTrue('person dirty1', VPID.IsDirty);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertSame('same pid instance', VPID, VPerson._PID as TJCoreOPFPID);
-    AssertFalse('person.age dirty2', VPerson._PID.IsDirty);
+    AssertFalse('person dirty2', VPerson._PID.IsDirty);
     VPerson.Age := 10;
-    AssertTrue('person.age dirty3', VPerson._PID.IsDirty);
+    AssertTrue('person dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1215,11 +1274,11 @@ begin
     VPerson.Age := 30;
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertFalse('person.age dirty1', VPerson._PID.IsDirty);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Age := 33;
-    AssertTrue('person.age dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
     VPerson.Age := 30;
-    AssertFalse('person.age dirty3', VPerson._PID.IsDirty);
+    AssertFalse('person dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1234,11 +1293,11 @@ begin
     VPerson.Name := 'Some name';
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertFalse('person.name dirty1', VPerson._PID.IsDirty);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Name := 'Other name';
-    AssertTrue('person.name dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
     VPerson.Name := 'Some name';
-    AssertFalse('person.name dirty3', VPerson._PID.IsDirty);
+    AssertFalse('person dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1256,11 +1315,11 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Phones[0].Number := '123-123';
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
     VPerson.Phones[0].Number := '123';
-    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty);
+    AssertFalse('person dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1278,13 +1337,13 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPhone := TTestPhone.Create;
     VPhone.Number := '321-321';
     VPerson.Phones.Add(VPhone);
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(1);
-    AssertFalse('person.phones dirty3', VPerson._PID.IsDirty);
+    AssertFalse('person dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1305,9 +1364,9 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(0);
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1328,12 +1387,12 @@ begin
     VPerson.Phones.Add(VPhone);
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertFalse('person.phones dirty1', VPerson._PID.IsDirty);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(1);
     VPhone := TTestPhone.Create;
     VPhone.Number := '456-7890';
     VPerson.Phones.Add(VPhone);
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1360,7 +1419,120 @@ begin
     VPerson.Phones.Clear;
     VPerson.Phones.Add(VPhone2);
     VPerson.Phones.Add(VPhone1);
-    AssertTrue('person.phones dirty2', VPerson._PID.IsDirty);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.AggregationChangedClean;
+var
+  VPerson: TTestPerson;
+  VLang: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang := TTestLanguage.Create('english');
+    VPerson.Languages.Add(VLang);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VPerson.Languages[0].Name := 'spanish';
+    AssertFalse('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.AggregationAddedClean;
+var
+  VPerson: TTestPerson;
+  VLang1, VLang2: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang1 := TTestLanguage.Create('english');
+    VPerson.Languages.Add(VLang1);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VLang2 := TTestLanguage.Create('german');
+    VPerson.Languages.Add(VLang2);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.AggregationRemovedClean;
+var
+  VPerson: TTestPerson;
+  VLang1, VLang2: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang1 := TTestLanguage.Create('spanish');
+    VLang2 := TTestLanguage.Create('italian');
+    VPerson.Languages.Add(VLang1);
+    VPerson.Languages.Add(VLang2);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VPerson.Languages.Delete(1);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.AggregationRemovedAddedClean;
+var
+  VPerson: TTestPerson;
+  VLang1, VLang2, VLang3: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang1 := TTestLanguage.Create('italian');
+    VLang2 := TTestLanguage.Create('german');
+    VPerson.Languages.Add(VLang1);
+    VPerson.Languages.Add(VLang2);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    { TODO : Fix reuse of the same memory address
+      Remove de following addref and respective freeandnil }
+    VLang2.AddRef;
+    VPerson.Languages.Delete(1);
+    VLang3 := TTestLanguage.Create('portuguese');
+    VPerson.Languages.Add(VLang3);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VLang2);
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.AggregationChangedOrderClean;
+var
+  VPerson: TTestPerson;
+  VLang1, VLang2: TTestLanguage;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VLang1 := TTestLanguage.Create('english');
+    VLang2 := TTestLanguage.Create('german');
+    VPerson.Languages.Add(VLang1);
+    VPerson.Languages.Add(VLang2);
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VLang1.AddRef;
+    VPerson.Languages.Delete(0);
+    VLang2.AddRef;
+    VPerson.Languages.Delete(0);
+    VPerson.Languages.Add(VLang2);
+    VPerson.Languages.Add(VLang1);
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;
