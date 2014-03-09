@@ -163,7 +163,7 @@ type
     FMetadata: TJCoreOPFClassMetadata;
     FOID: TJCoreOPFOID;
     FOwner: TJCoreOPFPID;
-    FOwnerAttr: TJCoreOPFADMCollection;
+    FOwnerADM: TJCoreOPFADMCollection;
     FStored: Boolean;
     procedure CreateADMs;
     function GetEntity: TObject;
@@ -182,7 +182,7 @@ type
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function ADMByName(const AAttributeName: string): IJCoreOPFADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
-    procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerAttr: TJCoreOPFADMCollection);
+    procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure Commit;
     function IsDirty: Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
@@ -548,20 +548,20 @@ begin
 end;
 
 procedure TJCoreOPFPID.AssignOwner(const AOwner: TJCoreOPFPID;
-  const AOwnerAttr: TJCoreOPFADMCollection);
+  const AOwnerADM: TJCoreOPFADMCollection);
 begin
-  if AOwnerAttr.Metadata.CompositionType = jctComposition then
+  if AOwnerADM.Metadata.CompositionType = jctComposition then
   begin
     if not Assigned(AOwner) then
     begin
       FOwner := nil;
-      FOwnerAttr := nil;
+      FOwnerADM := nil;
     end else if not Assigned(FOwner) then
     begin
       { TODO : Check circular reference }
       FOwner := AOwner;
-      FOwnerAttr := AOwnerAttr;
-    end else if (AOwner <> FOwner) or (AOwnerAttr <> FOwnerAttr) then
+      FOwnerADM := AOwnerADM;
+    end else if (AOwner <> FOwner) or (AOwnerADM <> FOwnerADM) then
       { TODO : Check duplication in the same admcollection }
       raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
   end;
