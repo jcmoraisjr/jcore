@@ -344,6 +344,7 @@ type
 
   TTestPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
@@ -386,6 +387,7 @@ const
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, CITY=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
   CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
+  CSQLDELETEPHONE = 'DELETE FROM PHONE WHERE ID';
   CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=?';
 
 { TTestOPFConfig }
@@ -979,15 +981,14 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Phones.Delete(1);
     FSession.Store(VPerson);
-    { TODO : Implement remove from collection }
-    AssertEquals('cmd count', 7-2, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 7, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString name', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
-    //AssertEquals('cmd5', 'WriteInteger 3', TTestSQLDriver.Commands[5]);
-    //AssertEquals('cmd6', 'ExecSQL ' + 'CSQLDELETEPHONE', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd5', 'WriteInteger 3', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPHONE + '=?', TTestSQLDriver.Commands[6]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1924,6 +1925,11 @@ begin
 end;
 
 { TTestPhoneSQLMapping }
+
+function TTestPhoneSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+begin
+  Result := CSQLDELETEPHONE + BuildParams(ASize);
+end;
 
 function TTestPhoneSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin

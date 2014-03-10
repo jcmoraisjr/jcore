@@ -51,6 +51,7 @@ type
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
     function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID; virtual; abstract;
+    function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     procedure InternalDispose(const AClass: TClass; const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; virtual; abstract;
     function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList; virtual; abstract;
@@ -90,6 +91,7 @@ type
   protected
     function CreateEntity(const AClass: TClass): TObject; virtual;
     function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
+    function GenerateDeleteStatement(const ASize: Integer): string; virtual; abstract;
     function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; virtual;
@@ -140,6 +142,15 @@ procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
 begin
   { TODO : Evaluate after attr metadata implementation }
   Driver.WriteNull;
+end;
+
+function TJCoreOPFMapping.CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(AItems));
+  for I := Low(Result) to High(Result) do
+    Result[I] := AcquirePID(AItems[I]);
 end;
 
 constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper;
@@ -443,9 +454,20 @@ end;
 procedure TJCoreOPFSQLMapping.InternalStoreElements(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
 var
+  VOIDs: TJCoreOPFOIDArray;
+  VOID: TJCoreOPFOID;
   I: Integer;
 begin
-  { TODO : Implement remove from collection }
+  if AOwnerADM.Metadata.CompositionType = jctComposition then
+  begin
+    VOIDs := AOwnerADM.OIDRemoved;
+    if Length(VOIDs) > 0 then
+    begin
+      for VOID in VOIDs do
+        VOID.WriteToDriver(Driver);
+      Driver.ExecSQL(GenerateDeleteStatement(Length(VOIDs)));
+    end;
+  end;
   for I := Low(AItems) to High(AItems) do
   begin
     AItems[I].AssignOwner(AOwnerPID, AOwnerADM);
@@ -477,7 +499,7 @@ begin
   end;
 
   // update items
-  VItems := CreatePIDArray(AADM.CreateArray);
+  VItems := AADM.PIDArray;
   Mapper.StoreElements(APID, AADM, VItems);
 
   // add new links

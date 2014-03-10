@@ -17,6 +17,7 @@ unit JCoreOPFOID;
 interface
 
 uses
+  JCoreClasses,
   JCoreOPFEntity,
   JCoreOPFDriver;
 
@@ -24,7 +25,7 @@ type
 
   { TJCoreOPFOID }
 
-  TJCoreOPFOID = class(TObject, IJCoreOPFOID)
+  TJCoreOPFOID = class(TJCoreManagedObject, IJCoreOPFOID)
   protected
     function GetAsInt64: Int64; virtual; abstract;
     function GetAsInteger: Integer; virtual; abstract;
@@ -35,6 +36,8 @@ type
     property AsInt64: Int64 read GetAsInt64;
     property AsString: string read GetAsString;
   end;
+
+  TJCoreOPFOIDArray = array of TJCoreOPFOID;
 
   { TJCoreOPFIntegerOID }
 

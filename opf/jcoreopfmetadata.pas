@@ -31,7 +31,7 @@ type
   TJCoreOPFPIDArray = array of TJCoreOPFPID;
 
   IJCoreOPFPIDMapping = interface
-    function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
+    function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
   end;
 
   TJCoreOPFAttrMetadata = class;
@@ -55,6 +55,7 @@ type
     constructor Create(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     function IsDirty: Boolean;
+    procedure TransactionClosing(const ACommit: Boolean); virtual;
     procedure UpdateCache;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
   end;
@@ -125,24 +126,46 @@ type
 
   TJCoreOPFADMCollection = class(TJCoreOPFADM)
   private
-    FPIDCache: TJCoreOPFPIDArray;
+    { TODO : Thread safety between arrays initialization and finish the transaction }
+    FChangesUpdated: Boolean;
+    FItemsArray: TJCoreObjectArray;
+    FItemsArrayUpdated: Boolean;
+    FOIDCache: TJCoreOPFOIDArray;
+    FOIDRemoved: TJCoreOPFOIDArray;
+    FPIDAdded: TJCoreOPFPIDArray;
+    FPIDArray: TJCoreOPFPIDArray;
+    FPIDArrayUpdated: Boolean;
     function ArrayContentIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
     function ArrayOrderIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
     function ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
-    function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
+    function GetItemsArray: TJCoreObjectArray;
+    function GetOIDRemoved: TJCoreOPFOIDArray;
+    function GetPIDArray: TJCoreOPFPIDArray;
+    function HasOIDInCache(const AOID: TJCoreOPFOID): Boolean;
+    function HasOIDInCollection(const APIDArray: TJCoreOPFPIDArray; const AOID: TJCoreOPFOID): Boolean;
+    procedure ReleaseOIDCache;
+    procedure SetOIDCache(AValue: TJCoreOPFOIDArray);
+    procedure UpdateChanges;
   protected
+    function InternalCreateItemsArray: TJCoreObjectArray; virtual; abstract;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
+    property ItemsArray: TJCoreObjectArray read GetItemsArray;
+    property OIDCache: TJCoreOPFOIDArray read FOIDCache write SetOIDCache;
   public
-    function CreateArray: TJCoreObjectArray; virtual; abstract;
+    destructor Destroy; override;
+    procedure TransactionClosing(const ACommit: Boolean); override;
+    property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
+    property PIDArray: TJCoreOPFPIDArray read GetPIDArray;
   end;
 
   { TJCoreOPFADMFPSListCollection }
 
   TJCoreOPFADMFPSListCollection = class(TJCoreOPFADMCollection)
+  protected
+    function InternalCreateItemsArray: TJCoreObjectArray; override;
   public
     class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
-    function CreateArray: TJCoreObjectArray; override;
   end;
 
   TJCoreOPFClassMetadata = class;
@@ -170,6 +193,7 @@ type
     function GetIsPersistent: Boolean;
     function GetOIDIntf: IJCoreOPFOID;
     function GetOwnerIntf: IJCoreOPFPID;
+    function IJCoreOPFPID.Entity = GetEntity;
     function IJCoreOPFPID.OID = GetOIDIntf;
     function IJCoreOPFPID.Owner = GetOwnerIntf;
   protected
@@ -187,9 +211,8 @@ type
     function IsDirty: Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
     procedure Stored;
-    procedure UpdateCache;
     property IsPersistent: Boolean read GetIsPersistent;
-    property Entity: TObject read GetEntity;
+    property Entity: TObject read FEntity;
     property OID: TJCoreOPFOID read FOID;
     property Owner: TJCoreOPFPID read FOwner;
   end;
@@ -272,6 +295,10 @@ function TJCoreOPFADM.IsDirty: Boolean;
 begin
   { TODO : Implement IsDirty cache while transaction is active }
   Result := not FCacheUpdated or InternalIsDirty;
+end;
+
+procedure TJCoreOPFADM.TransactionClosing(const ACommit: Boolean);
+begin
 end;
 
 procedure TJCoreOPFADM.UpdateCache;
@@ -392,28 +419,159 @@ function TJCoreOPFADMCollection.ArrayOrderIsDirty(const APIDArray: TJCoreOPFPIDA
 var
   I: Integer;
 begin
-  // SizeIsDirty checks that APIDArray and FPIDCache has the same size
+  // SizeIsDirty checks that APIDArray and FOIDCache has the same size
   Result := True;
-  { TODO : Validate with a hash or increase refcount (own) PID cache }
-  // Note that FPIDCache might have some invalid pointers
   for I := Low(APIDArray) to High(APIDArray) do
-    if APIDArray[I] <> FPIDCache[I] then
+    if APIDArray[I].OID <> OIDCache[I] then
       Exit;
   Result := False;
 end;
 
 function TJCoreOPFADMCollection.ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
 begin
-  Result := Length(FPIDCache) <> Length(AItems);
+  Result := Length(OIDCache) <> Length(AItems);
 end;
 
-function TJCoreOPFADMCollection.CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
-var
-  I: Integer;
+function TJCoreOPFADMCollection.GetItemsArray: TJCoreObjectArray;
 begin
-  SetLength(Result, Length(AItems));
-  for I := Low(Result) to High(Result) do
-    Result[I] := Mapping.AcquirePID(AItems[I]);
+  if not FItemsArrayUpdated then
+  begin
+    FItemsArray := InternalCreateItemsArray;
+    { TODO : Fix cache outside transaction control }
+    //FItemsArrayUpdated := True;
+  end;
+  Result := FItemsArray;
+end;
+
+function TJCoreOPFADMCollection.GetOIDRemoved: TJCoreOPFOIDArray;
+begin
+  UpdateChanges;
+  Result := FOIDRemoved;
+end;
+
+function TJCoreOPFADMCollection.GetPIDArray: TJCoreOPFPIDArray;
+begin
+  if not FPIDArrayUpdated then
+  begin
+    FPIDArray := Mapping.CreatePIDArray(ItemsArray);
+    { TODO : Fix cache outside transaction control }
+    //FPIDArrayUpdated := True;
+  end;
+  Result := FPIDArray;
+end;
+
+function TJCoreOPFADMCollection.HasOIDInCache(const AOID: TJCoreOPFOID): Boolean;
+var
+  VOID: TJCoreOPFOID;
+begin
+  Result := True;
+  for VOID in OIDCache do
+    if AOID = VOID then
+      Exit;
+  Result := False;
+end;
+
+function TJCoreOPFADMCollection.HasOIDInCollection(
+  const APIDArray: TJCoreOPFPIDArray; const AOID: TJCoreOPFOID): Boolean;
+var
+  VPID: TJCoreOPFPID;
+begin
+  Result := True;
+  for VPID in APIDArray do
+    if VPID.OID = AOID then
+      Exit;
+  Result := False;
+end;
+
+procedure TJCoreOPFADMCollection.ReleaseOIDCache;
+var
+  VOID: TJCoreOPFOID;
+begin
+  for VOID in OIDCache do
+    FreeAndNil(VOID);
+end;
+
+procedure TJCoreOPFADMCollection.SetOIDCache(AValue: TJCoreOPFOIDArray);
+var
+  VOID: TJCoreOPFOID;
+begin
+  ReleaseOIDCache;
+  FOIDCache := AValue;
+  for VOID in FOIDCache do
+    VOID.AddRef;
+end;
+
+procedure TJCoreOPFADMCollection.UpdateChanges;
+var
+  VPIDArray: TJCoreOPFPIDArray;
+  VPIDAddedArray: TJCoreOPFPIDArray;
+  VOIDRemovedArray: TJCoreOPFOIDArray;
+  I, VMinSize, VMaxSize, VTmpSize, VPIDSize, VOIDSize: Integer;
+  VAddedCount, VRemovedCount: Integer;
+begin
+  { TODO : Reduce npath }
+  if FChangesUpdated then
+    Exit;
+
+  // Initializing vars
+  VPIDArray := PIDArray;
+  VPIDSize := Length(VPIDArray);
+  VOIDSize := Length(OIDCache);
+  VMinSize := VPIDSize;
+  if VOIDSize < VMinSize then
+  begin
+    VMinSize := VOIDSize;
+    VMaxSize := VPIDSize;
+  end else
+    VMaxSize := VOIDSize;
+
+  // populating temp arrays
+  SetLength(VPIDAddedArray, VMaxSize);
+  SetLength(VOIDRemovedArray, VMaxSize);
+  VTmpSize := 0;
+  for I := 0 to Pred(VMinSize) do
+  begin
+    if VPIDArray[I].OID <> OIDCache[I] then
+    begin
+      VPIDAddedArray[VTmpSize] := VPIDArray[I];
+      VOIDRemovedArray[VTmpSize] := OIDCache[I];
+      Inc(VTmpSize);
+    end;
+  end;
+  for I := VMinSize to Pred(VPIDSize) do
+  begin
+    VPIDAddedArray[VTmpSize] := VPIDArray[I];
+    VOIDRemovedArray[VTmpSize] := nil;
+    Inc(VTmpSize);
+  end;
+  for I := VMinSize to Pred(VOIDSize) do
+  begin
+    VPIDAddedArray[VTmpSize] := nil;
+    VOIDRemovedArray[VTmpSize] := OIDCache[I];
+    Inc(VTmpSize);
+  end;
+
+  // populating added/removed arrays
+  SetLength(FPIDAdded, VTmpSize);
+  SetLength(FOIDRemoved, VTmpSize);
+  VAddedCount := 0;
+  VRemovedCount := 0;
+  for I := 0 to Pred(VTmpSize) do
+  begin
+    if Assigned(VPIDAddedArray[I]) and not HasOIDInCache(VPIDAddedArray[I].OID) then
+    begin
+      FPIDAdded[VAddedCount] := VPIDAddedArray[I];
+      Inc(VAddedCount);
+    end;
+    if Assigned(VOIDRemovedArray[I]) and not HasOIDInCollection(VPIDArray, VOIDRemovedArray[I]) then
+    begin
+      FOIDRemoved[VRemovedCount] := VOIDRemovedArray[I];
+      Inc(VRemovedCount);
+    end;
+  end;
+  SetLength(FPIDAdded, VAddedCount);
+  SetLength(FOIDRemoved, VRemovedCount);
+  FChangesUpdated := True;
 end;
 
 function TJCoreOPFADMCollection.InternalIsDirty: Boolean;
@@ -422,33 +580,46 @@ var
   VPIDArray: TJCoreOPFPIDArray;
 begin
   { TODO : evaluate after lazy loading implementation }
-  VItems := CreateArray;
+  VItems := ItemsArray;
   Result := ArraySizeIsDirty(VItems);
   if not Result then
   begin
-    VPIDArray := CreatePIDArray(VItems);
+    VPIDArray := PIDArray;
     Result := ArrayOrderIsDirty(VPIDArray) or ArrayContentIsDirty(VPIDArray);
   end;
 end;
 
 procedure TJCoreOPFADMCollection.InternalUpdateCache;
+var
+  VPIDArray: TJCoreOPFPIDArray;
+  VOIDCache: TJCoreOPFOIDArray;
+  I: Integer;
 begin
   { TODO : evaluate after lazy loading implementation }
-  FPIDCache := CreatePIDArray(CreateArray);
+  VPIDArray := PIDArray;
+  SetLength(VOIDCache, Length(VPIDArray));
+  for I := Low(VOIDCache) to High(VOIDCache) do
+    VOIDCache[I] := VPIDArray[I].OID;
+  OIDCache := VOIDCache;
+end;
+
+destructor TJCoreOPFADMCollection.Destroy;
+begin
+  ReleaseOIDCache;
+  inherited Destroy;
+end;
+
+procedure TJCoreOPFADMCollection.TransactionClosing(const ACommit: Boolean);
+begin
+  inherited;
+  FChangesUpdated := False;
+  FItemsArrayUpdated := False;
+  FPIDArrayUpdated := False;
 end;
 
 { TJCoreOPFADMFPSListCollection }
 
-class function TJCoreOPFADMFPSListCollection.Apply(
-  const AAttrTypeInfo: PTypeInfo): Boolean;
-begin
-  if AAttrTypeInfo^.Kind = tkClass then
-    Result := GetTypeData(AAttrTypeInfo)^.ClassType.InheritsFrom(TFPSList)
-  else
-    Result := False;
-end;
-
-function TJCoreOPFADMFPSListCollection.CreateArray: TJCoreObjectArray;
+function TJCoreOPFADMFPSListCollection.InternalCreateItemsArray: TJCoreObjectArray;
 var
   VItems: TFPSList;
   I: Integer;
@@ -463,6 +634,15 @@ begin
       Result[I] := TObject(VItems[I]^);
   end else
     SetLength(Result, 0);
+end;
+
+class function TJCoreOPFADMFPSListCollection.Apply(
+  const AAttrTypeInfo: PTypeInfo): Boolean;
+begin
+  if AAttrTypeInfo^.Kind = tkClass then
+    Result := GetTypeData(AAttrTypeInfo)^.ClassType.InheritsFrom(TFPSList)
+  else
+    Result := False;
 end;
 
 { TJCoreOPFPID }
@@ -568,11 +748,19 @@ begin
 end;
 
 procedure TJCoreOPFPID.Commit;
+var
+  VADM: TJCoreOPFADM;
+  I: Integer;
 begin
   if FStored then
   begin
     FIsPersistent := Assigned(FOID);
-    UpdateCache;
+    for I := 0 to Pred(ADMMap.Count) do
+    begin
+      VADM := ADMMap.Data[I];
+      VADM.UpdateCache;
+      VADM.TransactionClosing(True);
+    end;
     FStored := False;
   end;
 end;
@@ -600,14 +788,6 @@ end;
 procedure TJCoreOPFPID.Stored;
 begin
   FStored := True;
-end;
-
-procedure TJCoreOPFPID.UpdateCache;
-var
-  I: Integer;
-begin
-  for I := 0 to Pred(ADMMap.Count) do
-    ADMMap.Data[I].UpdateCache;
 end;
 
 { TJCoreOPFAttrMetadata }

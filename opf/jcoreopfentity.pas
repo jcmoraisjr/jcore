@@ -43,12 +43,11 @@ type
   IJCoreOPFPID = interface(IInterface)
   ['{92E3EA6B-0D18-E9DE-53C7-ED02857C558B}']
     function ADMByName(const AAttributeName: string): IJCoreOPFADM;
-    function GetEntity: TObject;
+    function Entity: TObject;
     function GetIsPersistent: Boolean;
     function IsDirty: Boolean;
     function OID: IJCoreOPFOID;
     function Owner: IJCoreOPFPID;
-    property Entity: TObject read GetEntity;
     property IsPersistent: Boolean read GetIsPersistent;
   end;
 
