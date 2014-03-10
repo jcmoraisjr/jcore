@@ -119,8 +119,11 @@ type
   published
     procedure City;
     procedure PersonCity;
-    procedure PersonPhones;
-    procedure PersonInsertDeleteLanguages;
+    procedure PersonAddPhones;
+    procedure PersonRemovePhones;
+    procedure PersonAddLanguages;
+    procedure PersonRemoveLanguages;
+    procedure PersonRemoveAddLanguages;
     procedure PersonNoLanguagesChange;
     procedure PersonAggregationChange;
   end;
@@ -822,7 +825,6 @@ begin
   VPerson := TTestPerson.Create;
   try
     VPerson.Name := 'SomeName';
-    VPerson.Languages := TTestLanguageList.Create(True);
     VPerson.Languages.Add(TTestLanguage.Create('English'));
     VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
     FSession.Store(VPerson);
@@ -932,7 +934,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonPhones;
+procedure TTestOPFUpdateManualMapping.PersonAddPhones;
 var
   VPerson: TTestPerson;
 begin
@@ -962,14 +964,105 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonInsertDeleteLanguages;
+procedure TTestOPFUpdateManualMapping.PersonRemovePhones;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'name';
+    VPerson.Phones.Add(TTestPhone.Create);
+    VPerson.Phones.Add(TTestPhone.Create);
+    VPerson.Phones[0].Number := '123';
+    VPerson.Phones[1].Number := '456';
+    FSession.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    VPerson.Phones.Delete(1);
+    FSession.Store(VPerson);
+    { TODO : Implement remove from collection }
+    AssertEquals('cmd count', 7-2, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteString name', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    //AssertEquals('cmd5', 'WriteInteger 3', TTestSQLDriver.Commands[5]);
+    //AssertEquals('cmd6', 'ExecSQL ' + 'CSQLDELETEPHONE', TTestSQLDriver.Commands[6]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMapping.PersonAddLanguages;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'somename';
+    VPerson.Languages.Add(TTestLanguage.Create('german'));
+    FSession.Store(VPerson);
+    VPerson.Languages.Add(TTestLanguage.Create('spanish'));
+    TTestSQLDriver.Commands.Clear;
+    FSession.Store(VPerson);
+    AssertEquals('cmd count', 16, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteString somename', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'WriteInteger 3', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteString spanish', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
+    AssertEquals('cmd11', 'WriteInteger 2', TTestSQLDriver.Commands[11]);
+    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[12]);
+    AssertEquals('cmd13', 'WriteInteger 1', TTestSQLDriver.Commands[13]);
+    AssertEquals('cmd14', 'WriteInteger 3', TTestSQLDriver.Commands[14]);
+    AssertEquals('cmd15', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[15]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMapping.PersonRemoveLanguages;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'thename';
+    VPerson.Languages.Add(TTestLanguage.Create('italian'));
+    VPerson.Languages.Add(TTestLanguage.Create('portuguese'));
+    FSession.Store(VPerson);
+    VPerson.Languages.Delete(0);
+    TTestSQLDriver.Commands.Clear;
+    FSession.Store(VPerson);
+    AssertEquals('cmd count', 10, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd0', 'WriteString thename', TTestSQLDriver.Commands[0]);
+    AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
+    AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
+    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
+    AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'WriteInteger 1', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteInteger 3', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[9]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMapping.PersonRemoveAddLanguages;
 var
   VPerson: TTestPerson;
 begin
   VPerson := TTestPerson.Create;
   try
     VPerson.Name := 'aname';
-    VPerson.Languages := TTestLanguageList.Create(True);
     VPerson.Languages.Add(TTestLanguage.Create('English'));
     VPerson.Languages.Add(TTestLanguage.Create('Brazilian portuguese'));
     FSession.Store(VPerson);
@@ -1006,7 +1099,6 @@ begin
   VPerson := TTestPerson.Create;
   try
     VPerson.Name := 'SomeName';
-    VPerson.Languages := TTestLanguageList.Create(True);
     VPerson.Languages.Add(TTestLanguage.Create('English'));
     FSession.Store(VPerson);
     TTestSQLDriver.Commands.Clear;
@@ -1031,7 +1123,6 @@ begin
   VPerson := TTestPerson.Create;
   try
     VPerson.Name := 'name';
-    VPerson.Languages := TTestLanguageList.Create(True);
     VLang := TTestLanguage.Create('english');
     VPerson.Languages.Add(VLang);
     FSession.Store(VPerson);

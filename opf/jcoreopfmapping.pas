@@ -445,6 +445,7 @@ procedure TJCoreOPFSQLMapping.InternalStoreElements(const AOwnerPID: TJCoreOPFPI
 var
   I: Integer;
 begin
+  { TODO : Implement remove from collection }
   for I := Low(AItems) to High(AItems) do
   begin
     AItems[I].AssignOwner(AOwnerPID, AOwnerADM);
