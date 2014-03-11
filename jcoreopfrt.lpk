@@ -9,6 +9,11 @@
         <OtherUnitFiles Value="opf"/>
         <UnitOutputDirectory Value="lib/opf/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf2Set"/>
+        </Debugging>
+      </Linking>
       <Other>
         <CompilerMessages>
           <MsgFileName Value=""/>
