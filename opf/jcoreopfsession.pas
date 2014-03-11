@@ -50,7 +50,7 @@ type
     procedure Commit; virtual;
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
-    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
+    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure StorePID(const APID: TJCoreOPFPID);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
     property InTransactionPIDList: TJCoreOPFPIDList read FInTransactionPIDList;
@@ -131,9 +131,9 @@ begin
 end;
 
 procedure TJCoreOPFSession.StoreElements(const AOwnerPID: TJCoreOPFPID;
-  const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
+  const AOwnerADM: TJCoreOPFADMCollection);
 begin
-  AcquireMapping(AOwnerADM.Metadata.CompositionClass).StoreElements(AOwnerPID, AOwnerADM, AItems);
+  AcquireMapping(AOwnerADM.Metadata.CompositionClass).StoreElements(AOwnerPID, AOwnerADM);
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: TJCoreOPFPID);

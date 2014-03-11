@@ -33,7 +33,7 @@ type
     procedure AddInTransactionPID(const APID: TJCoreOPFPID);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
-    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
+    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure StorePID(const APID: TJCoreOPFPID);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
@@ -56,7 +56,7 @@ type
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; virtual; abstract;
     function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList; virtual; abstract;
     procedure InternalStore(const APID: TJCoreOPFPID); virtual; abstract;
-    procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray); virtual; abstract;
+    procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Mapper: IJCoreOPFMapper read FMapper;
     property Model: TJCoreOPFModel read FModel;
@@ -71,7 +71,7 @@ type
     function RetrieveFromString(const AClass: TClass; const AStringOID: string): TObject;
     function RetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
     procedure Store(const APID: TJCoreOPFPID);
-    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
+    procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
 
@@ -109,7 +109,7 @@ type
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; override;
     function InternalRetrieveList(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList; override;
     procedure InternalStore(const APID: TJCoreOPFPID); override;
-    procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray); override;
+    procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection); override;
     procedure InternalStoreList(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection); virtual;
   protected
     function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
@@ -258,9 +258,9 @@ begin
 end;
 
 procedure TJCoreOPFMapping.StoreElements(const AOwnerPID: TJCoreOPFPID;
-  const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
+  const AOwnerADM: TJCoreOPFADMCollection);
 begin
-  InternalStoreElements(AOwnerPID, AOwnerADM, AItems);
+  InternalStoreElements(AOwnerPID, AOwnerADM);
 end;
 
 procedure TJCoreOPFMapping.StoreToDriver(const AClass: TClass;
@@ -460,11 +460,12 @@ begin
 end;
 
 procedure TJCoreOPFSQLMapping.InternalStoreElements(const AOwnerPID: TJCoreOPFPID;
-  const AOwnerADM: TJCoreOPFADMCollection; const AItems: TJCoreOPFPIDArray);
+  const AOwnerADM: TJCoreOPFADMCollection);
 var
   VOIDs: TJCoreOPFOIDArray;
   VOID: TJCoreOPFOID;
-  I: Integer;
+  VPIDs: TJCoreOPFPIDArray;
+  VPID: TJCoreOPFPID;
 begin
   if AOwnerADM.Metadata.CompositionType = jctComposition then
   begin
@@ -476,16 +477,18 @@ begin
       Driver.ExecSQL(GenerateDeleteStatement(Length(VOIDs)));
     end;
   end;
-  for I := Low(AItems) to High(AItems) do
+
+  VPIDs := AOwnerADM.PIDArray;
+  for VPID in VPIDs do
   begin
-    AItems[I].AssignOwner(AOwnerPID, AOwnerADM);
+    VPID.AssignOwner(AOwnerPID, AOwnerADM);
     if (AOwnerADM.Metadata.CompositionType = jctComposition) or
-     not AItems[I].IsPersistent then
+     not VPID.IsPersistent then
     begin
-      if Apply(AItems[I].Entity.ClassType) then
-        Store(AItems[I])
+      if Apply(VPID.Entity.ClassType) then
+        Store(VPID)
       else
-        Mapper.StorePID(AItems[I]);
+        Mapper.StorePID(VPID);
     end;
   end;
 end;
@@ -494,7 +497,6 @@ procedure TJCoreOPFSQLMapping.InternalStoreList(const APID: TJCoreOPFPID;
   const AADM: TJCoreOPFADMCollection);
 var
   VMetadata: TJCoreOPFAttrMetadata;
-  VItems: TJCoreOPFPIDArray;
   VOIDs: TJCoreOPFOIDArray;
   VOID: TJCoreOPFOID;
 begin
@@ -514,8 +516,7 @@ begin
   end;
 
   // update items
-  VItems := AADM.PIDArray;
-  Mapper.StoreElements(APID, AADM, VItems);
+  Mapper.StoreElements(APID, AADM);
 
   // add new links
   if VMetadata.CompositionLinkType = jcltExternal then
