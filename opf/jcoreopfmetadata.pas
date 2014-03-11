@@ -601,13 +601,23 @@ procedure TJCoreOPFADMCollection.InternalUpdateCache;
 var
   VPIDArray: TJCoreOPFPIDArray;
   VOIDCache: TJCoreOPFOIDArray;
-  I: Integer;
+  VOID: TJCoreOPFOID;
+  I, J: Integer;
 begin
   { TODO : evaluate after lazy loading implementation }
   VPIDArray := PIDArray;
   SetLength(VOIDCache, Length(VPIDArray));
-  for I := Low(VOIDCache) to High(VOIDCache) do
-    VOIDCache[I] := VPIDArray[I].OID;
+  J := 0;
+  for I := Low(VPIDArray) to High(VPIDArray) do
+  begin
+    VOID := VPIDArray[I].OID;
+    if Assigned(VOID) then
+    begin
+      VOIDCache[J] := VOID;
+      Inc(J);
+    end;
+  end;
+  SetLength(VOIDCache, J);
   OIDCache := VOIDCache;
 end;
 
