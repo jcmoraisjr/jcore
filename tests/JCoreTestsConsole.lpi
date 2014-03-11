@@ -88,7 +88,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="12">
+    <Exceptions Count="13">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -105,26 +105,29 @@
         <Name Value="EJCoreReadError"/>
       </Item5>
       <Item6>
-        <Name Value="EJCoreDICIntfNotFoundException"/>
+        <Name Value="EAssertionFailedError"/>
       </Item6>
       <Item7>
-        <Name Value="EJCoreDICAmbiguousImplementationException"/>
+        <Name Value="EJCoreDICIntfNotFoundException"/>
       </Item7>
       <Item8>
-        <Name Value="EJCoreOPFUndefinedDriver"/>
+        <Name Value="EJCoreDICAmbiguousImplementationException"/>
       </Item8>
       <Item9>
-        <Name Value="EJCoreOPFDriverNotFound"/>
+        <Name Value="EJCoreOPFUndefinedDriver"/>
       </Item9>
       <Item10>
-        <Name Value="EJCoreOPFUndefinedMapping"/>
+        <Name Value="EJCoreOPFDriverNotFound"/>
       </Item10>
       <Item11>
-        <Name Value="EJCoreOPFMappingNotFound"/>
+        <Name Value="EJCoreOPFUndefinedMapping"/>
       </Item11>
       <Item12>
-        <Name Value="EJCoreOPFUnsupportedListOperations"/>
+        <Name Value="EJCoreOPFMappingNotFound"/>
       </Item12>
+      <Item13>
+        <Name Value="EJCoreOPFUnsupportedListOperations"/>
+      </Item13>
     </Exceptions>
   </Debugging>
 </CONFIG>
