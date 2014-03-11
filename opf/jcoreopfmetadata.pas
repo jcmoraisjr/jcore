@@ -140,6 +140,7 @@ type
     function ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
     function GetItemsArray: TJCoreObjectArray;
     function GetOIDRemoved: TJCoreOPFOIDArray;
+    function GetPIDAdded: TJCoreOPFPIDArray;
     function GetPIDArray: TJCoreOPFPIDArray;
     function HasOIDInCache(const AOID: TJCoreOPFOID): Boolean;
     function HasOIDInCollection(const APIDArray: TJCoreOPFPIDArray; const AOID: TJCoreOPFOID): Boolean;
@@ -156,6 +157,7 @@ type
     destructor Destroy; override;
     procedure TransactionClosing(const ACommit: Boolean); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
+    property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
     property PIDArray: TJCoreOPFPIDArray read GetPIDArray;
   end;
 
@@ -447,6 +449,12 @@ function TJCoreOPFADMCollection.GetOIDRemoved: TJCoreOPFOIDArray;
 begin
   UpdateChanges;
   Result := FOIDRemoved;
+end;
+
+function TJCoreOPFADMCollection.GetPIDAdded: TJCoreOPFPIDArray;
+begin
+  UpdateChanges;
+  Result := FPIDAdded;
 end;
 
 function TJCoreOPFADMCollection.GetPIDArray: TJCoreOPFPIDArray;

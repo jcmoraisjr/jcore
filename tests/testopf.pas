@@ -308,6 +308,7 @@ type
 
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function GenerateDeleteExternalLinkIDsStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
     function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; override;
     function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
@@ -389,6 +390,7 @@ const
   CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
   CSQLDELETEPHONE = 'DELETE FROM PHONE WHERE ID';
   CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=?';
+  CSQLDELETEPERSON_LANG_IDs = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=? AND ID_LANG';
 
 { TTestOPFConfig }
 
@@ -1006,23 +1008,18 @@ begin
     VPerson.Languages.Add(TTestLanguage.Create('spanish'));
     TTestSQLDriver.Commands.Clear;
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 16, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 11, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString somename', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteInteger 3', TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'WriteString spanish', TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[9]);
-    AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
-    AssertEquals('cmd11', 'WriteInteger 2', TTestSQLDriver.Commands[11]);
-    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[12]);
-    AssertEquals('cmd13', 'WriteInteger 1', TTestSQLDriver.Commands[13]);
-    AssertEquals('cmd14', 'WriteInteger 3', TTestSQLDriver.Commands[14]);
-    AssertEquals('cmd15', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[15]);
+    AssertEquals('cmd5', 'WriteInteger 3', TTestSQLDriver.Commands[5]);
+    AssertEquals('cmd6', 'WriteString spanish', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteInteger 1', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'WriteInteger 3', TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd10', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[10]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1041,17 +1038,15 @@ begin
     VPerson.Languages.Delete(0);
     TTestSQLDriver.Commands.Clear;
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 10, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString thename', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
     AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteInteger 1', TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'WriteInteger 3', TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd6', 'WriteInteger 2', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?', TTestSQLDriver.Commands[7]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1071,23 +1066,21 @@ begin
     VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
     TTestSQLDriver.Commands.Clear;
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 16, TTestSQLDriver.Commands.Count);
+    AssertEquals('cmd count', 14, TTestSQLDriver.Commands.Count);
     AssertEquals('cmd0', 'WriteString aname', TTestSQLDriver.Commands[0]);
     AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
     AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
     AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
     AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
     AssertEquals('cmd5', 'WriteInteger 1', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'ExecSQL ' + CSQLDELETEPERSON_LANG, TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteInteger 4', TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'WriteString Spanish', TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[9]);
-    AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
-    AssertEquals('cmd11', 'WriteInteger 3', TTestSQLDriver.Commands[11]);
-    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[12]);
-    AssertEquals('cmd13', 'WriteInteger 1', TTestSQLDriver.Commands[13]);
-    AssertEquals('cmd14', 'WriteInteger 4', TTestSQLDriver.Commands[14]);
-    AssertEquals('cmd15', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[15]);
+    AssertEquals('cmd6', 'WriteInteger 2', TTestSQLDriver.Commands[6]);
+    AssertEquals('cmd7', 'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?', TTestSQLDriver.Commands[7]);
+    AssertEquals('cmd8', 'WriteInteger 4', TTestSQLDriver.Commands[8]);
+    AssertEquals('cmd9', 'WriteString Spanish', TTestSQLDriver.Commands[9]);
+    AssertEquals('cmd10', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[10]);
+    AssertEquals('cmd11', 'WriteInteger 1', TTestSQLDriver.Commands[11]);
+    AssertEquals('cmd12', 'WriteInteger 4', TTestSQLDriver.Commands[12]);
+    AssertEquals('cmd13', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[13]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1819,6 +1812,15 @@ begin
 end;
 
 { TTestPersonSQLMapping }
+
+function TTestPersonSQLMapping.GenerateDeleteExternalLinkIDsStatement(
+  const ACompositionClass: TClass; const ASize: Integer): string;
+begin
+  if ACompositionClass = TTestLanguage then
+    Result := CSQLDELETEPERSON_LANG_IDs + BuildParams(ASize)
+  else
+    Result := inherited GenerateDeleteExternalLinkIDsStatement(ACompositionClass, ASize);
+end;
 
 function TTestPersonSQLMapping.GenerateDeleteExternalLinksStatement(
   const ACompositionClass: TClass): string;

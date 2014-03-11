@@ -90,6 +90,7 @@ type
     function EnsureCollectionAttribute(const APID: TJCoreOPFPID; const AAttributeName: string): TJCoreOPFADMCollection;
   protected
     function CreateEntity(const AClass: TClass): TObject; virtual;
+    function GenerateDeleteExternalLinkIDsStatement(const ACompositionClass: TClass; const ASize: Integer): string; virtual;
     function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
     function GenerateDeleteStatement(const ASize: Integer): string; virtual; abstract;
     function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; virtual;
@@ -98,7 +99,7 @@ type
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; virtual; abstract;
     procedure ReadFromDriver(const APID: TJCoreOPFPID); virtual;
-    procedure WriteExternalLinksToDriver(const AOwnerPID: TJCoreOPFPID; const ACompositionClass: TClass; const AItems: TJCoreOPFPIDArray); virtual;
+    procedure WriteExternalLinksToDriver(const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection); virtual;
     procedure WriteExternalsToDriver(const APID: TJCoreOPFPID); virtual;
     procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); virtual;
   protected
@@ -295,6 +296,12 @@ begin
   Result := AClass.Create;
 end;
 
+function TJCoreOPFSQLMapping.GenerateDeleteExternalLinkIDsStatement(
+  const ACompositionClass: TClass; const ASize: Integer): string;
+begin
+  raise EJCoreOPFUnsupportedListOperations.Create;
+end;
+
 function TJCoreOPFSQLMapping.GenerateDeleteExternalLinksStatement(
   const ACompositionClass: TClass): string;
 begin
@@ -318,18 +325,19 @@ begin
 end;
 
 procedure TJCoreOPFSQLMapping.WriteExternalLinksToDriver(
-  const AOwnerPID: TJCoreOPFPID; const ACompositionClass: TClass;
-  const AItems: TJCoreOPFPIDArray);
+  const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
 var
-  VInsertStatement: string;
-  I: Integer;
+  VInsertStmt: string;
+  VPIDs: TJCoreOPFPIDArray;
+  VPID: TJCoreOPFPID;
 begin
-  VInsertStatement := GenerateInsertExternalLinksStatement(ACompositionClass);
-  for I := Low(AItems) to High(AItems) do
+  VInsertStmt := GenerateInsertExternalLinksStatement(AADM.Metadata.CompositionClass);
+  VPIDs := AADM.PIDAdded;
+  for VPID in VPIDs do
   begin
     AOwnerPID.OID.WriteToDriver(Driver);
-    AItems[I].OID.WriteToDriver(Driver);
-    Driver.ExecSQL(VInsertStatement);
+    VPID.OID.WriteToDriver(Driver);
+    Driver.ExecSQL(VInsertStmt);
   end;
 end;
 
@@ -487,15 +495,22 @@ procedure TJCoreOPFSQLMapping.InternalStoreList(const APID: TJCoreOPFPID;
 var
   VMetadata: TJCoreOPFAttrMetadata;
   VItems: TJCoreOPFPIDArray;
+  VOIDs: TJCoreOPFOIDArray;
+  VOID: TJCoreOPFOID;
 begin
-  { TODO : Implement partial update of external links }
   VMetadata := AADM.Metadata;
 
   // remove old links
   if (VMetadata.CompositionLinkType = jcltExternal) and APID.IsPersistent then
   begin
-    APID.OID.WriteToDriver(Driver);
-    Driver.ExecSQL(GenerateDeleteExternalLinksStatement(VMetadata.CompositionClass));
+    VOIDs := AADM.OIDRemoved;
+    if Length(VOIDs) > 0 then
+    begin
+      APID.OID.WriteToDriver(Driver);
+      for VOID in VOIDs do
+        VOID.WriteToDriver(Driver);
+      Driver.ExecSQL(GenerateDeleteExternalLinkIDsStatement(VMetadata.CompositionClass, Length(VOIDs)));
+    end;
   end;
 
   // update items
@@ -504,7 +519,7 @@ begin
 
   // add new links
   if VMetadata.CompositionLinkType = jcltExternal then
-    WriteExternalLinksToDriver(APID, VMetadata.CompositionClass, VItems);
+    WriteExternalLinksToDriver(APID, AADM);
 end;
 
 function TJCoreOPFSQLMapping.RetrieveListPID(const AListBaseClass: TClass;
