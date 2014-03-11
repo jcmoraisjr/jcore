@@ -1587,12 +1587,15 @@ begin
     { TODO : Fix reuse of the same memory address
       Remove de following addref and respective freeandnil }
     VLang2.AddRef;
-    VPerson.Languages.Delete(1);
-    VLang3 := TTestLanguage.Create('portuguese');
-    VPerson.Languages.Add(VLang3);
-    AssertTrue('person dirty2', VPerson._PID.IsDirty);
+    try
+      VPerson.Languages.Delete(1);
+      VLang3 := TTestLanguage.Create('portuguese');
+      VPerson.Languages.Add(VLang3);
+      AssertTrue('person dirty2', VPerson._PID.IsDirty);
+    finally
+      FreeAndNil(VLang2);
+    end;
   finally
-    FreeAndNil(VLang2);
     FreeAndNil(VPerson);
   end;
 end;
