@@ -199,6 +199,7 @@ type
     function IJCoreOPFPID.OID = GetOIDIntf;
     function IJCoreOPFPID.Owner = GetOwnerIntf;
   protected
+    function InternalIsDirty(const AIncludeExternals: Boolean): Boolean; virtual;
     property ADMMap: TJCoreOPFADMMap read FADMMap;
     property Mapping: IJCoreOPFPIDMapping read FMapping;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
@@ -211,6 +212,7 @@ type
     procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure Commit;
     function IsDirty: Boolean;
+    function IsInternalsDirty: Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
     procedure Stored;
     property IsPersistent: Boolean read GetIsPersistent;
@@ -229,6 +231,7 @@ type
   private
     FADMClass: TJCoreOPFADMClass;
     FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
+    FIsExternal: Boolean;
     FModel: TJCoreOPFModel;
     function ReadGenericsComposition(const AClassName: string): TClass;
   protected
@@ -237,6 +240,7 @@ type
     constructor Create(const AModel: TJCoreOPFModel; const APropInfo: PPropInfo);
     function CreateADM(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject): TJCoreOPFADM;
     property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
+    property IsExternal: Boolean read FIsExternal write FIsExternal;
   end;
 
   { TJCoreOPFClassMetadata }
@@ -697,6 +701,25 @@ begin
   Result := FOwner as IJCoreOPFPID;
 end;
 
+function TJCoreOPFPID.InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
+var
+  VADM: TJCoreOPFADM;
+  I: Integer;
+begin
+  Result := True;
+  for I := 0 to Pred(ADMMap.Count) do
+  begin
+    VADM := ADMMap.Data[I];
+    if VADM.Metadata.IsExternal then
+    begin
+      if AIncludeExternals and VADM.IsDirty then
+        Exit;
+    end else if VADM.IsDirty then
+      Exit;
+  end;
+  Result := False;
+end;
+
 constructor TJCoreOPFPID.Create(const AMapping: IJCoreOPFPIDMapping;
   const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
 begin
@@ -784,14 +807,13 @@ begin
 end;
 
 function TJCoreOPFPID.IsDirty: Boolean;
-var
-  I: Integer;
 begin
-  Result := True;
-  for I := 0 to Pred(ADMMap.Count) do
-    if ADMMap.Data[I].IsDirty then
-      Exit;
-  Result := False;
+  Result := InternalIsDirty(True);
+end;
+
+function TJCoreOPFPID.IsInternalsDirty: Boolean;
+begin
+  Result := InternalIsDirty(False);
 end;
 
 procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
@@ -832,6 +854,7 @@ begin
   FModel := AModel;
   CompositionClass := ReadGenericsComposition(APropInfo^.PropType^.Name);
   FCompositionLinkType := jcltEmbedded;
+  FIsExternal := APropInfo^.PropType^.Kind = tkClass;
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const AMapping: IJCoreOPFPIDMapping;

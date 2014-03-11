@@ -443,20 +443,19 @@ end;
 
 procedure TJCoreOPFSQLMapping.InternalStore(const APID: TJCoreOPFPID);
 begin
-  if APID.IsPersistent then
-  begin
-    WriteInternalsToDriver(APID);
-    APID.OID.WriteToDriver(Driver);
-    Driver.ExecSQL(GenerateUpdateStatement(APID));
-    WriteExternalsToDriver(APID);
-  end else
+  if not APID.IsPersistent then
   begin
     APID.AssignOID(CreateOIDFromString(''));
     APID.OID.WriteToDriver(Driver);
     WriteInternalsToDriver(APID);
     Driver.ExecSQL(GenerateInsertStatement(APID));
-    WriteExternalsToDriver(APID);
+  end else if APID.IsInternalsDirty then
+  begin
+    WriteInternalsToDriver(APID);
+    APID.OID.WriteToDriver(Driver);
+    Driver.ExecSQL(GenerateUpdateStatement(APID));
   end;
+  WriteExternalsToDriver(APID);
 end;
 
 procedure TJCoreOPFSQLMapping.InternalStoreElements(const AOwnerPID: TJCoreOPFPID;
