@@ -21,7 +21,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="12">
       <Item1>
         <Filename Value="core/jcore.inc"/>
         <Type Value="Include"/>
@@ -63,9 +63,13 @@
         <UnitName Value="JCoreExpressionLib"/>
       </Item10>
       <Item11>
+        <Filename Value="core/jcoreentity.pas"/>
+        <UnitName Value="JCoreEntity"/>
+      </Item11>
+      <Item12>
         <Filename Value="core/jcoremetadata.pas"/>
         <UnitName Value="JCoreMetadata"/>
-      </Item11>
+      </Item12>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

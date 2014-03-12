@@ -11,8 +11,8 @@ uses
   fpcunit,
   JCoreClasses,
   JCoreLogger,
+  JCoreEntity,
   JCoreMetadata,
-  JCoreOPFEntity,
   JCoreOPFDriver,
   JCoreOPFOID,
   JCoreOPFMetadata,
@@ -47,7 +47,7 @@ type
     class constructor Create;
     class destructor Destroy;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
-    class function ExistPIDInCommitPIDList(const APID: IJCoreOPFPID): Boolean;
+    class function ExistPIDInCommitPIDList(const APID: IJCorePID): Boolean;
     class property CommitCount: Integer read FCommitCount write FCommitCount;
     class property LastCommitPIDList: TJCoreOPFPIDList read FLastCommitPIDList;
   end;
@@ -182,19 +182,19 @@ type
 
   TTestBase = class(TJCoreManagedObject)
   private
-    FPID: IJCoreOPFPID;
+    FPID: IJCorePID;
   published
-    property _PID: IJCoreOPFPID read FPID write FPID;
+    property _PID: IJCorePID read FPID write FPID;
   end;
 
   { TTestSimple }
 
   TTestSimple = class(TObject)
   private
-    FPID: IJCoreOPFPID;
+    FPID: IJCorePID;
     FField1: Integer;
   published
-    property _PID: IJCoreOPFPID read FPID write FPID;
+    property _PID: IJCorePID read FPID write FPID;
     property Field1: Integer read FField1 write FField1;
   end;
 
@@ -462,7 +462,7 @@ begin
   Result := AcquireMapping(AClass).AcquireMetadata(AClass);
 end;
 
-class function TTestOPFSession.ExistPIDInCommitPIDList(const APID: IJCoreOPFPID): Boolean;
+class function TTestOPFSession.ExistPIDInCommitPIDList(const APID: IJCorePID): Boolean;
 begin
   Result := LastCommitPIDList.IndexOf(APID as TJCoreOPFPID) >= 0;
 end;
@@ -575,7 +575,7 @@ end;
 procedure TTestOPFCore.CreatePID;
 var
   VPerson: TTestPerson;
-  VPID: IJCoreOPFPID;
+  VPID: IJCorePID;
 begin
   VPerson := TTestPerson.Create;
   try

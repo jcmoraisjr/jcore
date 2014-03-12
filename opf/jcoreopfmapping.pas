@@ -20,7 +20,7 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
-  JCoreOPFEntity,
+  JCoreEntity,
   JCoreOPFDriver,
   JCoreOPFOID,
   JCoreOPFMetadata;
@@ -112,7 +112,7 @@ type
     procedure InternalStoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection); override;
     procedure InternalStoreList(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection); virtual;
   protected
-    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: IJCorePID): TJCoreObjectList;
     procedure StoreList(const APID: TJCoreOPFPID; const AAttributeName: string);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   public
@@ -167,7 +167,7 @@ end;
 
 function TJCoreOPFMapping.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
 var
-  VPID: IJCoreOPFPID;
+  VPID: IJCorePID;
   VPropInfo: PPropInfo;
 begin
   if not Assigned(AEntity) then
@@ -175,14 +175,14 @@ begin
   VPropInfo := GetPropInfo(AEntity, SPID);
   if not Assigned(VPropInfo) then
     raise EJCoreOPFPersistentIDFieldNotFound.Create(AEntity.ClassName);
-  VPID := GetInterfaceProp(AEntity, VPropInfo) as IJCoreOPFPID;
+  VPID := GetInterfaceProp(AEntity, VPropInfo) as IJCorePID;
   if Assigned(VPID) then
   begin
     Result := VPID as TJCoreOPFPID;
   end else
   begin
     Result := CreatePID(AEntity);
-    VPID := Result as IJCoreOPFPID;
+    VPID := Result as IJCorePID;
     SetInterfaceProp(AEntity, VPropInfo, VPID);
   end;
   Mapper.AddInTransactionPID(Result);
@@ -523,7 +523,7 @@ begin
 end;
 
 function TJCoreOPFSQLMapping.RetrieveListPID(const AListBaseClass: TClass;
-  const AOwnerPID: IJCoreOPFPID): TJCoreObjectList;
+  const AOwnerPID: IJCorePID): TJCoreObjectList;
 begin
   Result := Mapper.RetrieveListPID(AListBaseClass, AOwnerPID as TJCoreOPFPID);
 end;

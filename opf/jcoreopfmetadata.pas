@@ -20,8 +20,8 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
+  JCoreEntity,
   JCoreMetadata,
-  JCoreOPFEntity,
   JCoreOPFOID;
 
 type
@@ -39,7 +39,7 @@ type
 
   { TJCoreOPFADM }
 
-  TJCoreOPFADM = class(TObject, IJCoreOPFADM)
+  TJCoreOPFADM = class(TObject, IJCoreADM)
   private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
@@ -186,7 +186,7 @@ type
     iow, the same entity may be persistent to a configuration
     and nonpersistent to another one }
 
-  TJCoreOPFPID = class(TInterfacedObject, IJCoreOPFPID)
+  TJCoreOPFPID = class(TInterfacedObject, IJCorePID)
   private
     FADMMap: TJCoreOPFADMMap;
     FEntity: TObject;
@@ -200,11 +200,11 @@ type
     procedure CreateADMs;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
-    function GetOIDIntf: IJCoreOPFOID;
-    function GetOwnerIntf: IJCoreOPFPID;
-    function IJCoreOPFPID.Entity = GetEntity;
-    function IJCoreOPFPID.OID = GetOIDIntf;
-    function IJCoreOPFPID.Owner = GetOwnerIntf;
+    function GetOIDIntf: IJCoreOID;
+    function GetOwnerIntf: IJCorePID;
+    function IJCorePID.Entity = GetEntity;
+    function IJCorePID.OID = GetOIDIntf;
+    function IJCorePID.Owner = GetOwnerIntf;
   protected
     function InternalIsDirty(const AIncludeExternals: Boolean): Boolean; virtual;
     property ADMMap: TJCoreOPFADMMap read FADMMap;
@@ -214,7 +214,7 @@ type
     constructor Create(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
     destructor Destroy; override;
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
-    function ADMByName(const AAttributeName: string): IJCoreOPFADM;
+    function ADMByName(const AAttributeName: string): IJCoreADM;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure Commit;
@@ -741,14 +741,14 @@ begin
   Result := FIsPersistent;
 end;
 
-function TJCoreOPFPID.GetOIDIntf: IJCoreOPFOID;
+function TJCoreOPFPID.GetOIDIntf: IJCoreOID;
 begin
-  Result := FOID as IJCoreOPFOID
+  Result := FOID as IJCoreOID
 end;
 
-function TJCoreOPFPID.GetOwnerIntf: IJCoreOPFPID;
+function TJCoreOPFPID.GetOwnerIntf: IJCorePID;
 begin
-  Result := FOwner as IJCoreOPFPID;
+  Result := FOwner as IJCorePID;
 end;
 
 function TJCoreOPFPID.InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
@@ -805,9 +805,9 @@ begin
   Result := FADMMap.Data[VIndex];
 end;
 
-function TJCoreOPFPID.ADMByName(const AAttributeName: string): IJCoreOPFADM;
+function TJCoreOPFPID.ADMByName(const AAttributeName: string): IJCoreADM;
 begin
-  Result := AcquireADM(AAttributeName) as IJCoreOPFADM;
+  Result := AcquireADM(AAttributeName) as IJCoreADM;
 end;
 
 procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);

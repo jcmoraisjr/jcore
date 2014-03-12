@@ -18,14 +18,14 @@ interface
 
 uses
   JCoreClasses,
-  JCoreOPFEntity,
+  JCoreEntity,
   JCoreOPFDriver;
 
 type
 
   { TJCoreOPFOID }
 
-  TJCoreOPFOID = class(TJCoreManagedObject, IJCoreOPFOID)
+  TJCoreOPFOID = class(TJCoreManagedObject, IJCoreOID)
   protected
     function GetAsInt64: Int64; virtual; abstract;
     function GetAsInteger: Integer; virtual; abstract;
