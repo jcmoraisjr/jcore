@@ -69,6 +69,7 @@ type
     class var FLOG: IJCoreLogger;
   protected
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
+    procedure AssertSQLDriverCommands(const ACommands: array of string);
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
     procedure SetUp; override;
     procedure TearDown; override;
@@ -480,6 +481,16 @@ begin
   end;
 end;
 
+procedure TTestOPF.AssertSQLDriverCommands(const ACommands: array of string);
+var
+  I: Integer;
+begin
+  AssertEquals('cmd count', Length(ACommands), TTestSQLDriver.Commands.Count);
+  for I := Low(ACommands) to High(ACommands) do
+    AssertEquals('cmd' + IntToStr(I), ACommands[I], TTestSQLDriver.Commands[I]);
+  TTestSQLDriver.Commands.Clear;
+end;
+
 function TTestOPF.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
   const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
 var
@@ -744,12 +755,12 @@ begin
     VPerson.Name := 'TheName';
     VPerson.Age := 15;
     FSession.Store(VPerson);
-    AssertEquals(5, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('WriteString TheName', TTestSQLDriver.Commands[1]);
-    AssertEquals('WriteInteger 15', TTestSQLDriver.Commands[2]);
-    AssertEquals('WriteNull', TTestSQLDriver.Commands[3]);
-    AssertEquals('ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString TheName',
+     'WriteInteger 15',
+     'WriteNull',
+     'ExecSQL ' + CSQLINSERTPERSON]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -770,15 +781,15 @@ begin
     AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
     AssertNotNull('city pid', VPerson.City._PID);
     AssertEquals('city oid', 2, VPerson.City._PID.OID.AsInteger);
-    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteString SomeName', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 25', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteInteger 2', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteString CityName', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'ExecSQL ' + CSQLINSERTCITY, TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteInteger 2', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[7]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString SomeName',
+     'WriteInteger 25',
+     'WriteInteger 2',
+     'WriteString CityName',
+     'ExecSQL ' + CSQLINSERTCITY,
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLINSERTPERSON]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -803,20 +814,20 @@ begin
     AssertEquals('phone0 oid', 2, VPerson.Phones[0]._PID.OID.AsInteger);
     AssertNotNull('phone1 pid', VPerson.Phones[1]._PID);
     AssertEquals('phone1 oid', 3, VPerson.Phones[1]._PID.OID.AsInteger);
-    AssertEquals('cmd count', 13, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteString thename', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 10', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteNull', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'WriteInteger 2', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteInteger 1', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteString 636-3626', TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'WriteInteger 3', TTestSQLDriver.Commands[9]);
-    AssertEquals('cmd10', 'WriteInteger 1', TTestSQLDriver.Commands[10]);
-    AssertEquals('cmd11', 'WriteString 212-4321', TTestSQLDriver.Commands[11]);
-    AssertEquals('cmd12', 'ExecSQL ' + CSQLINSERTPHONE, TTestSQLDriver.Commands[12]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString thename',
+     'WriteInteger 10',
+     'WriteNull',
+     'ExecSQL ' + CSQLINSERTPERSON,
+     'WriteInteger 2',
+     'WriteInteger 1',
+     'WriteString 636-3626',
+     'ExecSQL ' + CSQLINSERTPHONE,
+     'WriteInteger 3',
+     'WriteInteger 1',
+     'WriteString 212-4321',
+     'ExecSQL ' + CSQLINSERTPHONE]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -838,24 +849,24 @@ begin
     AssertEquals('lang0 oid', 2, VPerson.Languages[0]._PID.OID.AsInteger);
     AssertNotNull('lang1 pid', VPerson.Languages[1]._PID);
     AssertEquals('lang1 oid', 3, VPerson.Languages[1]._PID.OID.AsInteger);
-    AssertEquals('cmd count', 17, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteString SomeName', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 0', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteNull', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'WriteInteger 2', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteString English', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'WriteInteger 3', TTestSQLDriver.Commands[8]);
-    AssertEquals('cmd9', 'WriteString Spanish', TTestSQLDriver.Commands[9]);
-    AssertEquals('cmd10', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[10]);
-    AssertEquals('cmd11', 'WriteInteger 1', TTestSQLDriver.Commands[11]);
-    AssertEquals('cmd12', 'WriteInteger 2', TTestSQLDriver.Commands[12]);
-    AssertEquals('cmd13', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[13]);
-    AssertEquals('cmd14', 'WriteInteger 1', TTestSQLDriver.Commands[14]);
-    AssertEquals('cmd15', 'WriteInteger 3', TTestSQLDriver.Commands[15]);
-    AssertEquals('cmd16', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[16]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString SomeName',
+     'WriteInteger 0',
+     'WriteNull',
+     'ExecSQL ' + CSQLINSERTPERSON,
+     'WriteInteger 2',
+     'WriteString English',
+     'ExecSQL ' + CSQLINSERTLANG,
+     'WriteInteger 3',
+     'WriteString Spanish',
+     'ExecSQL ' + CSQLINSERTLANG,
+     'WriteInteger 1',
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLINSERTPERSON_LANG,
+     'WriteInteger 1',
+     'WriteInteger 3',
+     'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -879,15 +890,15 @@ begin
     FSession.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 2, VPerson._PID.OID.AsInteger);
-    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 2', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteString name', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 0', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteNull', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'ExecSQL ' + CSQLINSERTPERSON, TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'WriteInteger 2', TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteInteger 1', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[7]);
+    AssertSQLDriverCommands([
+     'WriteInteger 2',
+     'WriteString name',
+     'WriteInteger 0',
+     'WriteNull',
+     'ExecSQL ' + CSQLINSERTPERSON,
+     'WriteInteger 2',
+     'WriteInteger 1',
+     'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -906,10 +917,10 @@ begin
     TTestSQLDriver.Commands.Clear;
     VCity.Name := 'OtherName';
     FSession.Store(VCity);
-    AssertEquals(3, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteString OtherName', TTestSQLDriver.Commands[0]);
-    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[1]);
-    AssertEquals('ExecSQL ' + CSQLUPDATECITY, TTestSQLDriver.Commands[2]);
+    AssertSQLDriverCommands([
+     'WriteString OtherName',
+     'WriteInteger 1',
+     'ExecSQL ' + CSQLUPDATECITY]);
   finally
     FreeAndNil(VCity);
   end;
@@ -927,12 +938,12 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Age := 18;
     FSession.Store(VPerson);
-    AssertEquals(5, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteString TheName', TTestSQLDriver.Commands[0]);
-    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[1]);
-    AssertEquals('WriteNull', TTestSQLDriver.Commands[2]);
-    AssertEquals('WriteInteger 1', TTestSQLDriver.Commands[3]);
-    AssertEquals('ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    AssertSQLDriverCommands([
+     'WriteString TheName',
+     'WriteInteger 18',
+     'WriteNull',
+     'WriteInteger 1',
+     'ExecSQL ' + CSQLUPDATEPERSON]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -953,11 +964,11 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Phones[1].Number := '987';
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 4, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteString 987', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 3', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'ExecSQL ' + CSQLUPDATEPHONE, TTestSQLDriver.Commands[3]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString 987',
+     'WriteInteger 3',
+     'ExecSQL ' + CSQLUPDATEPHONE]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -978,9 +989,9 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Phones.Delete(1);
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 2, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 3', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'ExecSQL ' + CSQLDELETEPHONE + '=?', TTestSQLDriver.Commands[1]);
+    AssertSQLDriverCommands([
+     'WriteInteger 3',
+     'ExecSQL ' + CSQLDELETEPHONE + '=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -998,13 +1009,13 @@ begin
     VPerson.Languages.Add(TTestLanguage.Create('spanish'));
     TTestSQLDriver.Commands.Clear;
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 6, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 3', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteString spanish', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteInteger 3', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[5]);
+    AssertSQLDriverCommands([
+     'WriteInteger 3',
+     'WriteString spanish',
+     'ExecSQL ' + CSQLINSERTLANG,
+     'WriteInteger 1',
+     'WriteInteger 3',
+     'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1023,10 +1034,10 @@ begin
     VPerson.Languages.Delete(0);
     TTestSQLDriver.Commands.Clear;
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 3, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteInteger 2', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?', TTestSQLDriver.Commands[2]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1046,16 +1057,16 @@ begin
     VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
     TTestSQLDriver.Commands.Clear;
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 9, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 1', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteInteger 2', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteInteger 4', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteString Spanish', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'ExecSQL ' + CSQLINSERTLANG, TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteInteger 1', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'WriteInteger 4', TTestSQLDriver.Commands[7]);
-    AssertEquals('cmd8', 'ExecSQL ' + CSQLINSERTPERSON_LANG, TTestSQLDriver.Commands[8]);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?',
+     'WriteInteger 4',
+     'WriteString Spanish',
+     'ExecSQL ' + CSQLINSERTLANG,
+     'WriteInteger 1',
+     'WriteInteger 4',
+     'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1073,12 +1084,12 @@ begin
     TTestSQLDriver.Commands.Clear;
     VPerson.Name := 'anothername';
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 5, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteString anothername', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'WriteInteger 0', TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteNull', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'WriteInteger 1', TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'ExecSQL ' + CSQLUPDATEPERSON, TTestSQLDriver.Commands[4]);
+    AssertSQLDriverCommands([
+     'WriteString anothername',
+     'WriteInteger 0',
+     'WriteNull',
+     'WriteInteger 1',
+     'ExecSQL ' + CSQLUPDATEPERSON]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1098,7 +1109,7 @@ begin
     TTestSQLDriver.Commands.Clear;
     VLang.Name := 'italian';
     FSession.Store(VPerson);
-    AssertEquals('cmd count', 0, TTestSQLDriver.Commands.Count);
+    AssertSQLDriverCommands([]);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1118,9 +1129,9 @@ begin
   try
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals(2, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteInteger 15', TTestSQLDriver.Commands[0]);
-    AssertEquals('ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[1]);
+    AssertSQLDriverCommands([
+     'WriteInteger 15',
+     'ExecSQL ' + CSQLSELECTCITY]);
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
     AssertEquals(15, VCity._PID.OID.AsInteger);
@@ -1149,15 +1160,15 @@ begin
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('cmd count', 8, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 8', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 5', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTCITY, TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteInteger 8', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[5]);
-    AssertEquals('cmd6', 'WriteInteger 8', TTestSQLDriver.Commands[6]);
-    AssertEquals('cmd7', 'ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[7]);
+    AssertSQLDriverCommands([
+     'WriteInteger 8',
+     'ExecSQL ' + CSQLSELECTPERSON,
+     'WriteInteger 5',
+     'ExecSQL ' + CSQLSELECTCITY,
+     'WriteInteger 8',
+     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'WriteInteger 8',
+     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 8, VPerson._PID.OID.AsInteger);
@@ -1187,13 +1198,13 @@ begin
   try
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals(6, TTestSQLDriver.Commands.Count);
-    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[0]);
-    AssertEquals('ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
-    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[2]);
-    AssertEquals('ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[3]);
-    AssertEquals('WriteInteger 18', TTestSQLDriver.Commands[4]);
-    AssertEquals('ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[5]);
+    AssertSQLDriverCommands([
+     'WriteInteger 18',
+     'ExecSQL ' + CSQLSELECTPERSON,
+     'WriteInteger 18',
+     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'WriteInteger 18',
+     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull(VPerson);
     AssertNotNull(VPerson._PID);
     AssertEquals(18, VPerson._PID.OID.AsInteger);
@@ -1226,13 +1237,13 @@ begin
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('cmd count', 6, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 9', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 9', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteInteger 9', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[5]);
+    AssertSQLDriverCommands([
+     'WriteInteger 9',
+     'ExecSQL ' + CSQLSELECTPERSON,
+     'WriteInteger 9',
+     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'WriteInteger 9',
+     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 9, VPerson._PID.OID.AsInteger);
@@ -1276,13 +1287,13 @@ begin
   try
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('cmd cnt', 6, TTestSQLDriver.Commands.Count);
-    AssertEquals('cmd0', 'WriteInteger 5', TTestSQLDriver.Commands[0]);
-    AssertEquals('cmd1', 'ExecSQL ' + CSQLSELECTPERSON, TTestSQLDriver.Commands[1]);
-    AssertEquals('cmd2', 'WriteInteger 5', TTestSQLDriver.Commands[2]);
-    AssertEquals('cmd3', 'ExecSQL ' + CSQLSELECTOWNEDPHONES, TTestSQLDriver.Commands[3]);
-    AssertEquals('cmd4', 'WriteInteger 5', TTestSQLDriver.Commands[4]);
-    AssertEquals('cmd5', 'ExecSQL ' + CSQLSELECTPERSON_LANG, TTestSQLDriver.Commands[5]);
+    AssertSQLDriverCommands([
+     'WriteInteger 5',
+     'ExecSQL ' + CSQLSELECTPERSON,
+     'WriteInteger 5',
+     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'WriteInteger 5',
+     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 5, VPerson._PID.OID.AsInteger);
