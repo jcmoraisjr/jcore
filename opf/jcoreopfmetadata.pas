@@ -261,7 +261,6 @@ type
     FADMClassList: TJCoreOPFADMClassList;
   protected
     procedure AddADMClass(const AADMClass: TJCoreOPFADMClass);
-    procedure AddClass(const AClass: TClass);
     function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; override;
     function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure Finit; override;
@@ -880,11 +879,6 @@ end;
 procedure TJCoreOPFModel.AddADMClass(const AADMClass: TJCoreOPFADMClass);
 begin
   ADMClassList.Add(AADMClass);
-end;
-
-procedure TJCoreOPFModel.AddClass(const AClass: TClass);
-begin
-  ClassMap.Add(AClass.ClassName, AClass);
 end;
 
 function TJCoreOPFModel.CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata;
