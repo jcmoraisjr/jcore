@@ -259,7 +259,6 @@ type
   TJCoreOPFModel = class(TJCoreModel)
   private
     FADMClassList: TJCoreOPFADMClassList;
-    FClassMap: TJCoreClassMap;
   protected
     procedure AddADMClass(const AADMClass: TJCoreOPFADMClass);
     procedure AddClass(const AClass: TClass);
@@ -269,12 +268,10 @@ type
     procedure InitRegistry; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
     property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
-    property ClassMap: TJCoreClassMap read FClassMap;
   public
     constructor Create; override;
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
-    function FindClass(const AClassName: string): TClass;
   end;
 
 implementation
@@ -903,7 +900,6 @@ end;
 procedure TJCoreOPFModel.Finit;
 begin
   FreeAndNil(FADMClassList);
-  FreeAndNil(FClassMap);
   inherited Finit;
 end;
 
@@ -926,7 +922,6 @@ end;
 constructor TJCoreOPFModel.Create;
 begin
   FADMClassList := TJCoreOPFADMClassList.Create;
-  FClassMap := TJCoreClassMap.Create;
   inherited Create;
 end;
 
@@ -941,17 +936,6 @@ end;
 function TJCoreOPFModel.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
   Result := inherited AcquireMetadata(AClass) as TJCoreOPFClassMetadata;
-end;
-
-function TJCoreOPFModel.FindClass(const AClassName: string): TClass;
-var
-  VIndex: Integer;
-begin
-  VIndex := ClassMap.IndexOf(AClassName);
-  if VIndex >= 0 then
-    Result := ClassMap.Data[VIndex]
-  else
-    Result := nil;
 end;
 
 end.

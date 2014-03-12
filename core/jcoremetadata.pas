@@ -68,17 +68,22 @@ type
 
   TJCoreModel = class(TJCoreManagedObject)
   private
+    FClassMap: TJCoreClassMap;
     FMetadataMap: TJCoreClassMetadataMap;
   protected
+    procedure AddClass(const AClass: TClass);
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
     function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; virtual;
     function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
     procedure Finit; override;
     procedure InitRegistry; virtual;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
+    property ClassMap: TJCoreClassMap read FClassMap;
   public
     constructor Create; virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
+    function FindClass(const AClassName: string): TClass;
+    function IsEntityClass(const AClass: TClass): Boolean;
   end;
 
 implementation
@@ -138,6 +143,11 @@ end;
 
 { TJCoreModel }
 
+procedure TJCoreModel.AddClass(const AClass: TClass);
+begin
+  ClassMap.Add(AClass.ClassName, AClass);
+end;
+
 function TJCoreModel.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
 var
   VPropList: PPropList;
@@ -183,6 +193,7 @@ procedure TJCoreModel.Finit;
 var
   I: Integer;
 begin
+  FreeAndNil(FClassMap);
   { TODO : Fix AV on all map.free if an exception raises freeing an item.
            Need to assign nil or remove the item from the map }
   for I := 0 to Pred(FMetadataMap.Count) do
@@ -203,6 +214,7 @@ end;
 constructor TJCoreModel.Create;
 begin
   inherited Create;
+  FClassMap := TJCoreClassMap.Create;
   FMetadataMap := TJCoreClassMetadataMap.Create;
   InitRegistry;
 end;
@@ -216,6 +228,22 @@ begin
   if VIndex = -1 then
     VIndex := FMetadataMap.Add(AClass, BuildMetadata(AClass));
   Result := FMetadataMap.Data[VIndex];
+end;
+
+function TJCoreModel.FindClass(const AClassName: string): TClass;
+var
+  VIndex: Integer;
+begin
+  VIndex := ClassMap.IndexOf(AClassName);
+  if VIndex >= 0 then
+    Result := ClassMap.Data[VIndex]
+  else
+    Result := nil;
+end;
+
+function TJCoreModel.IsEntityClass(const AClass: TClass): Boolean;
+begin
+  Result := ClassMap.IndexOfData(AClass) >= 0;
 end;
 
 end.
