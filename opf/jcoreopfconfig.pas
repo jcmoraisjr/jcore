@@ -120,11 +120,11 @@ end;
 constructor TJCoreOPFConfiguration.Create(
   const AModel: TJCoreOPFModel = nil);
 begin
-  inherited Create;
   if Assigned(AModel) then
     FModel := AModel
   else
     FModel := TJCoreOPFModel.Create;
+  inherited Create;
   FDriverClassList := TJCoreOPFDriverClassList.Create;
   FMappingClassList := TJCoreOPFMappingClassList.Create;
 end;
