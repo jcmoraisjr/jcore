@@ -31,6 +31,7 @@ type
   TJCoreOPFPIDArray = array of TJCoreOPFPID;
 
   IJCoreOPFPIDMapping = interface
+    function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
   end;
 
@@ -53,7 +54,7 @@ type
     property Mapping: IJCoreOPFPIDMapping read FMapping;
   public
     constructor Create(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject; const AMetadata: TJCoreOPFAttrMetadata); virtual;
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     function IsDirty: Boolean;
     procedure TransactionClosing(const ACommit: Boolean); virtual;
     procedure UpdateCache;
@@ -73,7 +74,7 @@ type
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
   public
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
   { TJCoreOPFADMType64 }
@@ -85,7 +86,7 @@ type
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
   public
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
   { TJCoreOPFADMFloat }
@@ -97,7 +98,7 @@ type
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
   public
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
   { TJCoreOPFADMAnsiString }
@@ -109,17 +110,23 @@ type
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
   public
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFADMObject }
+  { TJCoreOPFADMEntity }
 
-  TJCoreOPFADMObject = class(TJCoreOPFADM)
+  TJCoreOPFADMEntity = class(TJCoreOPFADM)
+  private
+    FOIDCache: TJCoreOPFOID;
+    procedure SetOIDCache(AValue: TJCoreOPFOID);
   protected
+    function AcquirePID: TJCoreOPFPID;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
+    property OIDCache: TJCoreOPFOID read FOIDCache write SetOIDCache;
   public
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    destructor Destroy; override;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
   { TJCoreOPFADMCollection }
@@ -167,7 +174,7 @@ type
   protected
     function InternalCreateItemsArray: TJCoreObjectArray; override;
   public
-    class function Apply(const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
   TJCoreOPFClassMetadata = class;
@@ -321,7 +328,8 @@ begin
   FCache := GetOrdProp(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFADMType32.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMType32.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInteger, tkChar, tkEnumeration, tkBool];
 end;
@@ -338,7 +346,8 @@ begin
   FCache := GetInt64Prop(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFADMType64.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMType64.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInt64, tkQWord];
 end;
@@ -355,7 +364,8 @@ begin
   FCache := GetFloatProp(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFADMFloat.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMFloat.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkFloat;
 end;
@@ -374,29 +384,73 @@ begin
   FCache := GetStrProp(Entity, AttrPropInfo);
 end;
 
-class function TJCoreOPFADMAnsiString.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+class function TJCoreOPFADMAnsiString.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkAString;
 end;
 
-{ TJCoreOPFADMObject }
+{ TJCoreOPFADMEntity }
 
-function TJCoreOPFADMObject.InternalIsDirty: Boolean;
+procedure TJCoreOPFADMEntity.SetOIDCache(AValue: TJCoreOPFOID);
 begin
-  { TODO : Implement }
-  Result := False;
+  if FOIDCache <> AValue then
+  begin;
+    FreeAndNil(FOIDCache);
+    FOIDCache := AValue;
+    if Assigned(FOIDCache) then
+      FOIDCache.AddRef;
+  end;
 end;
 
-procedure TJCoreOPFADMObject.InternalUpdateCache;
+function TJCoreOPFADMEntity.AcquirePID: TJCoreOPFPID;
+var
+  VObject: TObject;
 begin
-  { TODO : Implement }
+  VObject := GetObjectProp(Entity, AttrPropInfo, nil);
+  if Assigned(VObject) then
+    Result := Mapping.AcquirePID(VObject)
+  else
+    Result := nil;
 end;
 
-class function TJCoreOPFADMObject.Apply(const AAttrTypeInfo: PTypeInfo): Boolean;
+function TJCoreOPFADMEntity.InternalIsDirty: Boolean;
+var
+  VPID: TJCoreOPFPID;
+  VOID: TJCoreOPFOID;
 begin
-  { TODO : Implement }
+  VPID := AcquirePID;
+  if Assigned(VPID) then
+    VOID := VPID.OID
+  else
+    VOID := nil;
+  Result := OIDCache <> VOID;
+  if not Result and Assigned(VPID) and (Metadata.CompositionType = jctComposition) then
+    Result := VPID.IsDirty;
+end;
+
+procedure TJCoreOPFADMEntity.InternalUpdateCache;
+var
+  VPID: TJCoreOPFPID;
+begin
+  VPID := AcquirePID;
+  if Assigned(VPID) then
+    OIDCache := VPID.OID
+  else
+    OIDCache := nil;
+end;
+
+destructor TJCoreOPFADMEntity.Destroy;
+begin
+  FreeAndNil(FOIDCache);
+  inherited Destroy;
+end;
+
+class function TJCoreOPFADMEntity.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
+begin
   if AAttrTypeInfo^.Kind = tkClass then
-    Result := not GetTypeData(AAttrTypeInfo)^.ClassType.InheritsFrom(TFPSList)
+    Result := AModel.IsEntityClass(GetTypeData(AAttrTypeInfo)^.ClassType)
   else
     Result := False;
 end;
@@ -654,7 +708,7 @@ begin
     SetLength(Result, 0);
 end;
 
-class function TJCoreOPFADMFPSListCollection.Apply(
+class function TJCoreOPFADMFPSListCollection.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   if AAttrTypeInfo^.Kind = tkClass then
@@ -904,7 +958,7 @@ begin
   AddADMClass(TJCoreOPFADMType64);
   AddADMClass(TJCoreOPFADMFloat);
   AddADMClass(TJCoreOPFADMAnsiString);
-  AddADMClass(TJCoreOPFADMObject);
+  AddADMClass(TJCoreOPFADMEntity);
   AddADMClass(TJCoreOPFADMFPSListCollection);
 end;
 
@@ -922,7 +976,7 @@ end;
 function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
 begin
   for Result in ADMClassList do
-    if Result.Apply(AAttrTypeInfo) then
+    if Result.Apply(Self, AAttrTypeInfo) then
       Exit;
   raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
 end;

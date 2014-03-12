@@ -108,6 +108,7 @@ type
   TTestOPFInsertManualMapping = class(TTestOPF)
   published
     procedure Person;
+    procedure PersonAddress;
     procedure PersonCity;
     procedure PersonPhones;
     procedure PersonLanguages;
@@ -134,8 +135,9 @@ type
   TTestOPFSelectManualMapping = class(TTestOPF)
   published
     procedure City;
+    procedure PersonAddressCity;
     procedure PersonCity;
-    procedure PersonNullCity;
+    procedure PersonNullAddressCity;
     procedure PersonPhones;
     procedure PersonLanguages;
   end;
@@ -147,16 +149,18 @@ type
     procedure CacheNotUpdated;
     procedure IntegerClear;
     procedure StringClean;
-    procedure CompositionChangedClean;
-    procedure CompositionAddedClean;
-    procedure CompositionRemovedClean;
-    procedure CompositionRemovedAddedClean;
-    procedure CompositionChangedOrderClean;
-    procedure AggregationChangedClean;
-    procedure AggregationAddedClean;
-    procedure AggregationRemovedClean;
-    procedure AggregationRemovedAddedClean;
-    procedure AggregationChangedOrderClean;
+    procedure CompositionSimpleChanged;
+    procedure CompositionChanged;
+    procedure CompositionAdded;
+    procedure CompositionRemoved;
+    procedure CompositionRemovedAdded;
+    procedure CompositionChangedOrder;
+    procedure AggregationSimpleChanged;
+    procedure AggregationChanged;
+    procedure AggregationAdded;
+    procedure AggregationRemoved;
+    procedure AggregationRemovedAdded;
+    procedure AggregationChangedOrder;
   end;
 
   { TTestEmptyDriver }
@@ -192,6 +196,17 @@ type
   published
     property _PID: IJCoreOPFPID read FPID write FPID;
     property Field1: Integer read FField1 write FField1;
+  end;
+
+  { TTestAddress }
+
+  TTestAddress = class(TTestBase)
+  private
+    FStreet: string;
+    FZipCode: string;
+  published
+    property Street: string read FStreet write FStreet;
+    property ZipCode: string read FZipCode write FZipCode;
   end;
 
   { TTestCity }
@@ -234,10 +249,12 @@ type
     FName: string;
     FAge: Integer;
     FPhones: TTestPhoneList;
+    FAddress: TTestAddress;
     FCity: TTestCity;
     FLanguages: TTestLanguageList;
     function GetLanguages: TTestLanguageList;
     function GetPhones: TTestPhoneList;
+    procedure SetAddress(AValue: TTestAddress);
     procedure SetCity(AValue: TTestCity);
     procedure SetLanguages(AValue: TTestLanguageList);
     procedure SetPhones(AValue: TTestPhoneList);
@@ -247,6 +264,7 @@ type
     property Name: string read FName write FName;
     property Age: Integer read FAge write FAge;
     property Phones: TTestPhoneList read GetPhones write SetPhones;
+    property Address: TTestAddress read FAddress write SetAddress;
     property City: TTestCity read FCity write SetCity;
     property Languages: TTestLanguageList read GetLanguages write SetLanguages;
   end;
@@ -329,6 +347,19 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
+  { TTestAddressSQLMapping }
+
+  TTestAddressSQLMapping = class(TTestAbstractSQLMapping)
+  protected
+    function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
+    function GenerateSelectStatement(const AClass: TClass): string; override;
+    function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
+  end;
+
   { TTestCitySQLMapping }
 
   TTestCitySQLMapping = class(TTestAbstractSQLMapping)
@@ -376,15 +407,18 @@ uses
   JCoreOPFException;
 
 const
+  CSQLINSERTADDRESS = 'INSERT INTO ADDRESS (ID,STREET,ZIPCODE) VALUES (?,?,?)';
   CSQLINSERTCITY = 'INSERT INTO CITY (ID,NAME) VALUES (?,?)';
   CSQLINSERTPERSON = 'INSERT INTO PERSON (ID,NAME,AGE,CITY) VALUES (?,?,?,?)';
   CSQLINSERTPHONE = 'INSERT INTO PHONE (ID,PERSON,NUMBER) VALUES (?,?,?)';
   CSQLINSERTLANG = 'INSERT INTO LANG (ID,NAME) VALUES (?,?)';
   CSQLINSERTPERSON_LANG = 'INSERT INTO PERSON_LANG (ID_PERSON,ID_LANG) VALUES (?,?)';
+  CSQLSELECTADDRESS = 'SELECT STREET,ZIPCODE FROM ADDRESS WHERE ID=?';
   CSQLSELECTCITY = 'SELECT NAME FROM CITY WHERE ID=?';
   CSQLSELECTPERSON = 'SELECT NAME,AGE,CITY FROM PERSON WHERE ID=?';
   CSQLSELECTOWNEDPHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
   CSQLSELECTPERSON_LANG = 'SELECT L.ID,L.NAME FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON=?';
+  CSQLUPDATEADDRESS = 'UPDATE ADDRESS SET STREET=?, ZIPCODE=? WHERE ID=?';
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, CITY=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
@@ -445,6 +479,7 @@ begin
     begin
       VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
       VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
+      VMetadata.AttributeByName('City').CompositionType := jctAggregation;
     end;
   except
     FreeAndNil(VMetadata);
@@ -459,6 +494,7 @@ begin
   AddClass(TTestPerson);
   AddClass(TTestPhone);
   AddClass(TTestLanguage);
+  AddClass(TTestAddress);
   AddClass(TTestCity);
 end;
 
@@ -519,7 +555,8 @@ begin
   AssertEquals(0, TTestSQLDriver.Data.Count);
   FConfiguration := CreateConfiguration([TTestSQLDriver], [
    TTestSimpleSQLMapping, TTestPersonSQLMapping, TTestEmployeeSQLMapping,
-   TTestCitySQLMapping, TTestPhoneSQLMapping, TTestLanguageSQLMapping]);
+   TTestAddressSQLMapping, TTestCitySQLMapping, TTestPhoneSQLMapping,
+   TTestLanguageSQLMapping]);
   FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 
@@ -598,7 +635,7 @@ var
   VSession: IJCoreOPFSession;
   VPerson: TTestPerson;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create;
+  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModel.Create);
   VConfiguration.AddDriverClass(TTestEmptyDriver);
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
   VSession := VConfiguration.CreateSession;
@@ -620,12 +657,13 @@ var
   VMetadata: TJCoreOPFClassMetadata;
 begin
   VMetadata := FSession.AcquireMetadata(TTestPerson);
-  AssertEquals('meta.cnt', 5, VMetadata.AttributeCount);
+  AssertEquals('meta.cnt', 6, VMetadata.AttributeCount);
   AssertEquals('meta0.name', 'Name', VMetadata[0].Name);
   AssertEquals('meta1.name', 'Age', VMetadata[1].Name);
   AssertEquals('meta2.name', 'Phones', VMetadata[2].Name);
-  AssertEquals('meta3.name', 'City', VMetadata[3].Name);
-  AssertEquals('meta4.name', 'Languages', VMetadata[4].Name);
+  AssertEquals('meta3.name', 'Address', VMetadata[3].Name);
+  AssertEquals('meta4.name', 'City', VMetadata[4].Name);
+  AssertEquals('meta5.name', 'Languages', VMetadata[5].Name);
 end;
 
 procedure TTestOPFMetadata.InheritedAttributeList;
@@ -760,6 +798,38 @@ begin
      'WriteString TheName',
      'WriteInteger 15',
      'WriteNull',
+     'WriteNull',
+     'ExecSQL ' + CSQLINSERTPERSON]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFInsertManualMapping.PersonAddress;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Name := 'name';
+    VPerson.Age := 25;
+    VPerson.Address := TTestAddress.Create;
+    VPerson.Address.Street := 'route 66';
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertNotNull('address pid', VPerson.Address._PID);
+    AssertEquals('address oid', 2, VPerson.Address._PID.OID.AsInteger);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString name',
+     'WriteInteger 25',
+     'WriteInteger 2',
+     'WriteString route 66',
+     'WriteString ',
+     'ExecSQL ' + CSQLINSERTADDRESS,
+     'WriteInteger 2',
+     'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON]);
   finally
     FreeAndNil(VPerson);
@@ -785,6 +855,7 @@ begin
      'WriteInteger 1',
      'WriteString SomeName',
      'WriteInteger 25',
+     'WriteNull',
      'WriteInteger 2',
      'WriteString CityName',
      'ExecSQL ' + CSQLINSERTCITY,
@@ -818,6 +889,7 @@ begin
      'WriteInteger 1',
      'WriteString thename',
      'WriteInteger 10',
+     'WriteNull',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON,
      'WriteInteger 2',
@@ -853,6 +925,7 @@ begin
      'WriteInteger 1',
      'WriteString SomeName',
      'WriteInteger 0',
+     'WriteNull',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON,
      'WriteInteger 2',
@@ -894,6 +967,7 @@ begin
      'WriteInteger 2',
      'WriteString name',
      'WriteInteger 0',
+     'WriteNull',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON,
      'WriteInteger 2',
@@ -941,6 +1015,7 @@ begin
     AssertSQLDriverCommands([
      'WriteString TheName',
      'WriteInteger 18',
+     'WriteNull',
      'WriteNull',
      'WriteInteger 1',
      'ExecSQL ' + CSQLUPDATEPERSON]);
@@ -1088,6 +1163,7 @@ begin
      'WriteString anothername',
      'WriteInteger 0',
      'WriteNull',
+     'WriteNull',
      'WriteInteger 1',
      'ExecSQL ' + CSQLUPDATEPERSON]);
   finally
@@ -1141,6 +1217,64 @@ begin
   end;
 end;
 
+procedure TTestOPFSelectManualMapping.PersonAddressCity;
+var
+  VPerson: TTestPerson;
+  VAddress: TTestAddress;
+  VCity: TTestCity;
+begin
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('name');
+  TTestSQLDriver.Data.Add('3');
+
+  TTestSQLDriver.Data.Add('18');
+  // address
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('thestreet');
+  TTestSQLDriver.Data.Add('01000-001');
+
+  TTestSQLDriver.Data.Add('11');
+  // city
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('thecity');
+
+  VPerson := FSession.Retrieve(TTestPerson, '2') as TTestPerson;
+  try
+    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertSQLDriverCommands([
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLSELECTPERSON,
+     'WriteInteger 18',
+     'ExecSQL ' + CSQLSELECTADDRESS,
+     'WriteInteger 11',
+     'ExecSQL ' + CSQLSELECTCITY,
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'WriteInteger 2',
+     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
+    AssertNotNull('person', VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertEquals('person oid', 2, VPerson._PID.OID.AsInteger);
+    AssertEquals('person name', 'name', VPerson.Name);
+    AssertEquals('person age', 3, VPerson.Age);
+    VAddress := VPerson.Address;
+    AssertNotNull('address', VAddress);
+    AssertNotNull('address pid', VAddress._PID);
+    AssertEquals('address oid', 18, VAddress._PID.OID.AsInteger);
+    AssertEquals('address street', 'thestreet', VAddress.Street);
+    AssertEquals('address zipcode', '01000-001', VAddress.ZipCode);
+    VCity := VPerson.City;
+    AssertNotNull('city', VCity);
+    AssertNotNull('city pid', VCity._PID);
+    AssertEquals('city oid', 11, VCity._PID.OID.AsInteger);
+    AssertEquals('city name', 'thecity', VCity.Name);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
 procedure TTestOPFSelectManualMapping.PersonCity;
 var
   VPerson: TTestPerson;
@@ -1150,8 +1284,9 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('thepersonname');
   TTestSQLDriver.Data.Add('30');
-  TTestSQLDriver.Data.Add('5');
+  TTestSQLDriver.Data.Add('null');
 
+  TTestSQLDriver.Data.Add('5');
   // city
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('nameofcity');
@@ -1184,7 +1319,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.PersonNullCity;
+procedure TTestOPFSelectManualMapping.PersonNullAddressCity;
 var
   VPerson: TTestPerson;
 begin
@@ -1192,6 +1327,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('personname');
   TTestSQLDriver.Data.Add('22');
+  TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
   VPerson := FSession.Retrieve(TTestPerson, '18') as TTestPerson;
@@ -1224,6 +1360,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('aname');
   TTestSQLDriver.Data.Add('5');
+  TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
   // two phone objects
@@ -1270,6 +1407,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('personname');
   TTestSQLDriver.Data.Add('0');
+  TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
   // phones
@@ -1374,7 +1512,27 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionChangedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionSimpleChanged;
+var
+  VPerson: TTestPerson;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VPerson.Address := TTestAddress.Create;
+    VPerson.Address.Street := 'freeway s/n';
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VPerson.Address.Street := 'freeway 150';
+    AssertTrue('person dirty2', VPerson._PID.IsDirty);
+    VPerson.Address.Street := 'freeway s/n';
+    AssertFalse('person dirty3', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.CompositionChanged;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1396,7 +1554,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionAddedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionAdded;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1420,7 +1578,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionRemovedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionRemoved;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1443,7 +1601,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionRemovedAddedClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionRemovedAdded;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1469,7 +1627,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionChangedOrderClean;
+procedure TTestOPFCleanDirtyAttribute.CompositionChangedOrder;
 var
   VPerson: TTestPerson;
   VPhone1, VPhone2: TTestPhone;
@@ -1496,7 +1654,27 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationChangedClean;
+procedure TTestOPFCleanDirtyAttribute.AggregationSimpleChanged;
+var
+  VPerson: TTestPerson;
+  VCity: TTestCity;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    VCity := TTestCity.Create;
+    VCity.Name := 'sampa';
+    VPerson.City := VCity;
+    FSession.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VPerson.City.Name := 'ny';
+    AssertFalse('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttribute.AggregationChanged;
 var
   VPerson: TTestPerson;
   VLang: TTestLanguage;
@@ -1515,7 +1693,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationAddedClean;
+procedure TTestOPFCleanDirtyAttribute.AggregationAdded;
 var
   VPerson: TTestPerson;
   VLang1, VLang2: TTestLanguage;
@@ -1535,7 +1713,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationRemovedClean;
+procedure TTestOPFCleanDirtyAttribute.AggregationRemoved;
 var
   VPerson: TTestPerson;
   VLang1, VLang2: TTestLanguage;
@@ -1556,7 +1734,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationRemovedAddedClean;
+procedure TTestOPFCleanDirtyAttribute.AggregationRemovedAdded;
 var
   VPerson: TTestPerson;
   VLang1, VLang2, VLang3: TTestLanguage;
@@ -1579,7 +1757,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationChangedOrderClean;
+procedure TTestOPFCleanDirtyAttribute.AggregationChangedOrder;
 var
   VPerson: TTestPerson;
   VLang1, VLang2: TTestLanguage;
@@ -1615,11 +1793,24 @@ end;
 
 { TTestPerson }
 
+function TTestPerson.GetLanguages: TTestLanguageList;
+begin
+  if not Assigned(FLanguages) then
+    FLanguages := TTestLanguageList.Create;
+  Result := FLanguages;
+end;
+
 function TTestPerson.GetPhones: TTestPhoneList;
 begin
   if not Assigned(FPhones) then
     FPhones := TTestPhoneList.Create;
   Result := FPhones;
+end;
+
+procedure TTestPerson.SetAddress(AValue: TTestAddress);
+begin
+  FreeAndNil(FAddress);
+  FAddress := AValue;
 end;
 
 procedure TTestPerson.SetCity(AValue: TTestCity);
@@ -1629,13 +1820,6 @@ begin
     FreeAndNil(FCity);
     FCity := AValue;
   end;
-end;
-
-function TTestPerson.GetLanguages: TTestLanguageList;
-begin
-  if not Assigned(FLanguages) then
-    FLanguages := TTestLanguageList.Create;
-  Result := FLanguages;
 end;
 
 procedure TTestPerson.SetLanguages(AValue: TTestLanguageList);
@@ -1653,6 +1837,7 @@ end;
 procedure TTestPerson.Finit;
 begin
   FreeAndNil(FPhones);
+  FreeAndNil(FAddress);
   FreeAndNil(FCity);
   FreeAndNil(FLanguages);
   inherited Finit;
@@ -1844,6 +2029,7 @@ begin
   VPerson := APID.Entity as TTestPerson;
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
+  VPerson.Address := Mapper.RetrieveFromDriver(TTestAddress, Driver) as TTestAddress;
   VPerson.City := Mapper.RetrieveFromDriver(TTestCity, Driver) as TTestCity;
   VPerson.Phones := TTestPhoneList(RetrieveListPID(TTestPhone, VPerson._PID));
   VPerson.Languages := TTestLanguageList(RetrieveListPID(TTestLanguage, VPerson._PID));
@@ -1862,12 +2048,53 @@ begin
   VPerson := APID.Entity as TTestPerson;
   Driver.WriteString(VPerson.Name);
   Driver.WriteInteger(VPerson.Age);
+  Mapper.StoreToDriver(TTestAddress, VPerson.Address, Driver);
   Mapper.StoreToDriver(TTestCity, VPerson.City, Driver);
 end;
 
 class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestPerson;
+end;
+
+{ TTestAddressSQLMapping }
+
+function TTestAddressSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
+begin
+  Result := CSQLINSERTADDRESS;
+end;
+
+function TTestAddressSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+begin
+  Result := CSQLSELECTADDRESS;
+end;
+
+function TTestAddressSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
+begin
+  Result := CSQLUPDATEADDRESS;
+end;
+
+procedure TTestAddressSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+var
+  VAddress: TTestAddress;
+begin
+  VAddress := APID.Entity as TTestAddress;
+  VAddress.Street := Driver.ReadString;
+  VAddress.ZipCode := Driver.ReadString;
+end;
+
+procedure TTestAddressSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
+var
+  VAddress: TTestAddress;
+begin
+  VAddress := APID.Entity as TTestAddress;
+  Driver.WriteString(VAddress.Street);
+  Driver.WriteString(VAddress.ZipCode);
+end;
+
+class function TTestAddressSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestAddress;
 end;
 
 { TTestCitySQLMapping }
