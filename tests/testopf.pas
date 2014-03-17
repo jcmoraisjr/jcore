@@ -1391,7 +1391,7 @@ begin
     AssertNotNull('phone0 pid', VPerson.Phones[0]._PID);
     AssertEquals('phone0 oid', 11, VPerson.Phones[0]._PID.OID.AsInteger);
     AssertEquals('phone0 number', '212', VPerson.Phones[0].Number);
-    AssertNotNull('phone1 pid', VPerson.Phones[0]._PID);
+    AssertNotNull('phone1 pid', VPerson.Phones[1]._PID);
     AssertEquals('phone1 oid', 12, VPerson.Phones[1]._PID.OID.AsInteger);
     AssertEquals('phone1 number', '555', VPerson.Phones[1].Number);
   finally
