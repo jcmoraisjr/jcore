@@ -18,7 +18,6 @@ interface
 
 uses
   Classes,
-  JCoreClasses,
   JCoreOPFDriver,
   JCoreOPFMetadata,
   JCoreOPFMapping;
@@ -48,8 +47,8 @@ type
     procedure AddInTransactionPID(const APID: TJCoreOPFPID);
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit; virtual;
+    procedure RetrieveElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
-    function RetrieveListPID(const AListBaseClass: TClass; const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
     procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure StorePID(const APID: TJCoreOPFPID);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
@@ -118,16 +117,16 @@ begin
   InTransactionPIDList.Clear;
 end;
 
+procedure TJCoreOPFSession.RetrieveElements(const AOwnerPID: TJCoreOPFPID;
+  const AOwnerADM: TJCoreOPFADMCollection);
+begin
+  AcquireMapping(AOwnerADM.Metadata.CompositionClass).RetrieveElements(AOwnerPID, AOwnerADM);
+end;
+
 function TJCoreOPFSession.RetrieveFromDriver(const AClass: TClass;
   const ADriverOID: TJCoreOPFDriver): TObject;
 begin
   Result := AcquireMapping(AClass).RetrieveFromDriver(AClass, ADriverOID);
-end;
-
-function TJCoreOPFSession.RetrieveListPID(const AListBaseClass: TClass;
-  const AOwnerPID: TJCoreOPFPID): TJCoreObjectList;
-begin
-  Result := AcquireMapping(AListBaseClass).RetrieveList(AListBaseClass, AOwnerPID);
 end;
 
 procedure TJCoreOPFSession.StoreElements(const AOwnerPID: TJCoreOPFPID;

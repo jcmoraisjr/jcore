@@ -155,6 +155,7 @@ type
     procedure SetOIDCache(AValue: TJCoreOPFOIDArray);
     procedure UpdateChanges;
   protected
+    procedure InternalAssignArray(const AArray: TJCoreObjectArray); virtual; abstract;
     function InternalCreateItemsArray: TJCoreObjectArray; virtual; abstract;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
@@ -162,6 +163,7 @@ type
     property OIDCache: TJCoreOPFOIDArray read FOIDCache write SetOIDCache;
   public
     destructor Destroy; override;
+    procedure AssignArray(const AArray: TJCoreObjectArray);
     procedure TransactionClosing(const ACommit: Boolean); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
@@ -171,7 +173,10 @@ type
   { TJCoreOPFADMFPSListCollection }
 
   TJCoreOPFADMFPSListCollection = class(TJCoreOPFADMCollection)
+  private
+    function GetList: TFPSList;
   protected
+    procedure InternalAssignArray(const AArray: TJCoreObjectArray); override;
     function InternalCreateItemsArray: TJCoreObjectArray; override;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
@@ -681,6 +686,11 @@ begin
   inherited Destroy;
 end;
 
+procedure TJCoreOPFADMCollection.AssignArray(const AArray: TJCoreObjectArray);
+begin
+  InternalAssignArray(AArray);
+end;
+
 procedure TJCoreOPFADMCollection.TransactionClosing(const ACommit: Boolean);
 begin
   inherited;
@@ -691,13 +701,34 @@ end;
 
 { TJCoreOPFADMFPSListCollection }
 
+function TJCoreOPFADMFPSListCollection.GetList: TFPSList;
+begin
+  Result := TFPSList(GetObjectProp(Entity, AttrPropInfo, TFPSList));
+end;
+
+procedure TJCoreOPFADMFPSListCollection.InternalAssignArray(const AArray: TJCoreObjectArray);
+var
+  VItems: TFPSList;
+  VItem: TObject;
+begin
+  VItems := GetList;
+  if not Assigned(VItems) then
+  begin
+    VItems := TJCoreObjectList.Create;
+    SetObjectProp(Entity, AttrPropInfo, VItems);
+  end;
+  VItems.Clear;
+  for VItem in AArray do
+    VItems.Add(@VItem);
+end;
+
 function TJCoreOPFADMFPSListCollection.InternalCreateItemsArray: TJCoreObjectArray;
 var
   VItems: TFPSList;
   I: Integer;
 begin
   { TODO : evaluate after lazy loading implementation }
-  VItems := TFPSList(GetObjectProp(Entity, AttrPropInfo, TFPSList));
+  VItems := GetList;
   if Assigned(VItems) then
   begin
     SetLength(Result, VItems.Count);

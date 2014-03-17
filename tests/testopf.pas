@@ -2031,8 +2031,8 @@ begin
   VPerson.Age := Driver.ReadInteger;
   VPerson.Address := Mapper.RetrieveFromDriver(TTestAddress, Driver) as TTestAddress;
   VPerson.City := Mapper.RetrieveFromDriver(TTestCity, Driver) as TTestCity;
-  VPerson.Phones := TTestPhoneList(RetrieveListPID(TTestPhone, VPerson._PID));
-  VPerson.Languages := TTestLanguageList(RetrieveListPID(TTestLanguage, VPerson._PID));
+  RetrieveList(APID, 'Phones');
+  RetrieveList(APID, 'Languages');
 end;
 
 procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: TJCoreOPFPID);
