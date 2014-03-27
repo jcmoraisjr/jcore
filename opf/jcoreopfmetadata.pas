@@ -35,6 +35,8 @@ type
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
   end;
 
+  TJCoreOPFAttributeType = (jatSimple, jatEntity, jatCollection);
+
   TJCoreOPFAttrMetadata = class;
 
   { TJCoreOPFADM }
@@ -55,6 +57,7 @@ type
   public
     constructor Create(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
+    class function AttributeType: TJCoreOPFAttributeType; virtual; abstract;
     function IsDirty: Boolean;
     procedure TransactionClosing(const ACommit: Boolean); virtual;
     procedure UpdateCache;
@@ -65,9 +68,16 @@ type
   TJCoreOPFADMClassList = specialize TFPGList<TJCoreOPFADMClass>;
   TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
 
+  { TJCoreOPFADMSimple }
+
+  TJCoreOPFADMSimple = class(TJCoreOPFADM)
+  public
+    class function AttributeType: TJCoreOPFAttributeType; override;
+  end;
+
   { TJCoreOPFADMType32 }
 
-  TJCoreOPFADMType32 = class(TJCoreOPFADM)
+  TJCoreOPFADMType32 = class(TJCoreOPFADMSimple)
   private
     FCache: Longint;
   protected
@@ -79,7 +89,7 @@ type
 
   { TJCoreOPFADMType64 }
 
-  TJCoreOPFADMType64 = class(TJCoreOPFADM)
+  TJCoreOPFADMType64 = class(TJCoreOPFADMSimple)
   private
     FCache: Int64;
   protected
@@ -91,7 +101,7 @@ type
 
   { TJCoreOPFADMFloat }
 
-  TJCoreOPFADMFloat = class(TJCoreOPFADM)
+  TJCoreOPFADMFloat = class(TJCoreOPFADMSimple)
   private
     FCache: Extended;
   protected
@@ -103,7 +113,7 @@ type
 
   { TJCoreOPFADMAnsiString }
 
-  TJCoreOPFADMAnsiString = class(TJCoreOPFADM)
+  TJCoreOPFADMAnsiString = class(TJCoreOPFADMSimple)
   private
     FCache: AnsiString;
   protected
@@ -127,6 +137,7 @@ type
   public
     destructor Destroy; override;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    class function AttributeType: TJCoreOPFAttributeType; override;
   end;
 
   { TJCoreOPFADMCollection }
@@ -164,6 +175,7 @@ type
   public
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
+    class function AttributeType: TJCoreOPFAttributeType; override;
     procedure TransactionClosing(const ACommit: Boolean); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
@@ -242,6 +254,7 @@ type
   TJCoreOPFAttrMetadata = class(TJCoreAttrMetadata)
   private
     FADMClass: TJCoreOPFADMClass;
+    FAttributeType: TJCoreOPFAttributeType;
     FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
     FIsExternal: Boolean;
     FModel: TJCoreOPFModel;
@@ -249,10 +262,12 @@ type
     function ReadComposition(const AClassName: string): TClass;
     procedure SetCompositionMetadata(AValue: TJCoreOPFClassMetadata);
   protected
+    property ADMClass: TJCoreOPFADMClass read FADMClass;
     property Model: TJCoreOPFModel read FModel;
   public
     constructor Create(const AModel: TJCoreOPFModel; const APropInfo: PPropInfo);
     function CreateADM(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject): TJCoreOPFADM;
+    property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
     property IsExternal: Boolean read FIsExternal write FIsExternal;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
@@ -322,6 +337,13 @@ procedure TJCoreOPFADM.UpdateCache;
 begin
   InternalUpdateCache;
   FCacheUpdated := True;
+end;
+
+{ TJCoreOPFADMSimple }
+
+class function TJCoreOPFADMSimple.AttributeType: TJCoreOPFAttributeType;
+begin
+  Result := jatSimple;
 end;
 
 { TJCoreOPFADMType32 }
@@ -461,6 +483,11 @@ begin
     Result := AModel.IsEntityClass(GetTypeData(AAttrTypeInfo)^.ClassType)
   else
     Result := False;
+end;
+
+class function TJCoreOPFADMEntity.AttributeType: TJCoreOPFAttributeType;
+begin
+  Result := jatEntity;
 end;
 
 { TJCoreOPFADMCollection }
@@ -692,6 +719,11 @@ end;
 procedure TJCoreOPFADMCollection.AssignArray(const AArray: TJCoreObjectArray);
 begin
   InternalAssignArray(AArray);
+end;
+
+class function TJCoreOPFADMCollection.AttributeType: TJCoreOPFAttributeType;
+begin
+  Result := jatCollection;
 end;
 
 procedure TJCoreOPFADMCollection.TransactionClosing(const ACommit: Boolean);
@@ -946,6 +978,8 @@ constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
 begin
   inherited Create(APropInfo);
   FModel := AModel;
+  FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
+  FAttributeType := ADMClass.AttributeType;
   if IsClass then
     CompositionMetadata := Model.AcquireMetadata(ReadComposition(APropInfo^.PropType^.Name))
   else
@@ -957,9 +991,7 @@ end;
 function TJCoreOPFAttrMetadata.CreateADM(const AMapping: IJCoreOPFPIDMapping;
   const AEntity: TObject): TJCoreOPFADM;
 begin
-  if not Assigned(FADMClass) then
-    FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
-  Result := FADMClass.Create(AMapping, AEntity, Self);
+  Result := ADMClass.Create(AMapping, AEntity, Self);
 end;
 
 { TJCoreOPFClassMetadata }
