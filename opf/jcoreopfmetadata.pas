@@ -256,9 +256,9 @@ type
     FADMClass: TJCoreOPFADMClass;
     FAttributeType: TJCoreOPFAttributeType;
     FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
-    FIsExternal: Boolean;
     FModel: TJCoreOPFModel;
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
+    function GetHasExternalRef: Boolean;
     function ReadComposition(const AClassName: string): TClass;
     procedure SetCompositionMetadata(AValue: TJCoreOPFClassMetadata);
   protected
@@ -269,8 +269,8 @@ type
     function CreateADM(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject): TJCoreOPFADM;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
-    property IsExternal: Boolean read FIsExternal write FIsExternal;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
+    property HasExternalRef: Boolean read GetHasExternalRef;
   end;
 
   { TJCoreOPFClassMetadata }
@@ -826,7 +826,7 @@ begin
   for I := 0 to Pred(ADMMap.Count) do
   begin
     VADM := ADMMap.Data[I];
-    if VADM.Metadata.IsExternal then
+    if VADM.Metadata.HasExternalRef then
     begin
       if AIncludeExternals and VADM.IsDirty then
         Exit;
@@ -953,6 +953,11 @@ begin
   Result := inherited CompositionMetadata as TJCoreOPFClassMetadata;
 end;
 
+function TJCoreOPFAttrMetadata.GetHasExternalRef: Boolean;
+begin
+  Result := (CompositionLinkType = jcltExternal) or (AttributeType = jatCollection);
+end;
+
 function TJCoreOPFAttrMetadata.ReadComposition(const AClassName: string): TClass;
 var
   VClassName: string;
@@ -985,7 +990,6 @@ begin
   else
     CompositionMetadata := nil;
   FCompositionLinkType := jcltEmbedded;
-  FIsExternal := APropInfo^.PropType^.Kind = tkClass;
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const AMapping: IJCoreOPFPIDMapping;
