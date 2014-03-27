@@ -245,7 +245,9 @@ type
     FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
     FIsExternal: Boolean;
     FModel: TJCoreOPFModel;
-    function ReadGenericsComposition(const AClassName: string): TClass;
+    function GetCompositionMetadata: TJCoreOPFClassMetadata;
+    function ReadComposition(const AClassName: string): TClass;
+    procedure SetCompositionMetadata(AValue: TJCoreOPFClassMetadata);
   protected
     property Model: TJCoreOPFModel read FModel;
   public
@@ -253,6 +255,7 @@ type
     function CreateADM(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject): TJCoreOPFADM;
     property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
     property IsExternal: Boolean read FIsExternal write FIsExternal;
+    property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
   end;
 
   { TJCoreOPFClassMetadata }
@@ -913,19 +916,29 @@ end;
 
 { TJCoreOPFAttrMetadata }
 
-function TJCoreOPFAttrMetadata.ReadGenericsComposition(const AClassName: string): TClass;
+function TJCoreOPFAttrMetadata.GetCompositionMetadata: TJCoreOPFClassMetadata;
+begin
+  Result := inherited CompositionMetadata as TJCoreOPFClassMetadata;
+end;
+
+function TJCoreOPFAttrMetadata.ReadComposition(const AClassName: string): TClass;
 var
   VClassName: string;
   VPos: Integer;
 begin
-  // Sample of ClassName: TFPGList$TListType
+  // Sample of generics' ClassName: TFPGList$TListType
   VPos := Pos('$', AClassName);
   if VPos > 0 then
-  begin
-    VClassName := Copy(AClassName, VPos + 1, Length(AClassName));
-    Result := Model.FindClass(VClassName);
-  end else
-    Result := nil;
+    VClassName := Copy(AClassName, VPos + 1, Length(AClassName)) // generics
+  else
+    VClassName := AClassName;
+  Result := Model.FindClass(VClassName);
+end;
+
+procedure TJCoreOPFAttrMetadata.SetCompositionMetadata(
+  AValue: TJCoreOPFClassMetadata);
+begin
+  inherited CompositionMetadata := AValue;
 end;
 
 constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
@@ -933,7 +946,10 @@ constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreOPFModel;
 begin
   inherited Create(APropInfo);
   FModel := AModel;
-  CompositionClass := ReadGenericsComposition(APropInfo^.PropType^.Name);
+  if IsClass then
+    CompositionMetadata := Model.AcquireMetadata(ReadComposition(APropInfo^.PropType^.Name))
+  else
+    CompositionMetadata := nil;
   FCompositionLinkType := jcltEmbedded;
   FIsExternal := APropInfo^.PropType^.Kind = tkClass;
 end;

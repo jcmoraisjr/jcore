@@ -25,18 +25,23 @@ type
 
   TJCoreMetadataCompositionType = (jctNone, jctComposition, jctAggregation);
 
+  TJCoreClassMetadata = class;
+
   { TJCoreAttrMetadata }
 
   TJCoreAttrMetadata = class(TObject)
   private
     FCompositionClass: TClass;
+    FCompositionMetadata: TJCoreClassMetadata;
     FCompositionType: TJCoreMetadataCompositionType;
     FName: string;
     FPropInfo: PPropInfo;
     function GetIsClass: Boolean;
+    procedure SetCompositionMetadata(AValue: TJCoreClassMetadata);
   public
     constructor Create(const APropInfo: PPropInfo);
-    property CompositionClass: TClass read FCompositionClass write FCompositionClass;
+    property CompositionClass: TClass read FCompositionClass;
+    property CompositionMetadata: TJCoreClassMetadata read FCompositionMetadata write SetCompositionMetadata;
     property CompositionType: TJCoreMetadataCompositionType read FCompositionType write FCompositionType;
     property IsClass: Boolean read GetIsClass;
     property Name: string read FName;
@@ -98,6 +103,18 @@ uses
 function TJCoreAttrMetadata.GetIsClass: Boolean;
 begin
   Result := PropInfo^.PropType^.Kind = tkClass;
+end;
+
+procedure TJCoreAttrMetadata.SetCompositionMetadata(AValue: TJCoreClassMetadata);
+begin
+  if FCompositionMetadata <> AValue then
+  begin
+    FCompositionMetadata := AValue;
+    if Assigned(FCompositionMetadata) then
+      FCompositionClass := FCompositionMetadata.TheClass
+    else
+      FCompositionClass := nil;
+  end;
 end;
 
 constructor TJCoreAttrMetadata.Create(const APropInfo: PPropInfo);
