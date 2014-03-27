@@ -23,7 +23,7 @@ uses
 
 type
 
-  TJCoreMetadataCompositionType = (jctComposition, jctAggregation);
+  TJCoreMetadataCompositionType = (jctNone, jctComposition, jctAggregation);
 
   { TJCoreAttrMetadata }
 
@@ -33,10 +33,12 @@ type
     FCompositionType: TJCoreMetadataCompositionType;
     FName: string;
     FPropInfo: PPropInfo;
+    function GetIsClass: Boolean;
   public
     constructor Create(const APropInfo: PPropInfo);
     property CompositionClass: TClass read FCompositionClass write FCompositionClass;
     property CompositionType: TJCoreMetadataCompositionType read FCompositionType write FCompositionType;
+    property IsClass: Boolean read GetIsClass;
     property Name: string read FName;
     property PropInfo: PPropInfo read FPropInfo;
   end;
@@ -93,12 +95,20 @@ uses
 
 { TJCoreAttrMetadata }
 
+function TJCoreAttrMetadata.GetIsClass: Boolean;
+begin
+  Result := PropInfo^.PropType^.Kind = tkClass;
+end;
+
 constructor TJCoreAttrMetadata.Create(const APropInfo: PPropInfo);
 begin
   inherited Create;
   FPropInfo := APropInfo;
   FName := APropInfo^.Name;
-  FCompositionType := jctComposition;
+  if IsClass then
+    FCompositionType := jctComposition
+  else
+    FCompositionType := jctNone;
 end;
 
 { TJCoreClassMetadata }
