@@ -98,8 +98,8 @@ type
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; virtual; abstract;
     function GenerateSelectCompositionsForDeleteStatement(const AClass: TClass; const ASize: Integer): string; virtual;
+    function GenerateSelectCollectionStatement(const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; virtual;
-    function GenerateSelectListFromStatement(const AListBaseClass: TClass): string; virtual;
     function GenerateSelectStatement(const AClass: TClass): string; virtual; abstract;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; virtual; abstract;
     function ListEntityCompositionMetadatas(const AClassMetadata: TJCoreOPFClassMetadata): TJCoreOPFAttrMetadataArray; virtual;
@@ -358,16 +358,16 @@ begin
   raise EJCoreOPFUnsupportedSelectForDeleteOperation.Create(AClass);
 end;
 
+function TJCoreOPFSQLMapping.GenerateSelectCollectionStatement(
+  const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string;
+begin
+  raise EJCoreOPFUnsupportedListOperations.Create;
+end;
+
 function TJCoreOPFSQLMapping.GenerateSelectForDeleteStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
   raise EJCoreOPFUnsupportedSelectForDeleteOperation.Create(AAttrMetadata.CompositionClass);
-end;
-
-function TJCoreOPFSQLMapping.GenerateSelectListFromStatement(
-  const AListBaseClass: TClass): string;
-begin
-  raise EJCoreOPFUnsupportedListOperations.Create;
 end;
 
 function TJCoreOPFSQLMapping.ListEntityCompositionMetadatas(
@@ -574,20 +574,21 @@ procedure TJCoreOPFSQLMapping.InternalRetrieveElements(const AOwnerPID: TJCoreOP
   const AOwnerADM: TJCoreOPFADMCollection);
 var
   VElementsArray: TJCoreObjectArray;
-  VListClass: TClass;
   VOID: TJCoreOPFOID;
   VPID: TJCoreOPFPID;
+  VCompositionClass: TClass;
   VCount: Integer;
   I: Integer;
 begin
   AOwnerPID.OID.WriteToDriver(Driver);
-  VListClass := AOwnerADM.Metadata.CompositionClass;
-  VCount := Driver.ExecSQL(GenerateSelectListFromStatement(VListClass));
+  VCount := Driver.ExecSQL(GenerateSelectCollectionStatement(
+   AOwnerPID.Entity.ClassType, AOwnerADM.Metadata));
   SetLength(VElementsArray, VCount);
   try
+    VCompositionClass := AOwnerADM.Metadata.CompositionClass;
     for I := Low(VElementsArray) to High(VElementsArray) do
     begin
-      VElementsArray[I] := CreateEntity(VListClass);
+      VElementsArray[I] := CreateEntity(VCompositionClass);
       VOID := CreateOIDFromDriver(Driver);
       try
         VPID := AcquirePID(VElementsArray[I]);
