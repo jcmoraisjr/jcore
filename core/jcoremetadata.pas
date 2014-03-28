@@ -59,7 +59,6 @@ type
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
   protected
     property AttrList: TJCoreAttrMetadataList read FAttrList;
-    property TheClass: TClass read FClass;
   public
     constructor Create(const AClass: TClass);
     destructor Destroy; override;
@@ -67,6 +66,7 @@ type
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
     function AttributeCount: Integer;
     property Attributes[const AIndex: Integer]: TJCoreAttrMetadata read GetAttributes; default;
+    property TheClass: TClass read FClass;
   end;
 
   TJCoreClassMetadataMap = specialize TFPGMap<Pointer, TJCoreClassMetadata>;

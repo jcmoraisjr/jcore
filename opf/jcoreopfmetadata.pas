@@ -273,6 +273,8 @@ type
     property HasExternalRef: Boolean read GetHasExternalRef;
   end;
 
+  TJCoreOPFAttrMetadataArray = array of TJCoreOPFAttrMetadata;
+
   { TJCoreOPFClassMetadata }
 
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)

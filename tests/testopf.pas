@@ -142,6 +142,30 @@ type
     procedure PersonLanguages;
   end;
 
+  { TTestOPFDeleteOneManualMapping }
+
+  TTestOPFDeleteOneManualMapping = class(TTestOPF)
+  published
+    procedure City;
+    procedure PersonAddress;
+    procedure PersonCity;
+    procedure PersonOnePhone;
+    procedure PersonOneLanguage;
+    procedure PersonPhones;
+    procedure PersonLanguages;
+  end;
+
+  { TTestOPFDeleteArrayManualMapping }
+
+  TTestOPFDeleteArrayManualMapping = class(TTestOPF)
+  published
+    procedure City;
+    procedure PersonAddress;
+    procedure PersonCity;
+    procedure PersonPhones;
+    procedure PersonLanguages;
+  end;
+
   { TTestOPFCleanDirtyAttribute }
 
   TTestOPFCleanDirtyAttribute = class(TTestOPF)
@@ -328,9 +352,12 @@ type
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateDeleteExternalLinkIDsStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
-    function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass): string; override;
+    function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
+    function GenerateSelectCompositionsForDeleteStatement(const AClass: TClass; const ASize: Integer): string; override;
+    function GenerateSelectForDeleteStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
@@ -351,6 +378,7 @@ type
 
   TTestAddressSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
@@ -364,6 +392,7 @@ type
 
   TTestCitySQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
@@ -409,22 +438,28 @@ uses
 const
   CSQLINSERTADDRESS = 'INSERT INTO ADDRESS (ID,STREET,ZIPCODE) VALUES (?,?,?)';
   CSQLINSERTCITY = 'INSERT INTO CITY (ID,NAME) VALUES (?,?)';
-  CSQLINSERTPERSON = 'INSERT INTO PERSON (ID,NAME,AGE,CITY) VALUES (?,?,?,?)';
+  CSQLINSERTPERSON = 'INSERT INTO PERSON (ID,NAME,AGE,ADDRESS,CITY) VALUES (?,?,?,?,?)';
   CSQLINSERTPHONE = 'INSERT INTO PHONE (ID,PERSON,NUMBER) VALUES (?,?,?)';
   CSQLINSERTLANG = 'INSERT INTO LANG (ID,NAME) VALUES (?,?)';
   CSQLINSERTPERSON_LANG = 'INSERT INTO PERSON_LANG (ID_PERSON,ID_LANG) VALUES (?,?)';
   CSQLSELECTADDRESS = 'SELECT STREET,ZIPCODE FROM ADDRESS WHERE ID=?';
   CSQLSELECTCITY = 'SELECT NAME FROM CITY WHERE ID=?';
-  CSQLSELECTPERSON = 'SELECT NAME,AGE,CITY FROM PERSON WHERE ID=?';
-  CSQLSELECTOWNEDPHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
+  CSQLSELECTPERSON = 'SELECT NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ID=?';
+  CSQLSELECTPERSON_PHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
   CSQLSELECTPERSON_LANG = 'SELECT L.ID,L.NAME FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON=?';
+  CSQLSELECTPERSON_FOR_DELETE = 'SELECT ADDRESS FROM PERSON WHERE ID';
+  CSQLSELECTPERSON_PHONES_FOR_DELETE = 'SELECT ID FROM PHONE WHERE PERSON';
+  CSQLSELECTPERSON_LANG_FOR_DELETE = 'SELECT L.ID FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON';
   CSQLUPDATEADDRESS = 'UPDATE ADDRESS SET STREET=?, ZIPCODE=? WHERE ID=?';
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
-  CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, CITY=? WHERE ID=?';
+  CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, ADDRESS=?, CITY=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
   CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
+  CSQLDELETEADDRESS = 'DELETE FROM ADDRESS WHERE ID';
+  CSQLDELETECITY = 'DELETE FROM CITY WHERE ID';
   CSQLDELETEPHONE = 'DELETE FROM PHONE WHERE ID';
-  CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=?';
+  CSQLDELETEPERSON = 'DELETE FROM PERSON WHERE ID';
+  CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON';
   CSQLDELETEPERSON_LANG_IDs = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=? AND ID_LANG';
 
 { TTestOPFConfig }
@@ -521,9 +556,16 @@ procedure TTestOPF.AssertSQLDriverCommands(const ACommands: array of string);
 var
   I: Integer;
 begin
-  AssertEquals('cmd count', Length(ACommands), TTestSQLDriver.Commands.Count);
-  for I := Low(ACommands) to High(ACommands) do
-    AssertEquals('cmd' + IntToStr(I), ACommands[I], TTestSQLDriver.Commands[I]);
+  try
+    AssertEquals('cmd count', Length(ACommands), TTestSQLDriver.Commands.Count);
+    for I := Low(ACommands) to High(ACommands) do
+      AssertEquals('cmd' + IntToStr(I), ACommands[I], TTestSQLDriver.Commands[I]);
+  except
+    LOG.Warn('Executed commands:');
+    for I := 0 to Pred(TTestSQLDriver.Commands.Count) do
+      LOG.Warn('  ' + IntToStr(I) + ': ' + TTestSQLDriver.Commands[I]);
+    raise;
+  end;
   TTestSQLDriver.Commands.Clear;
 end;
 
@@ -1251,7 +1293,7 @@ begin
      'WriteInteger 11',
      'ExecSQL ' + CSQLSELECTCITY,
      'WriteInteger 2',
-     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 2',
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
@@ -1301,7 +1343,7 @@ begin
      'WriteInteger 5',
      'ExecSQL ' + CSQLSELECTCITY,
      'WriteInteger 8',
-     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 8',
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
@@ -1338,7 +1380,7 @@ begin
      'WriteInteger 18',
      'ExecSQL ' + CSQLSELECTPERSON,
      'WriteInteger 18',
-     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 18',
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull(VPerson);
@@ -1378,7 +1420,7 @@ begin
      'WriteInteger 9',
      'ExecSQL ' + CSQLSELECTPERSON,
      'WriteInteger 9',
-     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 9',
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
@@ -1429,7 +1471,7 @@ begin
      'WriteInteger 5',
      'ExecSQL ' + CSQLSELECTPERSON,
      'WriteInteger 5',
-     'ExecSQL ' + CSQLSELECTOWNEDPHONES,
+     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 5',
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
@@ -1449,6 +1491,336 @@ begin
   finally
     FreeAndNil(VPerson);
   end;
+end;
+
+{ TTestOPFDeleteOneManualMapping }
+
+procedure TTestOPFDeleteOneManualMapping.City;
+begin
+  FSession.Dispose(TTestCity, ['5']);
+  AssertSQLDriverCommands([
+   'WriteInteger 5',
+   'ExecSQL ' + CSQLDELETECITY + '=?']);
+end;
+
+procedure TTestOPFDeleteOneManualMapping.PersonAddress;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('4');
+
+  FSession.Dispose(TTestPerson, ['12']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 12',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'WriteInteger 12',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'WriteInteger 12',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'WriteInteger 4',
+   'ExecSQL ' + CSQLDELETEADDRESS + '=?',
+   'WriteInteger 12',
+   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+end;
+
+procedure TTestOPFDeleteOneManualMapping.PersonCity;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['3']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 3',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'WriteInteger 3',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'WriteInteger 3',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'WriteInteger 3',
+   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+end;
+
+procedure TTestOPFDeleteOneManualMapping.PersonOnePhone;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('15');
+  // Delete Phones
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['7']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 7',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'WriteInteger 15',
+   'ExecSQL ' + CSQLDELETEPHONE + '=?',
+   'WriteInteger 7',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'WriteInteger 7',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'WriteInteger 7',
+   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+end;
+
+procedure TTestOPFDeleteOneManualMapping.PersonOneLanguage;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['6']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 6',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'WriteInteger 6',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'WriteInteger 6',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'WriteInteger 6',
+   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+end;
+
+procedure TTestOPFDeleteOneManualMapping.PersonPhones;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('17');
+  TTestSQLDriver.Data.Add('18');
+  // Delete Phones
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['2']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 2',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'WriteInteger 17',
+   'WriteInteger 18',
+   'ExecSQL ' + CSQLDELETEPHONE + ' IN (?,?)',
+   'WriteInteger 2',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'WriteInteger 2',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'WriteInteger 2',
+   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+end;
+
+procedure TTestOPFDeleteOneManualMapping.PersonLanguages;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['5']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 5',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'WriteInteger 5',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'WriteInteger 5',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'WriteInteger 5',
+   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+end;
+
+{ TTestOPFDeleteArrayManualMapping }
+
+procedure TTestOPFDeleteArrayManualMapping.City;
+begin
+  FSession.Dispose(TTestCity, ['13', '22']);
+  AssertSQLDriverCommands([
+   'WriteInteger 13',
+   'WriteInteger 22',
+   'ExecSQL ' + CSQLDELETECITY + ' IN (?,?)']);
+end;
+
+procedure TTestOPFDeleteArrayManualMapping.PersonAddress;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(3);
+  TTestSQLDriver.Data.Add('10');
+  TTestSQLDriver.Data.Add('13');
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['9', '11', '16']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 9',
+   'WriteInteger 11',
+   'WriteInteger 16',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?,?)',
+   'WriteInteger 9',
+   'WriteInteger 11',
+   'WriteInteger 16',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?,?)',
+   'WriteInteger 9',
+   'WriteInteger 11',
+   'WriteInteger 16',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?,?)',
+   'WriteInteger 10',
+   'WriteInteger 13',
+   'ExecSQL ' + CSQLDELETEADDRESS + ' IN (?,?)',
+   'WriteInteger 9',
+   'WriteInteger 11',
+   'WriteInteger 16',
+   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
+end;
+
+procedure TTestOPFDeleteArrayManualMapping.PersonCity;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(3);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['21', '22', '23']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 21',
+   'WriteInteger 22',
+   'WriteInteger 23',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?,?)',
+   'WriteInteger 21',
+   'WriteInteger 22',
+   'WriteInteger 23',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?,?)',
+   'WriteInteger 21',
+   'WriteInteger 22',
+   'WriteInteger 23',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?,?)',
+   'WriteInteger 21',
+   'WriteInteger 22',
+   'WriteInteger 23',
+   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
+end;
+
+procedure TTestOPFDeleteArrayManualMapping.PersonPhones;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('11');
+  TTestSQLDriver.Data.Add('13');
+  // Delete Phones
+  TTestSQLDriver.ExpectedResultsets.Add(7);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(3);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['10', '12', '14']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 10',
+   'WriteInteger 12',
+   'WriteInteger 14',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?,?)',
+   'WriteInteger 11',
+   'WriteInteger 13',
+   'ExecSQL ' + CSQLDELETEPHONE + ' IN (?,?)',
+   'WriteInteger 10',
+   'WriteInteger 12',
+   'WriteInteger 14',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?,?)',
+   'WriteInteger 10',
+   'WriteInteger 12',
+   'WriteInteger 14',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?,?)',
+   'WriteInteger 10',
+   'WriteInteger 12',
+   'WriteInteger 14',
+   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
+end;
+
+procedure TTestOPFDeleteArrayManualMapping.PersonLanguages;
+begin
+  // Phones IDs
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  // Languages IDs
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  // Address ID
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+
+  FSession.Dispose(TTestPerson, ['15', '18']);
+
+  AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+  AssertSQLDriverCommands([
+   'WriteInteger 15',
+   'WriteInteger 18',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?)',
+   'WriteInteger 15',
+   'WriteInteger 18',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?)',
+   'WriteInteger 15',
+   'WriteInteger 18',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?)',
+   'WriteInteger 15',
+   'WriteInteger 18',
+   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?)']);
 end;
 
 { TTestOPFCleanDirtyAttribute }
@@ -1946,7 +2318,10 @@ end;
 function TTestAbstractSQLMapping.CreateOIDFromDriver(
   const ADriver: TJCoreOPFDriver): TJCoreOPFOID;
 begin
-  Result := TJCoreOPFIntegerOID.Create(ADriver.ReadInteger);
+  if not ADriver.ReadNull then
+    Result := TJCoreOPFIntegerOID.Create(ADriver.ReadInteger)
+  else
+    Result := nil;
 end;
 
 function TTestAbstractSQLMapping.CreateOIDFromString(const AOID: string): TJCoreOPFOID;
@@ -1990,12 +2365,17 @@ begin
 end;
 
 function TTestPersonSQLMapping.GenerateDeleteExternalLinksStatement(
-  const ACompositionClass: TClass): string;
+  const ACompositionClass: TClass; const ASize: Integer): string;
 begin
   if ACompositionClass = TTestLanguage then
-    Result := CSQLDELETEPERSON_LANG
+    Result := CSQLDELETEPERSON_LANG + BuildParams(ASize)
   else
-    Result := inherited GenerateDeleteExternalLinksStatement(ACompositionClass);
+    Result := inherited GenerateDeleteExternalLinksStatement(ACompositionClass, ASize);
+end;
+
+function TTestPersonSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+begin
+  Result := CSQLDELETEPERSON + BuildParams(ASize);
 end;
 
 function TTestPersonSQLMapping.GenerateInsertExternalLinksStatement(
@@ -2010,6 +2390,23 @@ end;
 function TTestPersonSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTPERSON;
+end;
+
+function TTestPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
+  const AClass: TClass; const ASize: Integer): string;
+begin
+  Result := CSQLSELECTPERSON_FOR_DELETE + BuildParams(ASize);
+end;
+
+function TTestPersonSQLMapping.GenerateSelectForDeleteStatement(
+  const ACompositionClass: TClass; const ASize: Integer): string;
+begin
+  if ACompositionClass = TTestPhone then
+    Result := CSQLSELECTPERSON_PHONES_FOR_DELETE + BuildParams(ASize)
+  else if ACompositionClass = TTestLanguage then
+    Result := CSQLSELECTPERSON_LANG_FOR_DELETE + BuildParams(ASize)
+  else
+    Result := inherited GenerateSelectForDeleteStatement(ACompositionClass, ASize);
 end;
 
 function TTestPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
@@ -2059,6 +2456,11 @@ end;
 
 { TTestAddressSQLMapping }
 
+function TTestAddressSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+begin
+  Result := CSQLDELETEADDRESS + BuildParams(ASize);
+end;
+
 function TTestAddressSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTADDRESS;
@@ -2098,6 +2500,11 @@ begin
 end;
 
 { TTestCitySQLMapping }
+
+function TTestCitySQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+begin
+  Result := CSQLDELETECITY + BuildParams(ASize);
+end;
 
 function TTestCitySQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
@@ -2151,7 +2558,7 @@ function TTestPhoneSQLMapping.GenerateSelectListFromStatement(
   const AListBaseClass: TClass): string;
 begin
   if AListBaseClass = TTestPhone then
-    Result := CSQLSELECTOWNEDPHONES
+    Result := CSQLSELECTPERSON_PHONES
   else
     Result := inherited GenerateSelectListFromStatement(AListBaseClass);
 end;
@@ -2235,6 +2642,8 @@ initialization
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
   RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteOneManualMapping);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteArrayManualMapping);
   RegisterTest('jcore.opf.mapping.cleandirty', TTestOPFCleanDirtyAttribute);
 
 end.

@@ -29,6 +29,8 @@ type
   end;
 
   IJCoreOPFSession = interface(IInterface)
+    procedure Dispose(const AEntity: TObject);
+    procedure Dispose(const AClass: TClass; const AOIDArray: array of string);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AObject: TObject);
   end;
@@ -47,6 +49,7 @@ type
     procedure AddInTransactionPID(const APID: TJCoreOPFPID);
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit; virtual;
+    procedure DisposeFromDriver(const AMetadata: TJCoreOPFClassMetadata; const ADriverOID: TJCoreOPFDriver; const ACount: Integer);
     procedure RetrieveElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
     procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
@@ -59,7 +62,7 @@ type
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const AModel: TJCoreOPFModel; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
     procedure Dispose(const AEntity: TObject);
-    procedure Dispose(const AClass: TClass; const AOID: string);
+    procedure Dispose(const AClass: TClass; const AOIDArray: array of string);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
@@ -115,6 +118,12 @@ begin
   for I := 0 to Pred(InTransactionPIDList.Count) do
     InTransactionPIDList[I].Commit;
   InTransactionPIDList.Clear;
+end;
+
+procedure TJCoreOPFSession.DisposeFromDriver(const AMetadata: TJCoreOPFClassMetadata;
+  const ADriverOID: TJCoreOPFDriver; const ACount: Integer);
+begin
+  AcquireMapping(AMetadata.TheClass).DisposeFromDriver(AMetadata, ADriverOID, ACount);
 end;
 
 procedure TJCoreOPFSession.RetrieveElements(const AOwnerPID: TJCoreOPFPID;
@@ -179,9 +188,9 @@ begin
   VMapping.Dispose(VMapping.AcquirePID(AEntity));
 end;
 
-procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AOID: string);
+procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AOIDArray: array of string);
 begin
-  AcquireMapping(AClass).DisposeFromString(AClass, AOID);
+  AcquireMapping(AClass).DisposeFromString(AClass, AOIDArray);
 end;
 
 function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;

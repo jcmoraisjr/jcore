@@ -105,6 +105,13 @@ type
     constructor Create(const AAttrTypeInfo: PTypeInfo);
   end;
 
+  { EJCoreOPFUnsupportedSelectForDeleteOperation }
+
+  EJCoreOPFUnsupportedSelectForDeleteOperation = class(EJCoreOPF)
+  public
+    constructor Create(const AClass: TClass);
+  end;
+
   { EJCoreOPFCollectionADMExpected }
 
   EJCoreOPFCollectionADMExpected = class(EJCoreOPF)
@@ -182,6 +189,13 @@ constructor EJCoreOPFUnsupportedAttributeType.Create(
   const AAttrTypeInfo: PTypeInfo);
 begin
   inherited Create(AAttrTypeInfo^.Name);
+end;
+
+{ EJCoreOPFUnsupportedSelectForDeleteOperation }
+
+constructor EJCoreOPFUnsupportedSelectForDeleteOperation.Create(
+  const AClass: TClass);
+begin
 end;
 
 { EJCoreOPFCollectionADMExpected }
