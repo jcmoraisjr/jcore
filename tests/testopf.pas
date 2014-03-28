@@ -351,13 +351,13 @@ type
 
   TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteExternalLinkIDsStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
-    function GenerateDeleteExternalLinksStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
+    function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
+    function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
     function GenerateDeleteStatement(const ASize: Integer): string; override;
-    function GenerateInsertExternalLinksStatement(const ACompositionClass: TClass): string; override;
+    function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectCompositionsForDeleteStatement(const AClass: TClass; const ASize: Integer): string; override;
-    function GenerateSelectForDeleteStatement(const ACompositionClass: TClass; const ASize: Integer): string; override;
+    function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
     function GenerateSelectStatement(const AClass: TClass): string; override;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
     procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
@@ -2356,21 +2356,21 @@ end;
 { TTestPersonSQLMapping }
 
 function TTestPersonSQLMapping.GenerateDeleteExternalLinkIDsStatement(
-  const ACompositionClass: TClass; const ASize: Integer): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
-  if ACompositionClass = TTestLanguage then
+  if AAttrMetadata.CompositionClass = TTestLanguage then
     Result := CSQLDELETEPERSON_LANG_IDs + BuildParams(ASize)
   else
-    Result := inherited GenerateDeleteExternalLinkIDsStatement(ACompositionClass, ASize);
+    Result := inherited GenerateDeleteExternalLinkIDsStatement(AAttrMetadata, ASize);
 end;
 
 function TTestPersonSQLMapping.GenerateDeleteExternalLinksStatement(
-  const ACompositionClass: TClass; const ASize: Integer): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
-  if ACompositionClass = TTestLanguage then
+  if AAttrMetadata.CompositionClass = TTestLanguage then
     Result := CSQLDELETEPERSON_LANG + BuildParams(ASize)
   else
-    Result := inherited GenerateDeleteExternalLinksStatement(ACompositionClass, ASize);
+    Result := inherited GenerateDeleteExternalLinksStatement(AAttrMetadata, ASize);
 end;
 
 function TTestPersonSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
@@ -2379,12 +2379,12 @@ begin
 end;
 
 function TTestPersonSQLMapping.GenerateInsertExternalLinksStatement(
-  const ACompositionClass: TClass): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
-  if ACompositionClass = TTestLanguage then
+  if AAttrMetadata.CompositionClass = TTestLanguage then
     Result := CSQLINSERTPERSON_LANG
   else
-    Result := inherited GenerateInsertExternalLinksStatement(ACompositionClass);
+    Result := inherited GenerateInsertExternalLinksStatement(AAttrMetadata);
 end;
 
 function TTestPersonSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
@@ -2399,14 +2399,14 @@ begin
 end;
 
 function TTestPersonSQLMapping.GenerateSelectForDeleteStatement(
-  const ACompositionClass: TClass; const ASize: Integer): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
-  if ACompositionClass = TTestPhone then
+  if AAttrMetadata.CompositionClass = TTestPhone then
     Result := CSQLSELECTPERSON_PHONES_FOR_DELETE + BuildParams(ASize)
-  else if ACompositionClass = TTestLanguage then
+  else if AAttrMetadata.CompositionClass = TTestLanguage then
     Result := CSQLSELECTPERSON_LANG_FOR_DELETE + BuildParams(ASize)
   else
-    Result := inherited GenerateSelectForDeleteStatement(ACompositionClass, ASize);
+    Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, ASize);
 end;
 
 function TTestPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
