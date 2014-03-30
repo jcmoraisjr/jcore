@@ -9,6 +9,11 @@
         <OtherUnitFiles Value="core;opf"/>
         <UnitOutputDirectory Value="../lib/tests/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf2Set"/>
+        </Debugging>
+      </Linking>
       <Other>
         <CompilerMessages>
           <MsgFileName Value=""/>
@@ -34,7 +39,6 @@
         <UnitName Value="TestOPF"/>
       </Item4>
     </Files>
-    <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="JCoreOPFRT"/>
