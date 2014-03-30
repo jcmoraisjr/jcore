@@ -80,7 +80,6 @@ type
 
   TTestOPFCore = class(TTestOPF)
   published
-    procedure CreatePID;
     procedure DriverNotFound;
     procedure MappingNotFound;
   end;
@@ -89,6 +88,7 @@ type
 
   TTestOPFMetadata = class(TTestOPF)
   published
+    procedure CreatePID;
     procedure AttributeList;
     procedure InheritedAttributeList;
     procedure NonPidAttributeList;
@@ -614,23 +614,6 @@ end;
 
 { TTestOPFCore }
 
-procedure TTestOPFCore.CreatePID;
-var
-  VPerson: TTestPerson;
-  VPID: IJCorePID;
-begin
-  VPerson := TTestPerson.Create;
-  try
-    AssertNull(VPerson._PID);
-    FSession.Store(VPerson);
-    VPID := VPerson._PID;
-    AssertNotNull(VPID);
-    AssertSame(VPID.Entity, VPerson);
-  finally
-    FreeAndNil(VPerson);
-  end;
-end;
-
 procedure TTestOPFCore.DriverNotFound;
 var
   VConfiguration: IJCoreOPFConfiguration;
@@ -693,6 +676,23 @@ begin
 end;
 
 { TTestOPFMetadata }
+
+procedure TTestOPFMetadata.CreatePID;
+var
+  VPerson: TTestPerson;
+  VPID: IJCorePID;
+begin
+  VPerson := TTestPerson.Create;
+  try
+    AssertNull(VPerson._PID);
+    FSession.Store(VPerson);
+    VPID := VPerson._PID;
+    AssertNotNull(VPID);
+    AssertSame(VPID.Entity, VPerson);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
 
 procedure TTestOPFMetadata.AttributeList;
 var
