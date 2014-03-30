@@ -76,17 +76,17 @@ type
     class property LOG: IJCoreLogger read FLOG;
   end;
 
-  { TTestOPFCore }
+  { TTestOPFSessionTests }
 
-  TTestOPFCore = class(TTestOPF)
+  TTestOPFSessionTests = class(TTestOPF)
   published
     procedure DriverNotFound;
     procedure MappingNotFound;
   end;
 
-  { TTestOPFMetadata }
+  { TTestOPFMetadataTests }
 
-  TTestOPFMetadata = class(TTestOPF)
+  TTestOPFMetadataTests = class(TTestOPF)
   published
     procedure CreatePID;
     procedure AttributeList;
@@ -94,18 +94,18 @@ type
     procedure NonPidAttributeList;
   end;
 
-  { TTestOPFPersistence }
+  { TTestOPFMappingTests }
 
-  TTestOPFPersistence = class(TTestOPF)
+  TTestOPFMappingTests = class(TTestOPF)
   published
     procedure TransactionPIDList;
     procedure StoreOwnerDontUpdateAggregations;
     procedure FailOwnOwnedComposition;
   end;
 
-  { TTestOPFInsertManualMapping }
+  { TTestOPFInsertManualMappingTests }
 
-  TTestOPFInsertManualMapping = class(TTestOPF)
+  TTestOPFInsertManualMappingTests = class(TTestOPF)
   published
     procedure Person;
     procedure PersonAddress;
@@ -115,9 +115,9 @@ type
     procedure PersonAggregationChange;
   end;
 
-  { TTestOPFUpdateManualMapping }
+  { TTestOPFUpdateManualMappingTests }
 
-  TTestOPFUpdateManualMapping = class(TTestOPF)
+  TTestOPFUpdateManualMappingTests = class(TTestOPF)
   published
     procedure City;
     procedure PersonCity;
@@ -130,9 +130,9 @@ type
     procedure PersonAggregationChange;
   end;
 
-  { TTestOPFSelectManualMapping }
+  { TTestOPFSelectManualMappingTests }
 
-  TTestOPFSelectManualMapping = class(TTestOPF)
+  TTestOPFSelectManualMappingTests = class(TTestOPF)
   published
     procedure City;
     procedure PersonAddressCity;
@@ -142,9 +142,9 @@ type
     procedure PersonLanguages;
   end;
 
-  { TTestOPFDeleteOneManualMapping }
+  { TTestOPFDeleteOneManualMappingTests }
 
-  TTestOPFDeleteOneManualMapping = class(TTestOPF)
+  TTestOPFDeleteOneManualMappingTests = class(TTestOPF)
   published
     procedure City;
     procedure PersonAddress;
@@ -155,9 +155,9 @@ type
     procedure PersonLanguages;
   end;
 
-  { TTestOPFDeleteArrayManualMapping }
+  { TTestOPFDeleteArrayManualMappingTests }
 
-  TTestOPFDeleteArrayManualMapping = class(TTestOPF)
+  TTestOPFDeleteArrayManualMappingTests = class(TTestOPF)
   published
     procedure City;
     procedure PersonAddress;
@@ -166,9 +166,9 @@ type
     procedure PersonLanguages;
   end;
 
-  { TTestOPFCleanDirtyAttribute }
+  { TTestOPFCleanDirtyAttributeTests }
 
-  TTestOPFCleanDirtyAttribute = class(TTestOPF)
+  TTestOPFCleanDirtyAttributeTests = class(TTestOPF)
   published
     procedure CacheNotUpdated;
     procedure IntegerClear;
@@ -612,9 +612,9 @@ begin
   TTestSQLDriver.Data.Clear;
 end;
 
-{ TTestOPFCore }
+{ TTestOPFSessionTests }
 
-procedure TTestOPFCore.DriverNotFound;
+procedure TTestOPFSessionTests.DriverNotFound;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -654,7 +654,7 @@ begin
   AssertNotNull(VSession);
 end;
 
-procedure TTestOPFCore.MappingNotFound;
+procedure TTestOPFSessionTests.MappingNotFound;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -675,9 +675,9 @@ begin
   end;
 end;
 
-{ TTestOPFMetadata }
+{ TTestOPFMetadataTests }
 
-procedure TTestOPFMetadata.CreatePID;
+procedure TTestOPFMetadataTests.CreatePID;
 var
   VPerson: TTestPerson;
   VPID: IJCorePID;
@@ -694,7 +694,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadata.AttributeList;
+procedure TTestOPFMetadataTests.AttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -708,7 +708,7 @@ begin
   AssertEquals('meta5.name', 'Languages', VMetadata[5].Name);
 end;
 
-procedure TTestOPFMetadata.InheritedAttributeList;
+procedure TTestOPFMetadataTests.InheritedAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -717,7 +717,7 @@ begin
   AssertEquals('meta0.name', 'Salary', VMetadata[0].Name);
 end;
 
-procedure TTestOPFMetadata.NonPidAttributeList;
+procedure TTestOPFMetadataTests.NonPidAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -726,9 +726,9 @@ begin
   AssertEquals('meta0.name', 'Field1', VMetadata[0].Name);
 end;
 
-{ TTestOPFPersistence }
+{ TTestOPFMappingTests }
 
-procedure TTestOPFPersistence.TransactionPIDList;
+procedure TTestOPFMappingTests.TransactionPIDList;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -779,7 +779,7 @@ begin
   end;
 end;
 
-procedure TTestOPFPersistence.StoreOwnerDontUpdateAggregations;
+procedure TTestOPFMappingTests.StoreOwnerDontUpdateAggregations;
 var
   VPerson: TTestPerson;
   VLang: TTestLanguage;
@@ -800,7 +800,7 @@ begin
   end;
 end;
 
-procedure TTestOPFPersistence.FailOwnOwnedComposition;
+procedure TTestOPFMappingTests.FailOwnOwnedComposition;
 var
   VPerson: TTestPerson;
   VLang: TTestLanguage;
@@ -824,9 +824,9 @@ begin
   end;
 end;
 
-{ TTestOPFInsertManualMapping }
+{ TTestOPFInsertManualMappingTests }
 
-procedure TTestOPFInsertManualMapping.Person;
+procedure TTestOPFInsertManualMappingTests.Person;
 var
   VPerson: TTestPerson;
 begin
@@ -847,7 +847,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.PersonAddress;
+procedure TTestOPFInsertManualMappingTests.PersonAddress;
 var
   VPerson: TTestPerson;
 begin
@@ -878,7 +878,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.PersonCity;
+procedure TTestOPFInsertManualMappingTests.PersonCity;
 var
   VPerson: TTestPerson;
 begin
@@ -908,7 +908,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.PersonPhones;
+procedure TTestOPFInsertManualMappingTests.PersonPhones;
 var
   VPerson: TTestPerson;
 begin
@@ -947,7 +947,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.PersonLanguages;
+procedure TTestOPFInsertManualMappingTests.PersonLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -987,7 +987,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMapping.PersonAggregationChange;
+procedure TTestOPFInsertManualMappingTests.PersonAggregationChange;
 var
   VPerson: TTestPerson;
   VLang: TTestLanguage;
@@ -1020,9 +1020,9 @@ begin
   end;
 end;
 
-{ TTestOPFUpdateManualMapping }
+{ TTestOPFUpdateManualMappingTests }
 
-procedure TTestOPFUpdateManualMapping.City;
+procedure TTestOPFUpdateManualMappingTests.City;
 var
   VCity: TTestCity;
 begin
@@ -1042,7 +1042,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonCity;
+procedure TTestOPFUpdateManualMappingTests.PersonCity;
 var
   VPerson: TTestPerson;
 begin
@@ -1066,7 +1066,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonAddPhones;
+procedure TTestOPFUpdateManualMappingTests.PersonAddPhones;
 var
   VPerson: TTestPerson;
 begin
@@ -1091,7 +1091,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonRemovePhones;
+procedure TTestOPFUpdateManualMappingTests.PersonRemovePhones;
 var
   VPerson: TTestPerson;
 begin
@@ -1114,7 +1114,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonAddLanguages;
+procedure TTestOPFUpdateManualMappingTests.PersonAddLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -1138,7 +1138,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonRemoveLanguages;
+procedure TTestOPFUpdateManualMappingTests.PersonRemoveLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -1160,7 +1160,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonRemoveAddLanguages;
+procedure TTestOPFUpdateManualMappingTests.PersonRemoveAddLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -1189,7 +1189,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonNoLanguagesChange;
+procedure TTestOPFUpdateManualMappingTests.PersonNoLanguagesChange;
 var
   VPerson: TTestPerson;
 begin
@@ -1213,7 +1213,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMapping.PersonAggregationChange;
+procedure TTestOPFUpdateManualMappingTests.PersonAggregationChange;
 var
   VPerson: TTestPerson;
   VLang: TTestLanguage;
@@ -1233,9 +1233,9 @@ begin
   end;
 end;
 
-{ TTestOPFSelectManualMapping }
+{ TTestOPFSelectManualMappingTests }
 
-procedure TTestOPFSelectManualMapping.City;
+procedure TTestOPFSelectManualMappingTests.City;
 var
   VCity: TTestCity;
 begin
@@ -1259,7 +1259,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.PersonAddressCity;
+procedure TTestOPFSelectManualMappingTests.PersonAddressCity;
 var
   VPerson: TTestPerson;
   VAddress: TTestAddress;
@@ -1317,7 +1317,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.PersonCity;
+procedure TTestOPFSelectManualMappingTests.PersonCity;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -1361,7 +1361,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.PersonNullAddressCity;
+procedure TTestOPFSelectManualMappingTests.PersonNullAddressCity;
 var
   VPerson: TTestPerson;
 begin
@@ -1394,7 +1394,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.PersonPhones;
+procedure TTestOPFSelectManualMappingTests.PersonPhones;
 var
   VPerson: TTestPerson;
 begin
@@ -1441,7 +1441,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMapping.PersonLanguages;
+procedure TTestOPFSelectManualMappingTests.PersonLanguages;
 var
   VPerson: TTestPerson;
 begin
@@ -1493,9 +1493,9 @@ begin
   end;
 end;
 
-{ TTestOPFDeleteOneManualMapping }
+{ TTestOPFDeleteOneManualMappingTests }
 
-procedure TTestOPFDeleteOneManualMapping.City;
+procedure TTestOPFDeleteOneManualMappingTests.City;
 begin
   FSession.Dispose(TTestCity, ['5']);
   AssertSQLDriverCommands([
@@ -1503,7 +1503,7 @@ begin
    'ExecSQL ' + CSQLDELETECITY + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMapping.PersonAddress;
+procedure TTestOPFDeleteOneManualMappingTests.PersonAddress;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1530,7 +1530,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMapping.PersonCity;
+procedure TTestOPFDeleteOneManualMappingTests.PersonCity;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1555,7 +1555,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMapping.PersonOnePhone;
+procedure TTestOPFDeleteOneManualMappingTests.PersonOnePhone;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -1585,7 +1585,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMapping.PersonOneLanguage;
+procedure TTestOPFDeleteOneManualMappingTests.PersonOneLanguage;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1610,7 +1610,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMapping.PersonPhones;
+procedure TTestOPFDeleteOneManualMappingTests.PersonPhones;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(2);
@@ -1642,7 +1642,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMapping.PersonLanguages;
+procedure TTestOPFDeleteOneManualMappingTests.PersonLanguages;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1667,9 +1667,9 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-{ TTestOPFDeleteArrayManualMapping }
+{ TTestOPFDeleteArrayManualMappingTests }
 
-procedure TTestOPFDeleteArrayManualMapping.City;
+procedure TTestOPFDeleteArrayManualMappingTests.City;
 begin
   FSession.Dispose(TTestCity, ['13', '22']);
   AssertSQLDriverCommands([
@@ -1678,7 +1678,7 @@ begin
    'ExecSQL ' + CSQLDELETECITY + ' IN (?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMapping.PersonAddress;
+procedure TTestOPFDeleteArrayManualMappingTests.PersonAddress;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1716,7 +1716,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMapping.PersonCity;
+procedure TTestOPFDeleteArrayManualMappingTests.PersonCity;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1751,7 +1751,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMapping.PersonPhones;
+procedure TTestOPFDeleteArrayManualMappingTests.PersonPhones;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(2);
@@ -1793,7 +1793,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMapping.PersonLanguages;
+procedure TTestOPFDeleteArrayManualMappingTests.PersonLanguages;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1823,9 +1823,9 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?)']);
 end;
 
-{ TTestOPFCleanDirtyAttribute }
+{ TTestOPFCleanDirtyAttributeTests }
 
-procedure TTestOPFCleanDirtyAttribute.CacheNotUpdated;
+procedure TTestOPFCleanDirtyAttributeTests.CacheNotUpdated;
 var
   VPerson: TTestPerson;
   VPID: TJCoreOPFPID;
@@ -1846,7 +1846,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.IntegerClear;
+procedure TTestOPFCleanDirtyAttributeTests.IntegerClear;
 var
   VPerson: TTestPerson;
 begin
@@ -1865,7 +1865,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.StringClean;
+procedure TTestOPFCleanDirtyAttributeTests.StringClean;
 var
   VPerson: TTestPerson;
 begin
@@ -1884,7 +1884,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionSimpleChanged;
+procedure TTestOPFCleanDirtyAttributeTests.CompositionSimpleChanged;
 var
   VPerson: TTestPerson;
 begin
@@ -1904,7 +1904,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionChanged;
+procedure TTestOPFCleanDirtyAttributeTests.CompositionChanged;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1926,7 +1926,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionAdded;
+procedure TTestOPFCleanDirtyAttributeTests.CompositionAdded;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1950,7 +1950,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionRemoved;
+procedure TTestOPFCleanDirtyAttributeTests.CompositionRemoved;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1973,7 +1973,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionRemovedAdded;
+procedure TTestOPFCleanDirtyAttributeTests.CompositionRemovedAdded;
 var
   VPerson: TTestPerson;
   VPhone: TTestPhone;
@@ -1999,7 +1999,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.CompositionChangedOrder;
+procedure TTestOPFCleanDirtyAttributeTests.CompositionChangedOrder;
 var
   VPerson: TTestPerson;
   VPhone1, VPhone2: TTestPhone;
@@ -2026,7 +2026,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationSimpleChanged;
+procedure TTestOPFCleanDirtyAttributeTests.AggregationSimpleChanged;
 var
   VPerson: TTestPerson;
   VCity: TTestCity;
@@ -2046,7 +2046,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationChanged;
+procedure TTestOPFCleanDirtyAttributeTests.AggregationChanged;
 var
   VPerson: TTestPerson;
   VLang: TTestLanguage;
@@ -2065,7 +2065,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationAdded;
+procedure TTestOPFCleanDirtyAttributeTests.AggregationAdded;
 var
   VPerson: TTestPerson;
   VLang1, VLang2: TTestLanguage;
@@ -2085,7 +2085,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationRemoved;
+procedure TTestOPFCleanDirtyAttributeTests.AggregationRemoved;
 var
   VPerson: TTestPerson;
   VLang1, VLang2: TTestLanguage;
@@ -2106,7 +2106,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationRemovedAdded;
+procedure TTestOPFCleanDirtyAttributeTests.AggregationRemovedAdded;
 var
   VPerson: TTestPerson;
   VLang1, VLang2, VLang3: TTestLanguage;
@@ -2129,7 +2129,7 @@ begin
   end;
 end;
 
-procedure TTestOPFCleanDirtyAttribute.AggregationChangedOrder;
+procedure TTestOPFCleanDirtyAttributeTests.AggregationChangedOrder;
 var
   VPerson: TTestPerson;
   VLang1, VLang2: TTestLanguage;
@@ -2636,15 +2636,15 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.core', TTestOPFCore);
-  RegisterTest('jcore.opf.metadata', TTestOPFMetadata);
-  RegisterTest('jcore.opf.persistence', TTestOPFPersistence);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMapping);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMapping);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMapping);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteOneManualMapping);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteArrayManualMapping);
-  RegisterTest('jcore.opf.mapping.cleandirty', TTestOPFCleanDirtyAttribute);
+  RegisterTest('jcore.opf.session', TTestOPFSessionTests);
+  RegisterTest('jcore.opf.metadata', TTestOPFMetadataTests);
+  RegisterTest('jcore.opf.mapping.core', TTestOPFMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteOneManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteArrayManualMappingTests);
+  RegisterTest('jcore.opf.mapping.cleandirty', TTestOPFCleanDirtyAttributeTests);
 
 end.
 
