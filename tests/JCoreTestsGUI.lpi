@@ -29,49 +29,32 @@
         <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="5">
+    <RequiredPackages Count="6">
       <Item1>
-        <PackageName Value="JCoreOPFRT"/>
+        <PackageName Value="JCoreTestsRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="JCoreRT"/>
+        <PackageName Value="JCoreOPFRT"/>
       </Item2>
       <Item3>
-        <PackageName Value="FPCUnitTestRunner"/>
+        <PackageName Value="JCoreRT"/>
       </Item3>
       <Item4>
-        <PackageName Value="LCL"/>
+        <PackageName Value="FPCUnitTestRunner"/>
       </Item4>
       <Item5>
-        <PackageName Value="FCL"/>
+        <PackageName Value="LCL"/>
       </Item5>
+      <Item6>
+        <PackageName Value="FCL"/>
+      </Item6>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="1">
       <Unit0>
         <Filename Value="JCoreTestsGUI.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="JCoreTestsGUI"/>
       </Unit0>
-      <Unit1>
-        <Filename Value="testexpression.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestExpression"/>
-      </Unit1>
-      <Unit2>
-        <Filename Value="testdic.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestDIC"/>
-      </Unit2>
-      <Unit3>
-        <Filename Value="testopf.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestOPF"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="testlogger.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestLogger"/>
-      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

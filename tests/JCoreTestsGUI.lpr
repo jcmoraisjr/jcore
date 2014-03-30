@@ -3,8 +3,7 @@ program JCoreTestsGUI;
 {$mode objfpc}{$H+}
 
 uses
-  heaptrc, sysutils, Interfaces, Forms, GuiTestRunner,
-  TestExpression, TestDIC, TestOPF, TestLogger;
+  heaptrc, sysutils, Interfaces, Forms, JCoreTestsRT, GuiTestRunner;
 
 {$R *.res}
 

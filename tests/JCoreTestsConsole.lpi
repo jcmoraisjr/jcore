@@ -27,46 +27,29 @@
         <CommandLineParams Value="-a --format=plain"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="4">
+    <RequiredPackages Count="5">
       <Item1>
-        <PackageName Value="JCoreOPFRT"/>
+        <PackageName Value="JCoreTestsRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="JCoreRT"/>
+        <PackageName Value="JCoreOPFRT"/>
       </Item2>
       <Item3>
-        <PackageName Value="FPCUnitConsoleRunner"/>
+        <PackageName Value="JCoreRT"/>
       </Item3>
       <Item4>
-        <PackageName Value="FCL"/>
+        <PackageName Value="FPCUnitConsoleRunner"/>
       </Item4>
+      <Item5>
+        <PackageName Value="FCL"/>
+      </Item5>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="1">
       <Unit0>
         <Filename Value="JCoreTestsConsole.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="JCoreTestsConsole"/>
       </Unit0>
-      <Unit1>
-        <Filename Value="testexpression.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestExpression"/>
-      </Unit1>
-      <Unit2>
-        <Filename Value="testdic.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestDIC"/>
-      </Unit2>
-      <Unit3>
-        <Filename Value="testopf.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestOPF"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="testlogger.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="TestLogger"/>
-      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

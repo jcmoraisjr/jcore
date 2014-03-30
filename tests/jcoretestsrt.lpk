@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="JCoreTestsRT"/>
+    <AddToProjectUsesSection Value="True"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="core;opf"/>
+        <UnitOutputDirectory Value="../lib/tests/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <MsgFileName Value=""/>
+        </CompilerMessages>
+        <CompilerPath Value="$(CompPath)"/>
+      </Other>
+    </CompilerOptions>
+    <Files Count="4">
+      <Item1>
+        <Filename Value="core/testlogger.pas"/>
+        <UnitName Value="TestLogger"/>
+      </Item1>
+      <Item2>
+        <Filename Value="core/testexpression.pas"/>
+        <UnitName Value="TestExpression"/>
+      </Item2>
+      <Item3>
+        <Filename Value="core/testdic.pas"/>
+        <UnitName Value="TestDIC"/>
+      </Item3>
+      <Item4>
+        <Filename Value="opf/testopf.pas"/>
+        <UnitName Value="TestOPF"/>
+      </Item4>
+    </Files>
+    <Type Value="RunAndDesignTime"/>
+    <RequiredPkgs Count="3">
+      <Item1>
+        <PackageName Value="JCoreOPFRT"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="JCoreRT"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+      </Item3>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
