@@ -5,10 +5,7 @@ unit TestOPFSessionTests;
 interface
 
 uses
-  JCoreOPFSession,
-  JCoreOPFConfig,
-  TestOPFConfig,
-  TestOPFModelIPID;
+  TestOPFConfig;
 
 type
 
@@ -26,7 +23,11 @@ uses
   sysutils,
   fpcunit,
   testregistry,
-  JCoreOPFException;
+  JCoreOPFException,
+  JCoreOPFConfig,
+  JCoreOPFSession,
+  TestOPFModelIPID,
+  TestOPFModelMgr;
 
 { TTestOPFSessionTests }
 

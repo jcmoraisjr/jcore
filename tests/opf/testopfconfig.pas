@@ -111,7 +111,7 @@ type
 implementation
 
 uses
-  TestOPFModelIPID,
+  TestOPFModelMgr,
   TestOPFMappingManual;
 
 { TTestOPFConfig }

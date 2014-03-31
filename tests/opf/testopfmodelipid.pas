@@ -7,9 +7,7 @@ interface
 uses
   fgl,
   JCoreClasses,
-  JCoreEntity,
-  JCoreMetadata,
-  JCoreOPFMetadata;
+  JCoreEntity;
 
 type
 
@@ -113,14 +111,6 @@ type
     property Salary: Currency read FSalary;
   end;
 
-  { TTestOPFModelIPID }
-
-  TTestOPFModelIPID = class(TJCoreOPFModel)
-  protected
-    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
-    procedure InitRegistry; override;
-  end;
-
 implementation
 
 uses
@@ -184,37 +174,6 @@ begin
   FreeAndNil(FCity);
   FreeAndNil(FLanguages);
   inherited Finit;
-end;
-
-{ TTestOPFModelIPID }
-
-function TTestOPFModelIPID.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
-var
-  VMetadata: TJCoreOPFClassMetadata;
-begin
-  VMetadata := inherited BuildMetadata(AClass) as TJCoreOPFClassMetadata;
-  try
-    if AClass = TTestIPIDPerson then
-    begin
-      VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
-      VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
-      VMetadata.AttributeByName('City').CompositionType := jctAggregation;
-    end;
-  except
-    FreeAndNil(VMetadata);
-    raise;
-  end;
-  Result := VMetadata;
-end;
-
-procedure TTestOPFModelIPID.InitRegistry;
-begin
-  inherited InitRegistry;
-  AddClass(TTestIPIDPerson);
-  AddClass(TTestIPIDPhone);
-  AddClass(TTestIPIDLanguage);
-  AddClass(TTestIPIDAddress);
-  AddClass(TTestIPIDCity);
 end;
 
 end.
