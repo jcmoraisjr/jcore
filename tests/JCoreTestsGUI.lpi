@@ -29,25 +29,19 @@
         <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="6">
+    <RequiredPackages Count="4">
       <Item1>
         <PackageName Value="JCoreTestsRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="JCoreOPFRT"/>
+        <PackageName Value="FPCUnitTestRunner"/>
       </Item2>
       <Item3>
-        <PackageName Value="JCoreRT"/>
+        <PackageName Value="LCL"/>
       </Item3>
       <Item4>
-        <PackageName Value="FPCUnitTestRunner"/>
-      </Item4>
-      <Item5>
-        <PackageName Value="LCL"/>
-      </Item5>
-      <Item6>
         <PackageName Value="FCL"/>
-      </Item6>
+      </Item4>
     </RequiredPackages>
     <Units Count="1">
       <Unit0>

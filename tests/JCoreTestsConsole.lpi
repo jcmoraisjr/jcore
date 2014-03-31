@@ -27,22 +27,16 @@
         <CommandLineParams Value="-a --format=plain"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="5">
+    <RequiredPackages Count="3">
       <Item1>
         <PackageName Value="JCoreTestsRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="JCoreOPFRT"/>
+        <PackageName Value="FPCUnitConsoleRunner"/>
       </Item2>
       <Item3>
-        <PackageName Value="JCoreRT"/>
-      </Item3>
-      <Item4>
-        <PackageName Value="FPCUnitConsoleRunner"/>
-      </Item4>
-      <Item5>
         <PackageName Value="FCL"/>
-      </Item5>
+      </Item3>
     </RequiredPackages>
     <Units Count="1">
       <Unit0>
