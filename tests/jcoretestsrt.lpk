@@ -39,8 +39,8 @@
         <UnitName Value="TestOPFConfig"/>
       </Item4>
       <Item5>
-        <Filename Value="opf/testopfmodel.pas"/>
-        <UnitName Value="TestOPFModel"/>
+        <Filename Value="opf/testopfmodelipid.pas"/>
+        <UnitName Value="TestOPFModelIPID"/>
       </Item5>
       <Item6>
         <Filename Value="opf/testopfmetadatatests.pas"/>

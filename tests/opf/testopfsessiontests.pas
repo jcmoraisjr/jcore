@@ -8,7 +8,7 @@ uses
   JCoreOPFSession,
   JCoreOPFConfig,
   TestOPFConfig,
-  TestOPFModel;
+  TestOPFModelIPID;
 
 type
 
@@ -74,14 +74,14 @@ procedure TTestOPFSessionTests.MappingNotFound;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModel.Create);
+  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelIPID.Create);
   VConfiguration.AddDriverClass(TTestEmptyDriver);
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
   VSession := VConfiguration.CreateSession;
   AssertNotNull(VSession);
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     AssertExceptionStore(VSession, VPerson, EJCoreOPFMappingNotFound);
     VConfiguration.AddMappingClass(TTestEmptyMapping);

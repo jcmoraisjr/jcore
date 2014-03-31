@@ -1,4 +1,4 @@
-unit TestOPFModel;
+unit TestOPFModelIPID;
 
 {$mode objfpc}{$H+}
 
@@ -13,18 +13,18 @@ uses
 
 type
 
-  { TTestBase }
+  { TTestIPIDBase }
 
-  TTestBase = class(TJCoreManagedObject)
+  TTestIPIDBase = class(TJCoreManagedObject)
   private
     FPID: IJCorePID;
   published
     property _PID: IJCorePID read FPID write FPID;
   end;
 
-  { TTestSimple }
+  { TTestIPIDSimple }
 
-  TTestSimple = class(TObject)
+  TTestIPIDSimple = class(TObject)
   private
     FPID: IJCorePID;
     FField1: Integer;
@@ -33,9 +33,9 @@ type
     property Field1: Integer read FField1 write FField1;
   end;
 
-  { TTestAddress }
+  { TTestIPIDAddress }
 
-  TTestAddress = class(TTestBase)
+  TTestIPIDAddress = class(TTestIPIDBase)
   private
     FStreet: string;
     FZipCode: string;
@@ -44,29 +44,29 @@ type
     property ZipCode: string read FZipCode write FZipCode;
   end;
 
-  { TTestCity }
+  { TTestIPIDCity }
 
-  TTestCity = class(TTestBase)
+  TTestIPIDCity = class(TTestIPIDBase)
   private
     FName: string;
   published
     property Name: string read FName write FName;
   end;
 
-  { TTestPhone }
+  { TTestIPIDPhone }
 
-  TTestPhone = class(TTestBase)
+  TTestIPIDPhone = class(TTestIPIDBase)
   private
     FNumber: string;
   published
     property Number: string read FNumber write FNumber;
   end;
 
-  TTestPhoneList = specialize TFPGObjectList<TTestPhone>;
+  TTestIPIDPhoneList = specialize TFPGObjectList<TTestIPIDPhone>;
 
-  { TTestLanguage }
+  { TTestIPIDLanguage }
 
-  TTestLanguage = class(TTestBase)
+  TTestIPIDLanguage = class(TTestIPIDBase)
   private
     FName: string;
   public
@@ -75,47 +75,47 @@ type
     property Name: string read FName write FName;
   end;
 
-  TTestLanguageList = specialize TFPGObjectList<TTestLanguage>;
+  TTestIPIDLanguageList = specialize TFPGObjectList<TTestIPIDLanguage>;
 
-  { TTestPerson }
+  { TTestIPIDPerson }
 
-  TTestPerson = class(TTestBase)
+  TTestIPIDPerson = class(TTestIPIDBase)
   private
     FName: string;
     FAge: Integer;
-    FPhones: TTestPhoneList;
-    FAddress: TTestAddress;
-    FCity: TTestCity;
-    FLanguages: TTestLanguageList;
-    function GetLanguages: TTestLanguageList;
-    function GetPhones: TTestPhoneList;
-    procedure SetAddress(AValue: TTestAddress);
-    procedure SetCity(AValue: TTestCity);
-    procedure SetLanguages(AValue: TTestLanguageList);
-    procedure SetPhones(AValue: TTestPhoneList);
+    FPhones: TTestIPIDPhoneList;
+    FAddress: TTestIPIDAddress;
+    FCity: TTestIPIDCity;
+    FLanguages: TTestIPIDLanguageList;
+    function GetLanguages: TTestIPIDLanguageList;
+    function GetPhones: TTestIPIDPhoneList;
+    procedure SetAddress(AValue: TTestIPIDAddress);
+    procedure SetCity(AValue: TTestIPIDCity);
+    procedure SetLanguages(AValue: TTestIPIDLanguageList);
+    procedure SetPhones(AValue: TTestIPIDPhoneList);
   protected
     procedure Finit; override;
   published
     property Name: string read FName write FName;
     property Age: Integer read FAge write FAge;
-    property Phones: TTestPhoneList read GetPhones write SetPhones;
-    property Address: TTestAddress read FAddress write SetAddress;
-    property City: TTestCity read FCity write SetCity;
-    property Languages: TTestLanguageList read GetLanguages write SetLanguages;
+    property Phones: TTestIPIDPhoneList read GetPhones write SetPhones;
+    property Address: TTestIPIDAddress read FAddress write SetAddress;
+    property City: TTestIPIDCity read FCity write SetCity;
+    property Languages: TTestIPIDLanguageList read GetLanguages write SetLanguages;
   end;
 
-  { TTestEmployee }
+  { TTestIPIDEmployee }
 
-  TTestEmployee = class(TTestPerson)
+  TTestIPIDEmployee = class(TTestIPIDPerson)
   private
     FSalary: Currency;
   published
     property Salary: Currency read FSalary;
   end;
 
-  { TTestOPFModel }
+  { TTestOPFModelIPID }
 
-  TTestOPFModel = class(TJCoreOPFModel)
+  TTestOPFModelIPID = class(TJCoreOPFModel)
   protected
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure InitRegistry; override;
@@ -126,37 +126,37 @@ implementation
 uses
   sysutils;
 
-{ TTestLanguage }
+{ TTestIPIDLanguage }
 
-constructor TTestLanguage.Create(const AName: string);
+constructor TTestIPIDLanguage.Create(const AName: string);
 begin
   inherited Create;
   FName := AName;
 end;
 
-{ TTestPerson }
+{ TTestIPIDPerson }
 
-function TTestPerson.GetLanguages: TTestLanguageList;
+function TTestIPIDPerson.GetLanguages: TTestIPIDLanguageList;
 begin
   if not Assigned(FLanguages) then
-    FLanguages := TTestLanguageList.Create;
+    FLanguages := TTestIPIDLanguageList.Create;
   Result := FLanguages;
 end;
 
-function TTestPerson.GetPhones: TTestPhoneList;
+function TTestIPIDPerson.GetPhones: TTestIPIDPhoneList;
 begin
   if not Assigned(FPhones) then
-    FPhones := TTestPhoneList.Create;
+    FPhones := TTestIPIDPhoneList.Create;
   Result := FPhones;
 end;
 
-procedure TTestPerson.SetAddress(AValue: TTestAddress);
+procedure TTestIPIDPerson.SetAddress(AValue: TTestIPIDAddress);
 begin
   FreeAndNil(FAddress);
   FAddress := AValue;
 end;
 
-procedure TTestPerson.SetCity(AValue: TTestCity);
+procedure TTestIPIDPerson.SetCity(AValue: TTestIPIDCity);
 begin
   if FCity <> AValue then
   begin
@@ -165,19 +165,19 @@ begin
   end;
 end;
 
-procedure TTestPerson.SetLanguages(AValue: TTestLanguageList);
+procedure TTestIPIDPerson.SetLanguages(AValue: TTestIPIDLanguageList);
 begin
   FreeAndNil(FLanguages);
   FLanguages := AValue;
 end;
 
-procedure TTestPerson.SetPhones(AValue: TTestPhoneList);
+procedure TTestIPIDPerson.SetPhones(AValue: TTestIPIDPhoneList);
 begin
   FreeAndNil(FPhones);
   FPhones := AValue;
 end;
 
-procedure TTestPerson.Finit;
+procedure TTestIPIDPerson.Finit;
 begin
   FreeAndNil(FPhones);
   FreeAndNil(FAddress);
@@ -186,15 +186,15 @@ begin
   inherited Finit;
 end;
 
-{ TTestOPFModel }
+{ TTestOPFModelIPID }
 
-function TTestOPFModel.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+function TTestOPFModelIPID.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
   VMetadata := inherited BuildMetadata(AClass) as TJCoreOPFClassMetadata;
   try
-    if AClass = TTestPerson then
+    if AClass = TTestIPIDPerson then
     begin
       VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
       VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
@@ -207,14 +207,14 @@ begin
   Result := VMetadata;
 end;
 
-procedure TTestOPFModel.InitRegistry;
+procedure TTestOPFModelIPID.InitRegistry;
 begin
   inherited InitRegistry;
-  AddClass(TTestPerson);
-  AddClass(TTestPhone);
-  AddClass(TTestLanguage);
-  AddClass(TTestAddress);
-  AddClass(TTestCity);
+  AddClass(TTestIPIDPerson);
+  AddClass(TTestIPIDPhone);
+  AddClass(TTestIPIDLanguage);
+  AddClass(TTestIPIDAddress);
+  AddClass(TTestIPIDCity);
 end;
 
 end.

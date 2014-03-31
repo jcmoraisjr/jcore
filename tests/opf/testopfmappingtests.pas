@@ -45,30 +45,30 @@ uses
   sysutils,
   testregistry,
   JCoreOPFMetadata,
-  TestOPFModel;
+  TestOPFModelIPID;
 
 { TTestOPFMappingTests }
 
 procedure TTestOPFMappingTests.TransactionPIDList;
 var
-  VPerson: TTestPerson;
-  VCity: TTestCity;
-  VPhone1: TTestPhone;
-  VPhone2: TTestPhone;
-  VLang1: TTestLanguage;
-  VLang2: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VCity: TTestIPIDCity;
+  VPhone1: TTestIPIDPhone;
+  VPhone2: TTestIPIDPhone;
+  VLang1: TTestIPIDLanguage;
+  VLang2: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VCity := TTestCity.Create;
+    VCity := TTestIPIDCity.Create;
     VPerson.City := VCity;
-    VPhone1 := TTestPhone.Create;
+    VPhone1 := TTestIPIDPhone.Create;
     VPerson.Phones.Add(VPhone1);
-    VPhone2 := TTestPhone.Create;
+    VPhone2 := TTestIPIDPhone.Create;
     VPerson.Phones.Add(VPhone2);
-    VLang1 := TTestLanguage.Create('1');
+    VLang1 := TTestIPIDLanguage.Create('1');
     VPerson.Languages.Add(VLang1);
-    VLang2 := TTestLanguage.Create('2');
+    VLang2 := TTestIPIDLanguage.Create('2');
     VPerson.Languages.Add(VLang2);
     VPerson.Languages.Add(VLang2);
     VLang2.AddRef;
@@ -102,12 +102,12 @@ end;
 
 procedure TTestOPFMappingTests.StoreOwnerDontUpdateAggregations;
 var
-  VPerson: TTestPerson;
-  VLang: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang := TTestLanguage.Create('english');
+    VLang := TTestIPIDLanguage.Create('english');
     VPerson.Languages.Add(VLang);
     Session.Store(VPerson);
     AssertNotNull('lang pid', VLang._PID);
@@ -123,18 +123,18 @@ end;
 
 procedure TTestOPFMappingTests.FailOwnOwnedComposition;
 var
-  VPerson: TTestPerson;
-  VLang: TTestLanguage;
-  VPhone: TTestPhone;
+  VPerson: TTestIPIDPerson;
+  VLang: TTestIPIDLanguage;
+  VPhone: TTestIPIDPhone;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang := TTestLanguage.Create('english');
+    VLang := TTestIPIDLanguage.Create('english');
     VPerson.Languages.Add(VLang);
     VPerson.Languages.Add(VLang);
     VLang.AddRef;
     Session.Store(VPerson);
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPerson.Phones.Add(VPhone);
     VPerson.Phones.Add(VPhone);
     VPhone.AddRef;
@@ -149,10 +149,10 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CacheNotUpdated;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
   VPID: TJCoreOPFPID;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Age := 0;
     VPID := Session.AcquireMapping(VPerson.ClassType).AcquirePID(VPerson);
@@ -170,9 +170,9 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.IntegerClear;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Age := 30;
     Session.Store(VPerson);
@@ -189,9 +189,9 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.StringClean;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'Some name';
     Session.Store(VPerson);
@@ -208,11 +208,11 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CompositionSimpleChanged;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VPerson.Address := TTestAddress.Create;
+    VPerson.Address := TTestIPIDAddress.Create;
     VPerson.Address.Street := 'freeway s/n';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
@@ -228,12 +228,12 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CompositionChanged;
 var
-  VPerson: TTestPerson;
-  VPhone: TTestPhone;
+  VPerson: TTestIPIDPerson;
+  VPhone: TTestIPIDPhone;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '123';
     VPerson.Phones.Add(VPhone);
     Session.Store(VPerson);
@@ -250,18 +250,18 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CompositionAdded;
 var
-  VPerson: TTestPerson;
-  VPhone: TTestPhone;
+  VPerson: TTestIPIDPerson;
+  VPhone: TTestIPIDPhone;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '321';
     VPerson.Phones.Add(VPhone);
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertFalse('person dirty1', VPerson._PID.IsDirty);
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '321-321';
     VPerson.Phones.Add(VPhone);
     AssertTrue('person dirty2', VPerson._PID.IsDirty);
@@ -274,15 +274,15 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CompositionRemoved;
 var
-  VPerson: TTestPerson;
-  VPhone: TTestPhone;
+  VPerson: TTestIPIDPerson;
+  VPhone: TTestIPIDPhone;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '456';
     VPerson.Phones.Add(VPhone);
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '456-789';
     VPerson.Phones.Add(VPhone);
     Session.Store(VPerson);
@@ -297,22 +297,22 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CompositionRemovedAdded;
 var
-  VPerson: TTestPerson;
-  VPhone: TTestPhone;
+  VPerson: TTestIPIDPerson;
+  VPhone: TTestIPIDPhone;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '456';
     VPerson.Phones.Add(VPhone);
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '456-789';
     VPerson.Phones.Add(VPhone);
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Phones.Delete(1);
-    VPhone := TTestPhone.Create;
+    VPhone := TTestIPIDPhone.Create;
     VPhone.Number := '456-7890';
     VPerson.Phones.Add(VPhone);
     AssertTrue('person dirty2', VPerson._PID.IsDirty);
@@ -323,14 +323,14 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.CompositionChangedOrder;
 var
-  VPerson: TTestPerson;
-  VPhone1, VPhone2: TTestPhone;
+  VPerson: TTestIPIDPerson;
+  VPhone1, VPhone2: TTestIPIDPhone;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VPhone1 := TTestPhone.Create;
+    VPhone1 := TTestIPIDPhone.Create;
     VPhone1.Number := '456';
-    VPhone2 := TTestPhone.Create;
+    VPhone2 := TTestIPIDPhone.Create;
     VPhone2.Number := '789';
     VPerson.Phones.Add(VPhone1);
     VPerson.Phones.Add(VPhone2);
@@ -350,12 +350,12 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.AggregationSimpleChanged;
 var
-  VPerson: TTestPerson;
-  VCity: TTestCity;
+  VPerson: TTestIPIDPerson;
+  VCity: TTestIPIDCity;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VCity := TTestCity.Create;
+    VCity := TTestIPIDCity.Create;
     VCity.Name := 'sampa';
     VPerson.City := VCity;
     Session.Store(VPerson);
@@ -370,12 +370,12 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.AggregationChanged;
 var
-  VPerson: TTestPerson;
-  VLang: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang := TTestLanguage.Create('english');
+    VLang := TTestIPIDLanguage.Create('english');
     VPerson.Languages.Add(VLang);
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
@@ -389,17 +389,17 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.AggregationAdded;
 var
-  VPerson: TTestPerson;
-  VLang1, VLang2: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang1, VLang2: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang1 := TTestLanguage.Create('english');
+    VLang1 := TTestIPIDLanguage.Create('english');
     VPerson.Languages.Add(VLang1);
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertFalse('person dirty1', VPerson._PID.IsDirty);
-    VLang2 := TTestLanguage.Create('german');
+    VLang2 := TTestIPIDLanguage.Create('german');
     VPerson.Languages.Add(VLang2);
     AssertTrue('person dirty2', VPerson._PID.IsDirty);
   finally
@@ -409,13 +409,13 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.AggregationRemoved;
 var
-  VPerson: TTestPerson;
-  VLang1, VLang2: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang1, VLang2: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang1 := TTestLanguage.Create('spanish');
-    VLang2 := TTestLanguage.Create('italian');
+    VLang1 := TTestIPIDLanguage.Create('spanish');
+    VLang2 := TTestIPIDLanguage.Create('italian');
     VPerson.Languages.Add(VLang1);
     VPerson.Languages.Add(VLang2);
     Session.Store(VPerson);
@@ -430,20 +430,20 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.AggregationRemovedAdded;
 var
-  VPerson: TTestPerson;
-  VLang1, VLang2, VLang3: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang1, VLang2, VLang3: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang1 := TTestLanguage.Create('italian');
-    VLang2 := TTestLanguage.Create('german');
+    VLang1 := TTestIPIDLanguage.Create('italian');
+    VLang2 := TTestIPIDLanguage.Create('german');
     VPerson.Languages.Add(VLang1);
     VPerson.Languages.Add(VLang2);
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertFalse('person dirty1', VPerson._PID.IsDirty);
     VPerson.Languages.Delete(1);
-    VLang3 := TTestLanguage.Create('portuguese');
+    VLang3 := TTestIPIDLanguage.Create('portuguese');
     VPerson.Languages.Add(VLang3);
     AssertTrue('person dirty2', VPerson._PID.IsDirty);
   finally
@@ -453,13 +453,13 @@ end;
 
 procedure TTestOPFCleanDirtyAttributeTests.AggregationChangedOrder;
 var
-  VPerson: TTestPerson;
-  VLang1, VLang2: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang1, VLang2: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang1 := TTestLanguage.Create('english');
-    VLang2 := TTestLanguage.Create('german');
+    VLang1 := TTestIPIDLanguage.Create('english');
+    VLang2 := TTestIPIDLanguage.Create('german');
     VPerson.Languages.Add(VLang1);
     VPerson.Languages.Add(VLang2);
     Session.Store(VPerson);

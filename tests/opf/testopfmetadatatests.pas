@@ -26,16 +26,16 @@ uses
   testregistry,
   JCoreEntity,
   JCoreOPFMetadata,
-  TestOPFModel;
+  TestOPFModelIPID;
 
 { TTestOPFMetadataTests }
 
 procedure TTestOPFMetadataTests.CreatePID;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
   VPID: IJCorePID;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     AssertNull(VPerson._PID);
     Session.Store(VPerson);
@@ -51,7 +51,7 @@ procedure TTestOPFMetadataTests.AttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
-  VMetadata := Session.AcquireMetadata(TTestPerson);
+  VMetadata := Session.AcquireMetadata(TTestIPIDPerson);
   AssertEquals('meta.cnt', 6, VMetadata.AttributeCount);
   AssertEquals('meta0.name', 'Name', VMetadata[0].Name);
   AssertEquals('meta1.name', 'Age', VMetadata[1].Name);
@@ -65,7 +65,7 @@ procedure TTestOPFMetadataTests.InheritedAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
-  VMetadata := Session.AcquireMetadata(TTestEmployee);
+  VMetadata := Session.AcquireMetadata(TTestIPIDEmployee);
   AssertEquals('meta.cnt', 1, VMetadata.AttributeCount);
   AssertEquals('meta0.name', 'Salary', VMetadata[0].Name);
 end;
@@ -74,7 +74,7 @@ procedure TTestOPFMetadataTests.NonPidAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
-  VMetadata := Session.AcquireMetadata(TTestSimple);
+  VMetadata := Session.AcquireMetadata(TTestIPIDSimple);
   AssertEquals('meta.cnt', 1, VMetadata.AttributeCount);
   AssertEquals('meta0.name', 'Field1', VMetadata[0].Name);
 end;

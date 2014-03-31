@@ -77,16 +77,16 @@ implementation
 uses
   testregistry,
   sysutils,
-  TestOPFModel,
+  TestOPFModelIPID,
   TestOPFMappingManual;
 
 { TTestOPFInsertManualMappingTests }
 
 procedure TTestOPFInsertManualMappingTests.Person;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'TheName';
     VPerson.Age := 15;
@@ -105,13 +105,13 @@ end;
 
 procedure TTestOPFInsertManualMappingTests.PersonAddress;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'name';
     VPerson.Age := 25;
-    VPerson.Address := TTestAddress.Create;
+    VPerson.Address := TTestIPIDAddress.Create;
     VPerson.Address.Street := 'route 66';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
@@ -136,13 +136,13 @@ end;
 
 procedure TTestOPFInsertManualMappingTests.PersonCity;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'SomeName';
     VPerson.Age := 25;
-    VPerson.City := TTestCity.Create;
+    VPerson.City := TTestIPIDCity.Create;
     VPerson.City.Name := 'CityName';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
@@ -166,15 +166,15 @@ end;
 
 procedure TTestOPFInsertManualMappingTests.PersonPhones;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'thename';
     VPerson.Age := 10;
-    VPerson.Phones.Add(TTestPhone.Create);
+    VPerson.Phones.Add(TTestIPIDPhone.Create);
     VPerson.Phones[0].Number := '636-3626';
-    VPerson.Phones.Add(TTestPhone.Create);
+    VPerson.Phones.Add(TTestIPIDPhone.Create);
     VPerson.Phones[1].Number := '212-4321';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
@@ -205,13 +205,13 @@ end;
 
 procedure TTestOPFInsertManualMappingTests.PersonLanguages;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'SomeName';
-    VPerson.Languages.Add(TTestLanguage.Create('English'));
-    VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('English'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('Spanish'));
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
@@ -245,12 +245,12 @@ end;
 
 procedure TTestOPFInsertManualMappingTests.PersonAggregationChange;
 var
-  VPerson: TTestPerson;
-  VLang: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
-    VLang := TTestLanguage.Create('portuguese');
+    VLang := TTestIPIDLanguage.Create('portuguese');
     Session.Store(VLang);
     AssertNotNull('lang pid', VLang._PID);
     AssertEquals('lang oid', 1, VLang._PID.OID.AsInteger);
@@ -280,9 +280,9 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.City;
 var
-  VCity: TTestCity;
+  VCity: TTestIPIDCity;
 begin
-  VCity := TTestCity.Create;
+  VCity := TTestIPIDCity.Create;
   try
     VCity.Name := 'TheName';
     Session.Store(VCity);
@@ -300,9 +300,9 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonCity;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'TheName';
     VPerson.Age := 15;
@@ -324,13 +324,13 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonAddPhones;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'somename';
-    VPerson.Phones.Add(TTestPhone.Create);
-    VPerson.Phones.Add(TTestPhone.Create);
+    VPerson.Phones.Add(TTestIPIDPhone.Create);
+    VPerson.Phones.Add(TTestIPIDPhone.Create);
     VPerson.Phones[0].Number := '123';
     VPerson.Phones[1].Number := '456';
     Session.Store(VPerson);
@@ -349,13 +349,13 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonRemovePhones;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'name';
-    VPerson.Phones.Add(TTestPhone.Create);
-    VPerson.Phones.Add(TTestPhone.Create);
+    VPerson.Phones.Add(TTestIPIDPhone.Create);
+    VPerson.Phones.Add(TTestIPIDPhone.Create);
     VPerson.Phones[0].Number := '123';
     VPerson.Phones[1].Number := '456';
     Session.Store(VPerson);
@@ -372,14 +372,14 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonAddLanguages;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'somename';
-    VPerson.Languages.Add(TTestLanguage.Create('german'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('german'));
     Session.Store(VPerson);
-    VPerson.Languages.Add(TTestLanguage.Create('spanish'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish'));
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
@@ -396,13 +396,13 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonRemoveLanguages;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'thename';
-    VPerson.Languages.Add(TTestLanguage.Create('italian'));
-    VPerson.Languages.Add(TTestLanguage.Create('portuguese'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('italian'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese'));
     Session.Store(VPerson);
     VPerson.Languages.Delete(0);
     TTestSQLDriver.Commands.Clear;
@@ -418,16 +418,16 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonRemoveAddLanguages;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'aname';
-    VPerson.Languages.Add(TTestLanguage.Create('English'));
-    VPerson.Languages.Add(TTestLanguage.Create('Brazilian portuguese'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('English'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('Brazilian portuguese'));
     Session.Store(VPerson);
     VPerson.Languages.Delete(0);
-    VPerson.Languages.Add(TTestLanguage.Create('Spanish'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('Spanish'));
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
@@ -447,12 +447,12 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonNoLanguagesChange;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'SomeName';
-    VPerson.Languages.Add(TTestLanguage.Create('English'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('English'));
     Session.Store(VPerson);
     TTestSQLDriver.Commands.Clear;
     VPerson.Name := 'anothername';
@@ -471,13 +471,13 @@ end;
 
 procedure TTestOPFUpdateManualMappingTests.PersonAggregationChange;
 var
-  VPerson: TTestPerson;
-  VLang: TTestLanguage;
+  VPerson: TTestIPIDPerson;
+  VLang: TTestIPIDLanguage;
 begin
-  VPerson := TTestPerson.Create;
+  VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Name := 'name';
-    VLang := TTestLanguage.Create('english');
+    VLang := TTestIPIDLanguage.Create('english');
     VPerson.Languages.Add(VLang);
     Session.Store(VPerson);
     TTestSQLDriver.Commands.Clear;
@@ -493,13 +493,13 @@ end;
 
 procedure TTestOPFSelectManualMappingTests.City;
 var
-  VCity: TTestCity;
+  VCity: TTestIPIDCity;
 begin
   // city
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('thecityname');
 
-  VCity := Session.Retrieve(TTestCity, '15') as TTestCity;
+  VCity := Session.Retrieve(TTestIPIDCity, '15') as TTestIPIDCity;
   try
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -517,9 +517,9 @@ end;
 
 procedure TTestOPFSelectManualMappingTests.PersonAddressCity;
 var
-  VPerson: TTestPerson;
-  VAddress: TTestAddress;
-  VCity: TTestCity;
+  VPerson: TTestIPIDPerson;
+  VAddress: TTestIPIDAddress;
+  VCity: TTestIPIDCity;
 begin
   // person
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -537,7 +537,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('thecity');
 
-  VPerson := Session.Retrieve(TTestPerson, '2') as TTestPerson;
+  VPerson := Session.Retrieve(TTestIPIDPerson, '2') as TTestIPIDPerson;
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -575,8 +575,8 @@ end;
 
 procedure TTestOPFSelectManualMappingTests.PersonCity;
 var
-  VPerson: TTestPerson;
-  VCity: TTestCity;
+  VPerson: TTestIPIDPerson;
+  VCity: TTestIPIDCity;
 begin
   // person
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -589,7 +589,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('nameofcity');
 
-  VPerson := Session.Retrieve(TTestPerson, '8') as TTestPerson;
+  VPerson := Session.Retrieve(TTestIPIDPerson, '8') as TTestIPIDPerson;
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -619,7 +619,7 @@ end;
 
 procedure TTestOPFSelectManualMappingTests.PersonNullAddressCity;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
   // person
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -628,7 +628,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
-  VPerson := Session.Retrieve(TTestPerson, '18') as TTestPerson;
+  VPerson := Session.Retrieve(TTestIPIDPerson, '18') as TTestIPIDPerson;
   try
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -652,7 +652,7 @@ end;
 
 procedure TTestOPFSelectManualMappingTests.PersonPhones;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
   // person
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -668,7 +668,7 @@ begin
   TTestSQLDriver.Data.Add('12');
   TTestSQLDriver.Data.Add('555');
 
-  VPerson := Session.Retrieve(TTestPerson, '9') as TTestPerson;
+  VPerson := Session.Retrieve(TTestIPIDPerson, '9') as TTestIPIDPerson;
   try
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -699,7 +699,7 @@ end;
 
 procedure TTestOPFSelectManualMappingTests.PersonLanguages;
 var
-  VPerson: TTestPerson;
+  VPerson: TTestIPIDPerson;
 begin
   // person
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -719,7 +719,7 @@ begin
   TTestSQLDriver.Data.Add('german');
 
   // let's go
-  VPerson := Session.Retrieve(TTestPerson, '5') as TTestPerson;
+  VPerson := Session.Retrieve(TTestIPIDPerson, '5') as TTestIPIDPerson;
   try
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -753,7 +753,7 @@ end;
 
 procedure TTestOPFDeleteOneManualMappingTests.City;
 begin
-  Session.Dispose(TTestCity, ['5']);
+  Session.Dispose(TTestIPIDCity, ['5']);
   AssertSQLDriverCommands([
    'WriteInteger 5',
    'ExecSQL ' + CSQLDELETECITY + '=?']);
@@ -769,7 +769,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('4');
 
-  Session.Dispose(TTestPerson, ['12']);
+  Session.Dispose(TTestIPIDPerson, ['12']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -796,7 +796,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['3']);
+  Session.Dispose(TTestIPIDPerson, ['3']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -824,7 +824,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['7']);
+  Session.Dispose(TTestIPIDPerson, ['7']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -851,7 +851,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['6']);
+  Session.Dispose(TTestIPIDPerson, ['6']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -880,7 +880,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['2']);
+  Session.Dispose(TTestIPIDPerson, ['2']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -908,7 +908,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['5']);
+  Session.Dispose(TTestIPIDPerson, ['5']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -927,7 +927,7 @@ end;
 
 procedure TTestOPFDeleteArrayManualMappingTests.City;
 begin
-  Session.Dispose(TTestCity, ['13', '22']);
+  Session.Dispose(TTestIPIDCity, ['13', '22']);
   AssertSQLDriverCommands([
    'WriteInteger 13',
    'WriteInteger 22',
@@ -946,7 +946,7 @@ begin
   TTestSQLDriver.Data.Add('13');
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['9', '11', '16']);
+  Session.Dispose(TTestIPIDPerson, ['9', '11', '16']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -984,7 +984,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['21', '22', '23']);
+  Session.Dispose(TTestIPIDPerson, ['21', '22', '23']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -1023,7 +1023,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['10', '12', '14']);
+  Session.Dispose(TTestIPIDPerson, ['10', '12', '14']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -1060,7 +1060,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
 
-  Session.Dispose(TTestPerson, ['15', '18']);
+  Session.Dispose(TTestIPIDPerson, ['15', '18']);
 
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);

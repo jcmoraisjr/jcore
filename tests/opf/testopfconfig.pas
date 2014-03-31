@@ -111,7 +111,7 @@ type
 implementation
 
 uses
-  TestOPFModel,
+  TestOPFModelIPID,
   TestOPFMappingManual;
 
 { TTestOPFConfig }
@@ -196,7 +196,7 @@ var
   VDriverClass: TJCoreOPFDriverClass;
   VMappingClass: TJCoreOPFMappingClass;
 begin
-  Result := TTestOPFConfig.Create(TTestOPFModel.Create);
+  Result := TTestOPFConfig.Create(TTestOPFModelIPID.Create);
   try
     for VDriverClass in ADriverClassArray do
       Result.AddDriverClass(VDriverClass);
