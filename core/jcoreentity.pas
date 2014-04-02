@@ -51,7 +51,71 @@ type
     property IsPersistent: Boolean read GetIsPersistent;
   end;
 
+  { TJCoreEntityProxy }
+
+  {$M+}
+  TJCoreEntityProxy = class(TObject)
+  private
+    FPID: IJCorePID;
+  public
+    constructor Create(const APID: IJCorePID);
+    function IsDirty: Boolean;
+    function IsPersistent: Boolean;
+    function OID: IJCoreOID;
+    function Owner: IJCorePID;
+    function PID: IJCorePID;
+  end;
+  {$M-}
+
 implementation
+
+{ TJCoreEntityProxy }
+
+constructor TJCoreEntityProxy.Create(const APID: IJCorePID);
+begin
+  inherited Create;
+  FPID := APID;
+end;
+
+function TJCoreEntityProxy.IsDirty: Boolean;
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    Result := FPID.IsDirty
+  else
+    Result := True;
+end;
+
+function TJCoreEntityProxy.IsPersistent: Boolean;
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    Result := FPID.IsPersistent
+  else
+    Result := False;
+end;
+
+function TJCoreEntityProxy.OID: IJCoreOID;
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    Result := FPID.OID
+  else
+    Result := nil;
+end;
+
+function TJCoreEntityProxy.Owner: IJCorePID;
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    Result := FPID.Owner
+  else
+    Result := nil;
+end;
+
+function TJCoreEntityProxy.PID: IJCorePID;
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    Result := FPID
+  else
+    Result := nil;
+end;
 
 end.
 

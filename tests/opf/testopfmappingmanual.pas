@@ -87,6 +87,16 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
+  { TTestProxyCitySQLMapping }
+
+  TTestProxyCitySQLMapping = class(TTestIPIDCitySQLMapping)
+  protected
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
+  end;
+
   { TTestIPIDPhoneSQLMapping }
 
   TTestIPIDPhoneSQLMapping = class(TTestAbstractSQLMapping)
@@ -145,7 +155,8 @@ implementation
 
 uses
   sysutils,
-  TestOPFModelIPID;
+  TestOPFModelIPID,
+  TestOPFModelProxy;
 
 { TTestAbstractSQLMapping }
 
@@ -374,6 +385,29 @@ end;
 class function TTestIPIDCitySQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDCity;
+end;
+
+{ TTestProxyCitySQLMapping }
+
+procedure TTestProxyCitySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+var
+  VCity: TTestProxyCity;
+begin
+  VCity := APID.Entity as TTestProxyCity;
+  VCity.Name := Driver.ReadString;
+end;
+
+procedure TTestProxyCitySQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
+var
+  VCity: TTestProxyCity;
+begin
+  VCity := APID.Entity as TTestProxyCity;
+  Driver.WriteString(VCity.Name);
+end;
+
+class function TTestProxyCitySQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestProxyCity;
 end;
 
 { TTestIPIDPhoneSQLMapping }

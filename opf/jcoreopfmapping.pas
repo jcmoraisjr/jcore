@@ -46,8 +46,11 @@ type
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
     FModel: TJCoreOPFModel;
+    function AcquirePIDFromIntfProp(const AEntity: TObject; APropInfo: PPropInfo): TJCoreOPFPID;
+    function AcquirePIDFromProxyField(const AEntity: TObject; AFieldAddr: Pointer): TJCoreOPFPID;
   protected
     function CreatePID(const AEntity: TObject): TJCoreOPFPID; virtual;
+    function CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
@@ -144,9 +147,40 @@ begin
   Result := Model.AcquireMetadata(AClass);
 end;
 
+function TJCoreOPFMapping.AcquirePIDFromIntfProp(const AEntity: TObject;
+  APropInfo: PPropInfo): TJCoreOPFPID;
+begin
+  Result := GetInterfaceProp(AEntity, APropInfo) as TJCoreOPFPID;
+  if not Assigned(Result) then
+  begin
+    Result := CreatePID(AEntity);
+    SetInterfaceProp(AEntity, APropInfo, Result as IJCorePID);
+  end;
+end;
+
+function TJCoreOPFMapping.AcquirePIDFromProxyField(const AEntity: TObject;
+  AFieldAddr: Pointer): TJCoreOPFPID;
+var
+  VProxy: TJCoreEntityProxy;
+begin
+  VProxy := TObject(AFieldAddr^) as TJCoreEntityProxy;
+  if not Assigned(VProxy) then
+  begin
+    Result := CreatePID(AEntity);
+    VProxy := CreateProxy(Result);
+    TJCoreEntityProxy(AFieldAddr^) := VProxy;
+  end else
+    Result := VProxy.PID as TJCoreOPFPID;
+end;
+
 function TJCoreOPFMapping.CreatePID(const AEntity: TObject): TJCoreOPFPID;
 begin
   Result := TJCoreOPFPID.Create(Self, AEntity, AcquireMetadata(AEntity.ClassType));
+end;
+
+function TJCoreOPFMapping.CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy;
+begin
+  Result := TJCoreEntityProxy.Create(APID);
 end;
 
 procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);
@@ -177,23 +211,24 @@ end;
 
 function TJCoreOPFMapping.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
 var
-  VPID: IJCorePID;
   VPropInfo: PPropInfo;
+  VFieldAddr: Pointer;
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
   VPropInfo := GetPropInfo(AEntity, SPID);
-  if not Assigned(VPropInfo) then
-    raise EJCoreOPFPersistentIDFieldNotFound.Create(AEntity.ClassName);
-  VPID := GetInterfaceProp(AEntity, VPropInfo) as IJCorePID;
-  if Assigned(VPID) then
+  if Assigned(VPropInfo) then
   begin
-    Result := VPID as TJCoreOPFPID;
+    if VPropInfo^.PropType^.Kind = tkInterface then
+      Result := AcquirePIDFromIntfProp(AEntity, VPropInfo)
+    else
+      raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
   end else
   begin
-    Result := CreatePID(AEntity);
-    VPID := Result as IJCorePID;
-    SetInterfaceProp(AEntity, VPropInfo, VPID);
+    VFieldAddr := AEntity.FieldAddress(SProxy);
+    if not Assigned(VFieldAddr) then
+      raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
+    Result := AcquirePIDFromProxyField(AEntity, VFieldAddr);
   end;
   Mapper.AddInTransactionPID(Result);
 end;

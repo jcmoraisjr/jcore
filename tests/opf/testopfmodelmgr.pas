@@ -18,11 +18,20 @@ type
     procedure InitRegistry; override;
   end;
 
+  { TTestOPFModelProxy }
+
+  TTestOPFModelProxy = class(TJCoreOPFModel)
+  protected
+    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
+    procedure InitRegistry; override;
+  end;
+
 implementation
 
 uses
   sysutils,
-  TestOPFModelIPID;
+  TestOPFModelIPID,
+  TestOPFModelProxy;
 
 { TTestOPFModelIPID }
 
@@ -53,6 +62,19 @@ begin
   AddClass(TTestIPIDLanguage);
   AddClass(TTestIPIDAddress);
   AddClass(TTestIPIDCity);
+end;
+
+{ TTestOPFModelProxy }
+
+function TTestOPFModelProxy.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+begin
+  Result := inherited BuildMetadata(AClass);
+end;
+
+procedure TTestOPFModelProxy.InitRegistry;
+begin
+  inherited InitRegistry;
+  AddClass(TTestProxyCity);
 end;
 
 end.

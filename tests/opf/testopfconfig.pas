@@ -76,6 +76,13 @@ type
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
+  { TTestOPFProxyTestCase }
+
+  TTestOPFProxyTestCase = class(TTestOPFAbstractTestCase)
+  protected
+    function InternalMappingClassArray: TTestOPFMappingClassArray; override;
+  end;
+
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
@@ -252,6 +259,14 @@ begin
   Result[4] := TTestIPIDCitySQLMapping;
   Result[5] := TTestIPIDPhoneSQLMapping;
   Result[6] := TTestIPIDLanguageSQLMapping;
+end;
+
+{ TTestOPFProxyTestCase }
+
+function TTestOPFProxyTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+begin
+  SetLength(Result, 1);
+  Result[0] := TTestProxyCitySQLMapping;
 end;
 
 { TTestEmptyDriver }

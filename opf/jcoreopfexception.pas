@@ -42,9 +42,9 @@ type
     constructor Create;
   end;
 
-  { EJCoreOPFPersistentIDFieldNotFound }
+  { EJCoreOPFPersistentIDNotFound }
 
-  EJCoreOPFPersistentIDFieldNotFound = class(EJCoreOPF)
+  EJCoreOPFPersistentIDNotFound = class(EJCoreOPF)
   public
     constructor Create(const AClassName: string);
   end;
@@ -133,9 +133,9 @@ constructor EJCoreOPFUndefinedDriver.Create;
 begin
 end;
 
-{ EJCoreOPFPersistentIDFieldNotFound }
+{ EJCoreOPFPersistentIDNotFound }
 
-constructor EJCoreOPFPersistentIDFieldNotFound.Create(const AClassName: string);
+constructor EJCoreOPFPersistentIDNotFound.Create(const AClassName: string);
 begin
 end;
 

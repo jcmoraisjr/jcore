@@ -9,14 +9,21 @@ uses
 
 type
 
-  { TTestOPFMetadataTests }
+  { TTestOPFIPIDMetadataTests }
 
-  TTestOPFMetadataTests = class(TTestOPFIPIDTestCase)
+  TTestOPFIPIDMetadataTests = class(TTestOPFIPIDTestCase)
   published
     procedure CreateIPID;
     procedure AttributeList;
     procedure InheritedAttributeList;
     procedure NonPidAttributeList;
+  end;
+
+  { TTestOPFProxyMetadataTests }
+
+  TTestOPFProxyMetadataTests = class(TTestOPFProxyTestCase)
+  published
+    procedure CreateProxy;
   end;
 
 implementation
@@ -26,11 +33,12 @@ uses
   testregistry,
   JCoreEntity,
   JCoreOPFMetadata,
-  TestOPFModelIPID;
+  TestOPFModelIPID,
+  TestOPFModelProxy;
 
-{ TTestOPFMetadataTests }
+{ TTestOPFIPIDMetadataTests }
 
-procedure TTestOPFMetadataTests.CreateIPID;
+procedure TTestOPFIPIDMetadataTests.CreateIPID;
 var
   VPerson: TTestIPIDPerson;
   VPID: IJCorePID;
@@ -47,7 +55,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadataTests.AttributeList;
+procedure TTestOPFIPIDMetadataTests.AttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -61,7 +69,7 @@ begin
   AssertEquals('meta5.name', 'Languages', VMetadata[5].Name);
 end;
 
-procedure TTestOPFMetadataTests.InheritedAttributeList;
+procedure TTestOPFIPIDMetadataTests.InheritedAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -70,7 +78,7 @@ begin
   AssertEquals('meta0.name', 'Salary', VMetadata[0].Name);
 end;
 
-procedure TTestOPFMetadataTests.NonPidAttributeList;
+procedure TTestOPFIPIDMetadataTests.NonPidAttributeList;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -79,8 +87,31 @@ begin
   AssertEquals('meta0.name', 'Field1', VMetadata[0].Name);
 end;
 
+{ TTestOPFProxyMetadataTests }
+
+procedure TTestOPFProxyMetadataTests.CreateProxy;
+var
+  VCity: TTestProxyCity;
+begin
+  VCity := TTestProxyCity.Create;
+  try
+    AssertNull('city.proxy', VCity._Proxy);
+    AssertTrue('city.isdirty', VCity._Proxy.IsDirty);
+    AssertFalse('city.ispersistent', VCity._Proxy.IsPersistent);
+    AssertNull('city.oid null', VCity._Proxy.OID);
+    AssertNull('city.owner null', VCity._Proxy.Owner);
+    AssertNull('city.pid null', VCity._Proxy.PID);
+    Session.Store(VCity);
+    AssertNotNull('city.pid', VCity._Proxy.PID);
+    AssertSame('city.entity', VCity._Proxy.PID.Entity, VCity);
+  finally
+    FreeAndNil(VCity);
+  end;
+end;
+
 initialization
-  RegisterTest('jcore.opf.metadata', TTestOPFMetadataTests);
+  RegisterTest('jcore.opf.metadata.ipid', TTestOPFIPIDMetadataTests);
+  RegisterTest('jcore.opf.metadata.proxy', TTestOPFProxyMetadataTests);
 
 end.
 

@@ -18,6 +18,7 @@ interface
 
 const
   SPID = '_pid';
+  SProxy = '_proxy';
 
 implementation
 
