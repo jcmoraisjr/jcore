@@ -11,7 +11,7 @@ type
 
   { TTestOPFMappingTests }
 
-  TTestOPFMappingTests = class(TTestOPF)
+  TTestOPFMappingTests = class(TTestOPFIPIDTestCase)
   published
     procedure TransactionPIDList;
     procedure StoreOwnerDontUpdateAggregations;
@@ -20,7 +20,7 @@ type
 
   { TTestOPFCleanDirtyAttributeTests }
 
-  TTestOPFCleanDirtyAttributeTests = class(TTestOPF)
+  TTestOPFCleanDirtyAttributeTests = class(TTestOPFIPIDTestCase)
   published
     procedure CacheNotUpdated;
     procedure IntegerClear;

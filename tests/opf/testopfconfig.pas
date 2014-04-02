@@ -49,9 +49,11 @@ type
     class property LastCommitPIDList: TJCoreOPFPIDList read FLastCommitPIDList;
   end;
 
-  { TTestOPF }
+  TTestOPFMappingClassArray = array of TJCoreOPFMappingClass;
 
-  TTestOPF = class(TTestCase)
+  { TTestOPFAbstractTestCase }
+
+  TTestOPFAbstractTestCase = class(TTestCase)
   private
     FConfiguration: IJCoreOPFConfiguration;
     FSession: ITestOPFSession;
@@ -60,10 +62,18 @@ type
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
+    function InternalMappingClassArray: TTestOPFMappingClassArray; virtual; abstract;
     procedure SetUp; override;
     procedure TearDown; override;
     class property LOG: IJCoreLogger read FLOG;
     property Session: ITestOPFSession read FSession;
+  end;
+
+  { TTestOPFIPIDTestCase }
+
+  TTestOPFIPIDTestCase = class(TTestOPFAbstractTestCase)
+  protected
+    function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
   { TTestEmptyDriver }
@@ -154,9 +164,9 @@ begin
   Result := LastCommitPIDList.IndexOf(APID as TJCoreOPFPID) >= 0;
 end;
 
-{ TTestOPF }
+{ TTestOPFAbstractTestCase }
 
-procedure TTestOPF.AssertExceptionStore(const ASession: IJCoreOPFSession;
+procedure TTestOPFAbstractTestCase.AssertExceptionStore(const ASession: IJCoreOPFSession;
   const AEntity: TObject; const AException: ExceptClass);
 begin
   try
@@ -173,7 +183,7 @@ begin
   end;
 end;
 
-procedure TTestOPF.AssertSQLDriverCommands(const ACommands: array of string);
+procedure TTestOPFAbstractTestCase.AssertSQLDriverCommands(const ACommands: array of string);
 var
   I: Integer;
 begin
@@ -190,7 +200,7 @@ begin
   TTestSQLDriver.Commands.Clear;
 end;
 
-function TTestOPF.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
+function TTestOPFAbstractTestCase.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
   const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
 var
   VDriverClass: TJCoreOPFDriverClass;
@@ -209,21 +219,18 @@ begin
   end;
 end;
 
-procedure TTestOPF.SetUp;
+procedure TTestOPFAbstractTestCase.SetUp;
 begin
   inherited SetUp;
   if not Assigned(FLOG) then
-    FLOG := TJCoreLogger.GetLogger('jcore.teste.opf');
+    FLOG := TJCoreLogger.GetLogger('jcore.test.opf');
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
-  FConfiguration := CreateConfiguration([TTestSQLDriver], [
-   TTestSimpleSQLMapping, TTestPersonSQLMapping, TTestEmployeeSQLMapping,
-   TTestAddressSQLMapping, TTestCitySQLMapping, TTestPhoneSQLMapping,
-   TTestLanguageSQLMapping]);
+  FConfiguration := CreateConfiguration([TTestSQLDriver], InternalMappingClassArray);
   FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 
-procedure TTestOPF.TearDown;
+procedure TTestOPFAbstractTestCase.TearDown;
 begin
   inherited TearDown;
   FSession := nil;
@@ -231,6 +238,20 @@ begin
   TTestAbstractSQLMapping.ClearOID;
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
+end;
+
+{ TTestOPFIPIDTestCase }
+
+function TTestOPFIPIDTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+begin
+  SetLength(Result, 7);
+  Result[0] := TTestIPIDSimpleSQLMapping;
+  Result[1] := TTestIPIDPersonSQLMapping;
+  Result[2] := TTestIPIDEmployeeSQLMapping;
+  Result[3] := TTestIPIDAddressSQLMapping;
+  Result[4] := TTestIPIDCitySQLMapping;
+  Result[5] := TTestIPIDPhoneSQLMapping;
+  Result[6] := TTestIPIDLanguageSQLMapping;
 end;
 
 { TTestEmptyDriver }

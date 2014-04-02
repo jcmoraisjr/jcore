@@ -25,16 +25,16 @@ type
     class procedure ClearOID;
   end;
 
-  { TTestSimpleSQLMapping }
+  { TTestIPIDSimpleSQLMapping }
 
-  TTestSimpleSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDSimpleSQLMapping = class(TTestAbstractSQLMapping)
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestPersonSQLMapping }
+  { TTestIPIDPersonSQLMapping }
 
-  TTestPersonSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
@@ -52,16 +52,16 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestEmployeeSQLMapping }
+  { TTestIPIDEmployeeSQLMapping }
 
-  TTestEmployeeSQLMapping = class(TTestPersonSQLMapping)
+  TTestIPIDEmployeeSQLMapping = class(TTestIPIDPersonSQLMapping)
   public
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestAddressSQLMapping }
+  { TTestIPIDAddressSQLMapping }
 
-  TTestAddressSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDAddressSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
@@ -73,9 +73,9 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestCitySQLMapping }
+  { TTestIPIDCitySQLMapping }
 
-  TTestCitySQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDCitySQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
@@ -87,9 +87,9 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestPhoneSQLMapping }
+  { TTestIPIDPhoneSQLMapping }
 
-  TTestPhoneSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
@@ -101,9 +101,9 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
-  { TTestLanguageSQLMapping }
+  { TTestIPIDLanguageSQLMapping }
 
-  TTestLanguageSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDLanguageSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectCollectionStatement(const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
@@ -180,16 +180,16 @@ begin
   FCurrentOID := 0;
 end;
 
-{ TTestSimpleSQLMapping }
+{ TTestIPIDSimpleSQLMapping }
 
-class function TTestSimpleSQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDSimpleSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDSimple;
 end;
 
-{ TTestPersonSQLMapping }
+{ TTestIPIDPersonSQLMapping }
 
-function TTestPersonSQLMapping.GenerateDeleteExternalLinkIDsStatement(
+function TTestIPIDPersonSQLMapping.GenerateDeleteExternalLinkIDsStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
@@ -198,7 +198,7 @@ begin
     Result := inherited GenerateDeleteExternalLinkIDsStatement(AAttrMetadata, ASize);
 end;
 
-function TTestPersonSQLMapping.GenerateDeleteExternalLinksStatement(
+function TTestIPIDPersonSQLMapping.GenerateDeleteExternalLinksStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
@@ -207,12 +207,12 @@ begin
     Result := inherited GenerateDeleteExternalLinksStatement(AAttrMetadata, ASize);
 end;
 
-function TTestPersonSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDPersonSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
 begin
   Result := CSQLDELETEPERSON + BuildParams(ASize);
 end;
 
-function TTestPersonSQLMapping.GenerateInsertExternalLinksStatement(
+function TTestIPIDPersonSQLMapping.GenerateInsertExternalLinksStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
@@ -221,18 +221,18 @@ begin
     Result := inherited GenerateInsertExternalLinksStatement(AAttrMetadata);
 end;
 
-function TTestPersonSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDPersonSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTPERSON;
 end;
 
-function TTestPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
+function TTestIPIDPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
   const AClass: TClass; const ASize: Integer): string;
 begin
   Result := CSQLSELECTPERSON_FOR_DELETE + BuildParams(ASize);
 end;
 
-function TTestPersonSQLMapping.GenerateSelectForDeleteStatement(
+function TTestIPIDPersonSQLMapping.GenerateSelectForDeleteStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDPhone then
@@ -243,17 +243,17 @@ begin
     Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, ASize);
 end;
 
-function TTestPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+function TTestIPIDPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
 begin
   Result := CSQLSELECTPERSON;
 end;
 
-function TTestPersonSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDPersonSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEPERSON;
 end;
 
-procedure TTestPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -266,13 +266,13 @@ begin
   RetrieveList(APID, 'Languages');
 end;
 
-procedure TTestPersonSQLMapping.WriteExternalsToDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPersonSQLMapping.WriteExternalsToDriver(const APID: TJCoreOPFPID);
 begin
   StoreList(APID, 'Phones');
   StoreList(APID, 'Languages');
 end;
 
-procedure TTestPersonSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPersonSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -283,34 +283,34 @@ begin
   Mapper.StoreToDriver(TTestIPIDCity, VPerson.City, Driver);
 end;
 
-class function TTestPersonSQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDPersonSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDPerson;
 end;
 
-{ TTestAddressSQLMapping }
+{ TTestIPIDAddressSQLMapping }
 
-function TTestAddressSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDAddressSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
 begin
   Result := CSQLDELETEADDRESS + BuildParams(ASize);
 end;
 
-function TTestAddressSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDAddressSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTADDRESS;
 end;
 
-function TTestAddressSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+function TTestIPIDAddressSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
 begin
   Result := CSQLSELECTADDRESS;
 end;
 
-function TTestAddressSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDAddressSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEADDRESS;
 end;
 
-procedure TTestAddressSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDAddressSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VAddress: TTestIPIDAddress;
 begin
@@ -319,7 +319,7 @@ begin
   VAddress.ZipCode := Driver.ReadString;
 end;
 
-procedure TTestAddressSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDAddressSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VAddress: TTestIPIDAddress;
 begin
@@ -328,34 +328,34 @@ begin
   Driver.WriteString(VAddress.ZipCode);
 end;
 
-class function TTestAddressSQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDAddressSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDAddress;
 end;
 
-{ TTestCitySQLMapping }
+{ TTestIPIDCitySQLMapping }
 
-function TTestCitySQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDCitySQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
 begin
   Result := CSQLDELETECITY + BuildParams(ASize);
 end;
 
-function TTestCitySQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDCitySQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTCITY;
 end;
 
-function TTestCitySQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+function TTestIPIDCitySQLMapping.GenerateSelectStatement(const AClass: TClass): string;
 begin
   Result := CSQLSELECTCITY;
 end;
 
-function TTestCitySQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDCitySQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATECITY;
 end;
 
-procedure TTestCitySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDCitySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VCity: TTestIPIDCity;
 begin
@@ -363,7 +363,7 @@ begin
   VCity.Name := Driver.ReadString;
 end;
 
-procedure TTestCitySQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDCitySQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VCity: TTestIPIDCity;
 begin
@@ -371,24 +371,24 @@ begin
   Driver.WriteString(VCity.Name);
 end;
 
-class function TTestCitySQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDCitySQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDCity;
 end;
 
-{ TTestPhoneSQLMapping }
+{ TTestIPIDPhoneSQLMapping }
 
-function TTestPhoneSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDPhoneSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
 begin
   Result := CSQLDELETEPHONE + BuildParams(ASize);
 end;
 
-function TTestPhoneSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDPhoneSQLMapping.GenerateInsertStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTPHONE;
 end;
 
-function TTestPhoneSQLMapping.GenerateSelectCollectionStatement(
+function TTestIPIDPhoneSQLMapping.GenerateSelectCollectionStatement(
   const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
   if AOwnerClass = TTestIPIDPerson then
@@ -397,12 +397,12 @@ begin
     Result := inherited GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttrMetadata);
 end;
 
-function TTestPhoneSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
+function TTestIPIDPhoneSQLMapping.GenerateUpdateStatement(const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATEPHONE;
 end;
 
-procedure TTestPhoneSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPhoneSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VPhone: TTestIPIDPhone;
 begin
@@ -410,7 +410,7 @@ begin
   VPhone.Number := Driver.ReadString;
 end;
 
-procedure TTestPhoneSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPhoneSQLMapping.WriteInternalsToDriver(const APID: TJCoreOPFPID);
 var
   VPhone: TTestIPIDPhone;
 begin
@@ -419,20 +419,20 @@ begin
   Driver.WriteString(VPhone.Number);
 end;
 
-class function TTestPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDPhone;
 end;
 
-{ TTestLanguageSQLMapping }
+{ TTestIPIDLanguageSQLMapping }
 
-function TTestLanguageSQLMapping.GenerateInsertStatement(
+function TTestIPIDLanguageSQLMapping.GenerateInsertStatement(
   const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLINSERTLANG;
 end;
 
-function TTestLanguageSQLMapping.GenerateSelectCollectionStatement(
+function TTestIPIDLanguageSQLMapping.GenerateSelectCollectionStatement(
   const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
   if AOwnerClass = TTestIPIDPerson then
@@ -441,13 +441,13 @@ begin
     Result := inherited GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttrMetadata);
 end;
 
-function TTestLanguageSQLMapping.GenerateUpdateStatement(
+function TTestIPIDLanguageSQLMapping.GenerateUpdateStatement(
   const APID: TJCoreOPFPID): string;
 begin
   Result := CSQLUPDATELANG;
 end;
 
-procedure TTestLanguageSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDLanguageSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 var
   VLang: TTestIPIDLanguage;
 begin
@@ -455,7 +455,7 @@ begin
   VLang.Name := Driver.ReadString;
 end;
 
-procedure TTestLanguageSQLMapping.WriteInternalsToDriver(
+procedure TTestIPIDLanguageSQLMapping.WriteInternalsToDriver(
   const APID: TJCoreOPFPID);
 var
   VLang: TTestIPIDLanguage;
@@ -464,14 +464,14 @@ begin
   Driver.WriteString(VLang.Name);
 end;
 
-class function TTestLanguageSQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDLanguageSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDLanguage;
 end;
 
-{ TTestEmployeeSQLMapping }
+{ TTestIPIDEmployeeSQLMapping }
 
-class function TTestEmployeeSQLMapping.Apply(const AClass: TClass): Boolean;
+class function TTestIPIDEmployeeSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDEmployee;
 end;

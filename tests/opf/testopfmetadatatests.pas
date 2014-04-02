@@ -11,9 +11,9 @@ type
 
   { TTestOPFMetadataTests }
 
-  TTestOPFMetadataTests = class(TTestOPF)
+  TTestOPFMetadataTests = class(TTestOPFIPIDTestCase)
   published
-    procedure CreatePID;
+    procedure CreateIPID;
     procedure AttributeList;
     procedure InheritedAttributeList;
     procedure NonPidAttributeList;
@@ -30,7 +30,7 @@ uses
 
 { TTestOPFMetadataTests }
 
-procedure TTestOPFMetadataTests.CreatePID;
+procedure TTestOPFMetadataTests.CreateIPID;
 var
   VPerson: TTestIPIDPerson;
   VPID: IJCorePID;

@@ -6,8 +6,7 @@ interface
 
 uses
   JCoreMetadata,
-  JCoreOPFMetadata,
-  TestOPFModelIPID;
+  JCoreOPFMetadata;
 
 type
 
@@ -22,7 +21,8 @@ type
 implementation
 
 uses
-  sysutils;
+  sysutils,
+  TestOPFModelIPID;
 
 { TTestOPFModelIPID }
 
