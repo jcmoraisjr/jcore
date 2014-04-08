@@ -45,17 +45,17 @@ type
   private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
-    FEntity: TObject;
     FMapping: IJCoreOPFPIDMapping;
     FMetadata: TJCoreOPFAttrMetadata;
+    FPID: TJCoreOPFPID;
   protected
     function InternalIsDirty: Boolean; virtual; abstract;
     procedure InternalUpdateCache; virtual; abstract;
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
-    property Entity: TObject read FEntity;
     property Mapping: IJCoreOPFPIDMapping read FMapping;
+    property PID: TJCoreOPFPID read FPID;
   public
-    constructor Create(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject; const AMetadata: TJCoreOPFAttrMetadata); virtual;
+    constructor Create(const AMapping: IJCoreOPFPIDMapping; const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     class function AttributeType: TJCoreOPFAttributeType; virtual; abstract;
     function IsDirty: Boolean;
@@ -266,7 +266,7 @@ type
     property Model: TJCoreOPFModel read FModel;
   public
     constructor Create(const AModel: TJCoreOPFModel; const APropInfo: PPropInfo);
-    function CreateADM(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject): TJCoreOPFADM;
+    function CreateADM(const AMapping: IJCoreOPFPIDMapping; const APID: TJCoreOPFPID): TJCoreOPFADM;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
@@ -315,11 +315,11 @@ uses
 { TJCoreOPFADM }
 
 constructor TJCoreOPFADM.Create(const AMapping: IJCoreOPFPIDMapping;
-  const AEntity: TObject; const AMetadata: TJCoreOPFAttrMetadata);
+  const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
 begin
   inherited Create;
   FMapping := AMapping;
-  FEntity := AEntity;
+  FPID := APID;
   FAttrPropInfo := AMetadata.PropInfo;
   FCacheUpdated := False;
   FMetadata := AMetadata;
@@ -352,12 +352,12 @@ end;
 
 function TJCoreOPFADMType32.InternalIsDirty: Boolean;
 begin
-  Result := GetOrdProp(Entity, AttrPropInfo) <> FCache;
+  Result := GetOrdProp(PID.Entity, AttrPropInfo) <> FCache;
 end;
 
 procedure TJCoreOPFADMType32.InternalUpdateCache;
 begin
-  FCache := GetOrdProp(Entity, AttrPropInfo);
+  FCache := GetOrdProp(PID.Entity, AttrPropInfo);
 end;
 
 class function TJCoreOPFADMType32.Apply(const AModel: TJCoreModel;
@@ -370,12 +370,12 @@ end;
 
 function TJCoreOPFADMType64.InternalIsDirty: Boolean;
 begin
-  Result := GetInt64Prop(Entity, AttrPropInfo) <> FCache;
+  Result := GetInt64Prop(PID.Entity, AttrPropInfo) <> FCache;
 end;
 
 procedure TJCoreOPFADMType64.InternalUpdateCache;
 begin
-  FCache := GetInt64Prop(Entity, AttrPropInfo);
+  FCache := GetInt64Prop(PID.Entity, AttrPropInfo);
 end;
 
 class function TJCoreOPFADMType64.Apply(const AModel: TJCoreModel;
@@ -388,12 +388,12 @@ end;
 
 function TJCoreOPFADMFloat.InternalIsDirty: Boolean;
 begin
-  Result := GetFloatProp(Entity, AttrPropInfo) <> FCache;
+  Result := GetFloatProp(PID.Entity, AttrPropInfo) <> FCache;
 end;
 
 procedure TJCoreOPFADMFloat.InternalUpdateCache;
 begin
-  FCache := GetFloatProp(Entity, AttrPropInfo);
+  FCache := GetFloatProp(PID.Entity, AttrPropInfo);
 end;
 
 class function TJCoreOPFADMFloat.Apply(const AModel: TJCoreModel;
@@ -407,13 +407,13 @@ end;
 function TJCoreOPFADMAnsiString.InternalIsDirty: Boolean;
 begin
   { TODO : use hash for long strings }
-  Result := GetStrProp(Entity, AttrPropInfo) <> FCache;
+  Result := GetStrProp(PID.Entity, AttrPropInfo) <> FCache;
 end;
 
 procedure TJCoreOPFADMAnsiString.InternalUpdateCache;
 begin
   { TODO : use hash for long strings }
-  FCache := GetStrProp(Entity, AttrPropInfo);
+  FCache := GetStrProp(PID.Entity, AttrPropInfo);
 end;
 
 class function TJCoreOPFADMAnsiString.Apply(const AModel: TJCoreModel;
@@ -439,7 +439,7 @@ function TJCoreOPFADMEntity.AcquirePID: TJCoreOPFPID;
 var
   VObject: TObject;
 begin
-  VObject := GetObjectProp(Entity, AttrPropInfo, nil);
+  VObject := GetObjectProp(PID.Entity, AttrPropInfo, nil);
   if Assigned(VObject) then
     Result := Mapping.AcquirePID(VObject)
   else
@@ -740,7 +740,7 @@ end;
 
 function TJCoreOPFADMFPSListCollection.GetList: TFPSList;
 begin
-  Result := TFPSList(GetObjectProp(Entity, AttrPropInfo, TFPSList));
+  Result := TFPSList(GetObjectProp(PID.Entity, AttrPropInfo, TFPSList));
 end;
 
 procedure TJCoreOPFADMFPSListCollection.InternalAssignArray(const AArray: TJCoreObjectArray);
@@ -752,7 +752,7 @@ begin
   if not Assigned(VItems) then
   begin
     VItems := TJCoreObjectList.Create;
-    SetObjectProp(Entity, AttrPropInfo, VItems);
+    SetObjectProp(PID.Entity, AttrPropInfo, VItems);
   end;
   VItems.Clear;
   for VItem in AArray do
@@ -795,7 +795,7 @@ begin
   for I := 0 to Pred(Metadata.AttributeCount) do
   begin
     VAttrMetadata := Metadata.Attributes[I];
-    ADMMap.Add(VAttrMetadata.Name, TJCoreOPFADM(VAttrMetadata.CreateADM(Mapping, Entity)));
+    ADMMap.Add(VAttrMetadata.Name, TJCoreOPFADM(VAttrMetadata.CreateADM(Mapping, Self)));
   end;
 end;
 
@@ -995,9 +995,9 @@ begin
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const AMapping: IJCoreOPFPIDMapping;
-  const AEntity: TObject): TJCoreOPFADM;
+  const APID: TJCoreOPFPID): TJCoreOPFADM;
 begin
-  Result := ADMClass.Create(AMapping, AEntity, Self);
+  Result := ADMClass.Create(AMapping, APID, Self);
 end;
 
 { TJCoreOPFClassMetadata }
