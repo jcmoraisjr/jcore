@@ -62,6 +62,7 @@ type
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
     function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
+    function InternalCreateModel: TJCoreOPFModel; virtual; abstract;
     function InternalMappingClassArray: TTestOPFMappingClassArray; virtual; abstract;
     procedure SetUp; override;
     procedure TearDown; override;
@@ -73,6 +74,7 @@ type
 
   TTestOPFIPIDTestCase = class(TTestOPFAbstractTestCase)
   protected
+    function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
@@ -80,6 +82,7 @@ type
 
   TTestOPFProxyTestCase = class(TTestOPFAbstractTestCase)
   protected
+    function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
@@ -213,7 +216,7 @@ var
   VDriverClass: TJCoreOPFDriverClass;
   VMappingClass: TJCoreOPFMappingClass;
 begin
-  Result := TTestOPFConfig.Create(TTestOPFModelIPID.Create);
+  Result := TTestOPFConfig.Create(InternalCreateModel);
   try
     for VDriverClass in ADriverClassArray do
       Result.AddDriverClass(VDriverClass);
@@ -249,6 +252,11 @@ end;
 
 { TTestOPFIPIDTestCase }
 
+function TTestOPFIPIDTestCase.InternalCreateModel: TJCoreOPFModel;
+begin
+  Result := TTestOPFModelIPID.Create;
+end;
+
 function TTestOPFIPIDTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
 begin
   SetLength(Result, 7);
@@ -263,10 +271,17 @@ end;
 
 { TTestOPFProxyTestCase }
 
+function TTestOPFProxyTestCase.InternalCreateModel: TJCoreOPFModel;
+begin
+  Result := TTestOPFModelProxy.Create;
+end;
+
 function TTestOPFProxyTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
 begin
-  SetLength(Result, 1);
-  Result[0] := TTestProxyCitySQLMapping;
+  SetLength(Result, 3);
+  Result[0] := TTestProxyPhoneSQLMapping;
+  Result[1] := TTestProxyCitySQLMapping;
+  Result[2] := TTestProxyPersonSQLMapping;
 end;
 
 { TTestEmptyDriver }

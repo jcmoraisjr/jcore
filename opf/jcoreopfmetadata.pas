@@ -26,6 +26,9 @@ uses
 
 type
 
+  TJCoreOPFADMEntity = class;
+  TJCoreOPFADMCollection = class;
+
   TJCoreOPFPID = class;
   TJCoreOPFPIDList = specialize TFPGObjectList<TJCoreOPFPID>;
   TJCoreOPFPIDArray = array of TJCoreOPFPID;
@@ -33,6 +36,8 @@ type
   IJCoreOPFPIDMapping = interface
     function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
+    procedure LoadEntity(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMEntity);
+    procedure LoadCollection(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
   end;
 
   TJCoreOPFAttributeType = (jatSimple, jatEntity, jatCollection);
@@ -45,11 +50,13 @@ type
   private
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
+    FLoaded: Boolean;
     FMapping: IJCoreOPFPIDMapping;
     FMetadata: TJCoreOPFAttrMetadata;
     FPID: TJCoreOPFPID;
   protected
     function InternalIsDirty: Boolean; virtual; abstract;
+    procedure InternalLoad; virtual;
     procedure InternalUpdateCache; virtual; abstract;
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
     property Mapping: IJCoreOPFPIDMapping read FMapping;
@@ -59,6 +66,7 @@ type
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     class function AttributeType: TJCoreOPFAttributeType; virtual; abstract;
     function IsDirty: Boolean;
+    procedure Load;
     procedure TransactionClosing(const ACommit: Boolean); virtual;
     procedure UpdateCache;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
@@ -127,17 +135,22 @@ type
 
   TJCoreOPFADMEntity = class(TJCoreOPFADM)
   private
+    FCompositionOID: TJCoreOPFOID;
     FOIDCache: TJCoreOPFOID;
+    procedure SetCompositionOID(AValue: TJCoreOPFOID);
     procedure SetOIDCache(AValue: TJCoreOPFOID);
   protected
     function AcquirePID: TJCoreOPFPID;
     function InternalIsDirty: Boolean; override;
+    procedure InternalLoad; override;
     procedure InternalUpdateCache; override;
     property OIDCache: TJCoreOPFOID read FOIDCache write SetOIDCache;
   public
     destructor Destroy; override;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure AssignComposition(const AComposite: TObject);
     class function AttributeType: TJCoreOPFAttributeType; override;
+    property CompositionOID: TJCoreOPFOID read FCompositionOID write SetCompositionOID;
   end;
 
   { TJCoreOPFADMCollection }
@@ -148,6 +161,7 @@ type
     FChangesUpdated: Boolean;
     FItemsArray: TJCoreObjectArray;
     FItemsArrayUpdated: Boolean;
+    FLoading: Boolean;
     FOIDCache: TJCoreOPFOIDArray;
     FOIDRemoved: TJCoreOPFOIDArray;
     FPIDAdded: TJCoreOPFPIDArray;
@@ -169,9 +183,11 @@ type
     procedure InternalAssignArray(const AArray: TJCoreObjectArray); virtual; abstract;
     function InternalCreateItemsArray: TJCoreObjectArray; virtual; abstract;
     function InternalIsDirty: Boolean; override;
+    procedure InternalLoad; override;
     procedure InternalUpdateCache; override;
     property ItemsArray: TJCoreObjectArray read GetItemsArray;
     property OIDCache: TJCoreOPFOIDArray read FOIDCache write SetOIDCache;
+    property Loading: Boolean read FLoading;
   public
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
@@ -237,6 +253,8 @@ type
     procedure Commit;
     function IsDirty: Boolean;
     function IsInternalsDirty: Boolean;
+    procedure Lazyload(const AFieldAddr: Pointer; const AAttributeName: string);
+    procedure Load(const AAttributeName: string);
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
     procedure Stored;
     property IsPersistent: Boolean read GetIsPersistent;
@@ -314,6 +332,11 @@ uses
 
 { TJCoreOPFADM }
 
+procedure TJCoreOPFADM.InternalLoad;
+begin
+  raise EJCoreOPFUnsupportedLoadOperation.Create(Metadata.PropInfo^.PropType^.Name);
+end;
+
 constructor TJCoreOPFADM.Create(const AMapping: IJCoreOPFPIDMapping;
   const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
 begin
@@ -323,12 +346,22 @@ begin
   FAttrPropInfo := AMetadata.PropInfo;
   FCacheUpdated := False;
   FMetadata := AMetadata;
+  FLoaded := False;
 end;
 
 function TJCoreOPFADM.IsDirty: Boolean;
 begin
   { TODO : Implement IsDirty cache while transaction is active }
   Result := not FCacheUpdated or InternalIsDirty;
+end;
+
+procedure TJCoreOPFADM.Load;
+begin
+  if not FLoaded then
+  begin
+    InternalLoad;
+    FLoaded := True;
+  end;
 end;
 
 procedure TJCoreOPFADM.TransactionClosing(const ACommit: Boolean);
@@ -435,6 +468,15 @@ begin
   end;
 end;
 
+procedure TJCoreOPFADMEntity.SetCompositionOID(AValue: TJCoreOPFOID);
+begin
+  if FCompositionOID <> AValue then
+  begin
+    FreeAndNil(FCompositionOID);
+    FCompositionOID := AValue;
+  end;
+end;
+
 function TJCoreOPFADMEntity.AcquirePID: TJCoreOPFPID;
 var
   VObject: TObject;
@@ -461,6 +503,11 @@ begin
     Result := VPID.IsDirty;
 end;
 
+procedure TJCoreOPFADMEntity.InternalLoad;
+begin
+  Mapping.LoadEntity(PID, Self);
+end;
+
 procedure TJCoreOPFADMEntity.InternalUpdateCache;
 var
   VPID: TJCoreOPFPID;
@@ -474,6 +521,7 @@ end;
 
 destructor TJCoreOPFADMEntity.Destroy;
 begin
+  FreeAndNil(FCompositionOID);
   FreeAndNil(FOIDCache);
   inherited Destroy;
 end;
@@ -485,6 +533,11 @@ begin
     Result := AModel.IsEntityClass(GetTypeData(AAttrTypeInfo)^.ClassType)
   else
     Result := False;
+end;
+
+procedure TJCoreOPFADMEntity.AssignComposition(const AComposite: TObject);
+begin
+  SetObjectProp(PID.Entity, Metadata.PropInfo, AComposite);
 end;
 
 class function TJCoreOPFADMEntity.AttributeType: TJCoreOPFAttributeType;
@@ -688,6 +741,16 @@ begin
   end;
 end;
 
+procedure TJCoreOPFADMCollection.InternalLoad;
+begin
+  FLoading := True;
+  try
+    Mapping.LoadCollection(PID, Self);
+  finally
+    FLoading := False;
+  end;
+end;
+
 procedure TJCoreOPFADMCollection.InternalUpdateCache;
 var
   VPIDArray: TJCoreOPFPIDArray;
@@ -748,7 +811,10 @@ var
   VItems: TFPSList;
   VItem: TObject;
 begin
-  VItems := GetList;
+  if not Loading then
+    VItems := GetList
+  else
+    VItems := nil;
   if not Assigned(VItems) then
   begin
     VItems := TJCoreObjectList.Create;
@@ -934,6 +1000,17 @@ begin
   Result := InternalIsDirty(False);
 end;
 
+procedure TJCoreOPFPID.Lazyload(const AFieldAddr: Pointer; const AAttributeName: string);
+begin
+  if not Assigned(AFieldAddr) or not Assigned(TObject(AFieldAddr^)) then
+    AcquireADM(AAttributeName).Load;
+end;
+
+procedure TJCoreOPFPID.Load(const AAttributeName: string);
+begin
+  AcquireADM(AAttributeName).Load;
+end;
+
 procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
 begin
   { TODO : Used to release the OID if an exception raises just after the OID
@@ -972,6 +1049,8 @@ begin
   else
     VClassName := AClassName;
   Result := Model.FindClass(VClassName);
+  if not Assigned(Result) then
+    raise EJCoreOPFEntityClassNotFound.Create(VClassName);
 end;
 
 procedure TJCoreOPFAttrMetadata.SetCompositionMetadata(

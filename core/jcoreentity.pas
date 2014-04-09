@@ -46,6 +46,8 @@ type
     function Entity: TObject;
     function GetIsPersistent: Boolean;
     function IsDirty: Boolean;
+    procedure Lazyload(const AFieldAddr: Pointer; const AFieldName: string);
+    procedure Load(const AFieldName: string);
     function OID: IJCoreOID;
     function Owner: IJCorePID;
     property IsPersistent: Boolean read GetIsPersistent;
@@ -61,6 +63,8 @@ type
     constructor Create(const APID: IJCorePID);
     function IsDirty: Boolean;
     function IsPersistent: Boolean;
+    procedure Lazyload(const AFieldAddr: Pointer; const AFieldName: string);
+    procedure Load(const AFieldName: string);
     function OID: IJCoreOID;
     function Owner: IJCorePID;
     function PID: IJCorePID;
@@ -91,6 +95,18 @@ begin
     Result := FPID.IsPersistent
   else
     Result := False;
+end;
+
+procedure TJCoreEntityProxy.Lazyload(const AFieldAddr: Pointer; const AFieldName: string);
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    FPID.Lazyload(AFieldAddr, AFieldName);
+end;
+
+procedure TJCoreEntityProxy.Load(const AFieldName: string);
+begin
+  if Assigned(Self) and Assigned(FPID) then
+    FPID.Load(AFieldName);
 end;
 
 function TJCoreEntityProxy.OID: IJCoreOID;

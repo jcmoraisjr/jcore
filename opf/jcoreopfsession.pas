@@ -50,8 +50,10 @@ type
     function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
     procedure Commit; virtual;
     procedure DisposeFromDriver(const AMetadata: TJCoreOPFClassMetadata; const ADriverOID: TJCoreOPFDriver; const ACount: Integer);
+    procedure RetrieveElement(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
     procedure RetrieveElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     function RetrieveFromDriver(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
+    procedure RetrieveLazyFromDriver(const AClass: TClass; const ADriver: TJCoreOPFDriver; const ALazyADM: TJCoreOPFADMEntity);
     procedure StoreElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure StorePID(const APID: TJCoreOPFPID);
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
@@ -126,6 +128,12 @@ begin
   AcquireMapping(AMetadata.TheClass).DisposeFromDriver(AMetadata, ADriverOID, ACount);
 end;
 
+procedure TJCoreOPFSession.RetrieveElement(const AOwnerPID: TJCoreOPFPID;
+  const AOwnerADM: TJCoreOPFADMEntity);
+begin
+  AcquireMapping(AOwnerADM.Metadata.CompositionClass).RetrieveElement(AOwnerPID, AOwnerADM);
+end;
+
 procedure TJCoreOPFSession.RetrieveElements(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMCollection);
 begin
@@ -136,6 +144,12 @@ function TJCoreOPFSession.RetrieveFromDriver(const AClass: TClass;
   const ADriverOID: TJCoreOPFDriver): TObject;
 begin
   Result := AcquireMapping(AClass).RetrieveFromDriver(AClass, ADriverOID);
+end;
+
+procedure TJCoreOPFSession.RetrieveLazyFromDriver(const AClass: TClass;
+  const ADriver: TJCoreOPFDriver; const ALazyADM: TJCoreOPFADMEntity);
+begin
+  AcquireMapping(AClass).RetrieveLazyFromDriver(AClass, ADriver, ALazyADM);
 end;
 
 procedure TJCoreOPFSession.StoreElements(const AOwnerPID: TJCoreOPFPID;

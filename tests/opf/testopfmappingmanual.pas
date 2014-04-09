@@ -52,6 +52,17 @@ type
     class function Apply(const AClass: TClass): Boolean; override;
   end;
 
+  { TTestProxyPersonSQLMapping }
+
+  TTestProxyPersonSQLMapping = class(TTestIPIDPersonSQLMapping)
+  protected
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteExternalsToDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
+  end;
+
   { TTestIPIDEmployeeSQLMapping }
 
   TTestIPIDEmployeeSQLMapping = class(TTestIPIDPersonSQLMapping)
@@ -105,6 +116,16 @@ type
     function GenerateInsertStatement(const APID: TJCoreOPFPID): string; override;
     function GenerateSelectCollectionStatement(const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateUpdateStatement(const APID: TJCoreOPFPID): string; override;
+    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
+  public
+    class function Apply(const AClass: TClass): Boolean; override;
+  end;
+
+  { TTestProxyPhoneSQLMapping }
+
+  TTestProxyPhoneSQLMapping = class(TTestIPIDPhoneSQLMapping)
+  protected
     procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); override;
   public
@@ -299,6 +320,43 @@ begin
   Result := AClass = TTestIPIDPerson;
 end;
 
+{ TTestProxyPersonSQLMapping }
+
+procedure TTestProxyPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+var
+  VPerson: TTestProxyPerson;
+begin
+  VPerson := APID.Entity as TTestProxyPerson;
+  VPerson.Name := Driver.ReadString;
+  VPerson.Age := Driver.ReadInteger;
+  Driver.ReadNull; // VPerson.Address := Mapper.RetrieveFromDriver(TTestIPIDAddress, Driver) as TTestIPIDAddress;
+  RetrieveLazy(APID, 'City');
+end;
+
+procedure TTestProxyPersonSQLMapping.WriteExternalsToDriver(
+  const APID: TJCoreOPFPID);
+begin
+  StoreList(APID, 'Phones');
+  // StoreList(APID, 'Languages');
+end;
+
+procedure TTestProxyPersonSQLMapping.WriteInternalsToDriver(
+  const APID: TJCoreOPFPID);
+var
+  VPerson: TTestProxyPerson;
+begin
+  VPerson := APID.Entity as TTestProxyPerson;
+  Driver.WriteString(VPerson.Name);
+  Driver.WriteInteger(VPerson.Age);
+  Driver.WriteNull; // Mapper.StoreToDriver(TTestIPIDAddress, VPerson.Address, Driver);
+  Mapper.StoreToDriver(TTestIPIDCity, VPerson.City, Driver);
+end;
+
+class function TTestProxyPersonSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestProxyPerson;
+end;
+
 { TTestIPIDAddressSQLMapping }
 
 function TTestIPIDAddressSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
@@ -425,7 +483,7 @@ end;
 function TTestIPIDPhoneSQLMapping.GenerateSelectCollectionStatement(
   const AOwnerClass: TClass; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
-  if AOwnerClass = TTestIPIDPerson then
+  if (AOwnerClass = TTestIPIDPerson) or (AOwnerClass = TTestProxyPerson) then
     Result := CSQLSELECTPERSON_PHONES
   else
     Result := inherited GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttrMetadata);
@@ -456,6 +514,31 @@ end;
 class function TTestIPIDPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
 begin
   Result := AClass = TTestIPIDPhone;
+end;
+
+{ TTestProxyPhoneSQLMapping }
+
+procedure TTestProxyPhoneSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+var
+  VPhone: TTestProxyPhone;
+begin
+  VPhone := APID.Entity as TTestProxyPhone;
+  VPhone.Number := Driver.ReadString;
+end;
+
+procedure TTestProxyPhoneSQLMapping.WriteInternalsToDriver(
+  const APID: TJCoreOPFPID);
+var
+  VPhone: TTestProxyPhone;
+begin
+  VPhone := APID.Entity as TTestProxyPhone;
+  APID.Owner.OID.WriteToDriver(Driver);
+  Driver.WriteString(VPhone.Number);
+end;
+
+class function TTestProxyPhoneSQLMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := AClass = TTestProxyPhone;
 end;
 
 { TTestIPIDLanguageSQLMapping }

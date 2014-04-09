@@ -74,7 +74,9 @@ end;
 procedure TTestOPFModelProxy.InitRegistry;
 begin
   inherited InitRegistry;
+  AddClass(TTestProxyPhone);
   AddClass(TTestProxyCity);
+  AddClass(TTestProxyPerson);
 end;
 
 end.

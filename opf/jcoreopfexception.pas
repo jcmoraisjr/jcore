@@ -63,6 +63,13 @@ type
     constructor Create(const AExpectedSize: Integer);
   end;
 
+  { EJCoreOPFEmptyOID }
+
+  EJCoreOPFEmptyOID = class(EJCoreOPF)
+  public
+    constructor Create;
+  end;
+
   { EJCoreOPFUnexpectedResultSetSize }
 
   EJCoreOPFUnexpectedResultSetSize = class(EJCoreOPF)
@@ -75,6 +82,13 @@ type
   EJCoreOPFMappingNotFound = class(EJCoreOPF)
   public
     constructor Create(const AEntityClassName: string);
+  end;
+
+  { EJCoreOPFEntityClassNotFound }
+
+  EJCoreOPFEntityClassNotFound = class(EJCoreOPF)
+  public
+    constructor Create(const AClassName: string);
   end;
 
   { EJCoreOPFCannotAssignOIDPersistent }
@@ -98,6 +112,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreOPFUnsupportedLoadOperation }
+
+  EJCoreOPFUnsupportedLoadOperation = class(EJCoreOPF)
+  public
+    constructor Create(const AAttributeTypeName: string);
+  end;
+
   { EJCoreOPFUnsupportedAttributeType }
 
   EJCoreOPFUnsupportedAttributeType = class(EJCoreOPF)
@@ -110,6 +131,13 @@ type
   EJCoreOPFUnsupportedSelectForDeleteOperation = class(EJCoreOPF)
   public
     constructor Create(const AClass: TClass);
+  end;
+
+  { EJCoreOPFEntityADMExpected }
+
+  EJCoreOPFEntityADMExpected = class(EJCoreOPF)
+  public
+    constructor Create(const AClassName, AAttributeName: string);
   end;
 
   { EJCoreOPFCollectionADMExpected }
@@ -151,6 +179,12 @@ constructor EJCoreOPFEmptyResultSet.Create(const AExpectedSize: Integer);
 begin
 end;
 
+{ EJCoreOPFEmptyOID }
+
+constructor EJCoreOPFEmptyOID.Create;
+begin
+end;
+
 { EJCoreOPFUnexpectedResultSetSize }
 
 constructor EJCoreOPFUnexpectedResultSetSize.Create(const AExpectedSize,
@@ -162,6 +196,13 @@ end;
 
 constructor EJCoreOPFMappingNotFound.Create(const AEntityClassName: string);
 begin
+end;
+
+{ EJCoreOPFEntityClassNotFound }
+
+constructor EJCoreOPFEntityClassNotFound.Create(const AClassName: string);
+begin
+  inherited Create(AClassName);
 end;
 
 { EJCoreOPFCannotAssignOIDPersistent }
@@ -183,6 +224,12 @@ constructor EJCoreOPFUnsupportedListOperations.Create;
 begin
 end;
 
+{ EJCoreOPFUnsupportedLoadOperation }
+
+constructor EJCoreOPFUnsupportedLoadOperation.Create(const AAttributeTypeName: string);
+begin
+end;
+
 { EJCoreOPFUnsupportedAttributeType }
 
 constructor EJCoreOPFUnsupportedAttributeType.Create(
@@ -195,6 +242,13 @@ end;
 
 constructor EJCoreOPFUnsupportedSelectForDeleteOperation.Create(
   const AClass: TClass);
+begin
+end;
+
+{ EJCoreOPFEntityADMExpected }
+
+constructor EJCoreOPFEntityADMExpected.Create(const AClassName,
+  AAttributeName: string);
 begin
 end;
 
