@@ -35,8 +35,7 @@ uses
   testregistry,
   JCoreEntity,
   JCoreOPFMetadata,
-  TestOPFModel,
-  TestOPFModelProxy,
+  TestOPFModelContact,
   TestOPFMappingManual;
 
 { TTestOPFIPIDMetadataTests }

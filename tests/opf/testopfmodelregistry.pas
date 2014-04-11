@@ -30,8 +30,7 @@ implementation
 
 uses
   sysutils,
-  TestOPFModel,
-  TestOPFModelProxy;
+  TestOPFModelContact;
 
 { TTestOPFModelIPID }
 

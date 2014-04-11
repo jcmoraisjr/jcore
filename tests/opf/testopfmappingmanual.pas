@@ -176,8 +176,7 @@ implementation
 
 uses
   sysutils,
-  TestOPFModel,
-  TestOPFModelProxy;
+  TestOPFModelContact;
 
 { TTestAbstractSQLMapping }
 

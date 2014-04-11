@@ -45,7 +45,7 @@ uses
   sysutils,
   testregistry,
   JCoreOPFMetadata,
-  TestOPFModel;
+  TestOPFModelContact;
 
 { TTestOPFMappingTests }
 
