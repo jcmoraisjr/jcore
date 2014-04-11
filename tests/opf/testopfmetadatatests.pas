@@ -35,7 +35,7 @@ uses
   testregistry,
   JCoreEntity,
   JCoreOPFMetadata,
-  TestOPFModelIPID,
+  TestOPFModel,
   TestOPFModelProxy,
   TestOPFMappingManual;
 

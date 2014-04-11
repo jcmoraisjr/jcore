@@ -26,8 +26,8 @@ uses
   JCoreOPFException,
   JCoreOPFConfig,
   JCoreOPFSession,
-  TestOPFModelIPID,
-  TestOPFModelMgr;
+  TestOPFModel,
+  TestOPFModelRegistry;
 
 { TTestOPFSessionTests }
 

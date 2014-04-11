@@ -1,4 +1,4 @@
-unit TestOPFModelMgr;
+unit TestOPFModelRegistry;
 
 {$mode objfpc}{$H+}
 
@@ -30,7 +30,7 @@ implementation
 
 uses
   sysutils,
-  TestOPFModelIPID,
+  TestOPFModel,
   TestOPFModelProxy;
 
 { TTestOPFModelIPID }

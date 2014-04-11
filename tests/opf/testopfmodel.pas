@@ -1,4 +1,4 @@
-unit TestOPFModelIPID;
+unit TestOPFModel;
 
 {$mode objfpc}{$H+}
 

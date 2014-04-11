@@ -35,16 +35,16 @@
         <UnitName Value="TestDIC"/>
       </Item3>
       <Item4>
-        <Filename Value="opf/testopfmodelipid.pas"/>
-        <UnitName Value="TestOPFModelIPID"/>
+        <Filename Value="opf/testopfmodel.pas"/>
+        <UnitName Value="TestOPFModel"/>
       </Item4>
       <Item5>
         <Filename Value="opf/testopfmodelproxy.pas"/>
         <UnitName Value="TestOPFModelProxy"/>
       </Item5>
       <Item6>
-        <Filename Value="opf/testopfmodelmgr.pas"/>
-        <UnitName Value="TestOPFModelMgr"/>
+        <Filename Value="opf/testopfmodelregistry.pas"/>
+        <UnitName Value="TestOPFModelRegistry"/>
       </Item6>
       <Item7>
         <Filename Value="opf/testopfconfig.pas"/>

@@ -77,7 +77,7 @@ implementation
 uses
   testregistry,
   sysutils,
-  TestOPFModelIPID,
+  TestOPFModel,
   TestOPFMappingManual;
 
 { TTestOPFInsertManualMappingTests }

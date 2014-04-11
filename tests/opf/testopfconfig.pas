@@ -131,7 +131,7 @@ type
 implementation
 
 uses
-  TestOPFModelMgr,
+  TestOPFModelRegistry,
   TestOPFMappingManual;
 
 { TTestOPFConfig }
