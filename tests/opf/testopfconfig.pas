@@ -254,7 +254,7 @@ end;
 
 function TTestOPFIPIDTestCase.InternalCreateModel: TJCoreOPFModel;
 begin
-  Result := TTestOPFModelIPID.Create;
+  Result := TTestOPFModelIPIDContact.Create;
 end;
 
 function TTestOPFIPIDTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
@@ -273,7 +273,7 @@ end;
 
 function TTestOPFProxyTestCase.InternalCreateModel: TJCoreOPFModel;
 begin
-  Result := TTestOPFModelProxy.Create;
+  Result := TTestOPFModelProxyContact.Create;
 end;
 
 function TTestOPFProxyTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;

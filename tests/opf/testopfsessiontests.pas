@@ -77,7 +77,7 @@ var
   VSession: IJCoreOPFSession;
   VPerson: TTestIPIDPerson;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelIPID.Create);
+  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelIPIDContact.Create);
   VConfiguration.AddDriverClass(TTestEmptyDriver);
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
   VSession := VConfiguration.CreateSession;

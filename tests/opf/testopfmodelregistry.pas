@@ -10,17 +10,17 @@ uses
 
 type
 
-  { TTestOPFModelIPID }
+  { TTestOPFModelIPIDContact }
 
-  TTestOPFModelIPID = class(TJCoreOPFModel)
+  TTestOPFModelIPIDContact = class(TJCoreOPFModel)
   protected
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure InitRegistry; override;
   end;
 
-  { TTestOPFModelProxy }
+  { TTestOPFModelProxyContact }
 
-  TTestOPFModelProxy = class(TJCoreOPFModel)
+  TTestOPFModelProxyContact = class(TJCoreOPFModel)
   protected
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure InitRegistry; override;
@@ -32,9 +32,9 @@ uses
   sysutils,
   TestOPFModelContact;
 
-{ TTestOPFModelIPID }
+{ TTestOPFModelIPIDContact }
 
-function TTestOPFModelIPID.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+function TTestOPFModelIPIDContact.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
@@ -53,7 +53,7 @@ begin
   Result := VMetadata;
 end;
 
-procedure TTestOPFModelIPID.InitRegistry;
+procedure TTestOPFModelIPIDContact.InitRegistry;
 begin
   inherited InitRegistry;
   AddClass(TTestIPIDPerson);
@@ -63,14 +63,14 @@ begin
   AddClass(TTestIPIDCity);
 end;
 
-{ TTestOPFModelProxy }
+{ TTestOPFModelProxyContact }
 
-function TTestOPFModelProxy.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+function TTestOPFModelProxyContact.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
 begin
   Result := inherited BuildMetadata(AClass);
 end;
 
-procedure TTestOPFModelProxy.InitRegistry;
+procedure TTestOPFModelProxyContact.InitRegistry;
 begin
   inherited InitRegistry;
   AddClass(TTestProxyPhone);
