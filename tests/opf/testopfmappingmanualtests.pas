@@ -11,7 +11,7 @@ type
 
   { TTestOPFInsertManualMappingTests }
 
-  TTestOPFInsertManualMappingTests = class(TTestOPFIPIDTestCase)
+  TTestOPFInsertManualMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure Person;
     procedure PersonAddress;
@@ -23,7 +23,7 @@ type
 
   { TTestOPFUpdateManualMappingTests }
 
-  TTestOPFUpdateManualMappingTests = class(TTestOPFIPIDTestCase)
+  TTestOPFUpdateManualMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonCity;
@@ -38,7 +38,7 @@ type
 
   { TTestOPFSelectManualMappingTests }
 
-  TTestOPFSelectManualMappingTests = class(TTestOPFIPIDTestCase)
+  TTestOPFSelectManualMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonAddressCity;
@@ -50,7 +50,7 @@ type
 
   { TTestOPFDeleteOneManualMappingTests }
 
-  TTestOPFDeleteOneManualMappingTests = class(TTestOPFIPIDTestCase)
+  TTestOPFDeleteOneManualMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonAddress;
@@ -63,7 +63,7 @@ type
 
   { TTestOPFDeleteArrayManualMappingTests }
 
-  TTestOPFDeleteArrayManualMappingTests = class(TTestOPFIPIDTestCase)
+  TTestOPFDeleteArrayManualMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonAddress;

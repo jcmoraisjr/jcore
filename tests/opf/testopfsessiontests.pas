@@ -11,7 +11,7 @@ type
 
   { TTestOPFSessionTests }
 
-  TTestOPFSessionTests = class(TTestOPFIPIDTestCase)
+  TTestOPFSessionTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure DriverNotFound;
     procedure MappingNotFound;

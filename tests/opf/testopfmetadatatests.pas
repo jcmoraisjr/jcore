@@ -11,7 +11,7 @@ type
 
   { TTestOPFIPIDMetadataTests }
 
-  TTestOPFIPIDMetadataTests = class(TTestOPFIPIDTestCase)
+  TTestOPFIPIDMetadataTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure CreateIPID;
     procedure AttributeList;
@@ -21,7 +21,7 @@ type
 
   { TTestOPFProxyMetadataTests }
 
-  TTestOPFProxyMetadataTests = class(TTestOPFProxyTestCase)
+  TTestOPFProxyMetadataTests = class(TTestOPFProxyContactTestCase)
   published
     procedure CreateProxy;
     procedure LazyEntity;

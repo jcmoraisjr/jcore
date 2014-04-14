@@ -70,17 +70,17 @@ type
     property Session: ITestOPFSession read FSession;
   end;
 
-  { TTestOPFIPIDTestCase }
+  { TTestOPFIPIDContactTestCase }
 
-  TTestOPFIPIDTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFIPIDContactTestCase = class(TTestOPFAbstractTestCase)
   protected
     function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
-  { TTestOPFProxyTestCase }
+  { TTestOPFProxyContactTestCase }
 
-  TTestOPFProxyTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFProxyContactTestCase = class(TTestOPFAbstractTestCase)
   protected
     function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
@@ -250,14 +250,14 @@ begin
   TTestSQLDriver.Data.Clear;
 end;
 
-{ TTestOPFIPIDTestCase }
+{ TTestOPFIPIDContactTestCase }
 
-function TTestOPFIPIDTestCase.InternalCreateModel: TJCoreOPFModel;
+function TTestOPFIPIDContactTestCase.InternalCreateModel: TJCoreOPFModel;
 begin
   Result := TTestOPFModelIPIDContact.Create;
 end;
 
-function TTestOPFIPIDTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+function TTestOPFIPIDContactTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
 begin
   SetLength(Result, 7);
   Result[0] := TTestIPIDSimpleSQLMapping;
@@ -269,14 +269,14 @@ begin
   Result[6] := TTestIPIDLanguageSQLMapping;
 end;
 
-{ TTestOPFProxyTestCase }
+{ TTestOPFProxyContactTestCase }
 
-function TTestOPFProxyTestCase.InternalCreateModel: TJCoreOPFModel;
+function TTestOPFProxyContactTestCase.InternalCreateModel: TJCoreOPFModel;
 begin
   Result := TTestOPFModelProxyContact.Create;
 end;
 
-function TTestOPFProxyTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+function TTestOPFProxyContactTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
 begin
   SetLength(Result, 3);
   Result[0] := TTestProxyPhoneSQLMapping;
