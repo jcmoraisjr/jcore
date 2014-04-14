@@ -132,6 +132,7 @@ implementation
 
 uses
   TestOPFModelRegistry,
+  TestOPFMapping,
   TestOPFMappingContact;
 
 { TTestOPFConfig }

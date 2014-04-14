@@ -21,7 +21,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="12">
       <Item1>
         <Filename Value="core/testlogger.pas"/>
         <UnitName Value="TestLogger"/>
@@ -55,17 +55,21 @@
         <UnitName Value="TestOPFSessionTests"/>
       </Item8>
       <Item9>
-        <Filename Value="opf/testopfmappingtests.pas"/>
-        <UnitName Value="TestOPFMappingTests"/>
+        <Filename Value="opf/testopfmapping.pas"/>
+        <UnitName Value="TestOPFMapping"/>
       </Item9>
       <Item10>
         <Filename Value="opf/testopfmappingcontact.pas"/>
         <UnitName Value="TestOPFMappingContact"/>
       </Item10>
       <Item11>
+        <Filename Value="opf/testopfmappingtests.pas"/>
+        <UnitName Value="TestOPFMappingTests"/>
+      </Item11>
+      <Item12>
         <Filename Value="opf/testopfmappingmanualtests.pas"/>
         <UnitName Value="TestOPFMappingManualTests"/>
-      </Item11>
+      </Item12>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
