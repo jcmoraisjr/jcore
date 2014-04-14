@@ -59,8 +59,8 @@
         <UnitName Value="TestOPFMappingTests"/>
       </Item9>
       <Item10>
-        <Filename Value="opf/testopfmappingmanual.pas"/>
-        <UnitName Value="TestOPFMappingManual"/>
+        <Filename Value="opf/testopfmappingcontact.pas"/>
+        <UnitName Value="TestOPFMappingContact"/>
       </Item10>
       <Item11>
         <Filename Value="opf/testopfmappingmanualtests.pas"/>

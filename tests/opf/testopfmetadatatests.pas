@@ -36,7 +36,7 @@ uses
   JCoreEntity,
   JCoreOPFMetadata,
   TestOPFModelContact,
-  TestOPFMappingManual;
+  TestOPFMappingContact;
 
 { TTestOPFIPIDMetadataTests }
 

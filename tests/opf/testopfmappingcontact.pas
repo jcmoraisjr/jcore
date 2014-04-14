@@ -1,4 +1,4 @@
-unit TestOPFMappingManual;
+unit TestOPFMappingContact;
 
 {$mode objfpc}{$H+}
 

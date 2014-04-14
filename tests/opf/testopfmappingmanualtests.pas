@@ -78,7 +78,7 @@ uses
   testregistry,
   sysutils,
   TestOPFModelContact,
-  TestOPFMappingManual;
+  TestOPFMappingContact;
 
 { TTestOPFInsertManualMappingTests }
 
