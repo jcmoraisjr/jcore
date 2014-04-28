@@ -21,7 +21,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="12">
+    <Files Count="14">
       <Item1>
         <Filename Value="core/testlogger.pas"/>
         <UnitName Value="TestLogger"/>
@@ -39,37 +39,45 @@
         <UnitName Value="TestOPFModelContact"/>
       </Item4>
       <Item5>
-        <Filename Value="opf/testopfmodelregistry.pas"/>
-        <UnitName Value="TestOPFModelRegistry"/>
+        <Filename Value="opf/testopfmodelinvoice.pas"/>
+        <UnitName Value="TestOPFModelInvoice"/>
       </Item5>
       <Item6>
-        <Filename Value="opf/testopfconfig.pas"/>
-        <UnitName Value="TestOPFConfig"/>
+        <Filename Value="opf/testopfmodelregistry.pas"/>
+        <UnitName Value="TestOPFModelRegistry"/>
       </Item6>
       <Item7>
-        <Filename Value="opf/testopfmetadatatests.pas"/>
-        <UnitName Value="TestOPFMetadataTests"/>
+        <Filename Value="opf/testopfconfig.pas"/>
+        <UnitName Value="TestOPFConfig"/>
       </Item7>
       <Item8>
-        <Filename Value="opf/testopfsessiontests.pas"/>
-        <UnitName Value="TestOPFSessionTests"/>
+        <Filename Value="opf/testopfmetadatatests.pas"/>
+        <UnitName Value="TestOPFMetadataTests"/>
       </Item8>
       <Item9>
-        <Filename Value="opf/testopfmapping.pas"/>
-        <UnitName Value="TestOPFMapping"/>
+        <Filename Value="opf/testopfsessiontests.pas"/>
+        <UnitName Value="TestOPFSessionTests"/>
       </Item9>
       <Item10>
-        <Filename Value="opf/testopfmappingcontact.pas"/>
-        <UnitName Value="TestOPFMappingContact"/>
+        <Filename Value="opf/testopfmapping.pas"/>
+        <UnitName Value="TestOPFMapping"/>
       </Item10>
       <Item11>
-        <Filename Value="opf/testopfmappingtests.pas"/>
-        <UnitName Value="TestOPFMappingTests"/>
+        <Filename Value="opf/testopfmappingcontact.pas"/>
+        <UnitName Value="TestOPFMappingContact"/>
       </Item11>
       <Item12>
+        <Filename Value="opf/testopfmappinginvoice.pas"/>
+        <UnitName Value="TestOPFMappingInvoice"/>
+      </Item12>
+      <Item13>
+        <Filename Value="opf/testopfmappingtests.pas"/>
+        <UnitName Value="TestOPFMappingTests"/>
+      </Item13>
+      <Item14>
         <Filename Value="opf/testopfmappingmanualtests.pas"/>
         <UnitName Value="TestOPFMappingManualTests"/>
-      </Item12>
+      </Item14>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

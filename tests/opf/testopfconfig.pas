@@ -13,6 +13,7 @@ uses
   JCoreEntity,
   JCoreOPFDriver,
   JCoreOPFMetadata,
+  JCoreOPFOID,
   JCoreOPFMapping,
   JCoreOPFSession,
   JCoreOPFConfig;
@@ -86,6 +87,14 @@ type
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
+  { TTestOPFProxyInvoiceTestCase }
+
+  TTestOPFProxyInvoiceTestCase = class(TTestOPFAbstractTestCase)
+  protected
+    function InternalCreateModel: TJCoreOPFModel; override;
+    function InternalMappingClassArray: TTestOPFMappingClassArray; override;
+  end;
+
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
@@ -96,9 +105,11 @@ type
   { TTestEmptyMapping }
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
+  protected
+    function CreateOIDFromString(const AOID: string): TJCoreOPFOID; override;
+    procedure InternalStore(const APID: TJCoreOPFPID); override;
   public
     class function Apply(const AClass: TClass): Boolean; override;
-    procedure InternalStore(const APID: TJCoreOPFPID); override;
   end;
 
   TTestIntegerList = specialize TFPGList<Integer>;
@@ -133,7 +144,8 @@ implementation
 uses
   TestOPFModelRegistry,
   TestOPFMapping,
-  TestOPFMappingContact;
+  TestOPFMappingContact,
+  TestOPFMappingInvoice;
 
 { TTestOPFConfig }
 
@@ -285,6 +297,21 @@ begin
   Result[2] := TTestProxyPersonSQLMapping;
 end;
 
+{ TTestOPFProxyInvoiceTestCase }
+
+function TTestOPFProxyInvoiceTestCase.InternalCreateModel: TJCoreOPFModel;
+begin
+  Result := TTestOPFModelProxyInvoice.Create;
+end;
+
+function TTestOPFProxyInvoiceTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+begin
+  SetLength(Result, 3);
+  Result[0] := TClientSQLMapping;
+  Result[1] := TPersonSQLMapping;
+  Result[2] := TCompanySQLMapping;
+end;
+
 { TTestEmptyDriver }
 
 class function TTestEmptyDriver.DriverName: string;
@@ -294,13 +321,18 @@ end;
 
 { TTestEmptyMapping }
 
-class function TTestEmptyMapping.Apply(const AClass: TClass): Boolean;
+function TTestEmptyMapping.CreateOIDFromString(const AOID: string): TJCoreOPFOID;
 begin
-  Result := True;
+  Result := TJCoreOPFIntegerOID.Create(1);
 end;
 
 procedure TTestEmptyMapping.InternalStore(const APID: TJCoreOPFPID);
 begin
+end;
+
+class function TTestEmptyMapping.Apply(const AClass: TClass): Boolean;
+begin
+  Result := True;
 end;
 
 { TTestSQLDriver }

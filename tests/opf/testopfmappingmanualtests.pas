@@ -72,13 +72,23 @@ type
     procedure PersonLanguages;
   end;
 
+  { TTestOPFInsertInvoiceManualMappingTests }
+
+  TTestOPFInsertInvoiceManualMappingTests = class(TTestOPFProxyInvoiceTestCase)
+  published
+    procedure Person;
+    procedure Company;
+  end;
+
 implementation
 
 uses
   testregistry,
   sysutils,
   TestOPFModelContact,
-  TestOPFMappingContact;
+  TestOPFModelInvoice,
+  TestOPFMappingContact,
+  TestOPFMappingInvoice;
 
 { TTestOPFInsertManualMappingTests }
 
@@ -1079,12 +1089,41 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?)']);
 end;
 
+{ TTestOPFInsertInvoiceManualMappingTests }
+
+procedure TTestOPFInsertInvoiceManualMappingTests.Person;
+var
+  VPerson: TPerson;
+begin
+  VPerson := TPerson.Create;
+  try
+    VPerson.Name := 'Jack';
+    VPerson.Nick := 'J';
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteString Jack',
+     'ExecSQL ' + CSQLINSERTINVOICECLIENT,
+     'WriteInteger 1',
+     'WriteString J',
+     'ExecSQL ' + CSQLINSERTINVOICEPERSON]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFInsertInvoiceManualMappingTests.Company;
+begin
+
+end;
+
 initialization
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFInsertManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFUpdateManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFSelectManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteOneManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping', TTestOPFDeleteArrayManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFInsertManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFUpdateManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFSelectManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFDeleteOneManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFDeleteArrayManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.invoice', TTestOPFInsertInvoiceManualMappingTests);
 
 end.
 

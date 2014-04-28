@@ -26,11 +26,20 @@ type
     procedure InitRegistry; override;
   end;
 
+  { TTestOPFModelProxyInvoice }
+
+  TTestOPFModelProxyInvoice = class(TJCoreOPFModel)
+  protected
+    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
+    procedure InitRegistry; override;
+  end;
+
 implementation
 
 uses
   sysutils,
-  TestOPFModelContact;
+  TestOPFModelContact,
+  TestOPFModelInvoice;
 
 { TTestOPFModelIPIDContact }
 
@@ -76,6 +85,26 @@ begin
   AddClass(TTestProxyPhone);
   AddClass(TTestProxyCity);
   AddClass(TTestProxyPerson);
+end;
+
+{ TTestOPFModelProxyInvoice }
+
+function TTestOPFModelProxyInvoice.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+begin
+  Result:=inherited BuildMetadata(AClass);
+end;
+
+procedure TTestOPFModelProxyInvoice.InitRegistry;
+begin
+  inherited InitRegistry;
+  AddClass(TClient);
+  AddClass(TPerson);
+  AddClass(TProduct);
+  AddClass(TProduct);
+  AddClass(TInvoiceItem);
+  AddClass(TInvoiceItemProduct);
+  AddClass(TInvoiceItemService);
+  AddClass(TInvoice);
 end;
 
 end.

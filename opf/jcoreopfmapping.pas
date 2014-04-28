@@ -87,11 +87,10 @@ type
     procedure StoreToDriver(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
   end;
 
-  TJCoreOPFMappingList = specialize TFPGObjectList<TJCoreOPFMapping>;
-
   TJCoreOPFMappingClass = class of TJCoreOPFMapping;
-
   TJCoreOPFMappingClassList = specialize TFPGList<TJCoreOPFMappingClass>;
+  TJCoreOPFMappingList = specialize TFPGObjectList<TJCoreOPFMapping>;
+  TJCoreOPFMappingListMap = specialize TFPGMap<Pointer, TJCoreOPFMappingList>;
 
   { TJCoreOPFSQLMapping }
 
@@ -378,6 +377,10 @@ procedure TJCoreOPFMapping.Store(const APID: TJCoreOPFPID);
 begin
   if APID.IsDirty then
   begin
+    // If a subclass has a different mapping class, Store will be called
+    // more than once. So let's check if the OID was created
+    if not APID.IsPersistent and not Assigned(APID.OID) then
+      APID.AssignOID(CreateOIDFromString(''));
     InternalStore(APID);
     APID.Stored;
   end;
@@ -727,7 +730,6 @@ procedure TJCoreOPFSQLMapping.InternalStore(const APID: TJCoreOPFPID);
 begin
   if not APID.IsPersistent then
   begin
-    APID.AssignOID(CreateOIDFromString(''));
     APID.OID.WriteToDriver(Driver);
     WriteInternalsToDriver(APID);
     Driver.ExecSQL(GenerateInsertStatement(APID));
