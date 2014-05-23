@@ -261,6 +261,7 @@ begin
   TTestAbstractSQLMapping.ClearOID;
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
+  TTestSQLDriver.ExpectedResultsets.Clear;
 end;
 
 { TTestOPFIPIDContactTestCase }
