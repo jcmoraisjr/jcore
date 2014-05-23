@@ -51,8 +51,8 @@ type
     function AcquirePIDFromIntfProp(const AEntity: TObject; APropInfo: PPropInfo): TJCoreOPFPID;
     function AcquirePIDFromProxyField(const AEntity: TObject; AFieldAddr: Pointer): TJCoreOPFPID;
   protected
-    function CreatePID(const AEntity: TObject): TJCoreOPFPID; virtual;
     function CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy; virtual;
+    function PIDClass: TJCoreOPFPIDClass; virtual;
     procedure WriteNullOIDToDriver(const AClass: TClass); virtual;
   protected
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID; virtual; abstract;
@@ -162,7 +162,7 @@ begin
   Result := GetInterfaceProp(AEntity, APropInfo) as TJCoreOPFPID;
   if not Assigned(Result) then
   begin
-    Result := CreatePID(AEntity);
+    Result := PIDClass.Create(Self, AEntity, AcquireMetadata(AEntity.ClassType));
     SetInterfaceProp(AEntity, APropInfo, Result as IJCorePID);
   end;
 end;
@@ -171,25 +171,28 @@ function TJCoreOPFMapping.AcquirePIDFromProxyField(const AEntity: TObject;
   AFieldAddr: Pointer): TJCoreOPFPID;
 var
   VProxy: TJCoreEntityProxy;
+  VMetadata: TJCoreOPFClassMetadata;
 begin
   VProxy := TObject(AFieldAddr^) as TJCoreEntityProxy;
   if not Assigned(VProxy) then
   begin
-    Result := CreatePID(AEntity);
+    VMetadata := AcquireMetadata(AEntity.ClassType);
+    Result := TJCoreOPFPID(PIDClass.NewInstance);
     VProxy := CreateProxy(Result);
     TJCoreEntityProxy(AFieldAddr^) := VProxy;
+    Result.Create(Self, AEntity, VMetadata);
   end else
     Result := VProxy.PID as TJCoreOPFPID;
-end;
-
-function TJCoreOPFMapping.CreatePID(const AEntity: TObject): TJCoreOPFPID;
-begin
-  Result := TJCoreOPFPID.Create(Self, AEntity, AcquireMetadata(AEntity.ClassType));
 end;
 
 function TJCoreOPFMapping.CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy;
 begin
   Result := TJCoreEntityProxy.Create(APID);
+end;
+
+function TJCoreOPFMapping.PIDClass: TJCoreOPFPIDClass;
+begin
+  Result := TJCoreOPFPID;
 end;
 
 procedure TJCoreOPFMapping.WriteNullOIDToDriver(const AClass: TClass);

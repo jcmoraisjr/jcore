@@ -307,10 +307,15 @@ end;
 
 function TTestOPFProxyInvoiceTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
 begin
-  SetLength(Result, 3);
+  SetLength(Result, 8);
   Result[0] := TClientSQLMapping;
   Result[1] := TPersonSQLMapping;
   Result[2] := TCompanySQLMapping;
+  Result[3] := TProductSQLMapping;
+  Result[4] := TInvoiceSQLMapping;
+  Result[5] := TInvoiceItemSQLMapping;
+  Result[6] := TInvoiceItemProductSQLMapping;
+  Result[7] := TInvoiceItemServiceSQLMapping;
 end;
 
 { TTestEmptyDriver }

@@ -237,13 +237,13 @@ end;
 
 function TTestProxyPerson.GetCity: TTestProxyCity;
 begin
-  _Proxy.Lazyload(@FCity, 'City');
+  _Proxy.Lazyload(@FCity);
   Result := FCity;
 end;
 
 function TTestProxyPerson.GetPhones: TTestProxyPhoneList;
 begin
-  _Proxy.Lazyload(@FPhones, 'Phones');
+  _Proxy.Lazyload(@FPhones);
   Result := FPhones;
 end;
 

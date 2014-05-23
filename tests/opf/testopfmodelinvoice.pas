@@ -52,12 +52,16 @@ type
   private
     FName: string;
   published
-    property Name: string read FName;
+    property Name: string read FName write FName;
   end;
 
   { TInvoiceItem }
 
   TInvoiceItem = class(TCustomEntity)
+  private
+    FTotal: Integer;
+  published
+    property Total: Integer read FTotal write FTotal;
   end;
 
   TInvoiceItemList = specialize TFPGObjectList<TInvoiceItem>;
@@ -91,7 +95,7 @@ type
   TInvoice = class(TCustomEntity)
   private
     FClient: TClient;
-    FDate: TDate;
+    FDate: string;
     FItems: TInvoiceItemList;
     function GetClient: TClient;
     function GetItems: TInvoiceItemList;
@@ -101,7 +105,7 @@ type
     procedure Finit; override;
   published
     property Client: TClient read GetClient write SetClient;
-    property Date: TDate read FDate write FDate;
+    property Date: string read FDate write FDate;
     property Items: TInvoiceItemList read GetItems write SetItems;
   end;
 
@@ -122,7 +126,7 @@ end;
 
 function TInvoiceItemProduct.GetProduct: TProduct;
 begin
-  _proxy.Lazyload(@FProduct, 'Product');
+  _proxy.Lazyload(@FProduct);
   Result := FProduct;
 end;
 
@@ -145,13 +149,14 @@ end;
 
 function TInvoice.GetClient: TClient;
 begin
-  _proxy.Lazyload(@FClient, 'Client');
+  _proxy.Lazyload(@FClient);
   Result := FClient;
 end;
 
 function TInvoice.GetItems: TInvoiceItemList;
 begin
-  _proxy.Lazyload(@FItems, 'Items');
+  if not Assigned(FItems) and not _proxy.Lazyload(@FItems) then
+    FItems := TInvoiceItemList.Create(True);
   Result := FItems;
 end;
 

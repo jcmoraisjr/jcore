@@ -78,6 +78,8 @@ type
   published
     procedure Person;
     procedure Company;
+    procedure InvoiceClient;
+    procedure InvoiceItem;
   end;
 
 implementation
@@ -1115,6 +1117,84 @@ end;
 procedure TTestOPFInsertInvoiceManualMappingTests.Company;
 begin
 
+end;
+
+procedure TTestOPFInsertInvoiceManualMappingTests.InvoiceClient;
+var
+  VInvoice: TInvoice;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VInvoice.Client := TClient.Create;
+    VInvoice.Client.Name := 'aclient';
+    VInvoice.Date := '01/01';
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'WriteInteger 2',
+     'WriteString aclient',
+     'ExecSQL ' + CSQLINSERTINVOICECLIENT,
+     'WriteInteger 2',
+     'WriteString 01/01',
+     'ExecSQL ' + CSQLINSERTINVOICEINVOICE]);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFInsertInvoiceManualMappingTests.InvoiceItem;
+var
+  VProduct: TProduct;
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+  VItemService: TInvoiceItemService;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VProduct := TProduct.Create;
+    try
+      VProduct.Name := 'prod';
+      Session.Store(VProduct);  // ID 1
+      VItemProduct := TInvoiceItemProduct.Create;
+      VInvoice.Items.Add(VItemProduct);  // ID 3
+      VItemProduct.Qty := 15;
+      VItemProduct.Product := VProduct;
+      VItemProduct.Total := 28;
+      VProduct.AddRef;
+
+      VItemService := TInvoiceItemService.Create;
+      VInvoice.Items.Add(VItemService);  // ID 4
+      VItemService.Description := 'srv description';
+      VItemService.Total := 90;
+
+      VInvoice.Date := '05/01';
+
+      TTestSQLDriver.Commands.Clear;
+      Session.Store(VInvoice);  // ID 2
+      AssertSQLDriverCommands([
+       'WriteInteger 2',
+       'WriteNull',
+       'WriteString 05/01',
+       'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)',
+       'WriteInteger 3',
+       'WriteInteger 28',
+       'ExecSQL INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)',
+       'WriteInteger 3',
+       'WriteInteger 15',
+       'WriteInteger 1',
+       'ExecSQL INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)',
+       'WriteInteger 4',
+       'WriteInteger 90',
+       'ExecSQL INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)',
+       'WriteInteger 4',
+       'WriteString srv description',
+       'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
+    finally
+      FreeAndNil(VProduct);
+    end;
+  finally
+    FreeAndNil(VInvoice);
+  end;
 end;
 
 initialization
