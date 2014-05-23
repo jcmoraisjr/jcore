@@ -1045,7 +1045,7 @@ end;
 
 function TJCoreOPFPID.GetOIDIntf: IJCoreOID;
 begin
-  Result := FOID as IJCoreOID
+  Result := FOID as IJCoreOID;
 end;
 
 function TJCoreOPFPID.GetOwnerIntf: IJCorePID;
@@ -1114,10 +1114,10 @@ function TJCoreOPFPID.AcquireADM(const AAttributeName: string): TJCoreOPFADM;
 var
   VIndex: Integer;
 begin
-  VIndex := FADMMap.IndexOf(AAttributeName);
+  VIndex := ADMMap.IndexOf(AAttributeName);
   if VIndex = -1 then
     raise EJCoreAttributeNotFound.Create(Entity.ClassName, AAttributeName);
-  Result := FADMMap.Data[VIndex];
+  Result := ADMMap.Data[VIndex];
 end;
 
 function TJCoreOPFPID.ADMByName(const AAttributeName: string): IJCoreADM;
