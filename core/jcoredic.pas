@@ -236,7 +236,7 @@ var
   I: Integer;
 begin
   VCurrent := ANewClass;
-  for I := 0 to Pred(Classes.Count) do
+  for I := Pred(Classes.Count) downto 0 do
     VCurrent := ChooseClass(VCurrent, Classes[I]);
   FCurrentClass := VCurrent;
 end;

@@ -26,6 +26,7 @@ type
     procedure InterfaceNotFoundCheck;
     procedure AmbiguousImplementationCheck;
     procedure LazyRegistrationCheck;
+    procedure LastLazyRegisterWinsCheck;
     procedure SingletonFactory;
     procedure InstanceFactory;
     procedure SingletonAndInstanceFactories;
@@ -211,6 +212,8 @@ var
 begin
   TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade);
   try
+    TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+    AssertEquals(TNavyBlueFacade.ClassName, VColdColor.MyClassName);
     TJCoreDIC.Register(IColdColorFacade, TGreenFacade);
     try
       TJCoreDIC.Locate(IColdColorFacade, VColdColor);
@@ -218,6 +221,8 @@ begin
     finally
       AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
     end;
+    TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+    AssertEquals(TNavyBlueFacade.ClassName, VColdColor.MyClassName);
   finally
     AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
   end;
@@ -231,6 +236,35 @@ begin
     finally
       AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
     end;
+  finally
+    AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
+  end;
+end;
+
+procedure TTestDIC.LastLazyRegisterWinsCheck;
+var
+  VColdColor: IColdColorFacade;
+begin
+  TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade);
+  try
+    TJCoreDIC.LazyRegister(IColdColorFacade, TGreenFacade);
+    try
+      TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+      AssertEquals(TGreenFacade.ClassName, VColdColor.MyClassName);
+      TJCoreDIC.Register(IColdColorFacade, TBlueFacade);
+      try
+        TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+        AssertEquals(TBlueFacade.ClassName, VColdColor.MyClassName);
+      finally
+        AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TBlueFacade));
+      end;
+      TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+      AssertEquals(TGreenFacade.ClassName, VColdColor.MyClassName);
+    finally
+      AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
+    end;
+    TJCoreDIC.Locate(IColdColorFacade, VColdColor);
+    AssertEquals(TNavyBlueFacade.ClassName, VColdColor.MyClassName);
   finally
     AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
   end;

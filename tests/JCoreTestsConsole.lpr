@@ -18,7 +18,7 @@ var
   Application: TMyTestRunner;
 
 begin
-  TJCoreDIC.Register(IJCoreLogFactory, TJCoreConsoleLogFactory);
+  TJCoreDIC.LazyRegister(IJCoreLogFactory, TJCoreConsoleLogFactory);
   Application := TMyTestRunner.Create(nil);
   Application.Initialize;
   Application.Run;
