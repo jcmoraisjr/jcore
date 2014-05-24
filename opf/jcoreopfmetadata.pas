@@ -193,7 +193,6 @@ type
     FChangesUpdated: Boolean;
     FItemsArray: TJCoreObjectArray;
     FItemsArrayUpdated: Boolean;
-    FLoading: Boolean;
     FOIDCache: TJCoreOPFOIDArray;
     FOIDRemoved: TJCoreOPFOIDArray;
     FPIDAdded: TJCoreOPFPIDArray;
@@ -219,7 +218,6 @@ type
     procedure InternalUpdateCache; override;
     property ItemsArray: TJCoreObjectArray read GetItemsArray;
     property OIDCache: TJCoreOPFOIDArray read FOIDCache write SetOIDCache;
-    property Loading: Boolean read FLoading;
   public
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
@@ -896,12 +894,7 @@ end;
 
 procedure TJCoreOPFADMCollection.InternalLoad;
 begin
-  FLoading := True;
-  try
-    Mapping.LoadCollection(PID, Self);
-  finally
-    FLoading := False;
-  end;
+  Mapping.LoadCollection(PID, Self);
 end;
 
 procedure TJCoreOPFADMCollection.InternalUpdateCache;
@@ -911,7 +904,6 @@ var
   VOID: TJCoreOPFOID;
   I, J: Integer;
 begin
-  { TODO : evaluate after lazy loading implementation }
   VPIDArray := PIDArray;
   SetLength(VOIDCache, Length(VPIDArray));
   J := 0;
@@ -970,10 +962,7 @@ var
   VItems: TFPSList;
   VItem: TObject;
 begin
-  if not Loading then
-    VItems := GetList
-  else
-    VItems := nil;
+  VItems := GetList;
   if not Assigned(VItems) then
   begin
     VItems := TJCoreObjectList.Create;
