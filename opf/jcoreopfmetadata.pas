@@ -286,7 +286,6 @@ type
     function IsDirty: Boolean;
     function IsInternalsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
-    procedure Load(const AAttributeName: string);
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
     procedure Stored;
     property IsPersistent: Boolean read GetIsPersistent;
@@ -1184,11 +1183,6 @@ begin
     FAttrAddrRef^ := AAttrAddr;
     Result := True;
   end;
-end;
-
-procedure TJCoreOPFPID.Load(const AAttributeName: string);
-begin
-  AcquireADM(AAttributeName).Load;
 end;
 
 procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);

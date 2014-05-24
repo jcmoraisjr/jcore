@@ -47,7 +47,6 @@ type
     function GetIsPersistent: Boolean;
     function IsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
-    procedure Load(const AFieldName: string);
     function OID: IJCoreOID;
     function Owner: IJCorePID;
     property IsPersistent: Boolean read GetIsPersistent;
@@ -64,7 +63,6 @@ type
     function IsDirty: Boolean;
     function IsPersistent: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
-    procedure Load(const AFieldName: string);
     function OID: IJCoreOID;
     function Owner: IJCorePID;
     function PID: IJCorePID;
@@ -102,12 +100,6 @@ begin
   Result := Assigned(Self) and Assigned(FPID);
   if Result then
     Result := FPID.Lazyload(AAttrAddr);
-end;
-
-procedure TJCoreEntityProxy.Load(const AFieldName: string);
-begin
-  if Assigned(Self) and Assigned(FPID) then
-    FPID.Load(AFieldName);
 end;
 
 function TJCoreEntityProxy.OID: IJCoreOID;
