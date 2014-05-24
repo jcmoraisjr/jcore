@@ -58,10 +58,12 @@ uses
 
 procedure TTestLogger.SetUp;
 begin
+  TJCoreDIC.Unregister(IJCoreLogFactory, TJCoreConsoleLogFactory);
 end;
 
 procedure TTestLogger.TearDown;
 begin
+  TJCoreDIC.Register(IJCoreLogFactory, TJCoreConsoleLogFactory);
 end;
 
 procedure TTestLogger.UseRegisteredLogFactory;
