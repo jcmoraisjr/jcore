@@ -220,7 +220,7 @@ begin
 end;
 
 initialization
-  TJCoreDIC.LazyRegister(IJCoreLogFactory, TJCoreLazyLogFactory);
+  TJCoreDIC.LazyRegister(IJCoreLogFactory, TJCoreLazyLogFactory, jdsApplication);
 
 finalization
   TJCoreDIC.Unregister(IJCoreLogFactory, TJCoreLazyLogFactory);

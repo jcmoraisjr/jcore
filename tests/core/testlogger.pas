@@ -75,7 +75,7 @@ begin
     VLogger := VLogFactory.GetLogger('thelogger');
     VLogger.Debug('themsg');
     AssertEquals(0, TTestLoggerLogger.Commands.Count);
-    TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory);
+    TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory, jdsApplication);
     TJCoreDIC.Locate(IJCoreLogFactory, VLogFactory);
     VLogger := VLogFactory.GetLogger('otherlogger');
     VLogger.Info('othermsg');
@@ -91,7 +91,7 @@ procedure TTestLogger.CreateLogException;
 var
   VLogger: IJCoreLogger;
 begin
-  TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory);
+  TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory, jdsApplication);
   try
     TTestLoggerLogger.Commands.Clear;
     VLogger := TJCoreLogger.GetLogger('logger.exception');
@@ -117,7 +117,7 @@ begin
   try
     TTestLogFactory.LoggerCount := 0;
     TTestLoggerLogger.Commands.Clear;
-    TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory);
+    TJCoreDIC.Register(IJCoreLogFactory, TTestLogFactory, jdsApplication);
 
     VLogger1 := TJCoreLogger.GetLogger('logger1');
     AssertEquals(1, TTestLogFactory.LoggerCount);

@@ -120,7 +120,7 @@ end;
 
 procedure TTestDIC.AmbiguousImplementationException;
 begin
-  TJCoreDIC.Register(IColdColorFacade, TGreenFacade);
+  TJCoreDIC.Register(IColdColorFacade, TGreenFacade, jdsApplication);
 end;
 
 procedure TTestDIC.SetUp;
@@ -135,7 +135,7 @@ procedure TTestDIC.FindImplementation;
 var
   VFacade: IHotColorFacade;
 begin
-  TJCoreDIC.Register(IHotColorFacade, TRedFacade);
+  TJCoreDIC.Register(IHotColorFacade, TRedFacade, jdsApplication);
   try
     TJCoreDIC.Locate(IHotColorFacade, VFacade);
     AssertEquals(VFacade.MyClassName, TRedFacade.ClassName);
@@ -148,12 +148,12 @@ procedure TTestDIC.FindInheritedImplementation;
 var
   VFacade: IHotColorFacade;
 begin
-  TJCoreDIC.Register(IHotColorFacade, TRubyRedFacade);
+  TJCoreDIC.Register(IHotColorFacade, TRubyRedFacade, jdsApplication);
   try
     try
       TJCoreDIC.Locate(IHotColorFacade, VFacade);
       AssertEquals(VFacade.MyClassName, TRubyRedFacade.ClassName);
-      TJCoreDIC.Register(IHotColorFacade, TRedFacade);
+      TJCoreDIC.Register(IHotColorFacade, TRedFacade, jdsApplication);
       TJCoreDIC.Locate(IHotColorFacade, VFacade);
       AssertEquals(VFacade.MyClassName, TRubyRedFacade.ClassName);
     finally
@@ -170,11 +170,11 @@ procedure TTestDIC.FindOverridedImplementation;
 var
   VFacade: IColdColorFacade;
 begin
-  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
+  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade, jdsApplication);
   try
     TJCoreDIC.Locate(IColdColorFacade, VFacade);
     AssertEquals(TNavyBlueFacade.ClassName, VFacade.MyClassName);
-    TJCoreDIC.Register(IColdColorFacade, TGreenFacade, nil, TNavyBlueFacade);
+    TJCoreDIC.Register(IColdColorFacade, TGreenFacade, jdsApplication, TNavyBlueFacade);
     try
       TJCoreDIC.Locate(IColdColorFacade, VFacade);
       AssertEquals(TGreenFacade.ClassName, VFacade.MyClassName);
@@ -192,11 +192,11 @@ procedure TTestDIC.FindQualifiedImplementation;
 var
   VHotColor: IHotColorFacade;
 begin
-  TJCoreDIC.Register(IHotColorFacade, 'dark', TRubyRedFacade);
+  TJCoreDIC.Register(IHotColorFacade, 'dark', TRubyRedFacade, jdsApplication);
   try
-    TJCoreDIC.Register(IHotColorFacade, 'medium', TRedFacade);
+    TJCoreDIC.Register(IHotColorFacade, 'medium', TRedFacade, jdsApplication);
     try
-      TJCoreDIC.Register(IHotColorFacade, 'light', TYellowFacade);
+      TJCoreDIC.Register(IHotColorFacade, 'light', TYellowFacade, jdsApplication);
       try
         TJCoreDIC.Locate(IHotColorFacade, 'medium', VHotColor);
         AssertEquals(TRedFacade.ClassName, VHotColor.MyClassName);
@@ -222,7 +222,7 @@ end;
 
 procedure TTestDIC.AmbiguousImplementationCheck;
 begin
-  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
+  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade, jdsApplication);
   try
     try
       AssertException(EJCoreDICAmbiguousImplementationException, @AmbiguousImplementationException);
@@ -238,11 +238,11 @@ procedure TTestDIC.LazyRegistrationCheck;
 var
   VColdColor: IColdColorFacade;
 begin
-  TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade);
+  TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade, jdsApplication);
   try
     TJCoreDIC.Locate(IColdColorFacade, VColdColor);
     AssertEquals(TNavyBlueFacade.ClassName, VColdColor.MyClassName);
-    TJCoreDIC.Register(IColdColorFacade, TGreenFacade);
+    TJCoreDIC.Register(IColdColorFacade, TGreenFacade, jdsApplication);
     try
       TJCoreDIC.Locate(IColdColorFacade, VColdColor);
       AssertEquals(TGreenFacade.ClassName, VColdColor.MyClassName);
@@ -255,9 +255,9 @@ begin
     AssertTrue(TJCoreDIC.Unregister(IColdColorFacade, TNavyBlueFacade));
   end;
 
-  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade);
+  TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade, jdsApplication);
   try
-    TJCoreDIC.LazyRegister(IColdColorFacade, TGreenFacade);
+    TJCoreDIC.LazyRegister(IColdColorFacade, TGreenFacade, jdsApplication);
     try
       TJCoreDIC.Locate(IColdColorFacade, VColdColor);
       AssertEquals(TNavyBlueFacade.ClassName, VColdColor.MyClassName);
@@ -273,13 +273,13 @@ procedure TTestDIC.LastLazyRegisterWinsCheck;
 var
   VColdColor: IColdColorFacade;
 begin
-  TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade);
+  TJCoreDIC.LazyRegister(IColdColorFacade, TNavyBlueFacade, jdsApplication);
   try
-    TJCoreDIC.LazyRegister(IColdColorFacade, TGreenFacade);
+    TJCoreDIC.LazyRegister(IColdColorFacade, TGreenFacade, jdsApplication);
     try
       TJCoreDIC.Locate(IColdColorFacade, VColdColor);
       AssertEquals(TGreenFacade.ClassName, VColdColor.MyClassName);
-      TJCoreDIC.Register(IColdColorFacade, TBlueFacade);
+      TJCoreDIC.Register(IColdColorFacade, TBlueFacade, jdsApplication);
       try
         TJCoreDIC.Locate(IColdColorFacade, VColdColor);
         AssertEquals(TBlueFacade.ClassName, VColdColor.MyClassName);
@@ -304,7 +304,7 @@ const
 var
   VFacade: IHotColorFacade;
 begin
-  TJCoreDIC.Register(IHotColorFacade, TRedFacade, TJCoreDICSingletonClass);
+  TJCoreDIC.Register(IHotColorFacade, TRedFacade, jdsApplication);
   TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CSingletonConfig;
   VFacade := nil;
@@ -319,7 +319,7 @@ const
 var
   VFacade: IHotColorFacade;
 begin
-  TJCoreDIC.Register(IHotColorFacade, TRedFacade, TJCoreDICInstanceClass);
+  TJCoreDIC.Register(IHotColorFacade, TRedFacade, jdsRequest);
   TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CInstanceConfig;
   VFacade := nil;
@@ -335,13 +335,13 @@ const
 var
   VFacade: IHotColorFacade;
 begin
-  TJCoreDIC.Register(IHotColorFacade, TRedFacade, TJCoreDICSingletonClass);
+  TJCoreDIC.Register(IHotColorFacade, TRedFacade, jdsApplication);
   TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CSingletonConfig;
   VFacade := nil;
   TJCoreDIC.Locate(IHotColorFacade, VFacade);
   AssertEquals(CSingletonConfig, VFacade.Value);
-  TJCoreDIC.Register(IHotColorFacade, TYellowFacade, TJCoreDICInstanceClass, TRedFacade);
+  TJCoreDIC.Register(IHotColorFacade, TYellowFacade, jdsRequest, TRedFacade);
   TJCoreDIC.Locate(IHotColorFacade, VFacade);
   VFacade.Value := CInstanceConfig;
   VFacade := nil;

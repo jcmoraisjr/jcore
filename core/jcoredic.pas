@@ -120,6 +120,8 @@ type
     function Unregister(const AGUID: TGuid; const AClass: TClass): Boolean;
   end;
 
+  TJCoreDICScope = (jdsApplication, jdsRequest);
+
   { TJCoreDIC }
 
   TJCoreDIC = class(TObject)
@@ -128,15 +130,15 @@ type
     class constructor Create;
     class destructor Destroy;
     class function CheckGUID(const AGUID: TGuid; const AQualifier: string): TJCoreDICClassFactory;
-    class procedure DoRegister(const AGUID: TGuid; const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
+    class procedure DoRegister(const AGUID: TGuid; const AQualifier: string; AClass: TClass; AScope: TJCoreDICScope; AOverrides: TClass; AIsLazy: Boolean);
     class property Container: TJCoreDICDependencyMap read FContainer;
   public
-    class procedure LazyRegister(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil);
-    class procedure LazyRegister(const AGUID: TGuid; const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass = nil);
+    class procedure LazyRegister(const AGUID: TGuid; AClass: TClass; AScope: TJCoreDICScope);
+    class procedure LazyRegister(const AGUID: TGuid; const AQualifier: string; AClass: TClass; AScope: TJCoreDICScope);
     class procedure Locate(const AGUID: TGuid; out AIntf);
     class procedure Locate(const AGUID: TGuid; const AQualifier: string; out AIntf);
-    class procedure Register(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil; AOverrides: TClass = nil);
-    class procedure Register(const AGUID: TGuid; const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass = nil; AOverrides: TClass = nil);
+    class procedure Register(const AGUID: TGuid; AClass: TClass; AScope: TJCoreDICScope; AOverrides: TClass = nil);
+    class procedure Register(const AGUID: TGuid; const AQualifier: string; AClass: TClass; AScope: TJCoreDICScope; AOverrides: TClass = nil);
     class function Unregister(const AGUID: TGuid; AClass: TClass): Boolean;
   end;
 
@@ -376,17 +378,21 @@ begin
 end;
 
 class procedure TJCoreDIC.DoRegister(const AGUID: TGuid; const AQualifier: string;
-  AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
+  AClass: TClass; AScope: TJCoreDICScope; AOverrides: TClass; AIsLazy: Boolean);
 var
+  VDICClassClass: TJCoreDICClassClass;
   VDICClass: TJCoreDICClass;
 begin
   if not Assigned(AClass) then
     raise EJCoreNilPointerException.Create;
   if (AClass.GetInterfaceEntry(AGUID) = nil) then
     raise EJCoreUnsupportedIntfException.Create(AClass, AGUID);
-  if not Assigned(ADICClass) then
-    ADICClass := TJCoreDICSingletonClass;
-  VDICClass := ADICClass.Create(AClass, AOverrides, AIsLazy);
+  { TODO : Factory }
+  case AScope of
+    jdsApplication: VDICClassClass := TJCoreDICSingletonClass;
+    jdsRequest: VDICClassClass := TJCoreDICInstanceClass;
+  end;
+  VDICClass := VDICClassClass.Create(AClass, AOverrides, AIsLazy);
   try
     CheckGUID(AGUID, AQualifier).AddClass(VDICClass);
   except
@@ -396,15 +402,15 @@ begin
 end;
 
 class procedure TJCoreDIC.LazyRegister(const AGUID: TGuid; AClass: TClass;
-  ADICClass: TJCoreDICClassClass);
+  AScope: TJCoreDICScope);
 begin
-  DoRegister(AGUID, '', AClass, ADICClass, nil, True);
+  DoRegister(AGUID, '', AClass, AScope, nil, True);
 end;
 
 class procedure TJCoreDIC.LazyRegister(const AGUID: TGuid;
-  const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass);
+  const AQualifier: string; AClass: TClass; AScope: TJCoreDICScope);
 begin
-  DoRegister(AGUID, AQualifier, AClass, ADICClass, nil, True);
+  DoRegister(AGUID, AQualifier, AClass, AScope, nil, True);
 end;
 
 class procedure TJCoreDIC.Locate(const AGUID: TGuid; out AIntf);
@@ -425,17 +431,16 @@ begin
     raise EJCoreUnsupportedIntfException.Create(VInstance.ClassType, AGUID);
 end;
 
-class procedure TJCoreDIC.Register(
-  const AGUID: TGuid; AClass: TClass;
-  ADICClass: TJCoreDICClassClass; AOverrides: TClass);
+class procedure TJCoreDIC.Register(const AGUID: TGuid; AClass: TClass;
+  AScope: TJCoreDICScope; AOverrides: TClass);
 begin
-  DoRegister(AGUID, '', AClass, ADICClass, AOverrides, False);
+  DoRegister(AGUID, '', AClass, AScope, AOverrides, False);
 end;
 
 class procedure TJCoreDIC.Register(const AGUID: TGuid; const AQualifier: string;
-  AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass);
+  AClass: TClass; AScope: TJCoreDICScope; AOverrides: TClass);
 begin
-  DoRegister(AGUID, AQualifier, AClass, ADICClass, AOverrides, False);
+  DoRegister(AGUID, AQualifier, AClass, AScope, AOverrides, False);
 end;
 
 class function TJCoreDIC.Unregister(
