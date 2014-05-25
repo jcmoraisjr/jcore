@@ -215,6 +215,9 @@ begin
     for I := Low(ACommands) to High(ACommands) do
       AssertEquals('cmd' + IntToStr(I), ACommands[I], TTestSQLDriver.Commands[I]);
   except
+    LOG.Warn('Expected commands:');
+    for I := Low(ACommands) to High(ACommands) do
+      LOG.Warn('  ' + IntToStr(I) + ': ' + ACommands[I]);
     LOG.Warn('Executed commands:');
     for I := 0 to Pred(TTestSQLDriver.Commands.Count) do
       LOG.Warn('  ' + IntToStr(I) + ': ' + TTestSQLDriver.Commands[I]);
