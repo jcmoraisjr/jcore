@@ -35,7 +35,6 @@ type
   IJCoreADM = interface
   ['{BB774071-F57D-AFB8-70BC-3A2B0DD69690}']
     function IsDirty: Boolean;
-    procedure UpdateCache;
   end;
 
   { IJCorePID }

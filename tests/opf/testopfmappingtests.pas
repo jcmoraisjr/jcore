@@ -39,6 +39,16 @@ type
     procedure AggregationChangedOrder;
   end;
 
+  { TTestOPFPersistentStateTests }
+
+  TTestOPFPersistentStateTests = class(TTestOPFIPIDContactTestCase)
+  published
+    procedure AfterInsert;
+    procedure AfterUpdate;
+    procedure AfterSelect;
+    procedure AfterDelete;
+  end;
+
 implementation
 
 uses
@@ -93,7 +103,7 @@ begin
     TTestOPFSession.CommitCount := 0;
     Session.Store(VPerson);
     AssertEquals('commit2 cnt', 1, TTestOPFSession.CommitCount);
-    AssertEquals('pid2 cnt', 5, TTestOPFSession.LastCommitPIDList.Count);
+    AssertEquals('pid2 cnt', 1, TTestOPFSession.LastCommitPIDList.Count);
     AssertSame('vperson2 pid', TTestOPFSession.LastCommitPIDList[0], VPerson._PID as TJCoreOPFPID);
   finally
     FreeAndNil(VPerson);
@@ -111,7 +121,7 @@ begin
     VPerson.Languages.Add(VLang);
     Session.Store(VPerson);
     AssertNotNull('lang pid', VLang._PID);
-    AssertTrue('lang clean', not VLang._PID.IsDirty);
+    AssertFalse('lang clean', VLang._PID.IsDirty);
     VPerson.Name := 'SomeName';
     VLang.Name := 'spanish';
     Session.Store(VPerson);
@@ -477,9 +487,85 @@ begin
   end;
 end;
 
+{ TTestOPFPersistentStateTests }
+
+procedure TTestOPFPersistentStateTests.AfterInsert;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    Session.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertTrue('person persistent', VPerson._PID.IsPersistent);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFPersistentStateTests.AfterUpdate;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Name := 'one';
+    Session.Store(VPerson);
+    VPerson.Name := 'other';
+    Session.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertTrue('person persistent', VPerson._PID.IsPersistent);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFPersistentStateTests.AfterSelect;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  TTestSQLDriver.Data.Add('name');
+  TTestSQLDriver.Data.Add('15');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  VPerson := Session.Retrieve(TTestIPIDPerson, '1') as TTestIPIDPerson;
+  try
+    Session.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertTrue('person persistent', VPerson._PID.IsPersistent);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFPersistentStateTests.AfterDelete;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    Session.Store(VPerson);
+    AssertNotNull('person pid1', VPerson._PID);
+    AssertNotNull('person oid1', VPerson._PID.OID);
+    AssertTrue('person persistent1', VPerson._PID.IsPersistent);
+    TTestSQLDriver.ExpectedResultsets.Add(0);
+    TTestSQLDriver.ExpectedResultsets.Add(0);
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('1');
+    Session.Dispose(VPerson);
+    AssertNotNull('person pid2', VPerson._PID);
+    AssertNull('person oid2', VPerson._PID.OID);
+    AssertFalse('person persistent2', VPerson._PID.IsPersistent);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
 initialization
   RegisterTest('jcore.opf.mapping.core', TTestOPFMappingTests);
   RegisterTest('jcore.opf.mapping.cleandirty', TTestOPFCleanDirtyAttributeTests);
+  RegisterTest('jcore.opf.mapping.persistentstate', TTestOPFPersistentStateTests);
 
 end.
 

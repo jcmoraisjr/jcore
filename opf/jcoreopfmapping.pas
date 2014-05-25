@@ -123,7 +123,6 @@ type
     procedure WriteInternalsToDriver(const APID: TJCoreOPFPID); virtual;
   protected
     function BuildParams(const ASize: Integer): string;
-    function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     procedure InternalDispose(const AMetadata: TJCoreOPFClassMetadata; const AOIDArray: array of TJCoreOPFOID); override;
     function InternalRetrieve(const AClass: TClass; const AOID: TJCoreOPFOID): TObject; override;
     procedure InternalRetrieveElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection); override;
@@ -247,12 +246,13 @@ begin
     Result := AcquirePIDFromProxyField(AEntity);
   if not Assigned(Result) then
     raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
-  Mapper.AddInTransactionPID(Result);
 end;
 
 procedure TJCoreOPFMapping.Dispose(const APID: TJCoreOPFPID);
 begin
   InternalDispose(Model.AcquireMetadata(APID.Entity.ClassType), [APID.OID]);
+  APID.AssignOID(nil);
+  Mapper.AddInTransactionPID(APID);
 end;
 
 procedure TJCoreOPFMapping.DisposeFromDriver(const AMetadata: TJCoreOPFClassMetadata;
@@ -384,7 +384,7 @@ begin
     if not APID.IsPersistent and not Assigned(APID.OID) then
       APID.AssignOID(CreateOIDFromString(''));
     InternalStore(APID);
-    APID.Stored;
+    Mapper.AddInTransactionPID(APID);
   end;
 end;
 
@@ -632,16 +632,6 @@ begin
     Result := '=?'
   else
     Result := '';
-end;
-
-function TJCoreOPFSQLMapping.CreatePIDArray(
-  const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
-var
-  I: Integer;
-begin
-  SetLength(Result, Length(AItems));
-  for I := Low(AItems) to High(AItems) do
-    Result[I] := AcquirePID(AItems[I]);
 end;
 
 procedure TJCoreOPFSQLMapping.InternalDispose(

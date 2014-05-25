@@ -57,6 +57,7 @@ type
     FMetadata: TJCoreOPFAttrMetadata;
     FPID: TJCoreOPFPID;
   protected
+    procedure InternalCommit; virtual;
     procedure InternalGetter; virtual; abstract;
     function InternalIsDirty: Boolean; virtual; abstract;
     procedure InternalLoad; virtual;
@@ -69,11 +70,10 @@ type
     constructor Create(const AMapping: IJCoreOPFPIDMapping; const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     class function AttributeType: TJCoreOPFAttributeType; virtual; abstract;
+    procedure Commit;
     function IsDirty: Boolean;
     procedure Load;
-    procedure TransactionClosing(const ACommit: Boolean); virtual;
     procedure UpdateAttrAddr(const AAttrAddrRef: PPPointer);
-    procedure UpdateCache;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
   end;
 
@@ -212,6 +212,7 @@ type
     procedure UpdateChanges;
   protected
     procedure InternalAssignArray(const AArray: TJCoreObjectArray); virtual; abstract;
+    procedure InternalCommit; override;
     function InternalCreateItemsArray: TJCoreObjectArray; virtual; abstract;
     function InternalIsDirty: Boolean; override;
     procedure InternalLoad; override;
@@ -222,7 +223,6 @@ type
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
     class function AttributeType: TJCoreOPFAttributeType; override;
-    procedure TransactionClosing(const ACommit: Boolean); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
     property PIDArray: TJCoreOPFPIDArray read GetPIDArray;
@@ -260,7 +260,6 @@ type
     FOID: TJCoreOPFOID;
     FOwner: TJCoreOPFPID;
     FOwnerADM: TJCoreOPFADMCollection;
-    FStored: Boolean;
     procedure CreateADMs;
     function GetEntity: TObject;
     function GetIsPersistent: Boolean;
@@ -287,7 +286,6 @@ type
     function IsInternalsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
-    procedure Stored;
     property IsPersistent: Boolean read GetIsPersistent;
     property Entity: TObject read FEntity;
     property OID: TJCoreOPFOID read FOID;
@@ -366,6 +364,10 @@ uses
 
 { TJCoreOPFADM }
 
+procedure TJCoreOPFADM.InternalCommit;
+begin
+end;
+
 procedure TJCoreOPFADM.InternalLoad;
 begin
   raise EJCoreOPFUnsupportedLoadOperation.Create(Metadata.PropInfo^.PropType^.Name);
@@ -383,6 +385,13 @@ begin
   FLoaded := False;
 end;
 
+procedure TJCoreOPFADM.Commit;
+begin
+  InternalUpdateCache;
+  FCacheUpdated := True;
+  InternalCommit;
+end;
+
 function TJCoreOPFADM.IsDirty: Boolean;
 begin
   { TODO : Implement IsDirty cache while transaction is active }
@@ -398,10 +407,6 @@ begin
   end;
 end;
 
-procedure TJCoreOPFADM.TransactionClosing(const ACommit: Boolean);
-begin
-end;
-
 procedure TJCoreOPFADM.UpdateAttrAddr(const AAttrAddrRef: PPPointer);
 begin
   // AAttrAddrRef^, which references ADM.AttrAddr address, will be updated
@@ -410,12 +415,6 @@ begin
   InternalGetter;
   if not Assigned(FAttrAddr) then;
     Metadata.NoLazyload;
-end;
-
-procedure TJCoreOPFADM.UpdateCache;
-begin
-  InternalUpdateCache;
-  FCacheUpdated := True;
 end;
 
 { TJCoreOPFADMSimple }
@@ -877,6 +876,14 @@ begin
   FChangesUpdated := True;
 end;
 
+procedure TJCoreOPFADMCollection.InternalCommit;
+begin
+  inherited;
+  FChangesUpdated := False;
+  FItemsArrayUpdated := False;
+  FPIDArrayUpdated := False;
+end;
+
 function TJCoreOPFADMCollection.InternalIsDirty: Boolean;
 var
   VItems: TJCoreObjectArray;
@@ -933,14 +940,6 @@ end;
 class function TJCoreOPFADMCollection.AttributeType: TJCoreOPFAttributeType;
 begin
   Result := jatCollection;
-end;
-
-procedure TJCoreOPFADMCollection.TransactionClosing(const ACommit: Boolean);
-begin
-  inherited;
-  FChangesUpdated := False;
-  FItemsArrayUpdated := False;
-  FPIDArrayUpdated := False;
 end;
 
 { TJCoreOPFADMFPSListCollection }
@@ -1115,7 +1114,7 @@ end;
 
 procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);
 begin
-  if IsPersistent then
+  if IsPersistent and Assigned(AOID) then
     raise EJCoreOPFCannotAssignOIDPersistent.Create;
   FreeAndNil(FOID);
   FOID := AOID;
@@ -1143,20 +1142,11 @@ end;
 
 procedure TJCoreOPFPID.Commit;
 var
-  VADM: TJCoreOPFADM;
   I: Integer;
 begin
-  if FStored then
-  begin
-    FIsPersistent := Assigned(FOID);
-    for I := 0 to Pred(ADMMap.Count) do
-    begin
-      VADM := ADMMap.Data[I];
-      VADM.UpdateCache;
-      VADM.TransactionClosing(True);
-    end;
-    FStored := False;
-  end;
+  FIsPersistent := Assigned(FOID);
+  for I := 0 to Pred(ADMMap.Count) do
+    ADMMap.Data[I].Commit;
 end;
 
 function TJCoreOPFPID.IsDirty: Boolean;
@@ -1192,11 +1182,6 @@ begin
            a better approach }
   if FOID = AOID then
     FOID := nil;
-end;
-
-procedure TJCoreOPFPID.Stored;
-begin
-  FStored := True;
 end;
 
 { TJCoreOPFAttrMetadata }

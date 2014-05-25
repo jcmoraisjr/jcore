@@ -277,6 +277,7 @@ begin
   VPID := VMappingList.Last.AcquirePID(AEntity);
   for VMapping in VMappingList do
     VMapping.Dispose(VPID);
+  Commit;
 end;
 
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AOIDArray: array of string);
