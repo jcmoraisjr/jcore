@@ -239,9 +239,6 @@ begin
 end;
 
 function TJCoreOPFMapping.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
-var
-  VPropInfo: PPropInfo;
-  VFieldAddr: Pointer;
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
