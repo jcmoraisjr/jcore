@@ -9,9 +9,9 @@ uses
 
 type
 
-  { TTestOPFInsertManualMappingTests }
+  { TTestOPFInsertManualIPIDMappingTests }
 
-  TTestOPFInsertManualMappingTests = class(TTestOPFIPIDContactTestCase)
+  TTestOPFInsertManualIPIDMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure Person;
     procedure PersonAddress;
@@ -21,9 +21,9 @@ type
     procedure PersonAggregationChange;
   end;
 
-  { TTestOPFUpdateManualMappingTests }
+  { TTestOPFUpdateManualIPIDMappingTests }
 
-  TTestOPFUpdateManualMappingTests = class(TTestOPFIPIDContactTestCase)
+  TTestOPFUpdateManualIPIDMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonCity;
@@ -36,9 +36,9 @@ type
     procedure PersonAggregationChange;
   end;
 
-  { TTestOPFSelectManualMappingTests }
+  { TTestOPFSelectManualIPIDMappingTests }
 
-  TTestOPFSelectManualMappingTests = class(TTestOPFIPIDContactTestCase)
+  TTestOPFSelectManualIPIDMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonAddressCity;
@@ -48,9 +48,9 @@ type
     procedure PersonLanguages;
   end;
 
-  { TTestOPFDeleteOneManualMappingTests }
+  { TTestOPFDeleteOneManualIPIDMappingTests }
 
-  TTestOPFDeleteOneManualMappingTests = class(TTestOPFIPIDContactTestCase)
+  TTestOPFDeleteOneManualIPIDMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonAddress;
@@ -61,9 +61,9 @@ type
     procedure PersonLanguages;
   end;
 
-  { TTestOPFDeleteArrayManualMappingTests }
+  { TTestOPFDeleteArrayManualIPIDMappingTests }
 
-  TTestOPFDeleteArrayManualMappingTests = class(TTestOPFIPIDContactTestCase)
+  TTestOPFDeleteArrayManualIPIDMappingTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure City;
     procedure PersonAddress;
@@ -72,9 +72,9 @@ type
     procedure PersonLanguages;
   end;
 
-  { TTestOPFInsertInvoiceManualMappingTests }
+  { TTestOPFInsertManualProxyMappingTests }
 
-  TTestOPFInsertInvoiceManualMappingTests = class(TTestOPFProxyInvoiceTestCase)
+  TTestOPFInsertManualProxyMappingTests = class(TTestOPFProxyInvoiceTestCase)
   published
     procedure Person;
     procedure Company;
@@ -92,9 +92,9 @@ uses
   TestOPFMappingContact,
   TestOPFMappingInvoice;
 
-{ TTestOPFInsertManualMappingTests }
+{ TTestOPFInsertManualIPIDMappingTests }
 
-procedure TTestOPFInsertManualMappingTests.Person;
+procedure TTestOPFInsertManualIPIDMappingTests.Person;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -115,7 +115,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMappingTests.PersonAddress;
+procedure TTestOPFInsertManualIPIDMappingTests.PersonAddress;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -146,7 +146,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMappingTests.PersonCity;
+procedure TTestOPFInsertManualIPIDMappingTests.PersonCity;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -176,7 +176,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMappingTests.PersonPhones;
+procedure TTestOPFInsertManualIPIDMappingTests.PersonPhones;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -215,7 +215,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMappingTests.PersonLanguages;
+procedure TTestOPFInsertManualIPIDMappingTests.PersonLanguages;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -255,7 +255,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualMappingTests.PersonAggregationChange;
+procedure TTestOPFInsertManualIPIDMappingTests.PersonAggregationChange;
 var
   VPerson: TTestIPIDPerson;
   VLang: TTestIPIDLanguage;
@@ -288,9 +288,9 @@ begin
   end;
 end;
 
-{ TTestOPFUpdateManualMappingTests }
+{ TTestOPFUpdateManualIPIDMappingTests }
 
-procedure TTestOPFUpdateManualMappingTests.City;
+procedure TTestOPFUpdateManualIPIDMappingTests.City;
 var
   VCity: TTestIPIDCity;
 begin
@@ -310,7 +310,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonCity;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonCity;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -334,7 +334,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonAddPhones;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonAddPhones;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -359,7 +359,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonRemovePhones;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonRemovePhones;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -382,7 +382,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonAddLanguages;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonAddLanguages;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -406,7 +406,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonRemoveLanguages;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonRemoveLanguages;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -428,7 +428,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonRemoveAddLanguages;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonRemoveAddLanguages;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -457,7 +457,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonNoLanguagesChange;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonNoLanguagesChange;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -481,7 +481,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingTests.PersonAggregationChange;
+procedure TTestOPFUpdateManualIPIDMappingTests.PersonAggregationChange;
 var
   VPerson: TTestIPIDPerson;
   VLang: TTestIPIDLanguage;
@@ -501,9 +501,9 @@ begin
   end;
 end;
 
-{ TTestOPFSelectManualMappingTests }
+{ TTestOPFSelectManualIPIDMappingTests }
 
-procedure TTestOPFSelectManualMappingTests.City;
+procedure TTestOPFSelectManualIPIDMappingTests.City;
 var
   VCity: TTestIPIDCity;
 begin
@@ -527,7 +527,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMappingTests.PersonAddressCity;
+procedure TTestOPFSelectManualIPIDMappingTests.PersonAddressCity;
 var
   VPerson: TTestIPIDPerson;
   VAddress: TTestIPIDAddress;
@@ -585,7 +585,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMappingTests.PersonCity;
+procedure TTestOPFSelectManualIPIDMappingTests.PersonCity;
 var
   VPerson: TTestIPIDPerson;
   VCity: TTestIPIDCity;
@@ -629,7 +629,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMappingTests.PersonNullAddressCity;
+procedure TTestOPFSelectManualIPIDMappingTests.PersonNullAddressCity;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -662,7 +662,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMappingTests.PersonPhones;
+procedure TTestOPFSelectManualIPIDMappingTests.PersonPhones;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -709,7 +709,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectManualMappingTests.PersonLanguages;
+procedure TTestOPFSelectManualIPIDMappingTests.PersonLanguages;
 var
   VPerson: TTestIPIDPerson;
 begin
@@ -761,9 +761,9 @@ begin
   end;
 end;
 
-{ TTestOPFDeleteOneManualMappingTests }
+{ TTestOPFDeleteOneManualIPIDMappingTests }
 
-procedure TTestOPFDeleteOneManualMappingTests.City;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.City;
 begin
   Session.Dispose(TTestIPIDCity, ['5']);
   AssertSQLDriverCommands([
@@ -771,7 +771,7 @@ begin
    'ExecSQL ' + CSQLDELETECITY + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMappingTests.PersonAddress;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.PersonAddress;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -798,7 +798,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMappingTests.PersonCity;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.PersonCity;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -823,7 +823,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMappingTests.PersonOnePhone;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.PersonOnePhone;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(1);
@@ -853,7 +853,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMappingTests.PersonOneLanguage;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.PersonOneLanguage;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -878,7 +878,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMappingTests.PersonPhones;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.PersonPhones;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(2);
@@ -910,7 +910,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-procedure TTestOPFDeleteOneManualMappingTests.PersonLanguages;
+procedure TTestOPFDeleteOneManualIPIDMappingTests.PersonLanguages;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -935,9 +935,9 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + '=?']);
 end;
 
-{ TTestOPFDeleteArrayManualMappingTests }
+{ TTestOPFDeleteArrayManualIPIDMappingTests }
 
-procedure TTestOPFDeleteArrayManualMappingTests.City;
+procedure TTestOPFDeleteArrayManualIPIDMappingTests.City;
 begin
   Session.Dispose(TTestIPIDCity, ['13', '22']);
   AssertSQLDriverCommands([
@@ -946,7 +946,7 @@ begin
    'ExecSQL ' + CSQLDELETECITY + ' IN (?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMappingTests.PersonAddress;
+procedure TTestOPFDeleteArrayManualIPIDMappingTests.PersonAddress;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -984,7 +984,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMappingTests.PersonCity;
+procedure TTestOPFDeleteArrayManualIPIDMappingTests.PersonCity;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1019,7 +1019,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMappingTests.PersonPhones;
+procedure TTestOPFDeleteArrayManualIPIDMappingTests.PersonPhones;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(2);
@@ -1061,7 +1061,7 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
 end;
 
-procedure TTestOPFDeleteArrayManualMappingTests.PersonLanguages;
+procedure TTestOPFDeleteArrayManualIPIDMappingTests.PersonLanguages;
 begin
   // Phones IDs
   TTestSQLDriver.ExpectedResultsets.Add(0);
@@ -1091,9 +1091,9 @@ begin
    'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?)']);
 end;
 
-{ TTestOPFInsertInvoiceManualMappingTests }
+{ TTestOPFInsertManualProxyMappingTests }
 
-procedure TTestOPFInsertInvoiceManualMappingTests.Person;
+procedure TTestOPFInsertManualProxyMappingTests.Person;
 var
   VPerson: TPerson;
 begin
@@ -1114,12 +1114,12 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertInvoiceManualMappingTests.Company;
+procedure TTestOPFInsertManualProxyMappingTests.Company;
 begin
 
 end;
 
-procedure TTestOPFInsertInvoiceManualMappingTests.InvoiceClient;
+procedure TTestOPFInsertManualProxyMappingTests.InvoiceClient;
 var
   VInvoice: TInvoice;
 begin
@@ -1142,7 +1142,7 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertInvoiceManualMappingTests.InvoiceItem;
+procedure TTestOPFInsertManualProxyMappingTests.InvoiceItem;
 var
   VProduct: TProduct;
   VInvoice: TInvoice;
@@ -1198,12 +1198,12 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFInsertManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFUpdateManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFSelectManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFDeleteOneManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.contact', TTestOPFDeleteArrayManualMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.invoice', TTestOPFInsertInvoiceManualMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFInsertManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFUpdateManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFSelectManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFDeleteOneManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFDeleteArrayManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.proxy', TTestOPFInsertManualProxyMappingTests);
 
 end.
 
