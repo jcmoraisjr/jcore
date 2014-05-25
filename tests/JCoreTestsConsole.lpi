@@ -85,7 +85,7 @@
         <Name Value="EAssertionFailedError"/>
       </Item6>
       <Item7>
-        <Name Value="EJCoreDICIntfNotFoundException"/>
+        <Name Value="EJCoreDICImplNotFoundException"/>
       </Item7>
       <Item8>
         <Name Value="EJCoreDICAmbiguousImplementationException"/>

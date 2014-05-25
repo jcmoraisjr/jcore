@@ -25,13 +25,13 @@ type
 
   EJCoreDICException = class(EJCoreException);
 
-  { EJCoreDICIntfNotFoundException }
+  { EJCoreDICImplNotFoundException }
 
-  EJCoreDICIntfNotFoundException = class(EJCoreDICException)
+  EJCoreDICImplNotFoundException = class(EJCoreDICException)
   strict private
     FGUID: TGuid;
   public
-    constructor Create(AGUID: TGuid);
+    constructor Create(const AGUID: TGuid; const AQualifier: string);
     property GUID: TGuid read FGUID;
   end;
 
@@ -93,22 +93,32 @@ type
     FClasses: TJCoreDICClassList;
     FCurrentClass: TJCoreDICClass;
     FGUID: TGuid;
+    FQualifier: string;
     function ChooseClass(AClass1, AClass2: TJCoreDICClass): TJCoreDICClass;
     function GetCurrentClass: TJCoreDICClass;
+    function GetQualifier: string;
     function IndexOfClass(AClass: TClass): Integer;
     procedure RecalcCurrentClass(ANewClass: TJCoreDICClass = nil);
     property Classes: TJCoreDICClassList read FClasses;
-    property GUID: TGuid read FGUID;
   public
-    constructor Create(const AGUID: TGuid);
+    constructor Create(const AGUID: TGuid; const AQualifier: string);
     destructor Destroy; override;
     procedure AddClass(AClass: TJCoreDICClass);
     function HasCurrentClass: Boolean;
     function RemoveClass(AClass: TClass): Boolean;
     property CurrentClass: TJCoreDICClass read GetCurrentClass;
+    property GUID: TGuid read FGUID;
+    property Qualifier: string read GetQualifier;
   end;
 
-  TJCoreDICDependencyMap = specialize TFPGMap<String, TJCoreDICClassFactory>;
+  { TJCoreDICDependencyMap }
+
+  TJCoreDICDependencyMap = class(specialize TFPGMap<string, TJCoreDICClassFactory>)
+  public
+    function Add(const AGUID: TGuid; const AQualifier: string; const AClassFactory: TJCoreDICClassFactory): Integer;
+    function IndexOf(const AGUID: TGuid; const AQualifier: string): Integer;
+    function Unregister(const AGUID: TGuid; const AClass: TClass): Boolean;
+  end;
 
   { TJCoreDIC }
 
@@ -117,13 +127,16 @@ type
     class var FContainer: TJCoreDICDependencyMap;
     class constructor Create;
     class destructor Destroy;
-    class function CheckGUID(const AGUID: TGuid): TJCoreDICClassFactory;
-    class procedure DoRegister(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
+    class function CheckGUID(const AGUID: TGuid; const AQualifier: string): TJCoreDICClassFactory;
+    class procedure DoRegister(const AGUID: TGuid; const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
     class property Container: TJCoreDICDependencyMap read FContainer;
   public
     class procedure LazyRegister(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil);
+    class procedure LazyRegister(const AGUID: TGuid; const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass = nil);
     class procedure Locate(const AGUID: TGuid; out AIntf);
+    class procedure Locate(const AGUID: TGuid; const AQualifier: string; out AIntf);
     class procedure Register(const AGUID: TGuid; AClass: TClass; ADICClass: TJCoreDICClassClass = nil; AOverrides: TClass = nil);
+    class procedure Register(const AGUID: TGuid; const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass = nil; AOverrides: TClass = nil);
     class function Unregister(const AGUID: TGuid; AClass: TClass): Boolean;
   end;
 
@@ -133,11 +146,11 @@ uses
   sysutils,
   JCoreConsts;
 
-{ EJCoreDICIntfNotFoundException }
+{ EJCoreDICImplNotFoundException }
 
-constructor EJCoreDICIntfNotFoundException.Create(AGUID: TGuid);
+constructor EJCoreDICImplNotFoundException.Create(const AGUID: TGuid; const AQualifier: string);
 begin
-  CreateFmt(SJCoreInterfaceNotFound, [GUIDToString(AGUID)]);
+  CreateFmt(SJCoreImplementationNotFound, [GUIDToString(AGUID), AQualifier]);
   FGUID := AGUID;
 end;
 
@@ -218,8 +231,16 @@ end;
 function TJCoreDICClassFactory.GetCurrentClass: TJCoreDICClass;
 begin
   if not Assigned(FCurrentClass) then
-    raise EJCoreDICIntfNotFoundException.Create(GUID);
+    raise EJCoreDICImplNotFoundException.Create(GUID, Qualifier);
   Result := FCurrentClass;
+end;
+
+function TJCoreDICClassFactory.GetQualifier: string;
+begin
+  if FQualifier = '' then
+    Result := SJCoreDefaultQualifier
+  else
+    Result := FQualifier;
 end;
 
 function TJCoreDICClassFactory.IndexOfClass(AClass: TClass): Integer;
@@ -241,10 +262,12 @@ begin
   FCurrentClass := VCurrent;
 end;
 
-constructor TJCoreDICClassFactory.Create(const AGUID: TGuid);
+constructor TJCoreDICClassFactory.Create(const AGUID: TGuid;
+  const AQualifier: string);
 begin
   inherited Create;
   FGUID := AGUID;
+  FQualifier := AQualifier;
   FClasses := TJCoreDICClassList.Create(True);
 end;
 
@@ -278,6 +301,50 @@ begin
   end;
 end;
 
+{ TJCoreDICDependencyMap }
+
+function TJCoreDICDependencyMap.Add(const AGUID: TGuid; const AQualifier: string;
+  const AClassFactory: TJCoreDICClassFactory): Integer;
+begin
+  Result := inherited Add(GUIDToString(AGUID) + AQualifier, AClassFactory);
+end;
+
+function TJCoreDICDependencyMap.IndexOf(const AGUID: TGuid;
+  const AQualifier: string): Integer;
+begin
+  Result := inherited IndexOf(GUIDToString(AGUID) + AQualifier);
+end;
+
+function TJCoreDICDependencyMap.Unregister(const AGUID: TGuid;
+  const AClass: TClass): Boolean;
+var
+  VClassFactory: TJCoreDICClassFactory;
+  VGUID: string;
+  VGUIDLen: Integer;
+  I: Integer;
+begin
+  // There is only one single list to GUIDs and Qualifiers. The index is built
+  // concatenating a string representation of GUID and the qualifier.
+  // To unregister, we need to iterate the list in order to find all
+  // qualifiers of the given GUID.
+  VGUID := GUIDToString(AGUID);
+  VGUIDLen := Length(VGUID);
+  Result := False;
+  for I := Pred(Count) downto 0 do
+  begin
+    if strlcomp(PChar(Keys[I]), PChar(VGUID), VGUIDLen) = 0 then
+    begin
+      VClassFactory := Data[I];
+      Result := VClassFactory.RemoveClass(AClass) or Result;
+      if not VClassFactory.HasCurrentClass then
+      begin
+        Delete(I);
+        FreeAndNil(VClassFactory);
+      end;
+    end;
+  end;
+end;
+
 { TJCoreDIC }
 
 class constructor TJCoreDIC.Create;
@@ -297,20 +364,19 @@ begin
   FreeAndNil(FContainer);
 end;
 
-class function TJCoreDIC.CheckGUID(const AGUID: TGuid): TJCoreDICClassFactory;
+class function TJCoreDIC.CheckGUID(const AGUID: TGuid;
+  const AQualifier: string): TJCoreDICClassFactory;
 var
-  VGUIDStr: string;
   VIndex: Integer;
 begin
-  VGUIDStr := GUIDToString(AGUID);
-  VIndex := Container.IndexOf(VGUIDStr);
+  VIndex := Container.IndexOf(AGUID, AQualifier);
   if VIndex = -1 then
-    VIndex := Container.Add(VGUIDStr, TJCoreDICClassFactory.Create(AGUID));
+    VIndex := Container.Add(AGUID, AQualifier, TJCoreDICClassFactory.Create(AGUID, AQualifier));
   Result := Container.Data[VIndex];
 end;
 
-class procedure TJCoreDIC.DoRegister(const AGUID: TGuid; AClass: TClass;
-  ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
+class procedure TJCoreDIC.DoRegister(const AGUID: TGuid; const AQualifier: string;
+  AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass; AIsLazy: Boolean);
 var
   VDICClass: TJCoreDICClass;
 begin
@@ -322,7 +388,7 @@ begin
     ADICClass := TJCoreDICSingletonClass;
   VDICClass := ADICClass.Create(AClass, AOverrides, AIsLazy);
   try
-    CheckGUID(AGUID).AddClass(VDICClass);
+    CheckGUID(AGUID, AQualifier).AddClass(VDICClass);
   except
     FreeAndNil(VDICClass);
     raise;
@@ -332,19 +398,28 @@ end;
 class procedure TJCoreDIC.LazyRegister(const AGUID: TGuid; AClass: TClass;
   ADICClass: TJCoreDICClassClass);
 begin
-  DoRegister(AGUID, AClass, ADICClass, nil, True);
+  DoRegister(AGUID, '', AClass, ADICClass, nil, True);
+end;
+
+class procedure TJCoreDIC.LazyRegister(const AGUID: TGuid;
+  const AQualifier: string; AClass: TClass; ADICClass: TJCoreDICClassClass);
+begin
+  DoRegister(AGUID, AQualifier, AClass, ADICClass, nil, True);
 end;
 
 class procedure TJCoreDIC.Locate(const AGUID: TGuid; out AIntf);
+begin
+  Locate(AGUID, '', AIntf);
+end;
+
+class procedure TJCoreDIC.Locate(const AGUID: TGuid; const AQualifier: string; out AIntf);
 var
-  VGUIDStr: String;
   VInstance: TObject;
   VIndex: Integer;
 begin
-  VGUIDStr := GUIDToString(AGUID);
-  VIndex := Container.IndexOf(VGUIDStr);
+  VIndex := Container.IndexOf(AGUID, AQualifier);
   if VIndex = -1 then
-    raise EJCoreDICIntfNotFoundException.Create(AGUID);
+    raise EJCoreDICImplNotFoundException.Create(AGUID, AQualifier);
   VInstance := Container.Data[VIndex].CurrentClass.Instance;
   if not VInstance.GetInterface(AGUID, IUnknown(AIntf)) then
     raise EJCoreUnsupportedIntfException.Create(VInstance.ClassType, AGUID);
@@ -354,29 +429,19 @@ class procedure TJCoreDIC.Register(
   const AGUID: TGuid; AClass: TClass;
   ADICClass: TJCoreDICClassClass; AOverrides: TClass);
 begin
-  DoRegister(AGUID, AClass, ADICClass, AOverrides, False);
+  DoRegister(AGUID, '', AClass, ADICClass, AOverrides, False);
+end;
+
+class procedure TJCoreDIC.Register(const AGUID: TGuid; const AQualifier: string;
+  AClass: TClass; ADICClass: TJCoreDICClassClass; AOverrides: TClass);
+begin
+  DoRegister(AGUID, AQualifier, AClass, ADICClass, AOverrides, False);
 end;
 
 class function TJCoreDIC.Unregister(
   const AGUID: TGuid; AClass: TClass): Boolean;
-var
-  VClassFactory: TJCoreDICClassFactory;
-  VGUIDStr: String;
-  VIndex: Integer;
 begin
-  VGUIDStr := GUIDToString(AGUID);
-  VIndex := Container.IndexOf(VGUIDStr);
-  if (VIndex >= 0) then
-  begin
-    VClassFactory := Container.Data[VIndex];
-    Result := VClassFactory.RemoveClass(AClass);
-    if not VClassFactory.HasCurrentClass then
-    begin
-      Container.Delete(VIndex);
-      FreeAndNil(VClassFactory);
-    end;
-  end else
-    Result := False;
+  Result := Container.Unregister(AGUID, AClass);
 end;
 
 end.

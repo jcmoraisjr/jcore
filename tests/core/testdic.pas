@@ -23,6 +23,7 @@ type
     procedure FindImplementation;
     procedure FindInheritedImplementation;
     procedure FindOverridedImplementation;
+    procedure FindQualifiedImplementation;
     procedure InterfaceNotFoundCheck;
     procedure AmbiguousImplementationCheck;
     procedure LazyRegistrationCheck;
@@ -187,9 +188,36 @@ begin
   end;
 end;
 
+procedure TTestDIC.FindQualifiedImplementation;
+var
+  VHotColor: IHotColorFacade;
+begin
+  TJCoreDIC.Register(IHotColorFacade, 'dark', TRubyRedFacade);
+  try
+    TJCoreDIC.Register(IHotColorFacade, 'medium', TRedFacade);
+    try
+      TJCoreDIC.Register(IHotColorFacade, 'light', TYellowFacade);
+      try
+        TJCoreDIC.Locate(IHotColorFacade, 'medium', VHotColor);
+        AssertEquals(TRedFacade.ClassName, VHotColor.MyClassName);
+        TJCoreDIC.Locate(IHotColorFacade, 'dark', VHotColor);
+        AssertEquals(TRubyRedFacade.ClassName, VHotColor.MyClassName);
+        TJCoreDIC.Locate(IHotColorFacade, 'light', VHotColor);
+        AssertEquals(TYellowFacade.ClassName, VHotColor.MyClassName);
+      finally
+        AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TYellowFacade));
+      end;
+    finally
+      AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRedFacade));
+    end;
+  finally
+    AssertTrue(TJCoreDIC.Unregister(IHotColorFacade, TRubyRedFacade));
+  end;
+end;
+
 procedure TTestDIC.InterfaceNotFoundCheck;
 begin
-  AssertException(EJCoreDICIntfNotFoundException, @InterfaceNotFoundError);
+  AssertException(EJCoreDICImplNotFoundException, @InterfaceNotFoundError);
 end;
 
 procedure TTestDIC.AmbiguousImplementationCheck;

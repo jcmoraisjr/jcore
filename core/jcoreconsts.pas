@@ -21,6 +21,7 @@ resourcestring
   SJCoreFalseString = 'False';
 
   SJCoreBooleanValueMsg = 'Boolean value';
+  SJCoreDefaultQualifier = '[Default]';
   SJCoreEofMsg = 'End of file';
   SJCoreIdentifierMsg = 'Identifier';
   SJCoreIntegerValueMsg = 'Integer';
@@ -31,7 +32,7 @@ resourcestring
 
   SJCoreAmbiguousImplementation = 'Ambiguous Implementation for Interface ''%s'': ''%s'' and ''%s''';
   SJCoreCannotReleaseInstance = 'Cannot release instance ''%s''';
-  SJCoreInterfaceNotFound = 'Interface not found: ''%s''';
+  SJCoreImplementationNotFound = 'Cannot find implementation for interface ''%s'' with qualifier ''%s''';
   SJCoreInvalidIdentifier = 'Invalid identifier ''%s''';
   SJCoreNilPointer = 'Nil pointer';
   SJCoreStringLengthOutOfBounds = 'String length out of bounds';
