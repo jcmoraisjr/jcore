@@ -33,8 +33,16 @@ as give you the hability to override default implementation from a framework
 with your own classes.
 
 * Declare your specification using interfaces
-* Register at least one implementation with `TJCoreDIC.Register(IYourIntf, TYourImpl);`
+* Register at least one implementation with `TJCoreDIC.Register(IYourIntf, TYourImpl, jdsApplication);`
 * Inject an implementation with `TJCoreDIC.Locate(IYourIntf, VAnIntfVar);`
+
+Qualifiers are supported:
+
+    TJCoreDIC.Register(IPayment, ‘cash’, TCashPayment, jdsApplication);
+    TJCoreDIC.Register(IPayment, ‘plastic’, TPlasticPayment, jdsApplication);
+    TJCoreDIC.Register(IPayment, ‘paypal’, TPaypalPayment, jdsApplication);
+    ...
+    TJCoreDIC.Locate(IPayment, ‘paypal’, VPayment);
 
 Expression Parser
 -----------------
