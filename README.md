@@ -35,12 +35,15 @@ with your own classes.
 * Declare your specification using interfaces
 * Register at least one implementation
 * Inject an implementation
+* Support of qualifiers
+
+Samples:
 
     TJCoreDIC.Register(IYourIntf, TYourImpl, jdsApplication);
     ...
     TJCoreDIC.Locate(IYourIntf, VAnIntfVar);
 
-* Qualifiers are supported:
+Using qualifier:
 
     TJCoreDIC.Register(IPayment, ‘cash’, TCashPayment, jdsApplication);
     TJCoreDIC.Register(IPayment, ‘plastic’, TPlasticPayment, jdsApplication);
