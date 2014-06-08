@@ -39,12 +39,11 @@ type
   ['{92E3EA6B-0D18-E9DE-53C7-ED02857C558B}']
     function ADMByName(const AAttributeName: string): IJCoreADM;
     function Entity: TObject;
-    function GetIsPersistent: Boolean;
     function IsDirty: Boolean;
+    function IsPersistent: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
     function OID: IJCoreOID;
     function Owner: IJCorePID;
-    property IsPersistent: Boolean read GetIsPersistent;
   end;
 
   { TJCoreEntityProxy }

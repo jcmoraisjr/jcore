@@ -261,13 +261,14 @@ type
     FOwner: TJCoreOPFPID;
     FOwnerADM: TJCoreOPFADMCollection;
     procedure CreateADMs;
-    function GetEntity: TObject;
-    function GetIsPersistent: Boolean;
-    function GetOIDIntf: IJCoreOID;
-    function GetOwnerIntf: IJCorePID;
-    function IJCorePID.Entity = GetEntity;
-    function IJCorePID.OID = GetOIDIntf;
-    function IJCorePID.Owner = GetOwnerIntf;
+    function IGetEntity: TObject;
+    function IGetIsPersistent: Boolean;
+    function IGetOIDIntf: IJCoreOID;
+    function IGetOwnerIntf: IJCorePID;
+    function IJCorePID.IsPersistent = IGetIsPersistent;
+    function IJCorePID.Entity = IGetEntity;
+    function IJCorePID.OID = IGetOIDIntf;
+    function IJCorePID.Owner = IGetOwnerIntf;
   protected
     function AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
     function InternalIsDirty(const AIncludeExternals: Boolean): Boolean; virtual;
@@ -286,7 +287,7 @@ type
     function IsInternalsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
     procedure ReleaseOID(const AOID: TJCoreOPFOID);
-    property IsPersistent: Boolean read GetIsPersistent;
+    property IsPersistent: Boolean read FIsPersistent;
     property Entity: TObject read FEntity;
     property OID: TJCoreOPFOID read FOID;
     property Owner: TJCoreOPFPID read FOwner;
@@ -1020,24 +1021,24 @@ begin
   end;
 end;
 
-function TJCoreOPFPID.GetEntity: TObject;
+function TJCoreOPFPID.IGetEntity: TObject;
 begin
   Result := FEntity;
 end;
 
-function TJCoreOPFPID.GetIsPersistent: Boolean;
+function TJCoreOPFPID.IGetIsPersistent: Boolean;
 begin
   Result := FIsPersistent;
 end;
 
-function TJCoreOPFPID.GetOIDIntf: IJCoreOID;
+function TJCoreOPFPID.IGetOIDIntf: IJCoreOID;
 begin
-  Result := FOID as IJCoreOID;
+  Result := FOID;
 end;
 
-function TJCoreOPFPID.GetOwnerIntf: IJCorePID;
+function TJCoreOPFPID.IGetOwnerIntf: IJCorePID;
 begin
-  Result := FOwner as IJCorePID;
+  Result := FOwner;
 end;
 
 function TJCoreOPFPID.AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
