@@ -127,7 +127,7 @@ begin
     AssertEquals('person exprs', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertNotNull('person nil', VPerson);
     AssertNotNull('person oid nil', VPerson._Proxy.OID);
-    AssertEquals('person oid', 2, VPerson._Proxy.OID.AsInteger);
+    AssertEquals('person oid', '2', VPerson._Proxy.OID.AsString);
     AssertEquals('person name', 'somename', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInteger 2',
@@ -141,7 +141,7 @@ begin
     AssertEquals('city exprs', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertNotNull('city nil', VCity);
     AssertNotNull('city oid nil', VCity._Proxy.OID);
-    AssertEquals('city oid', 4, VCity._Proxy.OID.AsInteger);
+    AssertEquals('city oid', '4', VCity._Proxy.OID.AsString);
     AssertEquals('city name', 'acity', VCity.Name);
     AssertSQLDriverCommands([
      'WriteInteger 4',
@@ -167,7 +167,7 @@ begin
     AssertEquals('person exprs', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertNotNull('person nil', VPerson);
     AssertNotNull('person oid nil', VPerson._Proxy.OID);
-    AssertEquals('person oid', 21, VPerson._Proxy.OID.AsInteger);
+    AssertEquals('person oid', '21', VPerson._Proxy.OID.AsString);
     AssertEquals('person name', 'name', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInteger 21',
@@ -187,13 +187,13 @@ begin
     AssertNotNull('phones nil', VPhones);
     AssertEquals('phones count', 3, VPhones.Count);
     AssertNotNull('phone0 oid nil', VPhones[0]._Proxy.OID);
-    AssertEquals('phone0 oid', 18, VPhones[0]._Proxy.OID.AsInteger);
+    AssertEquals('phone0 oid', '18', VPhones[0]._Proxy.OID.AsString);
     AssertEquals('phone0 number', '1213-9876', VPhones[0].Number);
     AssertNotNull('phone1 oid nil', VPhones[1]._Proxy.OID);
-    AssertEquals('phone1 oid', 19, VPhones[1]._Proxy.OID.AsInteger);
+    AssertEquals('phone1 oid', '19', VPhones[1]._Proxy.OID.AsString);
     AssertEquals('phone1 number', '2231-6621', VPhones[1].Number);
     AssertNotNull('phone2 oid nil', VPhones[2]._Proxy.OID);
-    AssertEquals('phone2 oid', 20, VPhones[2]._Proxy.OID.AsInteger);
+    AssertEquals('phone2 oid', '20', VPhones[2]._Proxy.OID.AsString);
     AssertEquals('phone2 number', '9989-3399', VPhones[2].Number);
     AssertSQLDriverCommands([
      'WriteInteger 21',

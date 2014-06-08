@@ -127,9 +127,9 @@ begin
     VPerson.Address.Street := 'route 66';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '1', VPerson._PID.OID.AsString);
     AssertNotNull('address pid', VPerson.Address._PID);
-    AssertEquals('address oid', 2, VPerson.Address._PID.OID.AsInteger);
+    AssertEquals('address oid', '2', VPerson.Address._PID.OID.AsString);
     AssertSQLDriverCommands([
      'WriteInteger 1',
      'WriteString name',
@@ -158,9 +158,9 @@ begin
     VPerson.City.Name := 'CityName';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '1', VPerson._PID.OID.AsString);
     AssertNotNull('city pid', VPerson.City._PID);
-    AssertEquals('city oid', 2, VPerson.City._PID.OID.AsInteger);
+    AssertEquals('city oid', '2', VPerson.City._PID.OID.AsString);
     AssertSQLDriverCommands([
      'WriteInteger 1',
      'WriteString SomeName',
@@ -190,11 +190,11 @@ begin
     VPerson.Phones[1].Number := '212-4321';
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '1', VPerson._PID.OID.AsString);
     AssertNotNull('phone0 pid', VPerson.Phones[0]._PID);
-    AssertEquals('phone0 oid', 2, VPerson.Phones[0]._PID.OID.AsInteger);
+    AssertEquals('phone0 oid', '2', VPerson.Phones[0]._PID.OID.AsString);
     AssertNotNull('phone1 pid', VPerson.Phones[1]._PID);
-    AssertEquals('phone1 oid', 3, VPerson.Phones[1]._PID.OID.AsInteger);
+    AssertEquals('phone1 oid', '3', VPerson.Phones[1]._PID.OID.AsString);
     AssertSQLDriverCommands([
      'WriteInteger 1',
      'WriteString thename',
@@ -226,11 +226,11 @@ begin
     VPerson.Languages.Add(TTestIPIDLanguage.Create('Spanish'));
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 1, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '1', VPerson._PID.OID.AsString);
     AssertNotNull('lang0 pid', VPerson.Languages[0]._PID);
-    AssertEquals('lang0 oid', 2, VPerson.Languages[0]._PID.OID.AsInteger);
+    AssertEquals('lang0 oid', '2', VPerson.Languages[0]._PID.OID.AsString);
     AssertNotNull('lang1 pid', VPerson.Languages[1]._PID);
-    AssertEquals('lang1 oid', 3, VPerson.Languages[1]._PID.OID.AsInteger);
+    AssertEquals('lang1 oid', '3', VPerson.Languages[1]._PID.OID.AsString);
     AssertSQLDriverCommands([
      'WriteInteger 1',
      'WriteString SomeName',
@@ -265,14 +265,14 @@ begin
     VLang := TTestIPIDLanguage.Create('portuguese');
     Session.Store(VLang);
     AssertNotNull('lang pid', VLang._PID);
-    AssertEquals('lang oid', 1, VLang._PID.OID.AsInteger);
+    AssertEquals('lang oid', '1', VLang._PID.OID.AsString);
     VPerson.Name := 'name';
     VPerson.Languages.Add(VLang);
     VLang.Name := 'german';
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 2, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '2', VPerson._PID.OID.AsString);
     AssertSQLDriverCommands([
      'WriteInteger 2',
      'WriteString name',
@@ -520,7 +520,7 @@ begin
      'ExecSQL ' + CSQLSELECTCITY]);
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
-    AssertEquals(15, VCity._PID.OID.AsInteger);
+    AssertEquals('15', VCity._PID.OID.AsString);
     AssertEquals('thecityname', VCity.Name);
   finally
     FreeAndNil(VCity);
@@ -566,19 +566,19 @@ begin
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 2, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '2', VPerson._PID.OID.AsString);
     AssertEquals('person name', 'name', VPerson.Name);
     AssertEquals('person age', 3, VPerson.Age);
     VAddress := VPerson.Address;
     AssertNotNull('address', VAddress);
     AssertNotNull('address pid', VAddress._PID);
-    AssertEquals('address oid', 18, VAddress._PID.OID.AsInteger);
+    AssertEquals('address oid', '18', VAddress._PID.OID.AsString);
     AssertEquals('address street', 'thestreet', VAddress.Street);
     AssertEquals('address zipcode', '01000-001', VAddress.ZipCode);
     VCity := VPerson.City;
     AssertNotNull('city', VCity);
     AssertNotNull('city pid', VCity._PID);
-    AssertEquals('city oid', 11, VCity._PID.OID.AsInteger);
+    AssertEquals('city oid', '11', VCity._PID.OID.AsString);
     AssertEquals('city name', 'thecity', VCity.Name);
   finally
     FreeAndNil(VPerson);
@@ -616,13 +616,13 @@ begin
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 8, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '8', VPerson._PID.OID.AsString);
     AssertEquals('person name', 'thepersonname', VPerson.Name);
     AssertEquals('person age', 30, VPerson.Age);
     VCity := VPerson.City;
     AssertNotNull('city', VCity);
     AssertNotNull('city pid', VCity._PID);
-    AssertEquals('city oid', 5, VCity._PID.OID.AsInteger);
+    AssertEquals('city oid', '5', VCity._PID.OID.AsString);
     AssertEquals('city name', 'nameofcity', VCity.Name);
   finally
     FreeAndNil(VPerson);
@@ -653,7 +653,7 @@ begin
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull(VPerson);
     AssertNotNull(VPerson._PID);
-    AssertEquals(18, VPerson._PID.OID.AsInteger);
+    AssertEquals('18', VPerson._PID.OID.AsString);
     AssertEquals('personname', VPerson.Name);
     AssertEquals(22, VPerson.Age);
     AssertNull(VPerson.City);
@@ -693,16 +693,16 @@ begin
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 9, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '9', VPerson._PID.OID.AsString);
     AssertEquals('person name', 'aname', VPerson.Name);
     AssertEquals('person age', 5, VPerson.Age);
     AssertNull('city', VPerson.City);
     AssertEquals('phone cnt', 2, VPerson.Phones.Count);
     AssertNotNull('phone0 pid', VPerson.Phones[0]._PID);
-    AssertEquals('phone0 oid', 11, VPerson.Phones[0]._PID.OID.AsInteger);
+    AssertEquals('phone0 oid', '11', VPerson.Phones[0]._PID.OID.AsString);
     AssertEquals('phone0 number', '212', VPerson.Phones[0].Number);
     AssertNotNull('phone1 pid', VPerson.Phones[1]._PID);
-    AssertEquals('phone1 oid', 12, VPerson.Phones[1]._PID.OID.AsInteger);
+    AssertEquals('phone1 oid', '12', VPerson.Phones[1]._PID.OID.AsString);
     AssertEquals('phone1 number', '555', VPerson.Phones[1].Number);
   finally
     FreeAndNil(VPerson);
@@ -744,17 +744,17 @@ begin
      'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', 5, VPerson._PID.OID.AsInteger);
+    AssertEquals('person oid', '5', VPerson._PID.OID.AsString);
     AssertEquals('person name', 'personname', VPerson.Name);
     AssertEquals('person age', 0, VPerson.Age);
     AssertNull('city', VPerson.City);
     AssertEquals('phone cnt', 0, VPerson.Phones.Count);
     AssertEquals('lang cnt', 2, VPerson.Languages.Count);
     AssertNotNull('lang0 pid', VPerson.Languages[0]);
-    AssertEquals('lang0 oid', 3, VPerson.Languages[0]._PID.OID.AsInteger);
+    AssertEquals('lang0 oid', '3', VPerson.Languages[0]._PID.OID.AsString);
     AssertEquals('lang0 name', 'spanish', VPerson.Languages[0].Name);
     AssertNotNull('lang1 pid', VPerson.Languages[1]);
-    AssertEquals('lang1 oid', 8, VPerson.Languages[1]._PID.OID.AsInteger);
+    AssertEquals('lang1 oid', '8', VPerson.Languages[1]._PID.OID.AsString);
     AssertEquals('lang1 name', 'german', VPerson.Languages[1].Name);
   finally
     FreeAndNil(VPerson);

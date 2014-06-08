@@ -27,14 +27,9 @@ type
 
   TJCoreOPFOID = class(TJCoreManagedObject, IJCoreOID)
   protected
-    function GetAsInt64: Int64; virtual; abstract;
-    function GetAsInteger: Integer; virtual; abstract;
     function GetAsString: string; virtual; abstract;
   public
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
-    property AsInteger: Integer read GetAsInteger;
-    property AsInt64: Int64 read GetAsInt64;
-    property AsString: string read GetAsString;
   end;
 
   TJCoreOPFOIDArray = array of TJCoreOPFOID;
@@ -45,8 +40,6 @@ type
   private
     FValue: Integer;
   protected
-    function GetAsInt64: Int64; override;
-    function GetAsInteger: Integer; override;
     function GetAsString: string; override;
   public
     constructor Create(const AValue: Integer);
@@ -60,8 +53,6 @@ type
   private
     FValue: string;
   protected
-    function GetAsInt64: Int64; override;
-    function GetAsInteger: Integer; override;
     function GetAsString: string; override;
   public
     constructor Create(const AValue: string);
@@ -75,16 +66,6 @@ uses
   sysutils;
 
 { TJCoreOPFIntegerOID }
-
-function TJCoreOPFIntegerOID.GetAsInt64: Int64;
-begin
-  Result := Value;
-end;
-
-function TJCoreOPFIntegerOID.GetAsInteger: Integer;
-begin
-  Result := Value;
-end;
 
 function TJCoreOPFIntegerOID.GetAsString: string;
 begin
@@ -103,16 +84,6 @@ begin
 end;
 
 { TJCoreOPFStringOID }
-
-function TJCoreOPFStringOID.GetAsInt64: Int64;
-begin
-  Result := StrToInt64(Value);
-end;
-
-function TJCoreOPFStringOID.GetAsInteger: Integer;
-begin
-  Result := StrToInt(Value);
-end;
 
 function TJCoreOPFStringOID.GetAsString: string;
 begin

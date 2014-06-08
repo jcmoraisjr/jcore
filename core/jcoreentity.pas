@@ -22,11 +22,7 @@ type
 
   IJCoreOID = interface
   ['{C4DE3860-6FBC-01A0-BA08-1990558E6AF1}']
-    function GetAsInt64: Int64;
-    function GetAsInteger: Integer;
     function GetAsString: string;
-    property AsInteger: Integer read GetAsInteger;
-    property AsInt64: Int64 read GetAsInt64;
     property AsString: string read GetAsString;
   end;
 
