@@ -14,7 +14,7 @@ type
 
   TTestOPFModelIPIDContact = class(TJCoreOPFModel)
   protected
-    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
+    procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); override;
     procedure InitRegistry; override;
   end;
 
@@ -22,7 +22,6 @@ type
 
   TTestOPFModelProxyContact = class(TJCoreOPFModel)
   protected
-    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure InitRegistry; override;
   end;
 
@@ -30,7 +29,6 @@ type
 
   TTestOPFModelProxyInvoice = class(TJCoreOPFModel)
   protected
-    function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure InitRegistry; override;
   end;
 
@@ -43,23 +41,18 @@ uses
 
 { TTestOPFModelIPIDContact }
 
-function TTestOPFModelIPIDContact.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
+procedure TTestOPFModelIPIDContact.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
 var
   VMetadata: TJCoreOPFClassMetadata;
 begin
-  VMetadata := inherited BuildMetadata(AClass) as TJCoreOPFClassMetadata;
-  try
-    if AClass = TTestIPIDPerson then
-    begin
-      VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
-      VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
-      VMetadata.AttributeByName('City').CompositionType := jctAggregation;
-    end;
-  except
-    FreeAndNil(VMetadata);
-    raise;
+  inherited RefineClassMetadata(AClassMetadata);
+  if AClassMetadata.TheClass = TTestIPIDPerson then
+  begin
+    VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
+    VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
+    VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
+    VMetadata.AttributeByName('City').CompositionType := jctAggregation;
   end;
-  Result := VMetadata;
 end;
 
 procedure TTestOPFModelIPIDContact.InitRegistry;
@@ -74,11 +67,6 @@ end;
 
 { TTestOPFModelProxyContact }
 
-function TTestOPFModelProxyContact.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
-begin
-  Result := inherited BuildMetadata(AClass);
-end;
-
 procedure TTestOPFModelProxyContact.InitRegistry;
 begin
   inherited InitRegistry;
@@ -88,11 +76,6 @@ begin
 end;
 
 { TTestOPFModelProxyInvoice }
-
-function TTestOPFModelProxyInvoice.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
-begin
-  Result:=inherited BuildMetadata(AClass);
-end;
 
 procedure TTestOPFModelProxyInvoice.InitRegistry;
 begin

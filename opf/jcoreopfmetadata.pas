@@ -403,10 +403,10 @@ type
     procedure AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
     function AttributeMetadataClass: TJCoreAttrMetadataClass; override;
     function ClassMetadataClass: TJCoreClassMetadataClass; override;
-    function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; override;
     procedure Finit; override;
     procedure InitRegistry; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
+    procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); override;
     property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
   public
     constructor Create; override;
@@ -1450,12 +1450,6 @@ begin
   Result := TJCoreOPFClassMetadata;
 end;
 
-function TJCoreOPFModel.CreateMetadata(const AClass: TClass): TJCoreClassMetadata;
-begin
-  Result := inherited CreateMetadata(AClass);
-  (Result as TJCoreOPFClassMetadata).OIDClass := OIDClass;
-end;
-
 procedure TJCoreOPFModel.Finit;
 begin
   FreeAndNil(FADMClassList);
@@ -1472,6 +1466,15 @@ end;
 function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
 begin
   Result := SameText(SPID, AAttrName) or inherited IsReservedAttr(AAttrName);
+end;
+
+procedure TJCoreOPFModel.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
+var
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  inherited RefineClassMetadata(AClassMetadata);
+  VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
+  VMetadata.OIDClass := OIDClass;
 end;
 
 constructor TJCoreOPFModel.Create;
