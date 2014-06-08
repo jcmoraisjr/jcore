@@ -287,12 +287,12 @@ type
     function GetADMMapping(const AIndex: Integer): TJCoreOPFADMMapping;
     function IGetEntity: TObject;
     function IGetIsPersistent: Boolean;
-    function IGetOIDIntf: IJCoreOID;
-    function IGetOwnerIntf: IJCorePID;
-    function IJCorePID.IsPersistent = IGetIsPersistent;
+    function IGetOID: IJCoreOID;
+    function IGetOwner: IJCorePID;
     function IJCorePID.Entity = IGetEntity;
-    function IJCorePID.OID = IGetOIDIntf;
-    function IJCorePID.Owner = IGetOwnerIntf;
+    function IJCorePID.IsPersistent = IGetIsPersistent;
+    function IJCorePID.OID = IGetOID;
+    function IJCorePID.Owner = IGetOwner;
   protected
     function AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
     property ADMMap: TJCoreOPFADMMap read FADMMap;
@@ -1151,12 +1151,12 @@ begin
   Result := FIsPersistent;
 end;
 
-function TJCoreOPFPID.IGetOIDIntf: IJCoreOID;
+function TJCoreOPFPID.IGetOID: IJCoreOID;
 begin
   Result := FOID;
 end;
 
-function TJCoreOPFPID.IGetOwnerIntf: IJCorePID;
+function TJCoreOPFPID.IGetOwner: IJCorePID;
 begin
   Result := FOwner;
 end;
