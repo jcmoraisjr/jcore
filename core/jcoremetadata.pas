@@ -26,6 +26,9 @@ type
   TJCoreMetadataCompositionType = (jctNone, jctComposition, jctAggregation);
 
   TJCoreClassMetadata = class;
+  TJCoreClassMetadataClass = class of TJCoreClassMetadata;
+
+  TJCoreModel = class;
 
   { TJCoreAttrMetadata }
 
@@ -34,12 +37,15 @@ type
     FCompositionClass: TClass;
     FCompositionMetadata: TJCoreClassMetadata;
     FCompositionType: TJCoreMetadataCompositionType;
+    FModel: TJCoreModel;
     FName: string;
     FPropInfo: PPropInfo;
     function GetIsClass: Boolean;
     procedure SetCompositionMetadata(AValue: TJCoreClassMetadata);
+  protected
+    property Model: TJCoreModel read FModel;
   public
-    constructor Create(const APropInfo: PPropInfo);
+    constructor Create(const AModel: TJCoreModel; const APropInfo: PPropInfo); virtual;
     property CompositionClass: TClass read FCompositionClass;
     property CompositionMetadata: TJCoreClassMetadata read FCompositionMetadata write SetCompositionMetadata;
     property CompositionType: TJCoreMetadataCompositionType read FCompositionType write FCompositionType;
@@ -48,6 +54,7 @@ type
     property PropInfo: PPropInfo read FPropInfo;
   end;
 
+  TJCoreAttrMetadataClass = class of TJCoreAttrMetadata;
   TJCoreAttrMetadataList = specialize TFPGObjectList<TJCoreAttrMetadata>;
 
   { TJCoreClassMetadata }
@@ -56,16 +63,18 @@ type
   private
     FAttrList: TJCoreAttrMetadataList;
     FClass: TClass;
+    FParent: TJCoreClassMetadata;
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
   protected
     property AttrList: TJCoreAttrMetadataList read FAttrList;
   public
-    constructor Create(const AClass: TClass);
+    constructor Create(const AClass: TClass; const AParent: TJCoreClassMetadata); virtual;
     destructor Destroy; override;
     procedure AddAttribute(const AAttribute: TJCoreAttrMetadata);
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
     function AttributeCount: Integer;
     property Attributes[const AIndex: Integer]: TJCoreAttrMetadata read GetAttributes; default;
+    property Parent: TJCoreClassMetadata read FParent;
     property TheClass: TClass read FClass;
   end;
 
@@ -79,8 +88,10 @@ type
     FMetadataMap: TJCoreClassMetadataMap;
   protected
     procedure AddClass(const AClass: TClass);
+    function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
     function BuildMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
-    function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata; virtual;
+    function ClassMetadataClass: TJCoreClassMetadataClass; virtual;
+    function CreateAttribute(const APropInfo: PPropInfo): TJCoreAttrMetadata;
     function CreateMetadata(const AClass: TClass): TJCoreClassMetadata; virtual;
     procedure Finit; override;
     procedure InitRegistry; virtual;
@@ -117,9 +128,11 @@ begin
   end;
 end;
 
-constructor TJCoreAttrMetadata.Create(const APropInfo: PPropInfo);
+constructor TJCoreAttrMetadata.Create(const AModel: TJCoreModel;
+  const APropInfo: PPropInfo);
 begin
   inherited Create;
+  FModel := AModel;
   FPropInfo := APropInfo;
   FName := APropInfo^.Name;
   if IsClass then
@@ -136,10 +149,12 @@ begin
   Result := AttrList[AIndex];
 end;
 
-constructor TJCoreClassMetadata.Create(const AClass: TClass);
+constructor TJCoreClassMetadata.Create(const AClass: TClass;
+  const AParent: TJCoreClassMetadata);
 begin
   inherited Create;
   FClass := AClass;
+  FParent := AParent;
   FAttrList := TJCoreAttrMetadataList.Create(True);
 end;
 
@@ -175,6 +190,11 @@ begin
   ClassMap.Add(AClass.ClassName, AClass);
 end;
 
+function TJCoreModel.AttributeMetadataClass: TJCoreAttrMetadataClass;
+begin
+  Result := TJCoreAttrMetadata;
+end;
+
 function TJCoreModel.BuildMetadata(const AClass: TClass): TJCoreClassMetadata;
 var
   VPropList: PPropList;
@@ -205,15 +225,28 @@ begin
   end;
 end;
 
+function TJCoreModel.ClassMetadataClass: TJCoreClassMetadataClass;
+begin
+  Result := TJCoreClassMetadata;
+end;
+
 function TJCoreModel.CreateAttribute(
   const APropInfo: PPropInfo): TJCoreAttrMetadata;
 begin
-  Result := TJCoreAttrMetadata.Create(APropInfo);
+  Result := AttributeMetadataClass.Create(Self, APropInfo);
 end;
 
 function TJCoreModel.CreateMetadata(const AClass: TClass): TJCoreClassMetadata;
+var
+  VParent: TClass;
+  VParentMetadata: TJCoreClassMetadata;
 begin
-  Result := TJCoreClassMetadata.Create(AClass);
+  VParent := AClass.ClassParent;
+  if VParent <> TObject then
+    VParentMetadata := AcquireMetadata(VParent)
+  else
+    VParentMetadata := nil;
+  Result := ClassMetadataClass.Create(AClass, VParentMetadata);
 end;
 
 procedure TJCoreModel.Finit;

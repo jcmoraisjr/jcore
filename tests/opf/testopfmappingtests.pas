@@ -165,7 +165,7 @@ begin
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Age := 0;
-    VPID := Session.AcquireMapping(VPerson.ClassType).AcquirePID(VPerson);
+    VPID := Session.AcquirePID(VPerson);
     AssertTrue('person dirty1', VPID.IsDirty);
     Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);

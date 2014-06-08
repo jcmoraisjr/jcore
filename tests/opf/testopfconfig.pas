@@ -29,7 +29,7 @@ type
 
   ITestOPFSession = interface(IJCoreOPFSession)
   ['{641946FC-586B-F7CA-5B84-25C3DC812F08}']
-    function AcquireMapping(const AClass: TClass): TJCoreOPFMapping;
+    function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
   end;
 
@@ -106,10 +106,10 @@ type
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
-    function CreateOIDFromString(const AOID: string): TJCoreOPFOID; override;
-    procedure InternalStore(const APID: TJCoreOPFPID); override;
+    function InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray; override;
+    procedure InternalStore(const AMapping: TJCoreOPFADMMapping); override;
   public
-    class function Apply(const AClass: TClass): Boolean; override;
+    class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
 
   TTestIntegerList = specialize TFPGList<Integer>;
@@ -151,7 +151,7 @@ uses
 
 function TTestOPFConfig.InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession;
 begin
-  Result := TTestOPFSession.Create(Self, Model, ADriver);
+  Result := TTestOPFSession.Create(Self, ADriver);
 end;
 
 { TTestOPFSession }
@@ -179,7 +179,7 @@ end;
 
 function TTestOPFSession.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
-  Result := AcquireMapping(AClass).AcquireMetadata(AClass);
+  Result := AcquireClassMapping(AClass).Metadata;
 end;
 
 class function TTestOPFSession.ExistPIDInCommitPIDList(const APID: IJCorePID): Boolean;
@@ -259,12 +259,12 @@ end;
 procedure TTestOPFAbstractTestCase.TearDown;
 begin
   inherited TearDown;
-  FSession := nil;
-  FConfiguration := nil;
   TTestAbstractSQLMapping.ClearOID;
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
+  FSession := nil;
+  FConfiguration := nil;
 end;
 
 { TTestOPFIPIDContactTestCase }
@@ -330,16 +330,20 @@ end;
 
 { TTestEmptyMapping }
 
-function TTestEmptyMapping.CreateOIDFromString(const AOID: string): TJCoreOPFOID;
+function TTestEmptyMapping.InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray;
+var
+  I: Integer;
 begin
-  Result := TJCoreOPFIntegerOID.Create(1);
+  SetLength(Result, ACount);
+  for I := 0 to Pred(ACount) do
+    Result[I] := TJCoreOPFIntegerOID.Create(1);
 end;
 
-procedure TTestEmptyMapping.InternalStore(const APID: TJCoreOPFPID);
+procedure TTestEmptyMapping.InternalStore(const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
-class function TTestEmptyMapping.Apply(const AClass: TClass): Boolean;
+class function TTestEmptyMapping.Apply(const AMap: TJCoreOPFMap): Boolean;
 begin
   Result := True;
 end;

@@ -39,6 +39,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreAmbiguousImplementation }
+
+  EJCoreAmbiguousImplementation = class(EJCoreException)
+  public
+    constructor Create(const AClassName1, AClassName2: string);
+  end;
+
   { EJCoreUnsupportedIntfException }
 
   EJCoreUnsupportedIntfException = class(EJCoreException)
@@ -115,6 +122,14 @@ type
     procedure AfterConstruction; override;
   end;
 
+  { TJCoreFactory }
+
+  generic TJCoreFactory<T> = class(TObject)
+  protected
+    function Choose(const AType1, AType2: T): T;
+    function InternalSelect(const AType1, AType2: T): T; virtual;
+  end;
+
   TJCoreTextReader = class(TObject)
   { TODO : Refactor class -- move Token implementation to the ParserReader }
   private
@@ -175,6 +190,13 @@ end;
 constructor EJCoreNilPointerException.Create;
 begin
   inherited Create(SJCoreNilPointer);
+end;
+
+{ EJCoreAmbiguousImplementation }
+
+constructor EJCoreAmbiguousImplementation.Create(const AClassName1,
+  AClassName2: string);
+begin
 end;
 
 { EJCoreUnsupportedIntfException }
@@ -287,6 +309,27 @@ procedure TJCoreManagedIObject.AfterConstruction;
 begin
   inherited;
   InterLockedDecrement(FRefCount);  // friend class
+end;
+
+{ TJCoreFactory }
+
+function TJCoreFactory.Choose(const AType1, AType2: T): T;
+begin
+  if (AType1 = nil) and (AType2 = nil) then
+    raise EJCoreNilPointerException.Create
+  else if (AType2 = nil) or AType1.InheritsFrom(AType2) then
+    Result := AType1
+  else if (AType1 = nil) or AType2.InheritsFrom(AType1) then
+    Result := AType2
+  else
+    Result := InternalSelect(AType1, AType2);
+  if (Result = nil) then
+    raise EJCoreAmbiguousImplementation.Create(AType1.ClassName, AType2.ClassName);
+end;
+
+function TJCoreFactory.InternalSelect(const AType1, AType2: T): T;
+begin
+  Result := nil;
 end;
 
 { TJCoreTextReader }

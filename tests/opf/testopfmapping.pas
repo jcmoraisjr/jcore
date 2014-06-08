@@ -13,13 +13,11 @@ type
 
   { TTestAbstractSQLMapping }
 
-  TTestAbstractSQLMapping = class(TJCoreOPFSQLMapping)
+  TTestAbstractSQLMapping = class(TJCoreOPFSQLManualMapping)
   private
     class var FCurrentOID: Integer;
   protected
-    function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID; override;
-    function CreateOIDFromString(const AOID: string): TJCoreOPFOID; override;
-    function GenerateOID: Integer;
+    function InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray; override;
   public
     class procedure ClearOID;
   end;
@@ -31,30 +29,16 @@ uses
 
 { TTestAbstractSQLMapping }
 
-function TTestAbstractSQLMapping.CreateOIDFromDriver(
-  const ADriver: TJCoreOPFDriver): TJCoreOPFOID;
-begin
-  if not ADriver.ReadNull then
-    Result := TJCoreOPFIntegerOID.Create(ADriver.ReadInteger)
-  else
-    Result := nil;
-end;
-
-function TTestAbstractSQLMapping.CreateOIDFromString(const AOID: string): TJCoreOPFOID;
+function TTestAbstractSQLMapping.InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray;
 var
-  VOID: Integer;
+  I: Integer;
 begin
-  if AOID = '' then
-    VOID := GenerateOID
-  else
-    VOID := StrToInt(AOID);
-  Result := TJCoreOPFIntegerOID.Create(VOID);
-end;
-
-function TTestAbstractSQLMapping.GenerateOID: Integer;
-begin
-  Inc(FCurrentOID);
-  Result := FCurrentOID;
+  SetLength(Result, ACount);
+  for I := 0 to Pred(ACount) do
+  begin
+    Inc(FCurrentOID);
+    Result[I] := TJCoreOPFIntegerOID.Create(FCurrentOID);
+  end;
 end;
 
 class procedure TTestAbstractSQLMapping.ClearOID;

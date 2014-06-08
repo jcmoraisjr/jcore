@@ -28,7 +28,7 @@ type
 
   IJCoreOPFConfiguration = interface(IInterface)
     procedure AddDriverClass(const ADriverClass: TJCoreOPFDriverClass);
-    procedure AddMappingClass(const AMappingClass: TJCoreOPFMappingClass);
+    procedure AddMappingClass(const AMappingClassArray: array of TJCoreOPFMappingClass);
     function CreateSession: IJCoreOPFSession;
     function GetDriverName: string;
     procedure SetDriverName(AValue: string);
@@ -42,21 +42,24 @@ type
     FDriverClass: TJCoreOPFDriverClass;
     FDriverClassMap: TJCoreOPFDriverClassMap;
     FDriverName: string;
-    FMappingClassList: TJCoreOPFMappingClassList;
+    FMappingClassFactory: TJCoreOPFMappingClassFactory;
     FModel: TJCoreOPFModel;
     function GetDriverName: string;
+    function IGetMappingClassFactory: TJCoreOPFMappingClassFactory;
+    function IGetModel: TJCoreOPFModel;
     procedure SetDriverName(AValue: string);
+    function IJCoreOPFSessionManager.MappingClassFactory = IGetMappingClassFactory;
+    function IJCoreOPFSessionManager.Model = IGetModel;
   protected
     function CreateDriver: TJCoreOPFDriver;
-    function FindMappingClass(const AClass: TClass): TJCoreOPFMappingClass;
     function InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession; virtual;
     property DriverClassMap: TJCoreOPFDriverClassMap read FDriverClassMap;
-    property MappingClassList: TJCoreOPFMappingClassList read FMappingClassList;
+    property MappingClassFactory: TJCoreOPFMappingClassFactory read FMappingClassFactory;
   public
     constructor Create(const AModel: TJCoreOPFModel = nil);
     destructor Destroy; override;
     procedure AddDriverClass(const ADriverClass: TJCoreOPFDriverClass);
-    procedure AddMappingClass(const AMappingClass: TJCoreOPFMappingClass);
+    procedure AddMappingClass(const AMappingClassArray: array of TJCoreOPFMappingClass);
     function CreateSession: IJCoreOPFSession;
     property DriverName: string read GetDriverName write SetDriverName;
     property Model: TJCoreOPFModel read FModel;
@@ -90,6 +93,16 @@ begin
   Result := FDriverName;
 end;
 
+function TJCoreOPFConfiguration.IGetMappingClassFactory: TJCoreOPFMappingClassFactory;
+begin
+  Result := FMappingClassFactory;
+end;
+
+function TJCoreOPFConfiguration.IGetModel: TJCoreOPFModel;
+begin
+  Result := FModel;
+end;
+
 function TJCoreOPFConfiguration.CreateDriver: TJCoreOPFDriver;
 begin
   { TODO : thread safe }
@@ -98,18 +111,10 @@ begin
   Result := FDriverClass.Create;
 end;
 
-function TJCoreOPFConfiguration.FindMappingClass(const AClass: TClass): TJCoreOPFMappingClass;
-begin
-  for Result in MappingClassList do
-    if Result.Apply(AClass) then
-      Exit;
-  Result := nil;
-end;
-
 function TJCoreOPFConfiguration.InternalCreateSession(
   const ADriver: TJCoreOPFDriver): IJCoreOPFSession;
 begin
-  Result := TJCoreOPFSession.Create(Self, Model, ADriver);
+  Result := TJCoreOPFSession.Create(Self, ADriver);
 end;
 
 constructor TJCoreOPFConfiguration.Create(
@@ -121,13 +126,13 @@ begin
     FModel := TJCoreOPFModel.Create;
   inherited Create;
   FDriverClassMap := TJCoreOPFDriverClassMap.Create;
-  FMappingClassList := TJCoreOPFMappingClassList.Create;
+  FMappingClassFactory := TJCoreOPFMappingClassFactory.Create(Model);
 end;
 
 destructor TJCoreOPFConfiguration.Destroy;
 begin
   FreeAndNil(FModel);
-  FreeAndNil(FMappingClassList);
+  FreeAndNil(FMappingClassFactory);
   FreeAndNil(FDriverClassMap);
   inherited Destroy;
 end;
@@ -138,9 +143,9 @@ begin
 end;
 
 procedure TJCoreOPFConfiguration.AddMappingClass(
-  const AMappingClass: TJCoreOPFMappingClass);
+  const AMappingClassArray: array of TJCoreOPFMappingClass);
 begin
-  MappingClassList.Add(AMappingClass);
+  MappingClassFactory.AddMappingClass(AMappingClassArray);
 end;
 
 function TJCoreOPFConfiguration.CreateSession: IJCoreOPFSession;

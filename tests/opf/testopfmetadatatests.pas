@@ -28,6 +28,13 @@ type
     procedure LazyCollection;
   end;
 
+  { TTestOPFInheritanceMetadataTest }
+
+  TTestOPFInheritanceMetadataTest = class(TTestOPFProxyInvoiceTestCase)
+  published
+    procedure CreatePIDInheritance;
+  end;
+
 implementation
 
 uses
@@ -36,6 +43,7 @@ uses
   JCoreEntity,
   JCoreOPFMetadata,
   TestOPFModelContact,
+  TestOPFModelInvoice,
   TestOPFMappingContact;
 
 { TTestOPFIPIDMetadataTests }
@@ -203,9 +211,36 @@ begin
   end;
 end;
 
+type
+  TTestPIDFriend = class(TJCoreOPFPID);
+
+{ TTestOPFInheritanceMetadataTest }
+
+procedure TTestOPFInheritanceMetadataTest.CreatePIDInheritance;
+var
+  VCompany: TCompany;
+  VPID: TJCoreOPFPID;
+  VADMMap: TJCoreOPFADMMap;
+begin
+  VCompany := TCompany.Create;
+  try
+    Session.Store(VCompany);
+    AssertNotNull('company proxy', VCompany._proxy);
+    VPID := VCompany._proxy.PID as TJCoreOPFPID;
+    AssertNotNull('company pid', VPID);
+    VADMMap := TTestPIDFriend(VPID).ADMMap;
+    AssertEquals('pid cnt adm', 2, VADMMap.Count);
+    AssertEquals('pid.adm0', 'Name', VADMMap.Data[0].Metadata.Name);
+    AssertEquals('pid.adm1', 'ContactName', VADMMap.Data[1].Metadata.Name);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
 initialization
   RegisterTest('jcore.opf.metadata.ipid', TTestOPFIPIDMetadataTests);
   RegisterTest('jcore.opf.metadata.proxy', TTestOPFProxyMetadataTests);
+  RegisterTest('jcore.opf.metadata.inheritance', TTestOPFInheritanceMetadataTest);
 
 end.
 

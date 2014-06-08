@@ -29,9 +29,13 @@ type
   protected
     function GetAsString: string; virtual; abstract;
   public
+    constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    constructor CreateFromString(const AStringOID: string); virtual; abstract;
+    class procedure WriteNull(const ADriver: TJCoreOPFDriver); virtual; abstract;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
   end;
 
+  TJCoreOPFOIDClass = class of TJCoreOPFOID;
   TJCoreOPFOIDArray = array of TJCoreOPFOID;
 
   { TJCoreOPFIntegerOID }
@@ -43,6 +47,9 @@ type
     function GetAsString: string; override;
   public
     constructor Create(const AValue: Integer);
+    constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
+    constructor CreateFromString(const AStringOID: string); override;
+    class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property Value: Integer read FValue;
   end;
@@ -56,6 +63,9 @@ type
     function GetAsString: string; override;
   public
     constructor Create(const AValue: string);
+    constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
+    constructor CreateFromString(const AStringOID: string); override;
+    class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property Value: string read FValue;
   end;
@@ -78,6 +88,21 @@ begin
   FValue := AValue;
 end;
 
+constructor TJCoreOPFIntegerOID.CreateFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  Create(ADriver.ReadInteger);
+end;
+
+constructor TJCoreOPFIntegerOID.CreateFromString(const AStringOID: string);
+begin
+  Create(StrToInt(AStringOID));
+end;
+
+class procedure TJCoreOPFIntegerOID.WriteNull(const ADriver: TJCoreOPFDriver);
+begin
+  ADriver.WriteNull;
+end;
+
 procedure TJCoreOPFIntegerOID.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
   ADriver.WriteInteger(Value);
@@ -94,6 +119,21 @@ constructor TJCoreOPFStringOID.Create(const AValue: string);
 begin
   inherited Create;
   FValue := AValue;
+end;
+
+constructor TJCoreOPFStringOID.CreateFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  Create(ADriver.ReadString);
+end;
+
+constructor TJCoreOPFStringOID.CreateFromString(const AStringOID: string);
+begin
+  Create(AStringOID);
+end;
+
+class procedure TJCoreOPFStringOID.WriteNull(const ADriver: TJCoreOPFDriver);
+begin
+  ADriver.WriteNull;
 end;
 
 procedure TJCoreOPFStringOID.WriteToDriver(const ADriver: TJCoreOPFDriver);

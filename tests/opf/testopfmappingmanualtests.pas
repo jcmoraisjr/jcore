@@ -77,9 +77,15 @@ type
   TTestOPFInsertManualProxyMappingTests = class(TTestOPFProxyInvoiceTestCase)
   published
     procedure Person;
-    procedure Company;
     procedure InvoiceClient;
     procedure InvoiceItem;
+  end;
+
+  { TTestOPFUpdateManualProxyMappingTests }
+
+  TTestOPFUpdateManualProxyMappingTests = class(TTestOPFProxyInvoiceTestCase)
+  published
+    procedure Company;
   end;
 
 implementation
@@ -1114,11 +1120,6 @@ begin
   end;
 end;
 
-procedure TTestOPFInsertManualProxyMappingTests.Company;
-begin
-
-end;
-
 procedure TTestOPFInsertManualProxyMappingTests.InvoiceClient;
 var
   VInvoice: TInvoice;
@@ -1197,13 +1198,44 @@ begin
   end;
 end;
 
+{ TTestOPFUpdateManualProxyMappingTests }
+
+procedure TTestOPFUpdateManualProxyMappingTests.Company;
+var
+  VCompany: TCompany;
+begin
+  VCompany := TCompany.Create;
+  try
+    VCompany.Name := 'company co';
+    VCompany.ContactName := 'joe';
+    Session.Store(VCompany);
+    TTestSQLDriver.Commands.Clear;
+    VCompany.Name := 'comp corp';
+    Session.Store(VCompany);
+    AssertSQLDriverCommands([
+     'WriteString comp corp',
+     'WriteInteger 1',
+     'ExecSQL UPDATE CLIENT SET NAME=? WHERE ID=?']);
+    TTestSQLDriver.Commands.Clear;
+    VCompany.ContactName := 'wil';
+    Session.Store(VCompany);
+    AssertSQLDriverCommands([
+     'WriteString wil',
+     'WriteInteger 1',
+     'ExecSQL UPDATE COMPANY SET CONTACTNAME=? WHERE ID=?']);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
 initialization
-  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFInsertManualIPIDMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFUpdateManualIPIDMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFSelectManualIPIDMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFDeleteOneManualIPIDMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.ipid', TTestOPFDeleteArrayManualIPIDMappingTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.proxy', TTestOPFInsertManualProxyMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.simple', TTestOPFInsertManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.simple', TTestOPFUpdateManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.simple', TTestOPFSelectManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.simple', TTestOPFDeleteOneManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.simple', TTestOPFDeleteArrayManualIPIDMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFInsertManualProxyMappingTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFUpdateManualProxyMappingTests);
 
 end.
 

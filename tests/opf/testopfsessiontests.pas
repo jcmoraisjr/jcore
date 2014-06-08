@@ -37,7 +37,7 @@ var
   VSession: IJCoreOPFSession;
 begin
   VConfiguration := TJCoreOPFConfiguration.Create;
-  VConfiguration.AddMappingClass(TTestEmptyMapping);
+  VConfiguration.AddMappingClass([TTestEmptyMapping]);
 
   try
     VSession := VConfiguration.CreateSession;
@@ -85,7 +85,7 @@ begin
   VPerson := TTestIPIDPerson.Create;
   try
     AssertExceptionStore(VSession, VPerson, EJCoreOPFMappingNotFound);
-    VConfiguration.AddMappingClass(TTestEmptyMapping);
+    VConfiguration.AddMappingClass([TTestEmptyMapping]);
     VSession.Store(VPerson);
   finally
     FreeAndNil(VPerson);
