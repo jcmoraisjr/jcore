@@ -42,11 +42,8 @@ type
     FDriverClass: TJCoreOPFDriverClass;
     FDriverClassList: TJCoreOPFDriverClassList;
     FDriverName: string;
-    FHost: string;
     FMappingClassList: TJCoreOPFMappingClassList;
     FModel: TJCoreOPFModel;
-    FPassword: string;
-    FUsername: string;
     function GetDriverName: string;
     procedure SetDriverName(AValue: string);
   protected
@@ -61,10 +58,7 @@ type
     procedure AddMappingClass(const AMappingClass: TJCoreOPFMappingClass);
     function CreateSession: IJCoreOPFSession;
     property DriverName: string read GetDriverName write SetDriverName;
-    property Host: string write FHost;
     property Model: TJCoreOPFModel read FModel;
-    property Password: string write FPassword;
-    property Username: string write FUsername;
   end;
 
 implementation
