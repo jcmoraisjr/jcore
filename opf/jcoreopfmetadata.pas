@@ -34,7 +34,7 @@ type
   TJCoreOPFPIDList = specialize TFPGObjectList<TJCoreOPFPID>;
   TJCoreOPFPIDArray = array of TJCoreOPFPID;
 
-  IJCoreOPFPIDMapping = interface
+  IJCoreOPFPIDManager = interface
     function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     procedure LoadEntity(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMEntity);
@@ -53,7 +53,6 @@ type
     FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
     FLoaded: Boolean;
-    FMapping: IJCoreOPFPIDMapping;
     FMetadata: TJCoreOPFAttrMetadata;
     FPID: TJCoreOPFPID;
   protected
@@ -64,10 +63,9 @@ type
     procedure InternalUpdateCache; virtual; abstract;
     property AttrAddr: Pointer read FAttrAddr;
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
-    property Mapping: IJCoreOPFPIDMapping read FMapping;
     property PID: TJCoreOPFPID read FPID;
   public
-    constructor Create(const AMapping: IJCoreOPFPIDMapping; const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); virtual;
+    constructor Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
     class function AttributeType: TJCoreOPFAttributeType; virtual; abstract;
     procedure Commit;
@@ -255,7 +253,7 @@ type
     FAttrAddrRef: PPointer;
     FEntity: TObject;
     FIsPersistent: Boolean;
-    FMapping: IJCoreOPFPIDMapping;
+    FPIDManager: IJCoreOPFPIDManager;
     FMetadata: TJCoreOPFClassMetadata;
     FOID: TJCoreOPFOID;
     FOwner: TJCoreOPFPID;
@@ -273,10 +271,10 @@ type
     function AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
     function InternalIsDirty(const AIncludeExternals: Boolean): Boolean; virtual;
     property ADMMap: TJCoreOPFADMMap read FADMMap;
-    property Mapping: IJCoreOPFPIDMapping read FMapping;
+    property PIDManager: IJCoreOPFPIDManager read FPIDManager;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
   public
-    constructor Create(const AMapping: IJCoreOPFPIDMapping; const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
+    constructor Create(const APIDManager: IJCoreOPFPIDManager; const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
     destructor Destroy; override;
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function ADMByName(const AAttributeName: string): IJCoreADM;
@@ -315,7 +313,7 @@ type
     property Model: TJCoreOPFModel read FModel;
   public
     constructor Create(const AModel: TJCoreOPFModel; const APropInfo: PPropInfo);
-    function CreateADM(const AMapping: IJCoreOPFPIDMapping; const APID: TJCoreOPFPID): TJCoreOPFADM;
+    function CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
     procedure NoLazyload;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
@@ -374,11 +372,9 @@ begin
   raise EJCoreOPFUnsupportedLoadOperation.Create(Metadata.PropInfo^.PropType^.Name);
 end;
 
-constructor TJCoreOPFADM.Create(const AMapping: IJCoreOPFPIDMapping;
-  const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
+constructor TJCoreOPFADM.Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
 begin
   inherited Create;
-  FMapping := AMapping;
   FPID := APID;
   FAttrPropInfo := AMetadata.PropInfo;
   FCacheUpdated := False;
@@ -632,7 +628,7 @@ var
 begin
   VObject := Value;
   if Assigned(VObject) then
-    Result := Mapping.AcquirePID(VObject)
+    Result := PID.PIDManager.AcquirePID(VObject)
   else
     Result := nil;
 end;
@@ -656,7 +652,7 @@ procedure TJCoreOPFADMEntity.InternalLoad;
 begin
   // No OID means nil reference or non persistent entity. So no loading.
   if Assigned(CompositionOID) then
-    Mapping.LoadEntity(PID, Self);
+    PID.PIDManager.LoadEntity(PID, Self);
 end;
 
 procedure TJCoreOPFADMEntity.InternalUpdateCache;
@@ -756,7 +752,7 @@ function TJCoreOPFADMCollection.GetPIDArray: TJCoreOPFPIDArray;
 begin
   if not FPIDArrayUpdated then
   begin
-    FPIDArray := Mapping.CreatePIDArray(ItemsArray);
+    FPIDArray := PID.PIDManager.CreatePIDArray(ItemsArray);
     { TODO : Fix cache outside transaction control }
     //FPIDArrayUpdated := True;
   end;
@@ -901,7 +897,7 @@ end;
 
 procedure TJCoreOPFADMCollection.InternalLoad;
 begin
-  Mapping.LoadCollection(PID, Self);
+  PID.PIDManager.LoadCollection(PID, Self);
 end;
 
 procedure TJCoreOPFADMCollection.InternalUpdateCache;
@@ -1008,7 +1004,7 @@ begin
   for I := 0 to Pred(Metadata.AttributeCount) do
   begin
     VAttrMetadata := Metadata.Attributes[I];
-    VADM := VAttrMetadata.CreateADM(Mapping, Self);
+    VADM := VAttrMetadata.CreateADM(Self);
     ADMMap.Add(VAttrMetadata.Name, VADM);
     if VAttrMetadata.HasLazyload then
     begin
@@ -1073,13 +1069,13 @@ begin
   Result := False;
 end;
 
-constructor TJCoreOPFPID.Create(const AMapping: IJCoreOPFPIDMapping;
+constructor TJCoreOPFPID.Create(const APIDManager: IJCoreOPFPIDManager;
   const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
   inherited Create;
-  FMapping := AMapping;
+  FPIDManager := APIDManager;
   FEntity := AEntity;
   FMetadata := AMetadata;
   FIsPersistent := False;
@@ -1234,10 +1230,9 @@ begin
   FHasLazyload := True; // which also means "I dont know yet, try it"
 end;
 
-function TJCoreOPFAttrMetadata.CreateADM(const AMapping: IJCoreOPFPIDMapping;
-  const APID: TJCoreOPFPID): TJCoreOPFADM;
+function TJCoreOPFAttrMetadata.CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
 begin
-  Result := ADMClass.Create(AMapping, APID, Self);
+  Result := ADMClass.Create(APID, Self);
 end;
 
 procedure TJCoreOPFAttrMetadata.NoLazyload;

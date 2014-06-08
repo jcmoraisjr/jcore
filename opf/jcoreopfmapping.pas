@@ -43,7 +43,7 @@ type
 
   { TJCoreOPFMapping }
 
-  TJCoreOPFMapping = class(TObject, IJCoreOPFPIDMapping)
+  TJCoreOPFMapping = class(TObject, IJCoreOPFPIDManager)
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
