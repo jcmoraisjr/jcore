@@ -40,7 +40,7 @@ type
   TJCoreOPFConfiguration = class(TInterfacedObject, IJCoreOPFConfiguration, IJCoreOPFSessionManager)
   private
     FDriverClass: TJCoreOPFDriverClass;
-    FDriverClassList: TJCoreOPFDriverClassList;
+    FDriverClassMap: TJCoreOPFDriverClassMap;
     FDriverName: string;
     FMappingClassList: TJCoreOPFMappingClassList;
     FModel: TJCoreOPFModel;
@@ -50,6 +50,7 @@ type
     function CreateDriver: TJCoreOPFDriver;
     function FindMappingClass(const AClass: TClass): TJCoreOPFMappingClass;
     function InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession; virtual;
+    property DriverClassMap: TJCoreOPFDriverClassMap read FDriverClassMap;
     property MappingClassList: TJCoreOPFMappingClassList read FMappingClassList;
   public
     constructor Create(const AModel: TJCoreOPFModel = nil);
@@ -76,10 +77,10 @@ begin
   if FDriverName <> AValue then
   begin
     { TODO : thread safe }
-    VIndex := FDriverClassList.IndexOf(AValue);
+    VIndex := DriverClassMap.IndexOf(AValue);
     if VIndex = -1 then
       raise EJCoreOPFDriverNotFound.Create(AValue);
-    FDriverClass := FDriverClassList.Data[VIndex];
+    FDriverClass := DriverClassMap.Data[VIndex];
     FDriverName := AValue;
   end;
 end;
@@ -119,7 +120,7 @@ begin
   else
     FModel := TJCoreOPFModel.Create;
   inherited Create;
-  FDriverClassList := TJCoreOPFDriverClassList.Create;
+  FDriverClassMap := TJCoreOPFDriverClassMap.Create;
   FMappingClassList := TJCoreOPFMappingClassList.Create;
 end;
 
@@ -127,19 +128,19 @@ destructor TJCoreOPFConfiguration.Destroy;
 begin
   FreeAndNil(FModel);
   FreeAndNil(FMappingClassList);
-  FreeAndNil(FDriverClassList);
+  FreeAndNil(FDriverClassMap);
   inherited Destroy;
 end;
 
 procedure TJCoreOPFConfiguration.AddDriverClass(const ADriverClass: TJCoreOPFDriverClass);
 begin
-  FDriverClassList.Add(ADriverClass.DriverName, ADriverClass);
+  DriverClassMap.Add(ADriverClass.DriverName, ADriverClass);
 end;
 
 procedure TJCoreOPFConfiguration.AddMappingClass(
   const AMappingClass: TJCoreOPFMappingClass);
 begin
-  FMappingClassList.Add(AMappingClass);
+  MappingClassList.Add(AMappingClass);
 end;
 
 function TJCoreOPFConfiguration.CreateSession: IJCoreOPFSession;

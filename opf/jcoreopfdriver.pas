@@ -79,8 +79,7 @@ type
   end;
 
   TJCoreOPFDriverClass = class of TJCoreOPFDriver;
-
-  TJCoreOPFDriverClassList = specialize TFPGMap<string, TJCoreOPFDriverClass>;
+  TJCoreOPFDriverClassMap = specialize TFPGMap<string, TJCoreOPFDriverClass>;
 
   { TJCoreOPFSQLDriver }
 
