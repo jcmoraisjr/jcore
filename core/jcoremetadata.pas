@@ -87,7 +87,7 @@ type
     FClassMap: TJCoreClassMap;
     FMetadataMap: TJCoreClassMetadataMap;
   protected
-    procedure AddClass(const AClass: TClass);
+    procedure AddClass(const AClassArray: array of TClass);
     function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
     function BuildClassMetadata(const AClass: TClass): TJCoreClassMetadata;
     function ClassMetadataClass: TJCoreClassMetadataClass; virtual;
@@ -186,9 +186,12 @@ end;
 
 { TJCoreModel }
 
-procedure TJCoreModel.AddClass(const AClass: TClass);
+procedure TJCoreModel.AddClass(const AClassArray: array of TClass);
+var
+  VClass: TClass;
 begin
-  ClassMap.Add(AClass.ClassName, AClass);
+  for VClass in AClassArray do
+    ClassMap.Add(VClass.ClassName, VClass);
 end;
 
 function TJCoreModel.AttributeMetadataClass: TJCoreAttrMetadataClass;

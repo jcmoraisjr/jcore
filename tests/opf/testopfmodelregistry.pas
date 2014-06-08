@@ -58,11 +58,7 @@ end;
 procedure TTestOPFModelIPIDContact.InitRegistry;
 begin
   inherited InitRegistry;
-  AddClass(TTestIPIDPerson);
-  AddClass(TTestIPIDPhone);
-  AddClass(TTestIPIDLanguage);
-  AddClass(TTestIPIDAddress);
-  AddClass(TTestIPIDCity);
+  AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
 end;
 
 { TTestOPFModelProxyContact }
@@ -70,9 +66,7 @@ end;
 procedure TTestOPFModelProxyContact.InitRegistry;
 begin
   inherited InitRegistry;
-  AddClass(TTestProxyPhone);
-  AddClass(TTestProxyCity);
-  AddClass(TTestProxyPerson);
+  AddClass([TTestProxyPhone, TTestProxyCity, TTestProxyPerson]);
 end;
 
 { TTestOPFModelProxyInvoice }
@@ -80,14 +74,8 @@ end;
 procedure TTestOPFModelProxyInvoice.InitRegistry;
 begin
   inherited InitRegistry;
-  AddClass(TClient);
-  AddClass(TPerson);
-  AddClass(TProduct);
-  AddClass(TProduct);
-  AddClass(TInvoiceItem);
-  AddClass(TInvoiceItemProduct);
-  AddClass(TInvoiceItemService);
-  AddClass(TInvoice);
+  AddClass([TClient, TPerson, TProduct, TProduct, TInvoiceItem, TInvoiceItemProduct,
+   TInvoiceItemService, TInvoice]);
 end;
 
 end.
