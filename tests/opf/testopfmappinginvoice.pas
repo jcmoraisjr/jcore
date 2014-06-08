@@ -16,7 +16,7 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const AClass: TClass): string; override;
+    function GenerateSelectStatement: string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -30,7 +30,7 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const AClass: TClass): string; override;
+    function GenerateSelectStatement: string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -44,7 +44,7 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const AClass: TClass): string; override;
+    function GenerateSelectStatement: string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -164,7 +164,7 @@ begin
   Result := CSQLINSERTINVOICECLIENT;
 end;
 
-function TClientSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+function TClientSQLMapping.GenerateSelectStatement: string;
 begin
   Result := CSQLSELECTINVOICECLIENT;
 end;
@@ -207,7 +207,7 @@ begin
   Result := CSQLINSERTINVOICEPERSON;
 end;
 
-function TPersonSQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+function TPersonSQLMapping.GenerateSelectStatement: string;
 begin
   Result := CSQLSELECTINVOICEPERSON;
 end;
@@ -250,7 +250,7 @@ begin
   Result := CSQLINSERTINVOICECOMPANY;
 end;
 
-function TCompanySQLMapping.GenerateSelectStatement(const AClass: TClass): string;
+function TCompanySQLMapping.GenerateSelectStatement: string;
 begin
   Result := CSQLSELECTINVOICECOMPANY;
 end;

@@ -259,7 +259,7 @@ end;
 
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);
 begin
-  AcquireClassMapping(AClass).Dispose(AClass, AStringOIDArray);
+  AcquireClassMapping(AClass).Dispose(AStringOIDArray);
   Commit;
 end;
 
