@@ -114,11 +114,11 @@ type
     property Mapper: IJCoreOPFMapper read FMapper;
     property MappingList: TJCoreOPFMappingList read FMappingList;
   public
-    procedure DisposeFromDriverInternal(const ADriverOID: TJCoreOPFDriver; const ACount: Integer);
+    procedure DisposeFromDriverInternal(const ACount: Integer);
     procedure DisposeFromOIDInternal(const AOIDArray: TJCoreOPFOIDArray);
-    function RetrieveEntityInternal(const ADriverOID: TJCoreOPFDriver): TObject;
+    function RetrieveFromDriverInternal: TObject;
     procedure RetrieveEntityInternal(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
-    procedure RetrieveLazyFromDriverInternal(const ADriver: TJCoreOPFDriver; const ALazyADM: TJCoreOPFADMEntity);
+    procedure RetrieveLazyFromDriverInternal(const ALazyADM: TJCoreOPFADMEntity);
     procedure RetrieveListInternal(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure StoreListInternal(const AOwnerMapping: TJCoreOPFADMMapping; const AOwnerADM: TJCoreOPFADMCollection);
   public
@@ -140,7 +140,7 @@ type
     FMap: TJCoreOPFMap;
     FMapper: IJCoreOPFMapper;
     FModel: TJCoreOPFModel;
-    function CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID;
+    function CreateOIDFromDriver: TJCoreOPFOID;
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID;
   protected
     function CreateEntity: TObject; virtual;
@@ -148,7 +148,7 @@ type
     procedure InternalDispose(const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
     function InternalRetrieve(const AOID: TJCoreOPFOID): TObject; virtual; abstract;
     procedure InternalRetrieveElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection); virtual; abstract;
-    procedure InternalRetrieveLazyFromDriver(const ADriver: TJCoreOPFDriver; const ALazyADM: TJCoreOPFADMEntity); virtual;
+    procedure InternalRetrieveLazyFromDriver(const ALazyADM: TJCoreOPFADMEntity); virtual;
     procedure InternalStore(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     property Driver: TJCoreOPFDriver read FDriver;
     property Map: TJCoreOPFMap read FMap;
@@ -159,14 +159,14 @@ type
     class function Apply(const AMap: TJCoreOPFMap): Boolean; virtual; abstract;
     function CreateOID: TJCoreOPFOID;
     procedure Dispose(const AMapping: TJCoreOPFADMMapping);
-    procedure DisposeFromDriver(const ADriverOID: TJCoreOPFDriver; const ACount: Integer);
+    procedure DisposeFromDriver(const ACount: Integer);
     procedure DisposeFromOID(const AOIDArray: TJCoreOPFOIDArray);
     procedure DisposeFromString(const AOIDArray: array of string);
     procedure RetrieveElement(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
     procedure RetrieveElements(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
-    function RetrieveFromDriver(const ADriverOID: TJCoreOPFDriver): TObject;
+    function RetrieveFromDriver: TObject;
     function RetrieveFromString(const AStringOID: string): TObject;
-    procedure RetrieveLazyFromDriver(const ADriver: TJCoreOPFDriver; const ALazyADM: TJCoreOPFADMEntity);
+    procedure RetrieveLazyFromDriver(const ALazyADM: TJCoreOPFADMEntity);
     procedure Store(const AMapping: TJCoreOPFADMMapping);
   end;
 
@@ -219,10 +219,10 @@ type
     procedure InternalRetrieveList(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection); virtual;
     procedure InternalStoreList(const AMapping: TJCoreOPFADMMapping; const AADM: TJCoreOPFADMCollection); virtual;
   protected
-    function RetrieveEntity(const AClass: TClass; const ADriverOID: TJCoreOPFDriver): TObject;
+    function RetrieveEntity(const AClass: TClass): TObject;
     procedure RetrieveLazy(const APID: TJCoreOPFPID; const AAttributeName: string);
     procedure RetrieveList(const APID: TJCoreOPFPID; const AAttributeName: string);
-    procedure StoreEntity(const AClass: TClass; const AEntity: TObject; const ADriver: TJCoreOPFDriver);
+    procedure StoreEntity(const AClass: TClass; const AEntity: TObject);
     procedure StoreList(const AMapping: TJCoreOPFADMMapping; const AAttributeName: string);
     procedure WriteOwnerOIDToDriver(const AMapping: TJCoreOPFADMMapping);
   end;
@@ -371,10 +371,9 @@ end;
 
 { TJCoreOPFClassMapping }
 
-procedure TJCoreOPFClassMapping.DisposeFromDriverInternal(const ADriverOID: TJCoreOPFDriver;
-  const ACount: Integer);
+procedure TJCoreOPFClassMapping.DisposeFromDriverInternal(const ACount: Integer);
 begin
-  MappingList.Last.DisposeFromDriver(ADriverOID, ACount);
+  MappingList.Last.DisposeFromDriver(ACount);
 end;
 
 procedure TJCoreOPFClassMapping.DisposeFromOIDInternal(const AOIDArray: TJCoreOPFOIDArray);
@@ -382,9 +381,9 @@ begin
   MappingList.Last.DisposeFromOID(AOIDArray);
 end;
 
-function TJCoreOPFClassMapping.RetrieveEntityInternal(const ADriverOID: TJCoreOPFDriver): TObject;
+function TJCoreOPFClassMapping.RetrieveFromDriverInternal: TObject;
 begin
-  Result := MappingList.Last.RetrieveFromDriver(ADriverOID);
+  Result := MappingList.Last.RetrieveFromDriver;
 end;
 
 procedure TJCoreOPFClassMapping.RetrieveEntityInternal(const AOwnerPID: TJCoreOPFPID;
@@ -399,10 +398,9 @@ begin
   MappingList.Last.RetrieveElements(AOwnerPID, AOwnerADM);
 end;
 
-procedure TJCoreOPFClassMapping.RetrieveLazyFromDriverInternal(const ADriver: TJCoreOPFDriver;
-  const ALazyADM: TJCoreOPFADMEntity);
+procedure TJCoreOPFClassMapping.RetrieveLazyFromDriverInternal(const ALazyADM: TJCoreOPFADMEntity);
 begin
-  MappingList.Last.RetrieveLazyFromDriver(ADriver, ALazyADM);
+  MappingList.Last.RetrieveLazyFromDriver(ALazyADM);
 end;
 
 procedure TJCoreOPFClassMapping.StoreListInternal(
@@ -477,10 +475,10 @@ end;
 
 { TJCoreOPFMapping }
 
-function TJCoreOPFMapping.CreateOIDFromDriver(const ADriver: TJCoreOPFDriver): TJCoreOPFOID;
+function TJCoreOPFMapping.CreateOIDFromDriver: TJCoreOPFOID;
 begin
-  if not ADriver.ReadNull then
-    Result := Map.OIDClass.CreateFromDriver(ADriver)
+  if not Driver.ReadNull then
+    Result := Map.OIDClass.CreateFromDriver(Driver)
   else
     Result := nil;
 end;
@@ -495,10 +493,9 @@ begin
   Result := Map.Metadata.TheClass.Create;
 end;
 
-procedure TJCoreOPFMapping.InternalRetrieveLazyFromDriver(const ADriver: TJCoreOPFDriver;
-  const ALazyADM: TJCoreOPFADMEntity);
+procedure TJCoreOPFMapping.InternalRetrieveLazyFromDriver(const ALazyADM: TJCoreOPFADMEntity);
 begin
-  ALazyADM.CompositionOID := CreateOIDFromDriver(ADriver);
+  ALazyADM.CompositionOID := CreateOIDFromDriver;
 end;
 
 constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap);
@@ -520,7 +517,7 @@ begin
   InternalDispose([AMapping.PID.OID]);
 end;
 
-procedure TJCoreOPFMapping.DisposeFromDriver(const ADriverOID: TJCoreOPFDriver; const ACount: Integer);
+procedure TJCoreOPFMapping.DisposeFromDriver(const ACount: Integer);
 var
   VOIDArray: TJCoreOPFOIDArray;
   I, VCount: Integer;
@@ -530,7 +527,7 @@ begin
     VCount := 0;
     for I := 0 to Pred(ACount) do
     begin
-      VOIDArray[VCount] := CreateOIDFromDriver(ADriverOID);
+      VOIDArray[VCount] := CreateOIDFromDriver;
       if Assigned(VOIDArray[VCount]) then
         Inc(VCount);
     end;
@@ -589,11 +586,11 @@ begin
   InternalRetrieveElements(AOwnerPID, AOwnerADM);
 end;
 
-function TJCoreOPFMapping.RetrieveFromDriver(const ADriverOID: TJCoreOPFDriver): TObject;
+function TJCoreOPFMapping.RetrieveFromDriver: TObject;
 var
   VOID: TJCoreOPFOID;
 begin
-  VOID := CreateOIDFromDriver(ADriverOID);
+  VOID := CreateOIDFromDriver;
   if Assigned(VOID) then
   begin
     try
@@ -623,10 +620,9 @@ begin
     Result := nil;
 end;
 
-procedure TJCoreOPFMapping.RetrieveLazyFromDriver(const ADriver: TJCoreOPFDriver;
-  const ALazyADM: TJCoreOPFADMEntity);
+procedure TJCoreOPFMapping.RetrieveLazyFromDriver(const ALazyADM: TJCoreOPFADMEntity);
 begin
-  InternalRetrieveLazyFromDriver(ADriver, ALazyADM);
+  InternalRetrieveLazyFromDriver(ALazyADM);
 end;
 
 procedure TJCoreOPFMapping.Store(const AMapping: TJCoreOPFADMMapping);
@@ -739,7 +735,7 @@ begin
   if (VCount > 0) and (AAttrMetadata.CompositionType = jctComposition) then
   begin
     // Delete external objects
-    Mapper.AcquireClassMapping(AAttrMetadata.CompositionClass).DisposeFromDriverInternal(Driver, VCount);
+    Mapper.AcquireClassMapping(AAttrMetadata.CompositionClass).DisposeFromDriverInternal(VCount);
   end;
 end;
 
@@ -760,8 +756,7 @@ begin
       VOID.WriteToDriver(Driver);
     Driver.ExecSQL(VSelectStmt, Length(AOIDArray));
     VCompositionMetadata := VCompositionMetadatas[0].CompositionMetadata;
-    Mapper.AcquireClassMapping(VCompositionMetadata.TheClass).DisposeFromDriverInternal(
-     Driver, Length(AOIDArray));
+    Mapper.AcquireClassMapping(VCompositionMetadata.TheClass).DisposeFromDriverInternal(Length(AOIDArray));
   end;
 end;
 
@@ -881,7 +876,7 @@ begin
     for I := Low(VElementsArray) to High(VElementsArray) do
     begin
       VElementsArray[I] := CreateEntity;
-      VOID := CreateOIDFromDriver(Driver);
+      VOID := CreateOIDFromDriver;
       try
         VPID := Mapper.AcquirePID(VElementsArray[I]);
         try
@@ -973,7 +968,7 @@ end;
 
 procedure TJCoreOPFSQLManualMapping.InternalRetrieveLazy(const AADM: TJCoreOPFADMEntity);
 begin
-  Mapper.AcquireClassMapping(AADM.Metadata.CompositionClass).RetrieveLazyFromDriverInternal(Driver, AADM);
+  Mapper.AcquireClassMapping(AADM.Metadata.CompositionClass).RetrieveLazyFromDriverInternal(AADM);
 end;
 
 procedure TJCoreOPFSQLManualMapping.InternalRetrieveList(const APID: TJCoreOPFPID;
@@ -1012,10 +1007,9 @@ begin
     WriteExternalLinksToDriver(AMapping, AADM);
 end;
 
-function TJCoreOPFSQLManualMapping.RetrieveEntity(const AClass: TClass;
-  const ADriverOID: TJCoreOPFDriver): TObject;
+function TJCoreOPFSQLManualMapping.RetrieveEntity(const AClass: TClass): TObject;
 begin
-  Result := Mapper.AcquireClassMapping(AClass).RetrieveEntityInternal(ADriverOID);
+  Result := Mapper.AcquireClassMapping(AClass).RetrieveFromDriverInternal;
 end;
 
 procedure TJCoreOPFSQLManualMapping.RetrieveLazy(const APID: TJCoreOPFPID; const AAttributeName: string);
@@ -1034,8 +1028,7 @@ begin
   InternalRetrieveList(APID, VADM);
 end;
 
-procedure TJCoreOPFSQLManualMapping.StoreEntity(const AClass: TClass; const AEntity: TObject;
-  const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFSQLManualMapping.StoreEntity(const AClass: TClass; const AEntity: TObject);
 var
   VPID: TJCoreOPFPID;
 begin
@@ -1043,7 +1036,7 @@ begin
   begin
     VPID := Mapper.AcquirePID(AEntity);
     Mapper.AcquireClassMapping(AEntity.ClassType).Store(VPID);
-    VPID.OID.WriteToDriver(ADriver);
+    VPID.OID.WriteToDriver(Driver);
   end else
     Model.AcquireMetadata(AClass).OIDClass.WriteNull(Driver);
 end;
