@@ -242,16 +242,16 @@ begin
   VPerson := APID.Entity as TTestIPIDPerson;
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
-  VPerson.Address := RetrieveEntity(TTestIPIDAddress) as TTestIPIDAddress;
-  VPerson.City := RetrieveEntity(TTestIPIDCity) as TTestIPIDCity;
-  RetrieveList(APID, 'Phones');
-  RetrieveList(APID, 'Languages');
+  VPerson.Address := ReadEntity(TTestIPIDAddress) as TTestIPIDAddress;
+  VPerson.City := ReadEntity(TTestIPIDCity) as TTestIPIDCity;
+  ReadCollection(APID, 'Phones');
+  ReadCollection(APID, 'Languages');
 end;
 
 procedure TTestIPIDPersonSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
 begin
-  StoreList(AMapping, 'Phones');
-  StoreList(AMapping, 'Languages');
+  WriteCollection(AMapping, 'Phones');
+  WriteCollection(AMapping, 'Languages');
 end;
 
 procedure TTestIPIDPersonSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -261,8 +261,8 @@ begin
   VPerson := AMapping.PID.Entity as TTestIPIDPerson;
   Driver.WriteString(VPerson.Name);
   Driver.WriteInteger(VPerson.Age);
-  StoreEntity(TTestIPIDAddress, VPerson.Address);
-  StoreEntity(TTestIPIDCity, VPerson.City);
+  WriteEntity(TTestIPIDAddress, VPerson.Address);
+  WriteEntity(TTestIPIDCity, VPerson.City);
 end;
 
 class function TTestIPIDPersonSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;
@@ -280,13 +280,13 @@ begin
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
   Driver.ReadNull; // VPerson.Address := Mapper.RetrieveFromDriver(TTestIPIDAddress, Driver) as TTestIPIDAddress;
-  RetrieveLazy(APID, 'City');
+  ReadLazyEntity(APID, 'City');
 end;
 
 procedure TTestProxyPersonSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
 begin
-  StoreList(AMapping, 'Phones');
-  StoreList(AMapping, 'Languages');
+  WriteCollection(AMapping, 'Phones');
+  WriteCollection(AMapping, 'Languages');
 end;
 
 procedure TTestProxyPersonSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -297,7 +297,7 @@ begin
   Driver.WriteString(VPerson.Name);
   Driver.WriteInteger(VPerson.Age);
   Driver.WriteNull; // StoreEntity(TTestIPIDAddress, VPerson.Address, Driver);
-  StoreEntity(TTestIPIDCity, VPerson.City);
+  WriteEntity(TTestIPIDCity, VPerson.City);
 end;
 
 class function TTestProxyPersonSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;

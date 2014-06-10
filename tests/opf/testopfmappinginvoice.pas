@@ -341,13 +341,13 @@ var
   VInvoice: TInvoice;
 begin
   VInvoice := APID.Entity as TInvoice;
-  VInvoice.Client := RetrieveEntity(TClient) as TClient;
+  VInvoice.Client := ReadEntity(TClient) as TClient;
   VInvoice.Date := Driver.ReadString;
 end;
 
 procedure TInvoiceSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
 begin
-  StoreList(AMapping, 'Items');
+  WriteCollection(AMapping, 'Items');
 end;
 
 procedure TInvoiceSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -355,7 +355,7 @@ var
   VInvoice: TInvoice;
 begin
   VInvoice := AMapping.PID.Entity as TInvoice;
-  StoreEntity(TClient, VInvoice.Client);
+  WriteEntity(TClient, VInvoice.Client);
   Driver.WriteString(VInvoice.Date);
 end;
 
@@ -426,7 +426,7 @@ var
 begin
   VItemProduct := APID.Entity as TInvoiceItemProduct;
   VItemProduct.Qty := Driver.ReadInteger;
-  VItemProduct.Product := RetrieveEntity(TProduct) as TProduct;
+  VItemProduct.Product := ReadEntity(TProduct) as TProduct;
 end;
 
 procedure TInvoiceItemProductSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -435,7 +435,7 @@ var
 begin
   VItemProduct := AMapping.PID.Entity as TInvoiceItemProduct;
   Driver.WriteInteger(VItemProduct.Qty);
-  StoreEntity(TProduct, VItemProduct.Product);
+  WriteEntity(TProduct, VItemProduct.Product);
 end;
 
 class function TInvoiceItemProductSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;
