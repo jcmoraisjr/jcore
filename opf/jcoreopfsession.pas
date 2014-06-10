@@ -78,8 +78,8 @@ type
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
     function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
-    procedure Dispose(const AEntity: TObject);
     procedure Dispose(const AClass: TClass; const AStringOIDArray: array of string);
+    procedure Dispose(const AEntity: TObject);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
     procedure Store(const AEntity: TObject);
   end;
@@ -197,7 +197,7 @@ end;
 procedure TJCoreOPFSession.LoadCollection(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMCollection);
 begin
-  AcquireClassMapping(AOwnerADM.Metadata.CompositionClass).RetrieveListInternal(AOwnerPID, AOwnerADM);
+  AcquireClassMapping(AOwnerADM.Metadata.CompositionClass).RetrieveCollectionInternal(AOwnerPID, AOwnerADM);
 end;
 
 procedure TJCoreOPFSession.LoadEntity(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
@@ -251,27 +251,27 @@ begin
     raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
 end;
 
-procedure TJCoreOPFSession.Dispose(const AEntity: TObject);
+procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);
 begin
-  AcquireClassMapping(AEntity.ClassType).Dispose(AcquirePID(AEntity));
+  AcquireClassMapping(AClass).DisposeOID(AStringOIDArray);
   Commit;
 end;
 
-procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);
+procedure TJCoreOPFSession.Dispose(const AEntity: TObject);
 begin
-  AcquireClassMapping(AClass).Dispose(AStringOIDArray);
+  AcquireClassMapping(AEntity.ClassType).DisposePID(AcquirePID(AEntity));
   Commit;
 end;
 
 function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;
 begin
-  Result := AcquireClassMapping(AClass).Retrieve(AOID);
+  Result := AcquireClassMapping(AClass).RetrieveOID(AOID);
   Commit;
 end;
 
 procedure TJCoreOPFSession.Store(const AEntity: TObject);
 begin
-  AcquireClassMapping(AEntity.ClassType).Store(AcquirePID(AEntity));
+  AcquireClassMapping(AEntity.ClassType).StorePID(AcquirePID(AEntity));
   Commit;
 end;
 
