@@ -196,7 +196,8 @@ type
     //// Support ////
     procedure WriteDisposeCollectionToDriver(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of TJCoreOPFOID);
     procedure WriteDisposeEntityCompositionsToDriver(const AOIDArray: array of TJCoreOPFOID);
-    procedure WriteExternalLinksToDriver(const AOwnerMapping: TJCoreOPFADMMapping; const AADM: TJCoreOPFADMCollection);
+    procedure WriteDisposeExternalLinksToDriver(const AOwnerMapping: TJCoreOPFADMMapping; const AADM: TJCoreOPFADMCollection);
+    procedure WriteInsertExternalLinksToDriver(const AOwnerMapping: TJCoreOPFADMMapping; const AADM: TJCoreOPFADMCollection);
     function BuildParams(const ASize: Integer): string;
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
   protected
@@ -218,8 +219,8 @@ type
     function EnsureEntityAttribute(const AMapping: TJCoreOPFADMMapping; const AAttributeName: string): TJCoreOPFADMEntity;
     function EnsureEntityAttribute(const APID: TJCoreOPFPID; const AAttributeName: string): TJCoreOPFADMEntity;
   protected
-    function ReadEntity(const AClass: TClass): TObject;
     procedure ReadCollection(const APID: TJCoreOPFPID; const AAttributeName: string);
+    function ReadEntity(const AClass: TClass): TObject;
     procedure ReadLazyEntity(const APID: TJCoreOPFPID; const AAttributeName: string);
     procedure WriteCollection(const AMapping: TJCoreOPFADMMapping; const AAttributeName: string);
     procedure WriteEntity(const AClass: TClass; const AEntity: TObject);
@@ -474,26 +475,40 @@ end;
 procedure TJCoreOPFClassMapping.StoreCollectionInternal(const AOwnerMapping: TJCoreOPFADMMapping;
   const AOwnerADM: TJCoreOPFADMCollection);
 var
+  VAttrMetadata: TJCoreOPFAttrMetadata;
   VOIDs: TJCoreOPFOIDArray;
   VPIDs: TJCoreOPFPIDArray;
   VPID: TJCoreOPFPID;
+  VLastMapping: TJCoreOPFClassMapping;
+  VLastClass: TClass;
 begin
-  if AOwnerADM.Metadata.CompositionType = jctComposition then
+  VAttrMetadata := AOwnerADM.Metadata;
+  //// This method does not update external links!
+  // delete old links (before)
+  // dispose removed and store inserted/updated objects (this method)
+  // insert new links (after)
+  if VAttrMetadata.CompositionType = jctComposition then
   begin
     VOIDs := AOwnerADM.OIDRemoved;
     if Length(VOIDs) > 0 then
-      Mapper.AcquireClassMapping(AOwnerADM.Metadata.CompositionClass).DisposeFromOIDInternal(VOIDs);
+      Mapper.AcquireClassMapping(VAttrMetadata.CompositionClass).DisposeFromOIDInternal(VOIDs);
   end;
-
+  VLastMapping := nil;
+  VLastClass := nil;
   VPIDs := AOwnerADM.PIDArray;
   for VPID in VPIDs do
   begin
     VPID.AssignOwner(AOwnerMapping.PID, AOwnerADM);
-    if (AOwnerADM.Metadata.CompositionType = jctComposition) or
-     not VPID.IsPersistent then
-      { TODO : Document approach - non composition attributes are stored if they are not persistent }
-      { TODO : Implement apply(classtype) in order to avoid a trip }
-      Mapper.AcquireClassMapping(VPID.Entity.ClassType).StorePID(VPID);
+    if (VAttrMetadata.CompositionType = jctComposition) or not VPID.IsPersistent then
+    { TODO : Document this approach: non composition attributes are stored if they are not persistent }
+    begin
+      if not Assigned(VLastMapping) or (VPID.Entity.ClassType <> VLastClass) then
+      begin
+        VLastClass := VPID.Entity.ClassType;
+        VLastMapping := Mapper.AcquireClassMapping(VLastClass);
+      end;
+      VLastMapping.StorePID(VPID);
+    end;
   end;
 end;
 
@@ -745,20 +760,42 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLMapping.WriteExternalLinksToDriver(
+procedure TJCoreOPFSQLMapping.WriteDisposeExternalLinksToDriver(
+  const AOwnerMapping: TJCoreOPFADMMapping; const AADM: TJCoreOPFADMCollection);
+var
+  VOIDs: TJCoreOPFOIDArray;
+  VOID: TJCoreOPFOID;
+begin
+  if (AADM.Metadata.CompositionLinkType = jcltExternal) and AOwnerMapping.PID.IsPersistent then
+  begin
+    VOIDs := AADM.OIDRemoved;
+    if Length(VOIDs) > 0 then
+    begin
+      AOwnerMapping.PID.OID.WriteToDriver(Driver);
+      for VOID in VOIDs do
+        VOID.WriteToDriver(Driver);
+      Driver.ExecSQL(GenerateDeleteExternalLinkIDsStatement(AADM.Metadata, Length(VOIDs)));
+    end;
+  end;
+end;
+
+procedure TJCoreOPFSQLMapping.WriteInsertExternalLinksToDriver(
   const AOwnerMapping: TJCoreOPFADMMapping; const AADM: TJCoreOPFADMCollection);
 var
   VInsertStmt: string;
   VPIDs: TJCoreOPFPIDArray;
   VPID: TJCoreOPFPID;
 begin
-  VInsertStmt := GenerateInsertExternalLinksStatement(AADM.Metadata);
-  VPIDs := AADM.PIDAdded;
-  for VPID in VPIDs do
+  if AADM.Metadata.CompositionLinkType = jcltExternal then
   begin
-    AOwnerMapping.PID.OID.WriteToDriver(Driver);
-    VPID.OID.WriteToDriver(Driver);
-    Driver.ExecSQL(VInsertStmt);
+    VInsertStmt := GenerateInsertExternalLinksStatement(AADM.Metadata);
+    VPIDs := AADM.PIDAdded;
+    for VPID in VPIDs do
+    begin
+      AOwnerMapping.PID.OID.WriteToDriver(Driver);
+      VPID.OID.WriteToDriver(Driver);
+      Driver.ExecSQL(VInsertStmt);
+    end;
   end;
 end;
 
@@ -931,17 +968,17 @@ begin
   Result := TJCoreOPFADMEntity(VADM);
 end;
 
-function TJCoreOPFSQLManualMapping.ReadEntity(const AClass: TClass): TObject;
-begin
-  Result := Mapper.AcquireClassMapping(AClass).RetrieveFromDriverInternal;
-end;
-
 procedure TJCoreOPFSQLManualMapping.ReadCollection(const APID: TJCoreOPFPID; const AAttributeName: string);
 var
   VADM: TJCoreOPFADMCollection;
 begin
   VADM := EnsureCollectionAttribute(APID, AAttributeName);
   Mapper.AcquireClassMapping(VADM.Metadata.CompositionClass).RetrieveCollectionInternal(APID, VADM);
+end;
+
+function TJCoreOPFSQLManualMapping.ReadEntity(const AClass: TClass): TObject;
+begin
+  Result := Mapper.AcquireClassMapping(AClass).RetrieveFromDriverInternal;
 end;
 
 procedure TJCoreOPFSQLManualMapping.ReadLazyEntity(const APID: TJCoreOPFPID; const AAttributeName: string);
@@ -956,35 +993,14 @@ procedure TJCoreOPFSQLManualMapping.WriteCollection(const AMapping: TJCoreOPFADM
   const AAttributeName: string);
 var
   VADM: TJCoreOPFADMCollection;
-  VMetadata: TJCoreOPFAttrMetadata;
-  VOIDs: TJCoreOPFOIDArray;
-  VOID: TJCoreOPFOID;
 begin
   { TODO : Improve the change analyzer }
   VADM := EnsureCollectionAttribute(AMapping, AAttributeName);
   if VADM.IsDirty then
   begin
-    VMetadata := VADM.Metadata;
-
-    // remove old links
-    if (VMetadata.CompositionLinkType = jcltExternal) and AMapping.PID.IsPersistent then
-    begin
-      VOIDs := VADM.OIDRemoved;
-      if Length(VOIDs) > 0 then
-      begin
-        AMapping.PID.OID.WriteToDriver(Driver);
-        for VOID in VOIDs do
-          VOID.WriteToDriver(Driver);
-        Driver.ExecSQL(GenerateDeleteExternalLinkIDsStatement(VMetadata, Length(VOIDs)));
-      end;
-    end;
-
-    // update items
+    WriteDisposeExternalLinksToDriver(AMapping, VADM);
     Mapper.AcquireClassMapping(VADM.Metadata.CompositionClass).StoreCollectionInternal(AMapping, VADM);
-
-    // add new links
-    if VMetadata.CompositionLinkType = jcltExternal then
-      WriteExternalLinksToDriver(AMapping, VADM);
+    WriteInsertExternalLinksToDriver(AMapping, VADM);
   end;
 end;
 
