@@ -18,6 +18,7 @@
         <CompilerMessages>
           <MsgFileName Value=""/>
         </CompilerMessages>
+        <CustomOptions Value="-vm5024"/>
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>

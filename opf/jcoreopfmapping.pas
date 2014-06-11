@@ -630,6 +630,7 @@ end;
 
 { TJCoreOPFSQLMapping }
 
+{$warn 5033 off}
 function TJCoreOPFSQLMapping.GenerateDeleteExternalLinkIDsStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
 begin
@@ -665,6 +666,7 @@ function TJCoreOPFSQLMapping.GenerateSelectForDeleteStatement(
 begin
   raise EJCoreOPFUnsupportedSelectForDeleteOperation.Create(AAttrMetadata.CompositionClass);
 end;
+{$warn 5033 on}
 
 procedure TJCoreOPFSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
 begin
