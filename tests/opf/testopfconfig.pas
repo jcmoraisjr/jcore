@@ -118,6 +118,7 @@ type
 
   TTestSQLDriver = class(TJCoreOPFSQLDriver)
   private
+    procedure AddCommand(const ACommand: string);
     function PopData(const APopFromQueue: Boolean = True): string;
     class var FCommands: TStringList;
     class var FData:  TStringList;
@@ -351,6 +352,11 @@ end;
 
 { TTestSQLDriver }
 
+procedure TTestSQLDriver.AddCommand(const ACommand: string);
+begin
+  FCommands.Add(ACommand);
+end;
+
 function TTestSQLDriver.PopData(const APopFromQueue: Boolean): string;
 begin
   if Data.Count = 0 then
@@ -414,17 +420,17 @@ end;
 
 procedure TTestSQLDriver.WriteInteger(const AValue: Integer);
 begin
-  FCommands.Add('WriteInteger ' + IntToStr(AValue));
+  AddCommand('WriteInteger ' + IntToStr(AValue));
 end;
 
 procedure TTestSQLDriver.WriteString(const AValue: string);
 begin
-  FCommands.Add('WriteString ' + AValue);
+  AddCommand('WriteString ' + AValue);
 end;
 
 procedure TTestSQLDriver.WriteNull;
 begin
-  FCommands.Add('WriteNull');
+  AddCommand('WriteNull');
 end;
 
 end.

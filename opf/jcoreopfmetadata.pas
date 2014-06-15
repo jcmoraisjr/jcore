@@ -310,7 +310,6 @@ type
     function IsDirty: Boolean;
     function IsInternalsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
-    procedure ReleaseOID(const AOID: TJCoreOPFOID);
     property ADMMapping[const AIndex: Integer]: TJCoreOPFADMMapping read GetADMMapping; default;
     property IsPersistent: Boolean read FIsPersistent;
     property Entity: TObject read FEntity;
@@ -1228,8 +1227,13 @@ procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);
 begin
   if IsPersistent and Assigned(AOID) then
     raise EJCoreOPFCannotAssignOIDPersistent.Create;
-  FreeAndNil(FOID);
-  FOID := AOID;
+  if FOID <> AOID then
+  begin
+    FreeAndNil(FOID);
+    FOID := AOID;
+    if Assigned(FOID) then
+      FOID.AddRef;
+  end;
 end;
 
 procedure TJCoreOPFPID.AssignOwner(const AOwner: TJCoreOPFPID;
@@ -1297,15 +1301,6 @@ begin
     FAttrAddrRef^ := AAttrAddr;
     Result := True;
   end;
-end;
-
-procedure TJCoreOPFPID.ReleaseOID(const AOID: TJCoreOPFOID);
-begin
-  { TODO : Used to release the OID if an exception raises just after the OID
-           was assigned. A refcounted object (intf or a jcore managed obj) is
-           a better approach }
-  if FOID = AOID then
-    FOID := nil;
 end;
 
 { TJCoreOPFAttrMetadata }

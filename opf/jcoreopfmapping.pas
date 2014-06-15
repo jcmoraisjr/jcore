@@ -462,7 +462,6 @@ begin
     end;
     VClassMapping.RetrieveMapsInternal(VPID);
   except
-    VPID.ReleaseOID(AOID);
     FreeAndNil(VEntity);
     raise;
   end;
@@ -505,9 +504,8 @@ begin
   begin
     try
       Result := InternalRetrieve(VOID);
-    except
+    finally
       FreeAndNil(VOID);
-      raise;
     end;
   end else
     Result := nil;
@@ -537,14 +535,8 @@ begin
   VOID := AOwnerADM.CompositionOID;
   if not Assigned(VOID) then
     raise EJCoreOPFEmptyOID.Create;
-  VOID.AddRef;
-  try
-    VComposite := InternalRetrieve(VOID);
-    AOwnerADM.AssignComposition(VComposite);
-  except
-    FreeAndNil(VOID);
-    raise;
-  end;
+  VComposite := InternalRetrieve(VOID);
+  AOwnerADM.AssignComposition(VComposite);
 end;
 
 procedure TJCoreOPFClassMapping.RetrieveLazyEntityFromDriverInternal(const ALazyADM: TJCoreOPFADMEntity);
@@ -645,9 +637,8 @@ begin
     VOID := CreateOIDFromString(AStringOID);
     try
       Result := InternalRetrieve(VOID);
-    except
+    finally
       FreeAndNil(VOID);
-      raise;
     end;
   end else
     Result := nil;
@@ -655,11 +646,19 @@ end;
 
 procedure TJCoreOPFClassMapping.StorePID(const APID: TJCoreOPFPID);
 var
+  VOID: TJCoreOPFOID;
   I: Integer;
 begin
   EnsureMappingConsistency(APID);
   if not APID.IsPersistent then
-    APID.AssignOID(MappingList.Last.CreateOID);
+  begin
+    VOID := MappingList.Last.CreateOID;
+    try
+      APID.AssignOID(VOID);
+    finally
+      FreeAndNil(VOID);
+    end;
+  end;
   for I := 0 to Pred(MappingList.Count) do
     MappingList[I].Store(APID[I]);
   Mapper.AddInTransactionPID(APID);
@@ -973,16 +972,10 @@ begin
       VOID := Map.OIDClass.CreateFromDriver(Driver);
       try
         VPID := Mapper.AcquirePID(VElementsArray[I]);
-        try
-          VPID.AssignOID(VOID);
-          ReadFromDriver(VPID[0]);
-        except
-          VPID.ReleaseOID(VOID);
-          raise;
-        end;
-      except
+        VPID.AssignOID(VOID);
+        ReadFromDriver(VPID[0]);
+      finally
         FreeAndNil(VOID);
-        raise;
       end;
     end;
     AOwnerADM.AssignArray(VElementsArray);

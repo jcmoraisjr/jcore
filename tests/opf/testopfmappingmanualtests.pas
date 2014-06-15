@@ -287,26 +287,31 @@ begin
   VPerson := TTestIPIDPerson.Create;
   try
     VLang := TTestIPIDLanguage.Create('portuguese');
-    Session.Store(VLang);
-    AssertNotNull('lang pid', VLang._PID);
-    AssertEquals('lang oid', '1', VLang._PID.OID.AsString);
-    VPerson.Name := 'name';
-    VPerson.Languages.Add(VLang);
-    VLang.Name := 'german';
-    TTestSQLDriver.Commands.Clear;
-    Session.Store(VPerson);
-    AssertNotNull('person pid', VPerson._PID);
-    AssertEquals('person oid', '2', VPerson._PID.OID.AsString);
-    AssertSQLDriverCommands([
-     'WriteInteger 2',
-     'WriteString name',
-     'WriteInteger 0',
-     'WriteNull',
-     'WriteNull',
-     'ExecSQL ' + CSQLINSERTPERSON,
-     'WriteInteger 2',
-     'WriteInteger 1',
-     'ExecSQL ' + CSQLINSERTPERSON_LANG]);
+    try
+      Session.Store(VLang);
+      AssertNotNull('lang pid', VLang._PID);
+      AssertEquals('lang oid', '1', VLang._PID.OID.AsString);
+      VPerson.Name := 'name';
+      VPerson.Languages.Add(VLang);
+      VLang.AddRef;
+      VLang.Name := 'german';
+      TTestSQLDriver.Commands.Clear;
+      Session.Store(VPerson);
+      AssertNotNull('person pid', VPerson._PID);
+      AssertEquals('person oid', '2', VPerson._PID.OID.AsString);
+      AssertSQLDriverCommands([
+       'WriteInteger 2',
+       'WriteString name',
+       'WriteInteger 0',
+       'WriteNull',
+       'WriteNull',
+       'ExecSQL ' + CSQLINSERTPERSON,
+       'WriteInteger 2',
+       'WriteInteger 1',
+       'ExecSQL ' + CSQLINSERTPERSON_LANG]);
+    finally
+      FreeAndNil(VLang);
+    end;
   finally
     FreeAndNil(VPerson);
   end;
