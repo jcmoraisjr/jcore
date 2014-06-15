@@ -88,6 +88,24 @@ type
     procedure SingleOneMappingChanged;
   end;
 
+  { TTestOPFSelectManualMappingInheritanceTests }
+
+  TTestOPFSelectManualMappingInheritanceTests = class(TTestOPFProxyInvoiceTestCase)
+  published
+    procedure SingleFromSubclass;
+    procedure SingleFromSuperclass1;
+    procedure SingleFromSuperclass2;
+    procedure SingleFromSuperclass3;
+  end;
+
+  { TTestOPFDeleteManualMappingInheritanceTests }
+
+  TTestOPFDeleteManualMappingInheritanceTests = class(TTestOPFProxyInvoiceTestCase)
+  published
+    procedure Single1;
+    procedure Single2;
+  end;
+
 implementation
 
 uses
@@ -1250,6 +1268,159 @@ begin
   end;
 end;
 
+{ TTestOPFSelectManualMappingInheritanceTests }
+
+procedure TTestOPFSelectManualMappingInheritanceTests.SingleFromSubclass;
+var
+  VCompany: TCompany;
+begin
+  // company
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('company corp');
+  TTestSQLDriver.Data.Add('jack');
+
+  VCompany := Session.Retrieve(TCompany, '10') as TCompany;
+  try
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+    AssertNotNull('company not null', VCompany);
+    AssertEquals('company name', 'company corp', VCompany.Name);
+    AssertEquals('company contact', 'jack', VCompany.ContactName);
+    AssertSQLDriverCommands([
+     'WriteInteger 10',
+     'ExecSQL SELECT T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID=?']);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFSelectManualMappingInheritanceTests.SingleFromSuperclass1;
+var
+  VClient: TClient;
+  VPerson: TPerson;
+begin
+  // client
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('7');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('johnson');
+
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('joe');
+
+  VClient := Session.Retrieve(TClient, '7') as TClient;
+  try
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+    AssertNotNull('client not null', VClient);
+    AssertTrue('client is person', VClient is TPerson);
+    VPerson := VClient as TPerson;
+    AssertEquals('person name', 'johnson', VPerson.Name);
+    AssertEquals('person nick', 'joe', VPerson.Nick);
+    AssertSQLDriverCommands([
+     'WriteInteger 7',
+     'ExecSQL SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     'WriteInteger 7',
+     'ExecSQL SELECT NICK FROM PERSON WHERE ID=?']);
+  finally
+    FreeAndNil(VClient);
+  end;
+end;
+
+procedure TTestOPFSelectManualMappingInheritanceTests.SingleFromSuperclass2;
+var
+  VClient: TClient;
+  VCompany: TCompany;
+begin
+  // client
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('91');
+  TTestSQLDriver.Data.Add('acorp');
+
+  // person
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('mike');
+
+  VClient := Session.Retrieve(TClient, '91') as TClient;
+  try
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+    AssertNotNull('client not null', VClient);
+    AssertTrue('client is company', VClient is TCompany);
+    VCompany := VClient as TCompany;
+    AssertEquals('company name', 'acorp', VCompany.Name);
+    AssertEquals('company contact name', 'mike', VCompany.ContactName);
+    AssertSQLDriverCommands([
+     'WriteInteger 91',
+     'ExecSQL SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     'WriteInteger 91',
+     'ExecSQL SELECT CONTACTNAME FROM COMPANY WHERE ID=?']);
+  finally
+    FreeAndNil(VClient);
+  end;
+end;
+
+procedure TTestOPFSelectManualMappingInheritanceTests.SingleFromSuperclass3;
+var
+  VClient: TClient;
+begin
+  // client
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('someone');
+
+  VClient := Session.Retrieve(TClient, '3') as TClient;
+  try
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+    AssertNotNull('client not null', VClient);
+    AssertTrue('client is tclient', VClient.ClassType = TClient);
+    AssertEquals('client name', 'someone', VClient.Name);
+    AssertSQLDriverCommands([
+     'WriteInteger 3',
+     'ExecSQL SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?']);
+  finally
+    FreeAndNil(VClient);
+  end;
+end;
+
+{ TTestOPFDeleteManualMappingInheritanceTests }
+
+procedure TTestOPFDeleteManualMappingInheritanceTests.Single1;
+var
+  VCompany: TCompany;
+begin
+  VCompany := TCompany.Create;
+  try
+    Session.Store(VCompany);
+    AssertEquals('company id', '1', VCompany._proxy.OID.AsString);
+    TTestSQLDriver.Commands.Clear;
+    Session.Dispose(VCompany);
+    AssertSQLDriverCommands([
+     'WriteInteger 1',
+     'ExecSQL DELETE FROM CLIENT WHERE ID=?',
+     'WriteInteger 1',
+     'ExecSQL DELETE FROM COMPANY WHERE ID=?']);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFDeleteManualMappingInheritanceTests.Single2;
+begin
+  Session.Dispose(TPerson, ['5', '6']);
+  AssertSQLDriverCommands([
+   'WriteInteger 5',
+   'WriteInteger 6',
+   'ExecSQL DELETE FROM CLIENT WHERE ID IN (?,?)',
+   'WriteInteger 5',
+   'WriteInteger 6',
+   'ExecSQL DELETE FROM PERSON WHERE ID IN (?,?)']);
+end;
+
 initialization
   RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFInsertManualMappingPlainTests);
   RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFUpdateManualMappingPlainTests);
@@ -1258,6 +1429,8 @@ initialization
   RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFDeleteArrayManualMappingPlainTests);
   RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFInsertManualMappingInheritanceTests);
   RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFUpdateManualMappingInheritanceTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFSelectManualMappingInheritanceTests);
+  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFDeleteManualMappingInheritanceTests);
 
 end.
 

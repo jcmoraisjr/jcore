@@ -75,6 +75,7 @@ type
     class function DriverName: string; virtual; abstract;
     function ReadInteger: Integer; virtual; abstract;
     function ReadNull: Boolean; virtual; abstract;
+    function ReadNullAndSkip: Boolean; virtual; abstract;
     function ReadString: string; virtual; abstract;
   end;
 

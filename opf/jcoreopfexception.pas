@@ -84,6 +84,20 @@ type
     constructor Create(const AEntityClassName: string);
   end;
 
+  { EJCoreOPFInconsistentMappingSizes }
+
+  EJCoreOPFInconsistentMappingSizes = class(EJCoreOPF)
+  public
+    constructor Create(const AExpectedSize, AActualSize: Integer);
+  end;
+
+  { EJCoreOPFAmbiguousInstanceClass }
+
+  EJCoreOPFAmbiguousInstanceClass = class(EJCoreOPF)
+  public
+    constructor Create(const AClass1, AClass2: TClass);
+  end;
+
   { EJCoreOPFEntityClassNotFound }
 
   EJCoreOPFEntityClassNotFound = class(EJCoreOPF)
@@ -126,9 +140,9 @@ type
     constructor Create(const AAttrTypeInfo: PTypeInfo);
   end;
 
-  { EJCoreOPFUnsupportedSelectForDeleteOperation }
+  { EJCoreOPFUnsupportedSelectOperation }
 
-  EJCoreOPFUnsupportedSelectForDeleteOperation = class(EJCoreOPF)
+  EJCoreOPFUnsupportedSelectOperation = class(EJCoreOPF)
   public
     constructor Create(const AClass: TClass);
   end;
@@ -198,6 +212,18 @@ constructor EJCoreOPFMappingNotFound.Create(const AEntityClassName: string);
 begin
 end;
 
+{ EJCoreOPFInconsistentMappingSizes }
+
+constructor EJCoreOPFInconsistentMappingSizes.Create(const AExpectedSize, AActualSize: Integer);
+begin
+end;
+
+{ EJCoreOPFAmbiguousInstanceClass }
+
+constructor EJCoreOPFAmbiguousInstanceClass.Create(const AClass1, AClass2: TClass);
+begin
+end;
+
 { EJCoreOPFEntityClassNotFound }
 
 constructor EJCoreOPFEntityClassNotFound.Create(const AClassName: string);
@@ -238,9 +264,9 @@ begin
   inherited Create(AAttrTypeInfo^.Name);
 end;
 
-{ EJCoreOPFUnsupportedSelectForDeleteOperation }
+{ EJCoreOPFUnsupportedSelectOperation }
 
-constructor EJCoreOPFUnsupportedSelectForDeleteOperation.Create(
+constructor EJCoreOPFUnsupportedSelectOperation.Create(
   const AClass: TClass);
 begin
 end;

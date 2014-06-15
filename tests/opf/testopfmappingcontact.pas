@@ -28,9 +28,9 @@ type
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectCompositionsForDeleteStatement(const ASize: Integer): string; override;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
-    function GenerateSelectStatement: string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
@@ -41,7 +41,7 @@ type
 
   TTestProxyPersonSQLMapping = class(TTestIPIDPersonSQLMapping)
   protected
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
@@ -61,9 +61,9 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement: string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -75,9 +75,9 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement: string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -87,7 +87,7 @@ type
 
   TTestProxyCitySQLMapping = class(TTestIPIDCitySQLMapping)
   protected
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -101,7 +101,7 @@ type
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectCollectionStatement(const AOwnerClassMetadata: TJCoreOPFClassMetadata; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -111,7 +111,7 @@ type
 
   TTestProxyPhoneSQLMapping = class(TTestIPIDPhoneSQLMapping)
   protected
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -124,7 +124,7 @@ type
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectCollectionStatement(const AOwnerClassMetadata: TJCoreOPFClassMetadata; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -225,7 +225,7 @@ begin
     Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, ASize);
 end;
 
-function TTestIPIDPersonSQLMapping.GenerateSelectStatement: string;
+function TTestIPIDPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
 begin
   Result := CSQLSELECTPERSON;
 end;
@@ -235,17 +235,17 @@ begin
   Result := CSQLUPDATEPERSON;
 end;
 
-procedure TTestIPIDPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPersonSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VPerson: TTestIPIDPerson;
 begin
-  VPerson := APID.Entity as TTestIPIDPerson;
+  VPerson := AMapping.PID.Entity as TTestIPIDPerson;
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
   VPerson.Address := ReadEntity(TTestIPIDAddress) as TTestIPIDAddress;
   VPerson.City := ReadEntity(TTestIPIDCity) as TTestIPIDCity;
-  ReadCollection(APID, 'Phones');
-  ReadCollection(APID, 'Languages');
+  ReadCollection(AMapping.PID, 'Phones');
+  ReadCollection(AMapping.PID, 'Languages');
 end;
 
 procedure TTestIPIDPersonSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -272,15 +272,15 @@ end;
 
 { TTestProxyPersonSQLMapping }
 
-procedure TTestProxyPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestProxyPersonSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VPerson: TTestProxyPerson;
 begin
-  VPerson := APID.Entity as TTestProxyPerson;
+  VPerson := AMapping.PID.Entity as TTestProxyPerson;
   VPerson.Name := Driver.ReadString;
   VPerson.Age := Driver.ReadInteger;
   Driver.ReadNull; // VPerson.Address := Mapper.RetrieveFromDriver(TTestIPIDAddress, Driver) as TTestIPIDAddress;
-  ReadLazyEntity(APID, 'City');
+  ReadLazyEntity(AMapping.PID, 'City');
 end;
 
 procedure TTestProxyPersonSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -317,7 +317,7 @@ begin
   Result := CSQLINSERTADDRESS;
 end;
 
-function TTestIPIDAddressSQLMapping.GenerateSelectStatement: string;
+function TTestIPIDAddressSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
 begin
   Result := CSQLSELECTADDRESS;
 end;
@@ -327,11 +327,11 @@ begin
   Result := CSQLUPDATEADDRESS;
 end;
 
-procedure TTestIPIDAddressSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDAddressSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VAddress: TTestIPIDAddress;
 begin
-  VAddress := APID.Entity as TTestIPIDAddress;
+  VAddress := AMapping.PID.Entity as TTestIPIDAddress;
   VAddress.Street := Driver.ReadString;
   VAddress.ZipCode := Driver.ReadString;
 end;
@@ -362,7 +362,7 @@ begin
   Result := CSQLINSERTCITY;
 end;
 
-function TTestIPIDCitySQLMapping.GenerateSelectStatement: string;
+function TTestIPIDCitySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
 begin
   Result := CSQLSELECTCITY;
 end;
@@ -372,11 +372,11 @@ begin
   Result := CSQLUPDATECITY;
 end;
 
-procedure TTestIPIDCitySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDCitySQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VCity: TTestIPIDCity;
 begin
-  VCity := APID.Entity as TTestIPIDCity;
+  VCity := AMapping.PID.Entity as TTestIPIDCity;
   VCity.Name := Driver.ReadString;
 end;
 
@@ -395,11 +395,11 @@ end;
 
 { TTestProxyCitySQLMapping }
 
-procedure TTestProxyCitySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestProxyCitySQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VCity: TTestProxyCity;
 begin
-  VCity := APID.Entity as TTestProxyCity;
+  VCity := AMapping.PID.Entity as TTestProxyCity;
   VCity.Name := Driver.ReadString;
 end;
 
@@ -444,11 +444,11 @@ begin
   Result := CSQLUPDATEPHONE;
 end;
 
-procedure TTestIPIDPhoneSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDPhoneSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VPhone: TTestIPIDPhone;
 begin
-  VPhone := APID.Entity as TTestIPIDPhone;
+  VPhone := AMapping.PID.Entity as TTestIPIDPhone;
   VPhone.Number := Driver.ReadString;
 end;
 
@@ -468,11 +468,11 @@ end;
 
 { TTestProxyPhoneSQLMapping }
 
-procedure TTestProxyPhoneSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestProxyPhoneSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VPhone: TTestProxyPhone;
 begin
-  VPhone := APID.Entity as TTestProxyPhone;
+  VPhone := AMapping.PID.Entity as TTestProxyPhone;
   VPhone.Number := Driver.ReadString;
 end;
 
@@ -512,11 +512,11 @@ begin
   Result := CSQLUPDATELANG;
 end;
 
-procedure TTestIPIDLanguageSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TTestIPIDLanguageSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VLang: TTestIPIDLanguage;
 begin
-  VLang := APID.Entity as TTestIPIDLanguage;
+  VLang := AMapping.PID.Entity as TTestIPIDLanguage;
   VLang.Name := Driver.ReadString;
 end;
 

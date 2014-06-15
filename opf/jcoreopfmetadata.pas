@@ -303,6 +303,7 @@ type
     destructor Destroy; override;
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function ADMByName(const AAttributeName: string): IJCoreADM;
+    function ADMMappingCount: Integer;
     procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure Commit;
@@ -1216,6 +1217,11 @@ end;
 function TJCoreOPFPID.ADMByName(const AAttributeName: string): IJCoreADM;
 begin
   Result := AcquireADM(AAttributeName) as IJCoreADM;
+end;
+
+function TJCoreOPFPID.ADMMappingCount: Integer;
+begin
+  Result := ADMMappingMap.Count;
 end;
 
 procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);

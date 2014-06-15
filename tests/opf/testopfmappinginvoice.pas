@@ -14,11 +14,12 @@ type
 
   TClientSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement: string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -30,9 +31,9 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement: string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -44,9 +45,9 @@ type
   protected
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement: string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -59,7 +60,7 @@ type
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -72,7 +73,7 @@ type
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
@@ -86,7 +87,7 @@ type
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -99,7 +100,7 @@ type
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -112,7 +113,7 @@ type
     function GenerateDeleteStatement(const ASize: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    procedure ReadFromDriver(const APID: TJCoreOPFPID); override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -121,15 +122,17 @@ type
 const
   CSQLINSERTINVOICECLIENT = 'INSERT INTO CLIENT (ID,NAME) VALUES (?,?)';
   CSQLINSERTINVOICEPERSON = 'INSERT INTO PERSON (ID,NICK) VALUES (?,?)';
-  CSQLINSERTINVOICECOMPANY = 'INSERT INTO COMPANY (ID,CONTACT) VALUES (?,?)';
+  CSQLINSERTINVOICECOMPANY = 'INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)';
   CSQLINSERTINVOICEPRODUCT = 'INSERT INTO PRODUCT (ID,NAME) VALUES (?,?)';
   CSQLINSERTINVOICEINVOICE = 'INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)';
   CSQLINSERTINVOICEINVOICEITEM = 'INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)';
   CSQLINSERTINVOICEINVOICEITEMPRODUCT = 'INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)';
   CSQLINSERTINVOICEINVOICEITEMSERVICE = 'INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)';
-  CSQLSELECTINVOICECLIENT = 'SELECT P.ID,CO.ID,CL.NAME,P.NICK,CO.CONTACT FROM CLIENT CL LEFT OUTER JOIN PERSON P ON CL.ID=P.ID LEFT OUTER JOIN COMPANY CO WHERE CL.ID=CO.ID WHERE CL.ID=?';
-  CSQLSELECTINVOICEPERSON = 'SELECT CL.NAME,P.NICK FROM CLIENT CL INNER JOIN PERSON P ON CL.ID=P.ID WHERE P.ID=?';
-  CSQLSELECTINVOICECOMPANY = 'SELECT CL.NAME,CO.CONTACT FROM CLIENT CL INNER JOIN COMPANY CO ON CL.ID=CO.ID WHERE CO.ID=?';
+  CSQLSELECTINVOICECLIENT = 'SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?';
+  CSQLSELECTINVOICEPERSON = 'SELECT T_1.NAME,T.NICK FROM CLIENT CL INNER JOIN PERSON P ON CL.ID=P.ID WHERE P.ID=?';
+  CSQLSELECTINVOICEPERSONCOMPLEMENTARY = 'SELECT NICK FROM PERSON WHERE ID=?';
+  CSQLSELECTINVOICECOMPANY = 'SELECT T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID=?';
+  CSQLSELECTINVOICECOMPANYCOMPLEMENTARY = 'SELECT CONTACTNAME FROM COMPANY WHERE ID=?';
   CSQLUPDATEINVOICECLIENT = 'UPDATE CLIENT SET NAME=? WHERE ID=?';
   CSQLUPDATEINVOICEPERSON = 'UPDATE PERSON SET NICK=? WHERE ID=?';
   CSQLUPDATEINVOICECOMPANY = 'UPDATE COMPANY SET CONTACTNAME=? WHERE ID=?';
@@ -154,6 +157,14 @@ uses
 
 { TClientSQLMapping }
 
+function TClientSQLMapping.CreateEntityFromDriver: TObject;
+begin
+  if Map.Metadata.TheClass = TClient then
+    Result := SelectClassFromDriver([TPerson, TCompany], TClient).Create
+  else
+    Result := inherited CreateEntityFromDriver;
+end;
+
 function TClientSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
 begin
   Result := CSQLDELETEINVOICECLIENT + BuildParams(ASize);
@@ -164,7 +175,7 @@ begin
   Result := CSQLINSERTINVOICECLIENT;
 end;
 
-function TClientSQLMapping.GenerateSelectStatement: string;
+function TClientSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
 begin
   Result := CSQLSELECTINVOICECLIENT;
 end;
@@ -174,11 +185,11 @@ begin
   Result := CSQLUPDATEINVOICECLIENT;
 end;
 
-procedure TClientSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TClientSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VClient: TClient;
 begin
-  VClient := APID.Entity as TClient;
+  VClient := AMapping.PID.Entity as TClient;
   VClient.Name := Driver.ReadString;
 end;
 
@@ -207,9 +218,14 @@ begin
   Result := CSQLINSERTINVOICEPERSON;
 end;
 
-function TPersonSQLMapping.GenerateSelectStatement: string;
+function TPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
 begin
-  Result := CSQLSELECTINVOICEPERSON;
+  if not Assigned(ABaseMap) then
+    Result := CSQLSELECTINVOICEPERSON
+  else if ABaseMap.Metadata.TheClass = TClient then
+    Result := CSQLSELECTINVOICEPERSONCOMPLEMENTARY
+  else
+    Result := inherited GenerateSelectStatement(ABaseMap);
 end;
 
 function TPersonSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -217,11 +233,11 @@ begin
   Result := CSQLUPDATEINVOICEPERSON;
 end;
 
-procedure TPersonSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TPersonSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VPerson: TPerson;
 begin
-  VPerson := APID.Entity as TPerson;
+  VPerson := AMapping.PID.Entity as TPerson;
   VPerson.Nick := Driver.ReadString;
 end;
 
@@ -250,9 +266,14 @@ begin
   Result := CSQLINSERTINVOICECOMPANY;
 end;
 
-function TCompanySQLMapping.GenerateSelectStatement: string;
+function TCompanySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
 begin
-  Result := CSQLSELECTINVOICECOMPANY;
+  if not Assigned(ABaseMap) then
+    Result := CSQLSELECTINVOICECOMPANY
+  else if ABaseMap.Metadata.TheClass = TClient then
+    Result := CSQLSELECTINVOICECOMPANYCOMPLEMENTARY
+  else
+    Result := inherited GenerateSelectStatement(ABaseMap);
 end;
 
 function TCompanySQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -260,11 +281,11 @@ begin
   Result := CSQLUPDATEINVOICECOMPANY;
 end;
 
-procedure TCompanySQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TCompanySQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VCompany: TCompany;
 begin
-  VCompany := APID.Entity as TCompany;
+  VCompany := AMapping.PID.Entity as TCompany;
   VCompany.ContactName := Driver.ReadString;
 end;
 
@@ -298,11 +319,11 @@ begin
   Result := CSQLUPDATEINVOICEPRODUCT;
 end;
 
-procedure TProductSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TProductSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VProduct: TProduct;
 begin
-  VProduct := APID.Entity as TProduct;
+  VProduct := AMapping.PID.Entity as TProduct;
   VProduct.Name := Driver.ReadString;
 end;
 
@@ -336,11 +357,11 @@ begin
   Result := CSQLUPDATEINVOICEINVOICE;
 end;
 
-procedure TInvoiceSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TInvoiceSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VInvoice: TInvoice;
 begin
-  VInvoice := APID.Entity as TInvoice;
+  VInvoice := AMapping.PID.Entity as TInvoice;
   VInvoice.Client := ReadEntity(TClient) as TClient;
   VInvoice.Date := Driver.ReadString;
 end;
@@ -382,11 +403,11 @@ begin
   Result := CSQLUPDATEINVOICEINVOICEITEM;
 end;
 
-procedure TInvoiceItemSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TInvoiceItemSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VInvoiceItem: TInvoiceItem;
 begin
-  VInvoiceItem := APID.Entity as TInvoiceItem;
+  VInvoiceItem := AMapping.PID.Entity as TInvoiceItem;
   VInvoiceItem.Total := Driver.ReadInteger;
 end;
 
@@ -420,11 +441,11 @@ begin
   Result := CSQLUPDATEINVOICEINVOICEITEMPRODUCT;
 end;
 
-procedure TInvoiceItemProductSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TInvoiceItemProductSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VItemProduct: TInvoiceItemProduct;
 begin
-  VItemProduct := APID.Entity as TInvoiceItemProduct;
+  VItemProduct := AMapping.PID.Entity as TInvoiceItemProduct;
   VItemProduct.Qty := Driver.ReadInteger;
   VItemProduct.Product := ReadEntity(TProduct) as TProduct;
 end;
@@ -460,11 +481,11 @@ begin
   Result := CSQLUPDATEINVOICEINVOICEITEMSERVICE;
 end;
 
-procedure TInvoiceItemServiceSQLMapping.ReadFromDriver(const APID: TJCoreOPFPID);
+procedure TInvoiceItemServiceSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VItemService: TInvoiceItemService;
 begin
-  VItemService := APID.Entity as TInvoiceItemService;
+  VItemService := AMapping.PID.Entity as TInvoiceItemService;
   VItemService.Description := Driver.ReadString;
 end;
 

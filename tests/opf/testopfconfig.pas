@@ -130,6 +130,7 @@ type
     class function DriverName: string; override;
     function ReadInteger: Integer; override;
     function ReadNull: Boolean; override;
+    function ReadNullAndSkip: Boolean; override;
     function ReadString: string; override;
     procedure WriteInteger(const AValue: Integer); override;
     procedure WriteString(const AValue: string); override;
@@ -399,6 +400,11 @@ begin
   Result := PopData(False) = 'null';
   if Result then
     PopData;
+end;
+
+function TTestSQLDriver.ReadNullAndSkip: Boolean;
+begin
+  Result := PopData = 'null';
 end;
 
 function TTestSQLDriver.ReadString: string;
