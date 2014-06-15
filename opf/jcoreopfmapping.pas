@@ -109,6 +109,7 @@ type
   private
     FDriver: TJCoreOPFDriver;
     FMapper: IJCoreOPFMapper;
+    FMapping: TJCoreOPFMapping;
     FMappingList: TJCoreOPFMappingList;
     FMetadata: TJCoreOPFClassMetadata;
     function AcquireClassMapping(const AClass: TClass): TJCoreOPFClassMapping;
@@ -138,6 +139,7 @@ type
     procedure DisposePID(const APIDArray: array of TJCoreOPFPID);
     function RetrieveOID(const AStringOID: string): TObject;
     procedure StorePID(const APID: TJCoreOPFPID);
+    property Mapping: TJCoreOPFMapping read FMapping;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
   end;
 
@@ -446,8 +448,8 @@ var
   VPID: TJCoreOPFPID;
   VClassMapping: TJCoreOPFClassMapping;
 begin
-  MappingList.Last.RetrieveEntityToDriver(AOID, nil);
-  VEntity := MappingList.Last.CreateEntity;
+  Mapping.RetrieveEntityToDriver(AOID, nil);
+  VEntity := Mapping.CreateEntity;
   try
     VPID := Mapper.AcquirePID(VEntity);
     VPID.AssignOID(AOID);
@@ -457,8 +459,7 @@ begin
     end else
     begin
       VClassMapping := Mapper.AcquireClassMapping(VPID.Entity.ClassType);
-      { TODO : Export the last mapping as a public property }
-      VClassMapping.MappingList.Last.RetrieveEntityToDriver(VPID.OID, MappingList.Last.Map);
+      VClassMapping.Mapping.RetrieveEntityToDriver(VPID.OID, Mapping.Map);
     end;
     VClassMapping.RetrieveMapsInternal(VPID);
   except
@@ -523,7 +524,7 @@ end;
 procedure TJCoreOPFClassMapping.RetrieveCollectionInternal(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMCollection);
 begin
-  MappingList.Last.RetrieveCollection(AOwnerPID, AOwnerADM);
+  Mapping.RetrieveCollection(AOwnerPID, AOwnerADM);
 end;
 
 procedure TJCoreOPFClassMapping.RetrieveEntityInternal(const AOwnerPID: TJCoreOPFPID;
@@ -594,6 +595,7 @@ begin
   FDriver := FMapper.Driver;
   FMetadata := AMetadata;
   FMappingList := AMappingList;
+  FMapping := MappingList.Last;
 end;
 
 procedure TJCoreOPFClassMapping.DisposeOID(const AStringOIDArray: array of string);
@@ -652,7 +654,7 @@ begin
   EnsureMappingConsistency(APID);
   if not APID.IsPersistent then
   begin
-    VOID := MappingList.Last.CreateOID;
+    VOID := Mapping.CreateOID;
     try
       APID.AssignOID(VOID);
     finally
