@@ -33,6 +33,7 @@ type
     constructor CreateFromString(const AStringOID: string); virtual; abstract;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); virtual; abstract;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    property AsString: string read GetAsString;
   end;
 
   TJCoreOPFOIDClass = class of TJCoreOPFOID;
@@ -49,6 +50,7 @@ type
     constructor Create(const AValue: Integer);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromString(const AStringOID: string); override;
+    function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property Value: Integer read FValue;
@@ -65,6 +67,7 @@ type
     constructor Create(const AValue: string);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromString(const AStringOID: string); override;
+    function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property Value: string read FValue;
@@ -98,6 +101,11 @@ begin
   Create(StrToInt(AStringOID));
 end;
 
+function TJCoreOPFIntegerOID.Equals(AOther: TObject): Boolean;
+begin
+  Result := (AOther is TJCoreOPFIntegerOID) and (TJCoreOPFIntegerOID(AOther).Value = Value);
+end;
+
 class procedure TJCoreOPFIntegerOID.WriteNull(const ADriver: TJCoreOPFDriver);
 begin
   ADriver.WriteNull;
@@ -129,6 +137,11 @@ end;
 constructor TJCoreOPFStringOID.CreateFromString(const AStringOID: string);
 begin
   Create(AStringOID);
+end;
+
+function TJCoreOPFStringOID.Equals(AOther: TObject): Boolean;
+begin
+  Result := (AOther is TJCoreOPFStringOID) and (TJCoreOPFStringOID(AOther).Value = Value);
 end;
 
 class procedure TJCoreOPFStringOID.WriteNull(const ADriver: TJCoreOPFDriver);

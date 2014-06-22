@@ -28,7 +28,7 @@ type
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -61,7 +61,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -75,7 +75,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -99,7 +99,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectCollectionStatement(const AOwnerClassMetadata: TJCoreOPFClassMetadata; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -122,7 +122,7 @@ type
   TTestIPIDLanguageSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectCollectionStatement(const AOwnerClassMetadata: TJCoreOPFClassMetadata; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -137,12 +137,12 @@ const
   CSQLINSERTPHONE = 'INSERT INTO PHONE (ID,PERSON,NUMBER) VALUES (?,?,?)';
   CSQLINSERTLANG = 'INSERT INTO LANG (ID,NAME) VALUES (?,?)';
   CSQLINSERTPERSON_LANG = 'INSERT INTO PERSON_LANG (ID_PERSON,ID_LANG) VALUES (?,?)';
-  CSQLSELECTADDRESS = 'SELECT STREET,ZIPCODE FROM ADDRESS WHERE ID=?';
-  CSQLSELECTCITY = 'SELECT NAME FROM CITY WHERE ID=?';
-  CSQLSELECTPERSON = 'SELECT NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ID=?';
+  CSQLSELECTADDRESS = 'SELECT ID,STREET,ZIPCODE FROM ADDRESS WHERE ID';
+  CSQLSELECTCITY = 'SELECT ID,NAME FROM CITY WHERE ID';
+  CSQLSELECTPERSON = 'SELECT ID,NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ID';
   CSQLSELECTPERSON_PHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
   CSQLSELECTPERSON_LANG = 'SELECT L.ID,L.NAME FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON=?';
-  CSQLSELECTPERSON_FOR_DELETE = 'SELECT ADDRESS FROM PERSON WHERE ID';
+  CSQLSELECTPERSON_FOR_DELETE = 'SELECT ID,ADDRESS FROM PERSON WHERE ID';
   CSQLSELECTPERSON_PHONES_FOR_DELETE = 'SELECT ID FROM PHONE WHERE PERSON';
   CSQLSELECTPERSON_LANG_FOR_DELETE = 'SELECT L.ID FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON';
   CSQLUPDATEADDRESS = 'UPDATE ADDRESS SET STREET=?, ZIPCODE=? WHERE ID=?';
@@ -225,9 +225,11 @@ begin
     Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, AOIDCount);
 end;
 
-function TTestIPIDPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
+function TTestIPIDPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTPERSON;
+  Result := CSQLSELECTPERSON + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -317,9 +319,11 @@ begin
   Result := CSQLINSERTADDRESS;
 end;
 
-function TTestIPIDAddressSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
+function TTestIPIDAddressSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTADDRESS;
+  Result := CSQLSELECTADDRESS + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDAddressSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -362,9 +366,11 @@ begin
   Result := CSQLINSERTCITY;
 end;
 
-function TTestIPIDCitySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
+function TTestIPIDCitySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTCITY;
+  Result := CSQLSELECTCITY + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDCitySQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -428,15 +434,14 @@ begin
   Result := CSQLINSERTPHONE;
 end;
 
-function TTestIPIDPhoneSQLMapping.GenerateSelectCollectionStatement(
-  const AOwnerClassMetadata: TJCoreOPFClassMetadata;
-  const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string;
+function TTestIPIDPhoneSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
-  if (AOwnerClassMetadata.TheClass = TTestIPIDPerson) or
-   (AOwnerClassMetadata.TheClass = TTestProxyPerson) then
+  if (AOwnerClass.TheClass = TTestIPIDPerson) or (AOwnerClass.TheClass = TTestProxyPerson) then
     Result := CSQLSELECTPERSON_PHONES
   else
-    Result := inherited GenerateSelectCollectionStatement(AOwnerClassMetadata, AOwnerAttrMetadata);
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
 
 function TTestIPIDPhoneSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -497,14 +502,14 @@ begin
   Result := CSQLINSERTLANG;
 end;
 
-function TTestIPIDLanguageSQLMapping.GenerateSelectCollectionStatement(
-  const AOwnerClassMetadata: TJCoreOPFClassMetadata;
-  const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string;
+function TTestIPIDLanguageSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
-  if AOwnerClassMetadata.TheClass = TTestIPIDPerson then
+  if AOwnerClass.TheClass = TTestIPIDPerson then
     Result := CSQLSELECTPERSON_LANG
   else
-    Result := inherited GenerateSelectCollectionStatement(AOwnerClassMetadata, AOwnerAttrMetadata);
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
 
 function TTestIPIDLanguageSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;

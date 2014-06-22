@@ -96,6 +96,9 @@ type
     procedure SingleFromSuperclass1;
     procedure SingleFromSuperclass2;
     procedure SingleFromSuperclass3;
+    procedure EntityComposition;
+    procedure CollectionComposition;
+    procedure CollectionCompositionOrderChangedSubmapping;
   end;
 
   { TTestOPFDeleteManualMappingInheritanceTests }
@@ -550,8 +553,9 @@ procedure TTestOPFSelectManualMappingPlainTests.Single;
 var
   VCity: TTestIPIDCity;
 begin
-  // Single
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('15');
   TTestSQLDriver.Data.Add('thecityname');
 
   VCity := Session.Retrieve(TTestIPIDCity, '15') as TTestIPIDCity;
@@ -560,7 +564,7 @@ begin
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertSQLDriverCommands([
      'WriteInteger 15',
-     'ExecSQL ' + CSQLSELECTCITY]);
+     {1}'ExecSQL ' + CSQLSELECTCITY + '=?']);
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
     AssertEquals('15', VCity._PID.OID.AsString);
@@ -576,37 +580,29 @@ var
   VAddress: TTestIPIDAddress;
   VCity: TTestIPIDCity;
 begin
-  // person
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('2');
   TTestSQLDriver.Data.Add('name');
   TTestSQLDriver.Data.Add('3');
-
   TTestSQLDriver.Data.Add('18');
-  // address
-  TTestSQLDriver.ExpectedResultsets.Add(1);
-  TTestSQLDriver.Data.Add('thestreet');
-  TTestSQLDriver.Data.Add('01000-001');
-
+    {2}
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('18');
+    TTestSQLDriver.Data.Add('thestreet');
+    TTestSQLDriver.Data.Add('01000-001');
   TTestSQLDriver.Data.Add('11');
-  // Single
-  TTestSQLDriver.ExpectedResultsets.Add(1);
-  TTestSQLDriver.Data.Add('thecity');
+    {3}
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('11');
+    TTestSQLDriver.Data.Add('thecity');
+  {4}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  {5}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
 
   VPerson := Session.Retrieve(TTestIPIDPerson, '2') as TTestIPIDPerson;
   try
-    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
-    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertSQLDriverCommands([
-     'WriteInteger 2',
-     'ExecSQL ' + CSQLSELECTPERSON,
-     'WriteInteger 18',
-     'ExecSQL ' + CSQLSELECTADDRESS,
-     'WriteInteger 11',
-     'ExecSQL ' + CSQLSELECTCITY,
-     'WriteInteger 2',
-     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 2',
-     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', '2', VPerson._PID.OID.AsString);
@@ -623,6 +619,19 @@ begin
     AssertNotNull('city pid', VCity._PID);
     AssertEquals('city oid', '11', VCity._PID.OID.AsString);
     AssertEquals('city name', 'thecity', VCity.Name);
+    AssertSQLDriverCommands([
+     'WriteInteger 2',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     'WriteInteger 18',
+     {2}'ExecSQL ' + CSQLSELECTADDRESS + '=?',
+     'WriteInteger 11',
+     {3}'ExecSQL ' + CSQLSELECTCITY + '=?',
+     'WriteInteger 2',
+     {4}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
+     'WriteInteger 2',
+     {5}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
+    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
   finally
     FreeAndNil(VPerson);
   end;
@@ -633,30 +642,24 @@ var
   VPerson: TTestIPIDPerson;
   VCity: TTestIPIDCity;
 begin
-  // person
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('8');
   TTestSQLDriver.Data.Add('thepersonname');
   TTestSQLDriver.Data.Add('30');
   TTestSQLDriver.Data.Add('null');
-
   TTestSQLDriver.Data.Add('5');
-  // Single
-  TTestSQLDriver.ExpectedResultsets.Add(1);
-  TTestSQLDriver.Data.Add('nameofcity');
+    {2}
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('5');
+    TTestSQLDriver.Data.Add('nameofcity');
+  {3}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  {4}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
 
   VPerson := Session.Retrieve(TTestIPIDPerson, '8') as TTestIPIDPerson;
   try
-    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
-    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertSQLDriverCommands([
-     'WriteInteger 8',
-     'ExecSQL ' + CSQLSELECTPERSON,
-     'WriteInteger 5',
-     'ExecSQL ' + CSQLSELECTCITY,
-     'WriteInteger 8',
-     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 8',
-     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', '8', VPerson._PID.OID.AsString);
@@ -667,6 +670,17 @@ begin
     AssertNotNull('city pid', VCity._PID);
     AssertEquals('city oid', '5', VCity._PID.OID.AsString);
     AssertEquals('city name', 'nameofcity', VCity.Name);
+    AssertSQLDriverCommands([
+     'WriteInteger 8',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     'WriteInteger 5',
+     {2}'ExecSQL ' + CSQLSELECTCITY + '=?',
+     'WriteInteger 8',
+     {3}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
+     'WriteInteger 8',
+     {4}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
+    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
   finally
     FreeAndNil(VPerson);
   end;
@@ -676,30 +690,35 @@ procedure TTestOPFSelectManualMappingPlainTests.SingleNullCompositions;
 var
   VPerson: TTestIPIDPerson;
 begin
-  // person
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('18');
   TTestSQLDriver.Data.Add('personname');
   TTestSQLDriver.Data.Add('22');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
+  {2}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  {3}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
 
   VPerson := Session.Retrieve(TTestIPIDPerson, '18') as TTestIPIDPerson;
   try
-    AssertEquals(0, TTestSQLDriver.Data.Count);
-    AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertSQLDriverCommands([
-     'WriteInteger 18',
-     'ExecSQL ' + CSQLSELECTPERSON,
-     'WriteInteger 18',
-     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 18',
-     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull(VPerson);
     AssertNotNull(VPerson._PID);
     AssertEquals('18', VPerson._PID.OID.AsString);
     AssertEquals('personname', VPerson.Name);
     AssertEquals(22, VPerson.Age);
     AssertNull(VPerson.City);
+    AssertSQLDriverCommands([
+     'WriteInteger 18',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     'WriteInteger 18',
+     {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
+     'WriteInteger 18',
+     {3}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
+    AssertEquals(0, TTestSQLDriver.Data.Count);
+    AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
   finally
     FreeAndNil(VPerson);
   end;
@@ -709,31 +728,24 @@ procedure TTestOPFSelectManualMappingPlainTests.CollectionComposition;
 var
   VPerson: TTestIPIDPerson;
 begin
-  // person
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('9');
   TTestSQLDriver.Data.Add('aname');
   TTestSQLDriver.Data.Add('5');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
-
-  // two phone objects
+  {2}
   TTestSQLDriver.ExpectedResultsets.Add(2);
   TTestSQLDriver.Data.Add('11');
   TTestSQLDriver.Data.Add('212');
   TTestSQLDriver.Data.Add('12');
   TTestSQLDriver.Data.Add('555');
+  {3}
+  TTestSQLDriver.ExpectedResultsets.Add(0);
 
   VPerson := Session.Retrieve(TTestIPIDPerson, '9') as TTestIPIDPerson;
   try
-    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
-    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertSQLDriverCommands([
-     'WriteInteger 9',
-     'ExecSQL ' + CSQLSELECTPERSON,
-     'WriteInteger 9',
-     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 9',
-     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', '9', VPerson._PID.OID.AsString);
@@ -747,6 +759,15 @@ begin
     AssertNotNull('phone1 pid', VPerson.Phones[1]._PID);
     AssertEquals('phone1 oid', '12', VPerson.Phones[1]._PID.OID.AsString);
     AssertEquals('phone1 number', '555', VPerson.Phones[1].Number);
+    AssertSQLDriverCommands([
+     'WriteInteger 9',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     'WriteInteger 9',
+     {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
+     'WriteInteger 9',
+     {3}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
+    AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
   finally
     FreeAndNil(VPerson);
   end;
@@ -756,35 +777,24 @@ procedure TTestOPFSelectManualMappingPlainTests.CollectionAggregation;
 var
   VPerson: TTestIPIDPerson;
 begin
-  // person
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('5');
   TTestSQLDriver.Data.Add('personname');
   TTestSQLDriver.Data.Add('0');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
-
-  // phones
+  {2}
   TTestSQLDriver.ExpectedResultsets.Add(0);
-
-  // language
+  {3}
   TTestSQLDriver.ExpectedResultsets.Add(2);
   TTestSQLDriver.Data.Add('3');
   TTestSQLDriver.Data.Add('spanish');
   TTestSQLDriver.Data.Add('8');
   TTestSQLDriver.Data.Add('german');
 
-  // let's go
   VPerson := Session.Retrieve(TTestIPIDPerson, '5') as TTestIPIDPerson;
   try
-    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
-    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertSQLDriverCommands([
-     'WriteInteger 5',
-     'ExecSQL ' + CSQLSELECTPERSON,
-     'WriteInteger 5',
-     'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 5',
-     'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertNotNull('person', VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertEquals('person oid', '5', VPerson._PID.OID.AsString);
@@ -799,6 +809,15 @@ begin
     AssertNotNull('lang1 pid', VPerson.Languages[1]);
     AssertEquals('lang1 oid', '8', VPerson.Languages[1]._PID.OID.AsString);
     AssertEquals('lang1 name', 'german', VPerson.Languages[1].Name);
+    AssertSQLDriverCommands([
+     'WriteInteger 5',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     'WriteInteger 5',
+     {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
+     'WriteInteger 5',
+     {3}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   finally
     FreeAndNil(VPerson);
   end;
@@ -1279,21 +1298,22 @@ procedure TTestOPFSelectManualMappingInheritanceTests.SingleFromSubclass;
 var
   VCompany: TCompany;
 begin
-  // company
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('10');
   TTestSQLDriver.Data.Add('company corp');
   TTestSQLDriver.Data.Add('jack');
 
   VCompany := Session.Retrieve(TCompany, '10') as TCompany;
   try
-    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertNotNull('company not null', VCompany);
     AssertEquals('company name', 'company corp', VCompany.Name);
     AssertEquals('company contact', 'jack', VCompany.ContactName);
     AssertSQLDriverCommands([
      'WriteInteger 10',
-     'ExecSQL SELECT T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID=?']);
+     {1}'ExecSQL SELECT T.ID,T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID=?']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
     FreeAndNil(VCompany);
   end;
@@ -1304,20 +1324,19 @@ var
   VClient: TClient;
   VPerson: TPerson;
 begin
-  // client
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('7');
   TTestSQLDriver.Data.Add('7');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('johnson');
-
-  // person
+  {2}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('7');
   TTestSQLDriver.Data.Add('joe');
 
   VClient := Session.Retrieve(TClient, '7') as TClient;
   try
-    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertNotNull('client not null', VClient);
     AssertTrue('client is person', VClient is TPerson);
     VPerson := VClient as TPerson;
@@ -1325,9 +1344,11 @@ begin
     AssertEquals('person nick', 'joe', VPerson.Nick);
     AssertSQLDriverCommands([
      'WriteInteger 7',
-     'ExecSQL SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
      'WriteInteger 7',
-     'ExecSQL SELECT NICK FROM PERSON WHERE ID=?']);
+     {2}'ExecSQL SELECT ID,NICK FROM PERSON WHERE ID=?']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
     FreeAndNil(VClient);
   end;
@@ -1338,20 +1359,19 @@ var
   VClient: TClient;
   VCompany: TCompany;
 begin
-  // client
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('91');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('91');
   TTestSQLDriver.Data.Add('acorp');
-
-  // person
+  {2}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('91');
   TTestSQLDriver.Data.Add('mike');
 
   VClient := Session.Retrieve(TClient, '91') as TClient;
   try
-    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertNotNull('client not null', VClient);
     AssertTrue('client is company', VClient is TCompany);
     VCompany := VClient as TCompany;
@@ -1359,9 +1379,11 @@ begin
     AssertEquals('company contact name', 'mike', VCompany.ContactName);
     AssertSQLDriverCommands([
      'WriteInteger 91',
-     'ExecSQL SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
      'WriteInteger 91',
-     'ExecSQL SELECT CONTACTNAME FROM COMPANY WHERE ID=?']);
+     {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
     FreeAndNil(VClient);
   end;
@@ -1371,24 +1393,217 @@ procedure TTestOPFSelectManualMappingInheritanceTests.SingleFromSuperclass3;
 var
   VClient: TClient;
 begin
-  // client
+  {1}
   TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('3');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('someone');
 
   VClient := Session.Retrieve(TClient, '3') as TClient;
   try
-    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
-    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertNotNull('client not null', VClient);
     AssertTrue('client is tclient', VClient.ClassType = TClient);
     AssertEquals('client name', 'someone', VClient.Name);
     AssertSQLDriverCommands([
      'WriteInteger 3',
-     'ExecSQL SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?']);
+     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
     FreeAndNil(VClient);
+  end;
+end;
+
+procedure TTestOPFSelectManualMappingInheritanceTests.EntityComposition;
+var
+  VInvoice: TInvoice;
+  VClient: TClient;
+  VCompany: TCompany;
+begin
+  {1}
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('3');
+  TTestSQLDriver.Data.Add('18');
+    {2}
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('18');
+    TTestSQLDriver.Data.Add('null');
+    TTestSQLDriver.Data.Add('18');
+    TTestSQLDriver.Data.Add('thecorp');
+    {3}
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('18');
+    TTestSQLDriver.Data.Add('corp contact');
+  TTestSQLDriver.Data.Add('01/05');
+
+  VInvoice := Session.Retrieve(TInvoice, '3') as TInvoice;
+  try
+    AssertNotNull('invoice not null', VInvoice);
+    VClient := VInvoice.Client;
+    AssertTrue('client is company', VClient is TCompany);
+    VCompany := VClient as TCompany;
+    AssertEquals('company name', 'thecorp', VCompany.Name);
+    AssertEquals('company contact', 'corp contact', VCompany.ContactName);
+    AssertSQLDriverCommands([
+     'WriteInteger 3',
+     {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
+     'WriteInteger 18',
+     {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     'WriteInteger 18',
+     {3}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFSelectManualMappingInheritanceTests.CollectionComposition;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+  VProduct: TProduct;
+begin
+  {1}
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('8');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('01/02');
+  {2}
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('50');
+  {3}
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('3');
+  TTestSQLDriver.Data.Add('55');
+    {4}
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('55');
+    TTestSQLDriver.Data.Add('prod');
+
+  VInvoice := Session.Retrieve(TInvoice, '8') as TInvoice;
+  try
+    AssertNotNull('invoice not null', VInvoice);
+    AssertNull('invoice client', VInvoice.Client);
+    AssertEquals('invoice date', '01/02', VInvoice.Date);
+    AssertEquals('invoice item cnt', 1, VInvoice.Items.Count);
+    AssertTrue('item is productitem', VInvoice.Items[0] is TInvoiceItemProduct);
+    VItemProduct := VInvoice.Items[0] as TInvoiceItemProduct;
+    AssertEquals('product item total', 50, VItemProduct.Total);
+    AssertEquals('product item qty', 3, VItemProduct.Qty);
+    VProduct := VItemProduct.Product;
+    AssertNotNull('product not null', VProduct);
+    AssertEquals('product name', 'prod', VProduct.Name);
+    AssertSQLDriverCommands([
+     'WriteInteger 8',
+     {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
+     'WriteInteger 8',
+     {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     'WriteInteger 12',
+     {3}'ExecSQL SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID=?',
+     'WriteInteger 55',
+     {4}'ExecSQL SELECT ID,NAME FROM PRODUCT WHERE ID=?']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFSelectManualMappingInheritanceTests.CollectionCompositionOrderChangedSubmapping;
+var
+  VInvoice: TInvoice;
+  VItem0: TInvoiceItemProduct;
+  VItem1: TInvoiceItemService;
+  VItem2: TInvoiceItemService;
+  VItem3: TInvoiceItemProduct;
+begin
+  {1}
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('18');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('1/1');
+  {2}
+  TTestSQLDriver.ExpectedResultsets.Add(4);
+  //1
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('180');
+  //2
+  TTestSQLDriver.Data.Add('13');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('13');
+  TTestSQLDriver.Data.Add('95');
+  //3
+  TTestSQLDriver.Data.Add('16');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('16');
+  TTestSQLDriver.Data.Add('15');
+  //4
+  TTestSQLDriver.Data.Add('17');
+  TTestSQLDriver.Data.Add('17');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('99');
+  {3}
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  //2 -- here is the test: this complementary resultset isn't in the same order
+  TTestSQLDriver.Data.Add('17');
+  TTestSQLDriver.Data.Add('1');
+  TTestSQLDriver.Data.Add('null');
+  //1
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('7');
+  TTestSQLDriver.Data.Add('null');
+  {4}
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  //1
+  TTestSQLDriver.Data.Add('13');
+  TTestSQLDriver.Data.Add('services 1');
+  //2
+  TTestSQLDriver.Data.Add('16');
+  TTestSQLDriver.Data.Add('another services');
+
+  VInvoice := Session.Retrieve(TInvoice, '18') as TInvoice;
+  try
+    AssertNotNull('invoice not null', VInvoice);
+    AssertEquals('invoice item cnt', 4, VInvoice.Items.Count);
+    AssertTrue('item0 is productitem', VInvoice.Items[0] is TInvoiceItemProduct);
+    AssertTrue('item1 is serviceitem', VInvoice.Items[1] is TInvoiceItemService);
+    AssertTrue('item2 is serviceitem', VInvoice.Items[2] is TInvoiceItemService);
+    AssertTrue('item3 is productitem', VInvoice.Items[3] is TInvoiceItemProduct);
+    VItem0 := VInvoice.Items[0] as TInvoiceItemProduct;
+    VItem1 := VInvoice.Items[1] as TInvoiceItemService;
+    VItem2 := VInvoice.Items[2] as TInvoiceItemService;
+    VItem3 := VInvoice.Items[3] as TInvoiceItemProduct;
+    AssertEquals('item0 total', 180, VItem0.Total);
+    AssertEquals('item0 qty', 7, VItem0.Qty);
+    AssertEquals('item1 total', 95, VItem1.Total);
+    AssertEquals('item1 description', 'services 1', VItem1.Description);
+    AssertEquals('item2 total', 15, VItem2.Total);
+    AssertEquals('item2 description', 'another services', VItem2.Description);
+    AssertEquals('item3 total', 99, VItem3.Total);
+    AssertEquals('item3 qty', 1, VItem3.Qty);
+    AssertSQLDriverCommands([
+     'WriteInteger 18',
+     {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
+     'WriteInteger 18',
+     {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     'WriteInteger 12',
+     'WriteInteger 17',
+     {3}'ExecSQL SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID IN (?,?)',
+     'WriteInteger 13',
+     'WriteInteger 16',
+     {4}'ExecSQL SELECT ID,DESCRIPTION FROM INVOICEITEMSERVICE WHERE ID IN (?,?)']);
+    AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
+    AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 

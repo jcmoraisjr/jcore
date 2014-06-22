@@ -17,7 +17,7 @@ type
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -31,7 +31,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -45,7 +45,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -59,6 +59,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -72,6 +73,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -84,8 +86,10 @@ type
 
   TInvoiceItemSQLMapping = class(TTestAbstractSQLMapping)
   protected
+    function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -95,10 +99,11 @@ type
 
   { TInvoiceItemProductSQLMapping }
 
-  TInvoiceItemProductSQLMapping = class(TTestAbstractSQLMapping)
+  TInvoiceItemProductSQLMapping = class(TInvoiceItemSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -108,10 +113,11 @@ type
 
   { TInvoiceItemServiceSQLMapping }
 
-  TInvoiceItemServiceSQLMapping = class(TTestAbstractSQLMapping)
+  TInvoiceItemServiceSQLMapping = class(TInvoiceItemSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -128,11 +134,16 @@ const
   CSQLINSERTINVOICEINVOICEITEM = 'INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)';
   CSQLINSERTINVOICEINVOICEITEMPRODUCT = 'INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)';
   CSQLINSERTINVOICEINVOICEITEMSERVICE = 'INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)';
-  CSQLSELECTINVOICECLIENT = 'SELECT T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?';
-  CSQLSELECTINVOICEPERSON = 'SELECT T_1.NAME,T.NICK FROM CLIENT CL INNER JOIN PERSON P ON CL.ID=P.ID WHERE P.ID=?';
-  CSQLSELECTINVOICEPERSONCOMPLEMENTARY = 'SELECT NICK FROM PERSON WHERE ID=?';
-  CSQLSELECTINVOICECOMPANY = 'SELECT T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID=?';
-  CSQLSELECTINVOICECOMPANYCOMPLEMENTARY = 'SELECT CONTACTNAME FROM COMPANY WHERE ID=?';
+  CSQLSELECTINVOICECLIENT = 'SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID';
+  CSQLSELECTINVOICEPERSON = 'SELECT T.ID,T_1.NAME,T.NICK FROM PERSON T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID';
+  CSQLSELECTINVOICEPERSONCOMPLEMENTARY = 'SELECT ID,NICK FROM PERSON WHERE ID';
+  CSQLSELECTINVOICECOMPANY = 'SELECT T.ID,T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID';
+  CSQLSELECTINVOICECOMPANYCOMPLEMENTARY = 'SELECT ID,CONTACTNAME FROM COMPANY WHERE ID';
+  CSQLSELECTINVOICEINVOICE = 'SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID';
+  CSQLSELECTINVOICEINVOICEITEM = 'SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE T.ID';
+  CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY = 'SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID';
+  CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY = 'SELECT ID,DESCRIPTION FROM INVOICEITEMSERVICE WHERE ID';
+  CSQLSELECTINVOICEPRODUCT = 'SELECT ID,NAME FROM PRODUCT WHERE ID';
   CSQLUPDATEINVOICECLIENT = 'UPDATE CLIENT SET NAME=? WHERE ID=?';
   CSQLUPDATEINVOICEPERSON = 'UPDATE PERSON SET NICK=? WHERE ID=?';
   CSQLUPDATEINVOICECOMPANY = 'UPDATE COMPANY SET CONTACTNAME=? WHERE ID=?';
@@ -175,9 +186,11 @@ begin
   Result := CSQLINSERTINVOICECLIENT;
 end;
 
-function TClientSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
+function TClientSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTINVOICECLIENT;
+  Result := CSQLSELECTINVOICECLIENT + BuildParams(AOIDCount);
 end;
 
 function TClientSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -218,14 +231,16 @@ begin
   Result := CSQLINSERTINVOICEPERSON;
 end;
 
-function TPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
+function TPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
   if not Assigned(ABaseMap) then
-    Result := CSQLSELECTINVOICEPERSON
+    Result := CSQLSELECTINVOICEPERSON + BuildParams(AOIDCount)
   else if ABaseMap.Metadata.TheClass = TClient then
-    Result := CSQLSELECTINVOICEPERSONCOMPLEMENTARY
+    Result := CSQLSELECTINVOICEPERSONCOMPLEMENTARY + BuildParams(AOIDCount)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap);
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
 
 function TPersonSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -266,14 +281,16 @@ begin
   Result := CSQLINSERTINVOICECOMPANY;
 end;
 
-function TCompanySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
+function TCompanySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
 begin
   if not Assigned(ABaseMap) then
-    Result := CSQLSELECTINVOICECOMPANY
+    Result := CSQLSELECTINVOICECOMPANY + BuildParams(AOIDCount)
   else if ABaseMap.Metadata.TheClass = TClient then
-    Result := CSQLSELECTINVOICECOMPANYCOMPLEMENTARY
+    Result := CSQLSELECTINVOICECOMPANYCOMPLEMENTARY + BuildParams(AOIDCount)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap);
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
 
 function TCompanySQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -314,6 +331,13 @@ begin
   Result := CSQLINSERTINVOICEPRODUCT;
 end;
 
+function TProductSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
+begin
+  Result := CSQLSELECTINVOICEPRODUCT + BuildParams(AOIDCount);
+end;
+
 function TProductSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
   Result := CSQLUPDATEINVOICEPRODUCT;
@@ -352,6 +376,13 @@ begin
   Result := CSQLINSERTINVOICEINVOICE;
 end;
 
+function TInvoiceSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
+begin
+  Result := CSQLSELECTINVOICEINVOICE + BuildParams(AOIDCount);
+end;
+
 function TInvoiceSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
   Result := CSQLUPDATEINVOICEINVOICE;
@@ -387,6 +418,14 @@ end;
 
 { TInvoiceItemSQLMapping }
 
+function TInvoiceItemSQLMapping.CreateEntityFromDriver: TObject;
+begin
+  if Map.Metadata.TheClass = TInvoiceItem then
+    Result := SelectClassFromDriver([TInvoiceItemProduct, TInvoiceItemService], TInvoiceItem).Create
+  else
+    Result := inherited CreateEntityFromDriver;
+end;
+
 function TInvoiceItemSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
   Result := CSQLDELETEINVOICEINVOICEITEM + BuildParams(AOIDCount);
@@ -397,6 +436,15 @@ begin
   Result := CSQLINSERTINVOICEINVOICEITEM;
 end;
 
+function TInvoiceItemSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
+begin
+  if AOwnerClass.TheClass = TInvoice then
+    Result := CSQLSELECTINVOICEINVOICEITEM + BuildParams(AOIDCount)
+  else
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+end;
 
 function TInvoiceItemSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
@@ -434,6 +482,16 @@ end;
 function TInvoiceItemProductSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
   Result := CSQLINSERTINVOICEINVOICEITEMPRODUCT;
+end;
+
+function TInvoiceItemProductSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
+begin
+  if ABaseMap.Metadata.TheClass = TInvoiceItem then
+    Result := CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY + BuildParams(AOIDCount)
+  else
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
 
 function TInvoiceItemProductSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -474,6 +532,16 @@ end;
 function TInvoiceItemServiceSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
   Result := CSQLINSERTINVOICEINVOICEITEMSERVICE;
+end;
+
+function TInvoiceItemServiceSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+  const AOIDCount: Integer): string;
+begin
+  if ABaseMap.Metadata.TheClass = TInvoiceItem then
+    Result := CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY + BuildParams(AOIDCount)
+  else
+    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
 
 function TInvoiceItemServiceSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;

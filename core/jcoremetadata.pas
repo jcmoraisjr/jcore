@@ -63,12 +63,14 @@ type
   private
     FAttrList: TJCoreAttrMetadataList;
     FClass: TClass;
+    FModel: TJCoreModel;
     FParent: TJCoreClassMetadata;
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
   protected
     property AttrList: TJCoreAttrMetadataList read FAttrList;
+    property Model: TJCoreModel read FModel;
   public
-    constructor Create(const AClass: TClass; const AParent: TJCoreClassMetadata); virtual;
+    constructor Create(const AModel: TJCoreModel; const AClass: TClass; const AParent: TJCoreClassMetadata); virtual;
     destructor Destroy; override;
     procedure AddAttribute(const AAttribute: TJCoreAttrMetadata);
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
@@ -150,10 +152,11 @@ begin
   Result := AttrList[AIndex];
 end;
 
-constructor TJCoreClassMetadata.Create(const AClass: TClass;
+constructor TJCoreClassMetadata.Create(const AModel: TJCoreModel; const AClass: TClass;
   const AParent: TJCoreClassMetadata);
 begin
   inherited Create;
+  FModel := AModel;
   FClass := AClass;
   FParent := AParent;
   FAttrList := TJCoreAttrMetadataList.Create(True);
@@ -250,7 +253,7 @@ begin
     VParentMetadata := AcquireMetadata(VParent)
   else
     VParentMetadata := nil;
-  Result := ClassMetadataClass.Create(AClass, VParentMetadata);
+  Result := ClassMetadataClass.Create(Self, AClass, VParentMetadata);
 end;
 
 procedure TJCoreModel.Finit;

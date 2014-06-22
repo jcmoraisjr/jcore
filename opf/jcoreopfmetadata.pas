@@ -259,7 +259,9 @@ type
 
   TJCoreOPFADMMappingMap = specialize TFPGMap<Pointer, TJCoreOPFADMMapping>;
 
-  TJCoreOPFMaps = class;
+  TJCoreOPFMap = class;
+  TJCoreOPFMaps = specialize TFPGObjectList<TJCoreOPFMap>;
+  TJCoreOPFMapMap = specialize TFPGMap<string, TJCoreOPFMap>;
 
   { TJCoreOPFPID }
 
@@ -355,6 +357,11 @@ type
   { TJCoreOPFMap }
 
   TJCoreOPFMap = class(TJCoreOPFAttrMetadataList)
+  // Map is a list of attributes that share the same persistence structure, eg a
+  // table on a RDBMS)
+  //
+  // In the current version these attributes must be of the same class or a
+  // parent class.
   private
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
@@ -362,15 +369,6 @@ type
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
-  end;
-
-  { TJCoreOPFMap }
-
-  TJCoreOPFMaps = class(specialize TFPGObjectList<TJCoreOPFMap>)
-  private
-    procedure CreateMaps(const AMetadata: TJCoreOPFClassMetadata);
-  public
-    constructor Create(const AMetadata: TJCoreOPFClassMetadata);
   end;
 
   { TJCoreOPFClassMetadata }
@@ -381,7 +379,10 @@ type
     FOIDClass: TJCoreOPFOIDClass;
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
+    function GetModel: TJCoreOPFModel;
     function GetParent: TJCoreOPFClassMetadata;
+  protected
+    property Model: TJCoreOPFModel read GetModel;
   public
     { TODO : Generics? }
     destructor Destroy; override;
@@ -398,7 +399,9 @@ type
   { TODO : Model, map and metadata threadsafe }
   private
     FADMClassList: TJCoreOPFADMClassList;
+    FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
+    procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
   protected
     procedure AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
     function AttributeMetadataClass: TJCoreAttrMetadataClass; override;
@@ -408,10 +411,12 @@ type
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
     procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); override;
     property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
+    property MapMap: TJCoreOPFMapMap read FMapMap;
   public
     constructor Create; override;
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+    function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
   end;
 
@@ -1375,31 +1380,6 @@ begin
   FOIDClass := Metadata.OIDClass;
 end;
 
-{ TJCoreOPFMaps }
-
-procedure TJCoreOPFMaps.CreateMaps(const AMetadata: TJCoreOPFClassMetadata);
-var
-  VMap: TJCoreOPFMap;
-  I: Integer;
-begin
-  if not Assigned(AMetadata) then
-    Exit;
-  if AMetadata.AttributeCount = 0 then
-    // no attribute, no map
-    Exit;
-  CreateMaps(AMetadata.Parent);
-  VMap := TJCoreOPFMap.Create(AMetadata);
-  Add(VMap);
-  for I := 0 to Pred(AMetadata.AttributeCount) do
-    VMap.Add(AMetadata[I]);
-end;
-
-constructor TJCoreOPFMaps.Create(const AMetadata: TJCoreOPFClassMetadata);
-begin
-  inherited Create(True);
-  CreateMaps(AMetadata);
-end;
-
 { TJCoreOPFClassMetadata }
 
 function TJCoreOPFClassMetadata.GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
@@ -1410,8 +1390,13 @@ end;
 function TJCoreOPFClassMetadata.GetMaps: TJCoreOPFMaps;
 begin
   if not Assigned(FMaps) then
-    FMaps := TJCoreOPFMaps.Create(Self);
+    FMaps := Model.CreateMaps(Self);
   Result := FMaps;
+end;
+
+function TJCoreOPFClassMetadata.GetModel: TJCoreOPFModel;
+begin
+  Result := inherited Model as TJCoreOPFModel;
 end;
 
 function TJCoreOPFClassMetadata.GetParent: TJCoreOPFClassMetadata;
@@ -1433,6 +1418,31 @@ end;
 
 { TJCoreOPFModel }
 
+procedure TJCoreOPFModel.AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
+var
+  VName: string;
+  VIndex: Integer;
+  VMap: TJCoreOPFMap;
+  I: Integer;
+begin
+  if not Assigned(AMetadata) then
+    Exit;
+  AcquireMaps(AMetadata.Parent, AMaps);
+  if AMetadata.AttributeCount = 0 then
+    // no attribute, no map
+    Exit;
+  VName := AMetadata.TheClass.ClassName;
+  VIndex := MapMap.IndexOf(VName);
+  if VIndex = -1 then
+  begin
+    VMap := TJCoreOPFMap.Create(AMetadata);
+    VIndex := MapMap.Add(VName, VMap);
+    for I := 0 to Pred(AMetadata.AttributeCount) do
+      VMap.Add(AMetadata[I]);
+  end;
+  AMaps.Add(MapMap.Data[VIndex]);
+end;
+
 procedure TJCoreOPFModel.AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
 var
   VADMClass: TJCoreOPFADMClass;
@@ -1452,8 +1462,13 @@ begin
 end;
 
 procedure TJCoreOPFModel.Finit;
+var
+  I: Integer;
 begin
   FreeAndNil(FADMClassList);
+  for I := 0 to Pred(FMapMap.Count) do
+    FMapMap.Data[I].Free;
+  FreeAndNil(FMapMap);
   inherited Finit;
 end;
 
@@ -1483,6 +1498,7 @@ begin
   FADMClassList := TJCoreOPFADMClassList.Create;
   inherited Create;
   FOIDClass := TJCoreOPFIntegerOID;
+  FMapMap := TJCoreOPFMapMap.Create;
 end;
 
 function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
@@ -1496,6 +1512,17 @@ end;
 function TJCoreOPFModel.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
 begin
   Result := inherited AcquireMetadata(AClass) as TJCoreOPFClassMetadata;
+end;
+
+function TJCoreOPFModel.CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
+begin
+  Result := TJCoreOPFMaps.Create(False);
+  try
+    AcquireMaps(AMetadata, Result);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 end.

@@ -124,6 +124,7 @@ var
   VPerson: TTestProxyPerson;
   VCity: TTestProxyCity;
 begin
+  TTestSQLDriver.Data.Add('2');
   TTestSQLDriver.Data.Add('somename');
   TTestSQLDriver.Data.Add('20');
   TTestSQLDriver.Data.Add('null');
@@ -139,8 +140,9 @@ begin
     AssertEquals('person name', 'somename', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInteger 2',
-     'ExecSQL ' + CSQLSELECTPERSON]);
+     'ExecSQL ' + CSQLSELECTPERSON + '=?']);
 
+    TTestSQLDriver.Data.Add('4');
     TTestSQLDriver.Data.Add('acity');
     TTestSQLDriver.ExpectedResultsets.Add(1);
     TTestSQLDriver.Commands.Clear;
@@ -153,7 +155,7 @@ begin
     AssertEquals('city name', 'acity', VCity.Name);
     AssertSQLDriverCommands([
      'WriteInteger 4',
-     'ExecSQL ' + CSQLSELECTCITY]);
+     'ExecSQL ' + CSQLSELECTCITY + '=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -164,6 +166,7 @@ var
   VPerson: TTestProxyPerson;
   VPhones: TTestProxyPhoneList;
 begin
+  TTestSQLDriver.Data.Add('21');
   TTestSQLDriver.Data.Add('name');
   TTestSQLDriver.Data.Add('38');
   TTestSQLDriver.Data.Add('null');
@@ -179,7 +182,7 @@ begin
     AssertEquals('person name', 'name', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInteger 21',
-     'ExecSQL ' + CSQLSELECTPERSON]);
+     'ExecSQL ' + CSQLSELECTPERSON + '=?']);
 
     TTestSQLDriver.Data.Add('18');
     TTestSQLDriver.Data.Add('1213-9876');

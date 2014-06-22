@@ -70,6 +70,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreOPFObjectNotFound }
+
+  EJCoreOPFObjectNotFound = class(EJCoreOPF)
+  public
+    constructor Create(const AOID: string);
+  end;
+
   { EJCoreOPFUnexpectedResultSetSize }
 
   EJCoreOPFUnexpectedResultSetSize = class(EJCoreOPF)
@@ -119,13 +126,6 @@ type
     constructor Create(const AOwnedClassName, AOwnerClassName: string);
   end;
 
-  { EJCoreOPFUnsupportedListOperations }
-
-  EJCoreOPFUnsupportedListOperations = class(EJCoreOPF)
-  public
-    constructor Create;
-  end;
-
   { EJCoreOPFUnsupportedLoadOperation }
 
   EJCoreOPFUnsupportedLoadOperation = class(EJCoreOPF)
@@ -140,11 +140,11 @@ type
     constructor Create(const AAttrTypeInfo: PTypeInfo);
   end;
 
-  { EJCoreOPFUnsupportedSelectOperation }
+  { EJCoreOPFUnsupportedDMLOperation }
 
-  EJCoreOPFUnsupportedSelectOperation = class(EJCoreOPF)
+  EJCoreOPFUnsupportedDMLOperation = class(EJCoreOPF)
   public
-    constructor Create(const AClass: TClass);
+    constructor Create(const AClass: TClass; const AOperationName: string);
   end;
 
   { EJCoreOPFEntityADMExpected }
@@ -199,6 +199,12 @@ constructor EJCoreOPFEmptyOID.Create;
 begin
 end;
 
+{ EJCoreOPFObjectNotFound }
+
+constructor EJCoreOPFObjectNotFound.Create(const AOID: string);
+begin
+end;
+
 { EJCoreOPFUnexpectedResultSetSize }
 
 constructor EJCoreOPFUnexpectedResultSetSize.Create(const AExpectedSize,
@@ -244,12 +250,6 @@ constructor EJCoreOPFObjectAlreadyOwned.Create(const AOwnedClassName,
 begin
 end;
 
-{ EJCoreOPFUnsupportedListOperations }
-
-constructor EJCoreOPFUnsupportedListOperations.Create;
-begin
-end;
-
 { EJCoreOPFUnsupportedLoadOperation }
 
 constructor EJCoreOPFUnsupportedLoadOperation.Create(const AAttributeTypeName: string);
@@ -264,10 +264,9 @@ begin
   inherited Create(AAttrTypeInfo^.Name);
 end;
 
-{ EJCoreOPFUnsupportedSelectOperation }
+{ EJCoreOPFUnsupportedDMLOperation }
 
-constructor EJCoreOPFUnsupportedSelectOperation.Create(
-  const AClass: TClass);
+constructor EJCoreOPFUnsupportedDMLOperation.Create(const AClass: TClass; const AOperationName: string);
 begin
 end;
 

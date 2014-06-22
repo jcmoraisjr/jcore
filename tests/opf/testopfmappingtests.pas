@@ -524,6 +524,7 @@ procedure TTestOPFPersistentStateTests.AfterSelect;
 var
   VPerson: TTestIPIDPerson;
 begin
+  TTestSQLDriver.Data.Add('1');
   TTestSQLDriver.Data.Add('name');
   TTestSQLDriver.Data.Add('15');
   TTestSQLDriver.Data.Add('null');
