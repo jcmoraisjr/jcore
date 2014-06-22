@@ -15,7 +15,7 @@ type
   TClientSQLMapping = class(TTestAbstractSQLMapping)
   protected
     function CreateEntityFromDriver: TObject; override;
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -29,7 +29,7 @@ type
 
   TPersonSQLMapping = class(TClientSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -43,7 +43,7 @@ type
 
   TCompanySQLMapping = class(TClientSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -57,7 +57,7 @@ type
 
   TProductSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -70,7 +70,7 @@ type
 
   TInvoiceSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -84,7 +84,7 @@ type
 
   TInvoiceItemSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -97,7 +97,7 @@ type
 
   TInvoiceItemProductSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -110,7 +110,7 @@ type
 
   TInvoiceItemServiceSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -165,9 +165,9 @@ begin
     Result := inherited CreateEntityFromDriver;
 end;
 
-function TClientSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TClientSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICECLIENT + BuildParams(ASize);
+  Result := CSQLDELETEINVOICECLIENT + BuildParams(AOIDCount);
 end;
 
 function TClientSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -208,9 +208,9 @@ end;
 
 { TPersonSQLMapping }
 
-function TPersonSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TPersonSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEPERSON + BuildParams(ASize);
+  Result := CSQLDELETEINVOICEPERSON + BuildParams(AOIDCount);
 end;
 
 function TPersonSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -256,9 +256,9 @@ end;
 
 { TCompanySQLMapping }
 
-function TCompanySQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TCompanySQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICECOMPANY + BuildParams(ASize);
+  Result := CSQLDELETEINVOICECOMPANY + BuildParams(AOIDCount);
 end;
 
 function TCompanySQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -304,9 +304,9 @@ end;
 
 { TProductSQLMapping }
 
-function TProductSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TProductSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEPRODUCT + BuildParams(ASize);
+  Result := CSQLDELETEINVOICEPRODUCT + BuildParams(AOIDCount);
 end;
 
 function TProductSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -342,9 +342,9 @@ end;
 
 { TInvoiceSQLMapping }
 
-function TInvoiceSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TInvoiceSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICE + BuildParams(ASize);
+  Result := CSQLDELETEINVOICEINVOICE + BuildParams(AOIDCount);
 end;
 
 function TInvoiceSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -387,9 +387,9 @@ end;
 
 { TInvoiceItemSQLMapping }
 
-function TInvoiceItemSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TInvoiceItemSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICEITEM + BuildParams(ASize);
+  Result := CSQLDELETEINVOICEINVOICEITEM + BuildParams(AOIDCount);
 end;
 
 function TInvoiceItemSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -426,9 +426,9 @@ end;
 
 { TInvoiceItemProductSQLMapping }
 
-function TInvoiceItemProductSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TInvoiceItemProductSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICEITEMPRODUCT + BuildParams(ASize);
+  Result := CSQLDELETEINVOICEINVOICEITEMPRODUCT + BuildParams(AOIDCount);
 end;
 
 function TInvoiceItemProductSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -466,9 +466,9 @@ end;
 
 { TInvoiceItemServiceSQLMapping }
 
-function TInvoiceItemServiceSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TInvoiceItemServiceSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICEITEMSERVICE + BuildParams(ASize);
+  Result := CSQLDELETEINVOICEINVOICEITEMSERVICE + BuildParams(AOIDCount);
 end;
 
 function TInvoiceItemServiceSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;

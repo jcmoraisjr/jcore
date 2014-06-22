@@ -21,13 +21,13 @@ type
 
   TTestIPIDPersonSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
-    function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectCompositionsForDeleteStatement(const ASize: Integer): string; override;
-    function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string; override;
+    function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; override;
+    function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -59,7 +59,7 @@ type
 
   TTestIPIDAddressSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -73,7 +73,7 @@ type
 
   TTestIPIDCitySQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -97,7 +97,7 @@ type
 
   TTestIPIDPhoneSQLMapping = class(TTestAbstractSQLMapping)
   protected
-    function GenerateDeleteStatement(const ASize: Integer): string; override;
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectCollectionStatement(const AOwnerClassMetadata: TJCoreOPFClassMetadata; const AOwnerAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -172,26 +172,26 @@ end;
 { TTestIPIDPersonSQLMapping }
 
 function TTestIPIDPersonSQLMapping.GenerateDeleteExternalLinkIDsStatement(
-  const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
-    Result := CSQLDELETEPERSON_LANG_IDs + BuildParams(ASize)
+    Result := CSQLDELETEPERSON_LANG_IDs + BuildParams(AOIDCount)
   else
-    Result := inherited GenerateDeleteExternalLinkIDsStatement(AAttrMetadata, ASize);
+    Result := inherited GenerateDeleteExternalLinkIDsStatement(AAttrMetadata, AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateDeleteExternalLinksStatement(
-  const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
-    Result := CSQLDELETEPERSON_LANG + BuildParams(ASize)
+    Result := CSQLDELETEPERSON_LANG + BuildParams(AOIDCount)
   else
-    Result := inherited GenerateDeleteExternalLinksStatement(AAttrMetadata, ASize);
+    Result := inherited GenerateDeleteExternalLinksStatement(AAttrMetadata, AOIDCount);
 end;
 
-function TTestIPIDPersonSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDPersonSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEPERSON + BuildParams(ASize);
+  Result := CSQLDELETEPERSON + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateInsertExternalLinksStatement(
@@ -209,20 +209,20 @@ begin
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
-  const ASize: Integer): string;
+  const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTPERSON_FOR_DELETE + BuildParams(ASize);
+  Result := CSQLSELECTPERSON_FOR_DELETE + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateSelectForDeleteStatement(
-  const AAttrMetadata: TJCoreOPFAttrMetadata; const ASize: Integer): string;
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDPhone then
-    Result := CSQLSELECTPERSON_PHONES_FOR_DELETE + BuildParams(ASize)
+    Result := CSQLSELECTPERSON_PHONES_FOR_DELETE + BuildParams(AOIDCount)
   else if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
-    Result := CSQLSELECTPERSON_LANG_FOR_DELETE + BuildParams(ASize)
+    Result := CSQLSELECTPERSON_LANG_FOR_DELETE + BuildParams(AOIDCount)
   else
-    Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, ASize);
+    Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap): string;
@@ -307,9 +307,9 @@ end;
 
 { TTestIPIDAddressSQLMapping }
 
-function TTestIPIDAddressSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDAddressSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEADDRESS + BuildParams(ASize);
+  Result := CSQLDELETEADDRESS + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDAddressSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -352,9 +352,9 @@ end;
 
 { TTestIPIDCitySQLMapping }
 
-function TTestIPIDCitySQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDCitySQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETECITY + BuildParams(ASize);
+  Result := CSQLDELETECITY + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDCitySQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -418,9 +418,9 @@ end;
 
 { TTestIPIDPhoneSQLMapping }
 
-function TTestIPIDPhoneSQLMapping.GenerateDeleteStatement(const ASize: Integer): string;
+function TTestIPIDPhoneSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEPHONE + BuildParams(ASize);
+  Result := CSQLDELETEPHONE + BuildParams(AOIDCount);
 end;
 
 function TTestIPIDPhoneSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;

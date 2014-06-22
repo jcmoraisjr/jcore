@@ -17,7 +17,7 @@ type
   private
     class var FCurrentOID: Integer;
   protected
-    function InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray; override;
+    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
   public
     class procedure ClearOID;
   end;
@@ -29,12 +29,12 @@ uses
 
 { TTestAbstractSQLMapping }
 
-function TTestAbstractSQLMapping.InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray;
+function TTestAbstractSQLMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
 var
   I: Integer;
 begin
-  SetLength(Result, ACount);
-  for I := 0 to Pred(ACount) do
+  SetLength(Result, AOIDCount);
+  for I := 0 to Pred(AOIDCount) do
   begin
     Inc(FCurrentOID);
     Result[I] := TJCoreOPFIntegerOID.Create(FCurrentOID);

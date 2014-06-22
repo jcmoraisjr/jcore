@@ -106,7 +106,7 @@ type
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
-    function InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray; override;
+    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
     procedure InternalStore(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -332,12 +332,12 @@ end;
 
 { TTestEmptyMapping }
 
-function TTestEmptyMapping.InternalCreateOIDArray(const ACount: Integer): TJCoreOPFOIDArray;
+function TTestEmptyMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
 var
   I: Integer;
 begin
-  SetLength(Result, ACount);
-  for I := 0 to Pred(ACount) do
+  SetLength(Result, AOIDCount);
+  for I := 0 to Pred(AOIDCount) do
     Result[I] := TJCoreOPFIntegerOID.Create(1);
 end;
 
