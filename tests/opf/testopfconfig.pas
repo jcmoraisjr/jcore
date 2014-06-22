@@ -15,6 +15,7 @@ uses
   JCoreOPFMetadata,
   JCoreOPFOID,
   JCoreOPFMapping,
+  JCoreOPFMappingSQL,
   JCoreOPFSession,
   JCoreOPFConfig;
 

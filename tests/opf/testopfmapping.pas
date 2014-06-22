@@ -7,7 +7,7 @@ interface
 uses
   JCoreOPFDriver,
   JCoreOPFOID,
-  JCoreOPFMapping;
+  JCoreOPFMappingSQL;
 
 type
 
