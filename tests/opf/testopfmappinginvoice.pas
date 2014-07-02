@@ -6,13 +6,13 @@ interface
 
 uses
   JCoreOPFMetadata,
-  TestOPFMapping;
+  TestOPFConfig;
 
 type
 
   { TClientSQLMapping }
 
-  TClientSQLMapping = class(TTestAbstractSQLMapping)
+  TClientSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
@@ -55,7 +55,7 @@ type
 
   { TProductSQLMapping }
 
-  TProductSQLMapping = class(TTestAbstractSQLMapping)
+  TProductSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -69,7 +69,7 @@ type
 
   { TInvoiceSQLMapping }
 
-  TInvoiceSQLMapping = class(TTestAbstractSQLMapping)
+  TInvoiceSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -84,7 +84,7 @@ type
 
   { TInvoiceItemSQLMapping }
 
-  TInvoiceItemSQLMapping = class(TTestAbstractSQLMapping)
+  TInvoiceItemSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
@@ -134,16 +134,16 @@ const
   CSQLINSERTINVOICEINVOICEITEM = 'INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)';
   CSQLINSERTINVOICEINVOICEITEMPRODUCT = 'INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)';
   CSQLINSERTINVOICEINVOICEITEMSERVICE = 'INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)';
-  CSQLSELECTINVOICECLIENT = 'SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID';
-  CSQLSELECTINVOICEPERSON = 'SELECT T.ID,T_1.NAME,T.NICK FROM PERSON T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID';
-  CSQLSELECTINVOICEPERSONCOMPLEMENTARY = 'SELECT ID,NICK FROM PERSON WHERE ID';
-  CSQLSELECTINVOICECOMPANY = 'SELECT T.ID,T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID';
-  CSQLSELECTINVOICECOMPANYCOMPLEMENTARY = 'SELECT ID,CONTACTNAME FROM COMPANY WHERE ID';
-  CSQLSELECTINVOICEINVOICE = 'SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID';
-  CSQLSELECTINVOICEINVOICEITEM = 'SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE T.ID';
-  CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY = 'SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID';
-  CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY = 'SELECT ID,DESCRIPTION FROM INVOICEITEMSERVICE WHERE ID';
-  CSQLSELECTINVOICEPRODUCT = 'SELECT ID,NAME FROM PRODUCT WHERE ID';
+  CSQLSELECTINVOICECLIENT = 'SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE ';
+  CSQLSELECTINVOICEPERSON = 'SELECT T.ID,T_1.NAME,T.NICK FROM PERSON T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE ';
+  CSQLSELECTINVOICEPERSONCOMPLEMENTARY = 'SELECT ID,NICK FROM PERSON WHERE ';
+  CSQLSELECTINVOICECOMPANY = 'SELECT T.ID,T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE ';
+  CSQLSELECTINVOICECOMPANYCOMPLEMENTARY = 'SELECT ID,CONTACTNAME FROM COMPANY WHERE ';
+  CSQLSELECTINVOICEINVOICE = 'SELECT ID,CLIENT,DATE FROM INVOICE WHERE ';
+  CSQLSELECTINVOICEINVOICEITEM = 'SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE ';
+  CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY = 'SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ';
+  CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY = 'SELECT ID,DESCRIPTION FROM INVOICEITEMSERVICE WHERE ';
+  CSQLSELECTINVOICEPRODUCT = 'SELECT ID,NAME FROM PRODUCT WHERE ';
   CSQLUPDATEINVOICECLIENT = 'UPDATE CLIENT SET NAME=? WHERE ID=?';
   CSQLUPDATEINVOICEPERSON = 'UPDATE PERSON SET NICK=? WHERE ID=?';
   CSQLUPDATEINVOICECOMPANY = 'UPDATE COMPANY SET CONTACTNAME=? WHERE ID=?';
@@ -152,14 +152,14 @@ const
   CSQLUPDATEINVOICEINVOICEITEM = 'UPDATE INVOICEITEM SET TOTAL=? WHERE ID=?';
   CSQLUPDATEINVOICEINVOICEITEMPRODUCT = 'UPDATE INVOICEITEMPRODUCT SET QTY=?, PRODUCT=? WHERE ID=?';
   CSQLUPDATEINVOICEINVOICEITEMSERVICE = 'UPDATE INVOICEITEMSERVICE SET DESCRIPTION=? WHERE ID=?';
-  CSQLDELETEINVOICECLIENT = 'DELETE FROM CLIENT WHERE ID';
-  CSQLDELETEINVOICEPERSON = 'DELETE FROM PERSON WHERE ID';
-  CSQLDELETEINVOICECOMPANY = 'DELETE FROM COMPANY WHERE ID';
-  CSQLDELETEINVOICEPRODUCT = 'DELETE FROM PRODUCT WHERE ID';
-  CSQLDELETEINVOICEINVOICE = 'DELETE FROM INVOICE WHERE ID';
-  CSQLDELETEINVOICEINVOICEITEM = 'DELETE FROM INVOICEITEM WHERE ID';
-  CSQLDELETEINVOICEINVOICEITEMPRODUCT = 'DELETE FROM INVOICEITEMPRODUCT WHERE ID';
-  CSQLDELETEINVOICEINVOICEITEMSERVICE = 'DELETE FROM INVOICEITEMSERVICE WHERE ID';
+  CSQLDELETEINVOICECLIENT = 'DELETE FROM CLIENT WHERE ';
+  CSQLDELETEINVOICEPERSON = 'DELETE FROM PERSON WHERE ';
+  CSQLDELETEINVOICECOMPANY = 'DELETE FROM COMPANY WHERE ';
+  CSQLDELETEINVOICEPRODUCT = 'DELETE FROM PRODUCT WHERE ';
+  CSQLDELETEINVOICEINVOICE = 'DELETE FROM INVOICE WHERE ';
+  CSQLDELETEINVOICEINVOICEITEM = 'DELETE FROM INVOICEITEM WHERE ';
+  CSQLDELETEINVOICEINVOICEITEMPRODUCT = 'DELETE FROM INVOICEITEMPRODUCT WHERE ';
+  CSQLDELETEINVOICEINVOICEITEMSERVICE = 'DELETE FROM INVOICEITEMSERVICE WHERE ';
 
 implementation
 
@@ -178,7 +178,7 @@ end;
 
 function TClientSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICECLIENT + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICECLIENT + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TClientSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -190,7 +190,7 @@ function TClientSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
   const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTINVOICECLIENT + BuildParams(AOIDCount);
+  Result := CSQLSELECTINVOICECLIENT + BuildOIDCondition(['T.ID'], AOIDCount);
 end;
 
 function TClientSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -223,7 +223,7 @@ end;
 
 function TPersonSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEPERSON + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICEPERSON + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TPersonSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -236,9 +236,9 @@ function TPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
 begin
   if not Assigned(ABaseMap) then
-    Result := CSQLSELECTINVOICEPERSON + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICEPERSON + BuildOIDCondition(['T.ID'], AOIDCount)
   else if ABaseMap.Metadata.TheClass = TClient then
-    Result := CSQLSELECTINVOICEPERSONCOMPLEMENTARY + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICEPERSONCOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
     Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
@@ -273,7 +273,7 @@ end;
 
 function TCompanySQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICECOMPANY + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICECOMPANY + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TCompanySQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -286,9 +286,9 @@ function TCompanySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap
   const AOIDCount: Integer): string;
 begin
   if not Assigned(ABaseMap) then
-    Result := CSQLSELECTINVOICECOMPANY + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICECOMPANY + BuildOIDCondition(['T.ID'], AOIDCount)
   else if ABaseMap.Metadata.TheClass = TClient then
-    Result := CSQLSELECTINVOICECOMPANYCOMPLEMENTARY + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICECOMPANYCOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
     Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
@@ -323,7 +323,7 @@ end;
 
 function TProductSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEPRODUCT + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICEPRODUCT + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TProductSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -335,7 +335,7 @@ function TProductSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap
   const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTINVOICEPRODUCT + BuildParams(AOIDCount);
+  Result := CSQLSELECTINVOICEPRODUCT + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TProductSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -368,7 +368,7 @@ end;
 
 function TInvoiceSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICE + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICEINVOICE + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TInvoiceSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -380,7 +380,7 @@ function TInvoiceSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap
   const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTINVOICEINVOICE + BuildParams(AOIDCount);
+  Result := CSQLSELECTINVOICEINVOICE + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TInvoiceSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -428,7 +428,7 @@ end;
 
 function TInvoiceItemSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICEITEM + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICEINVOICEITEM + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TInvoiceItemSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -441,7 +441,7 @@ function TInvoiceItemSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOP
   const AOIDCount: Integer): string;
 begin
   if AOwnerClass.TheClass = TInvoice then
-    Result := CSQLSELECTINVOICEINVOICEITEM + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICEINVOICEITEM + BuildOIDCondition(['T.ID'], AOIDCount)
   else
     Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
@@ -476,7 +476,7 @@ end;
 
 function TInvoiceItemProductSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICEITEMPRODUCT + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICEINVOICEITEMPRODUCT + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TInvoiceItemProductSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -489,7 +489,7 @@ function TInvoiceItemProductSQLMapping.GenerateSelectStatement(const ABaseMap: T
   const AOIDCount: Integer): string;
 begin
   if ABaseMap.Metadata.TheClass = TInvoiceItem then
-    Result := CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
     Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;
@@ -526,7 +526,7 @@ end;
 
 function TInvoiceItemServiceSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEINVOICEINVOICEITEMSERVICE + BuildParams(AOIDCount);
+  Result := CSQLDELETEINVOICEINVOICEITEMSERVICE + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TInvoiceItemServiceSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -539,7 +539,7 @@ function TInvoiceItemServiceSQLMapping.GenerateSelectStatement(const ABaseMap: T
   const AOIDCount: Integer): string;
 begin
   if ABaseMap.Metadata.TheClass = TInvoiceItem then
-    Result := CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY + BuildParams(AOIDCount)
+    Result := CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
     Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
 end;

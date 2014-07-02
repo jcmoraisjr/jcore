@@ -60,24 +60,24 @@
         <UnitName Value="TestOPFSessionTests"/>
       </Item9>
       <Item10>
-        <Filename Value="opf/testopfmapping.pas"/>
-        <UnitName Value="TestOPFMapping"/>
-      </Item10>
-      <Item11>
         <Filename Value="opf/testopfmappingcontact.pas"/>
         <UnitName Value="TestOPFMappingContact"/>
-      </Item11>
-      <Item12>
+      </Item10>
+      <Item11>
         <Filename Value="opf/testopfmappinginvoice.pas"/>
         <UnitName Value="TestOPFMappingInvoice"/>
-      </Item12>
-      <Item13>
+      </Item11>
+      <Item12>
         <Filename Value="opf/testopfmappingtests.pas"/>
         <UnitName Value="TestOPFMappingTests"/>
-      </Item13>
-      <Item14>
+      </Item12>
+      <Item13>
         <Filename Value="opf/testopfmappingmanualtests.pas"/>
         <UnitName Value="TestOPFMappingManualTests"/>
+      </Item13>
+      <Item14>
+        <Filename Value="opf/testopfmappingautotests.pas"/>
+        <UnitName Value="TestOPFMappingAutoTests"/>
       </Item14>
     </Files>
     <RequiredPkgs Count="3">

@@ -22,6 +22,7 @@ uses
   JCoreClasses,
   JCoreEntity,
   JCoreMetadata,
+  JCoreOPFDriver,
   JCoreOPFOID;
 
 type
@@ -71,12 +72,15 @@ type
     procedure Commit;
     function IsDirty: Boolean;
     procedure Load;
+    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
     procedure UpdateAttrAddr(const AAttrAddrRef: PPPointer);
+    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
   end;
 
   TJCoreOPFADMClass = class of TJCoreOPFADM;
   TJCoreOPFADMClassList = specialize TFPGList<TJCoreOPFADMClass>;
+  TJCoreOPFADMArray = array of TJCoreOPFADM;
   TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
 
   { TJCoreOPFADMSimple }
@@ -91,15 +95,19 @@ type
   TJCoreOPFADMType32 = class(TJCoreOPFADMSimple)
   private
     FCache: Longint;
-    function GetGetter: Longint;
     function GetValue: Longint;
+    procedure SetValue(AValue: Longint);
+    function UseGetter: Longint;
+    procedure UseSetter(const AValue: Longint);
   protected
     procedure InternalGetter; override;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
-    property Value: Longint read GetValue;
+    property Value: Longint read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
   end;
 
   { TJCoreOPFADMType64 }
@@ -139,15 +147,19 @@ type
   TJCoreOPFADMAnsiString = class(TJCoreOPFADMSimple)
   private
     FCache: AnsiString;
-    function GetGetter: AnsiString;
     function GetValue: AnsiString;
+    procedure SetValue(AValue: AnsiString);
+    function UseGetter: AnsiString;
+    procedure UseSetter(const AValue: AnsiString);
   protected
     procedure InternalGetter; override;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
-    property Value: AnsiString read GetValue;
+    property Value: AnsiString read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
   end;
 
   { TJCoreOPFADMObject }
@@ -246,7 +258,10 @@ type
   // ADMs of a single class metadata, without parents.
   // Based on TJCoreOPFMaps and synchronized with TJCoreOPFMappingClassFactory's mappings.
   private
+    FADMChanged: TJCoreOPFADMArray;
     FPID: TJCoreOPFPID;
+    function GetADM(const AIndex: Integer): TJCoreOPFADM;
+    function GetADMChanged: TJCoreOPFADMArray;
   protected
     function InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
   public
@@ -254,6 +269,8 @@ type
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function IsDirty: Boolean;
     function IsInternalsDirty: Boolean;
+    property ADM[const AIndex: Integer]: TJCoreOPFADM read GetADM; default;
+    property ADMChanged: TJCoreOPFADMArray read GetADMChanged;
     property PID: TJCoreOPFPID read FPID;
   end;
 
@@ -332,6 +349,7 @@ type
     FAttributeType: TJCoreOPFAttributeType;
     FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
     FHasLazyload: Boolean;
+    FPersistentFieldName: string;
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
     function GetHasExternalRef: Boolean;
     function GetModel: TJCoreOPFModel;
@@ -349,6 +367,7 @@ type
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
     property HasExternalRef: Boolean read GetHasExternalRef;
     property HasLazyload: Boolean read FHasLazyload;
+    property PersistentFieldName: string read FPersistentFieldName;
   end;
 
   TJCoreOPFAttrMetadataList = specialize TFPGObjectList<TJCoreOPFAttrMetadata>;
@@ -365,10 +384,14 @@ type
   private
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
+    FOIDName: TJCoreStringArray;
+    FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
+    property OIDName: TJCoreStringArray read FOIDName;
+    property TableName: string read FTableName;
   end;
 
   { TJCoreOPFClassMetadata }
@@ -377,6 +400,7 @@ type
   private
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass;
+    FOIDName: TJCoreStringArray;
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
     function GetModel: TJCoreOPFModel;
@@ -389,7 +413,8 @@ type
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
     property Maps: TJCoreOPFMaps read GetMaps;
-    property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
+    property OIDClass: TJCoreOPFOIDClass read FOIDClass;
+    property OIDName: TJCoreStringArray read FOIDName;
     property Parent: TJCoreOPFClassMetadata read GetParent;
   end;
 
@@ -489,22 +514,35 @@ end;
 
 { TJCoreOPFADMType32 }
 
-function TJCoreOPFADMType32.GetGetter: Longint;
-begin
-  Result := GetOrdProp(PID.Entity, AttrPropInfo);
-end;
-
 function TJCoreOPFADMType32.GetValue: Longint;
 begin
   if Assigned(AttrAddr) then
     Result := Longint(AttrAddr^)
   else
-    Result := GetGetter;
+    Result := UseGetter;
+end;
+
+procedure TJCoreOPFADMType32.SetValue(AValue: Longint);
+begin
+  if Assigned(AttrAddr) then
+    Longint(AttrAddr^) := AValue
+  else
+    UseSetter(AValue);
+end;
+
+function TJCoreOPFADMType32.UseGetter: Longint;
+begin
+  Result := GetOrdProp(PID.Entity, AttrPropInfo);
+end;
+
+procedure TJCoreOPFADMType32.UseSetter(const AValue: Longint);
+begin
+  SetOrdProp(PID.Entity, AttrPropInfo, AValue);
 end;
 
 procedure TJCoreOPFADMType32.InternalGetter;
 begin
-  GetGetter;
+  UseGetter;
 end;
 
 function TJCoreOPFADMType32.InternalIsDirty: Boolean;
@@ -521,6 +559,16 @@ class function TJCoreOPFADMType32.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInteger, tkChar, tkEnumeration, tkBool];
+end;
+
+procedure TJCoreOPFADMType32.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  Value := ADriver.ReadInteger;
+end;
+
+procedure TJCoreOPFADMType32.WriteToDriver(const ADriver: TJCoreOPFDriver);
+begin
+  ADriver.WriteInteger(Value);
 end;
 
 { TJCoreOPFADMType64 }
@@ -610,22 +658,35 @@ end;
 
 { TJCoreOPFADMAnsiString }
 
-function TJCoreOPFADMAnsiString.GetGetter: AnsiString;
-begin
-  Result := GetStrProp(PID.Entity, AttrPropInfo);
-end;
-
 function TJCoreOPFADMAnsiString.GetValue: AnsiString;
 begin
   if Assigned(AttrAddr) then
     Result := PAnsiString(AttrAddr)^
   else
-    Result := GetGetter;
+    Result := UseGetter;
+end;
+
+procedure TJCoreOPFADMAnsiString.SetValue(AValue: AnsiString);
+begin
+  if Assigned(AttrAddr) then
+    PAnsiString(AttrAddr)^ := AValue
+  else
+    UseSetter(AValue);
+end;
+
+function TJCoreOPFADMAnsiString.UseGetter: AnsiString;
+begin
+  Result := GetStrProp(PID.Entity, AttrPropInfo);
+end;
+
+procedure TJCoreOPFADMAnsiString.UseSetter(const AValue: AnsiString);
+begin
+  SetStrProp(PID.Entity, AttrPropInfo, AValue);
 end;
 
 procedure TJCoreOPFADMAnsiString.InternalGetter;
 begin
-  GetGetter;
+  UseGetter;
 end;
 
 function TJCoreOPFADMAnsiString.InternalIsDirty: Boolean;
@@ -644,6 +705,16 @@ class function TJCoreOPFADMAnsiString.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkAString;
+end;
+
+procedure TJCoreOPFADMAnsiString.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  Value := ADriver.ReadString;
+end;
+
+procedure TJCoreOPFADMAnsiString.WriteToDriver(const ADriver: TJCoreOPFDriver);
+begin
+  ADriver.WriteString(Value);
 end;
 
 { TJCoreOPFADMObject }
@@ -1061,6 +1132,34 @@ end;
 
 { TJCoreOPFADMMapping }
 
+function TJCoreOPFADMMapping.GetADMChanged: TJCoreOPFADMArray;
+var
+  VADM: TJCoreOPFADM;
+  VCount, I: Integer;
+begin
+  if not Assigned(FADMChanged) then
+  begin
+    SetLength(FADMChanged, Count);
+    VCount := 0;
+    for I := 0 to Pred(Count) do
+    begin
+      VADM := Data[I];
+      if VADM.IsDirty then
+      begin
+        FADMChanged[VCount] := VADM;
+        Inc(VCount);
+      end;
+    end;
+    SetLength(FADMChanged, VCount);
+  end;
+  Result := FADMChanged;
+end;
+
+function TJCoreOPFADMMapping.GetADM(const AIndex: Integer): TJCoreOPFADM;
+begin
+  Result := Data[AIndex];
+end;
+
 function TJCoreOPFADMMapping.InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
 var
   VADM: TJCoreOPFADM;
@@ -1359,6 +1458,7 @@ begin
     CompositionMetadata := nil;
   FCompositionLinkType := jcltEmbedded;
   FHasLazyload := True; // which also means "I dont know yet, try it"
+  FPersistentFieldName := UpperCase(Name);
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
@@ -1378,6 +1478,8 @@ begin
   inherited Create(False);
   FMetadata := AMetadata;
   FOIDClass := Metadata.OIDClass;
+  FOIDName := Metadata.OIDName;
+  FTableName := UpperCase(Copy(Metadata.TheClass.ClassName, 2, MaxInt));
 end;
 
 { TJCoreOPFClassMetadata }
@@ -1487,10 +1589,14 @@ end;
 procedure TJCoreOPFModel.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
 var
   VMetadata: TJCoreOPFClassMetadata;
+  VOIDName: TJCoreStringArray;
 begin
   inherited RefineClassMetadata(AClassMetadata);
   VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
-  VMetadata.OIDClass := OIDClass;
+  VMetadata.FOIDClass := OIDClass; // friend class
+  SetLength(VOIDName, 1);
+  VOIDName[0] := 'ID';
+  VMetadata.FOIDName := VOIDName; // friend class
 end;
 
 constructor TJCoreOPFModel.Create;

@@ -72,9 +72,25 @@ type
     property Session: ITestOPFSession read FSession;
   end;
 
+  { TTestOPFManualMappingTestCase }
+
+  TTestOPFManualMappingTestCase = class(TTestOPFAbstractTestCase)
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  end;
+
+  { TTestOPFAutoMappingTestCase }
+
+  TTestOPFAutoMappingTestCase = class(TTestOPFAbstractTestCase)
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  end;
+
   { TTestOPFIPIDContactTestCase }
 
-  TTestOPFIPIDContactTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFIPIDContactTestCase = class(TTestOPFManualMappingTestCase)
   protected
     function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
@@ -82,15 +98,23 @@ type
 
   { TTestOPFProxyContactTestCase }
 
-  TTestOPFProxyContactTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFProxyContactTestCase = class(TTestOPFManualMappingTestCase)
   protected
     function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
-  { TTestOPFProxyInvoiceTestCase }
+  { TTestOPFProxyInvoiceManualMappingTestCase }
 
-  TTestOPFProxyInvoiceTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFProxyInvoiceManualMappingTestCase = class(TTestOPFManualMappingTestCase)
+  protected
+    function InternalCreateModel: TJCoreOPFModel; override;
+    function InternalMappingClassArray: TTestOPFMappingClassArray; override;
+  end;
+
+  { TTestOPFProxyInvoiceAutoMappingTestCase }
+
+  TTestOPFProxyInvoiceAutoMappingTestCase = class(TTestOPFAutoMappingTestCase)
   protected
     function InternalCreateModel: TJCoreOPFModel; override;
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
@@ -142,11 +166,34 @@ type
     class property ExpectedResultsets: TTestIntegerList read FExpectedResultsets write FExpectedResultsets;
   end;
 
+  { TTestAbstractSQLManualMapping }
+
+  TTestAbstractSQLManualMapping = class(TJCoreOPFSQLManualMapping)
+  private
+    class var FCurrentOID: Integer;
+  protected
+    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
+  public
+    class property CurrentOID: Integer read FCurrentOID;
+    class procedure ClearOID;
+  end;
+
+  { TTestSQLAutoMapping }
+
+  TTestSQLAutoMapping = class(TJCoreOPFSQLAutoMapping)
+  private
+    class var FCurrentOID: Integer;
+  protected
+    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
+  public
+    class property CurrentOID: Integer read FCurrentOID;
+    class procedure ClearOID;
+  end;
+
 implementation
 
 uses
   TestOPFModelRegistry,
-  TestOPFMapping,
   TestOPFMappingContact,
   TestOPFMappingInvoice;
 
@@ -262,12 +309,39 @@ end;
 procedure TTestOPFAbstractTestCase.TearDown;
 begin
   inherited TearDown;
-  TTestAbstractSQLMapping.ClearOID;
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
   FSession := nil;
   FConfiguration := nil;
+end;
+
+{ TTestOPFManualMappingTestCase }
+
+procedure TTestOPFManualMappingTestCase.SetUp;
+begin
+  inherited SetUp;
+  AssertEquals(0, TTestAbstractSQLManualMapping.CurrentOID);
+end;
+
+procedure TTestOPFManualMappingTestCase.TearDown;
+begin
+  inherited TearDown;
+  TTestAbstractSQLManualMapping.ClearOID;
+end;
+
+{ TTestOPFAutoMappingTestCase }
+
+procedure TTestOPFAutoMappingTestCase.SetUp;
+begin
+  inherited SetUp;
+  AssertEquals(0, TTestSQLAutoMapping.CurrentOID);
+end;
+
+procedure TTestOPFAutoMappingTestCase.TearDown;
+begin
+  inherited TearDown;
+  TTestSQLAutoMapping.ClearOID;
 end;
 
 { TTestOPFIPIDContactTestCase }
@@ -304,14 +378,14 @@ begin
   Result[2] := TTestProxyPersonSQLMapping;
 end;
 
-{ TTestOPFProxyInvoiceTestCase }
+{ TTestOPFProxyInvoiceManualMappingTestCase }
 
-function TTestOPFProxyInvoiceTestCase.InternalCreateModel: TJCoreOPFModel;
+function TTestOPFProxyInvoiceManualMappingTestCase.InternalCreateModel: TJCoreOPFModel;
 begin
   Result := TTestOPFModelProxyInvoice.Create;
 end;
 
-function TTestOPFProxyInvoiceTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+function TTestOPFProxyInvoiceManualMappingTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
 begin
   SetLength(Result, 8);
   Result[0] := TClientSQLMapping;
@@ -322,6 +396,19 @@ begin
   Result[5] := TInvoiceItemSQLMapping;
   Result[6] := TInvoiceItemProductSQLMapping;
   Result[7] := TInvoiceItemServiceSQLMapping;
+end;
+
+{ TTestOPFProxyInvoiceAutoMappingTestCase }
+
+function TTestOPFProxyInvoiceAutoMappingTestCase.InternalCreateModel: TJCoreOPFModel;
+begin
+  Result := TTestOPFModelProxyInvoice.Create;
+end;
+
+function TTestOPFProxyInvoiceAutoMappingTestCase.InternalMappingClassArray: TTestOPFMappingClassArray;
+begin
+  SetLength(Result, 1);
+  Result[0] := TTestSQLAutoMapping;
 end;
 
 { TTestEmptyDriver }
@@ -432,6 +519,44 @@ end;
 procedure TTestSQLDriver.WriteNull;
 begin
   AddCommand('WriteNull');
+end;
+
+{ TTestAbstractSQLManualMapping }
+
+function TTestAbstractSQLManualMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
+var
+  I: Integer;
+begin
+  SetLength(Result, AOIDCount);
+  for I := 0 to Pred(AOIDCount) do
+  begin
+    Inc(FCurrentOID);
+    Result[I] := TJCoreOPFIntegerOID.Create(FCurrentOID);
+  end;
+end;
+
+class procedure TTestAbstractSQLManualMapping.ClearOID;
+begin
+  FCurrentOID := 0;
+end;
+
+{ TTestSQLAutoMapping }
+
+function TTestSQLAutoMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
+var
+  I: Integer;
+begin
+  SetLength(Result, AOIDCount);
+  for I := 0 to Pred(AOIDCount) do
+  begin
+    Inc(FCurrentOID);
+    Result[I] := TJCoreOPFIntegerOID.Create(FCurrentOID);
+  end;
+end;
+
+class procedure TTestSQLAutoMapping.ClearOID;
+begin
+  FCurrentOID := 0;
 end;
 
 end.

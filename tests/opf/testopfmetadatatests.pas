@@ -30,7 +30,7 @@ type
 
   { TTestOPFInheritanceMetadataTest }
 
-  TTestOPFInheritanceMetadataTest = class(TTestOPFProxyInvoiceTestCase)
+  TTestOPFInheritanceMetadataTest = class(TTestOPFProxyInvoiceManualMappingTestCase)
   published
     procedure CreatePIDInheritance;
   end;
@@ -140,7 +140,7 @@ begin
     AssertEquals('person name', 'somename', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInteger 2',
-     'ExecSQL ' + CSQLSELECTPERSON + '=?']);
+     'ExecSQL ' + CSQLSELECTPERSON + 'ID=?']);
 
     TTestSQLDriver.Data.Add('4');
     TTestSQLDriver.Data.Add('acity');
@@ -155,7 +155,7 @@ begin
     AssertEquals('city name', 'acity', VCity.Name);
     AssertSQLDriverCommands([
      'WriteInteger 4',
-     'ExecSQL ' + CSQLSELECTCITY + '=?']);
+     'ExecSQL ' + CSQLSELECTCITY + 'ID=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -182,7 +182,7 @@ begin
     AssertEquals('person name', 'name', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInteger 21',
-     'ExecSQL ' + CSQLSELECTPERSON + '=?']);
+     'ExecSQL ' + CSQLSELECTPERSON + 'ID=?']);
 
     TTestSQLDriver.Data.Add('18');
     TTestSQLDriver.Data.Add('1213-9876');

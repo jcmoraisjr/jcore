@@ -74,7 +74,7 @@ type
 
   { TTestOPFInsertManualMappingInheritanceTests }
 
-  TTestOPFInsertManualMappingInheritanceTests = class(TTestOPFProxyInvoiceTestCase)
+  TTestOPFInsertManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
   published
     procedure Single;
     procedure EntityAggregation;
@@ -83,14 +83,14 @@ type
 
   { TTestOPFUpdateManualMappingInheritanceTests }
 
-  TTestOPFUpdateManualMappingInheritanceTests = class(TTestOPFProxyInvoiceTestCase)
+  TTestOPFUpdateManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
   published
     procedure SingleOneMappingChanged;
   end;
 
   { TTestOPFSelectManualMappingInheritanceTests }
 
-  TTestOPFSelectManualMappingInheritanceTests = class(TTestOPFProxyInvoiceTestCase)
+  TTestOPFSelectManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
   published
     procedure SingleFromSubclass;
     procedure SingleFromSuperclass1;
@@ -103,7 +103,7 @@ type
 
   { TTestOPFDeleteManualMappingInheritanceTests }
 
-  TTestOPFDeleteManualMappingInheritanceTests = class(TTestOPFProxyInvoiceTestCase)
+  TTestOPFDeleteManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
   published
     procedure Single1;
     procedure Single2;
@@ -422,7 +422,7 @@ begin
     Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInteger 3',
-     'ExecSQL ' + CSQLDELETEPHONE + '=?']);
+     'ExecSQL ' + CSQLDELETEPHONE + 'ID=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -468,7 +468,7 @@ begin
     AssertSQLDriverCommands([
      'WriteInteger 1',
      'WriteInteger 2',
-     'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?']);
+     'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + 'ID_LANG=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -491,7 +491,7 @@ begin
     AssertSQLDriverCommands([
      'WriteInteger 1',
      'WriteInteger 2',
-     'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + '=?',
+     'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + 'ID_LANG=?',
      'WriteInteger 4',
      'WriteString Spanish',
      'ExecSQL ' + CSQLINSERTLANG,
@@ -564,7 +564,7 @@ begin
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertSQLDriverCommands([
      'WriteInteger 15',
-     {1}'ExecSQL ' + CSQLSELECTCITY + '=?']);
+     {1}'ExecSQL ' + CSQLSELECTCITY + 'ID=?']);
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
     AssertEquals('15', VCity._PID.OID.AsString);
@@ -621,11 +621,11 @@ begin
     AssertEquals('city name', 'thecity', VCity.Name);
     AssertSQLDriverCommands([
      'WriteInteger 2',
-     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
      'WriteInteger 18',
-     {2}'ExecSQL ' + CSQLSELECTADDRESS + '=?',
+     {2}'ExecSQL ' + CSQLSELECTADDRESS + 'ID=?',
      'WriteInteger 11',
-     {3}'ExecSQL ' + CSQLSELECTCITY + '=?',
+     {3}'ExecSQL ' + CSQLSELECTCITY + 'ID=?',
      'WriteInteger 2',
      {4}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 2',
@@ -672,9 +672,9 @@ begin
     AssertEquals('city name', 'nameofcity', VCity.Name);
     AssertSQLDriverCommands([
      'WriteInteger 8',
-     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
      'WriteInteger 5',
-     {2}'ExecSQL ' + CSQLSELECTCITY + '=?',
+     {2}'ExecSQL ' + CSQLSELECTCITY + 'ID=?',
      'WriteInteger 8',
      {3}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 8',
@@ -712,7 +712,7 @@ begin
     AssertNull(VPerson.City);
     AssertSQLDriverCommands([
      'WriteInteger 18',
-     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
      'WriteInteger 18',
      {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 18',
@@ -761,7 +761,7 @@ begin
     AssertEquals('phone1 number', '555', VPerson.Phones[1].Number);
     AssertSQLDriverCommands([
      'WriteInteger 9',
-     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
      'WriteInteger 9',
      {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 9',
@@ -811,7 +811,7 @@ begin
     AssertEquals('lang1 name', 'german', VPerson.Languages[1].Name);
     AssertSQLDriverCommands([
      'WriteInteger 5',
-     {1}'ExecSQL ' + CSQLSELECTPERSON + '=?',
+     {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
      'WriteInteger 5',
      {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
      'WriteInteger 5',
@@ -830,7 +830,7 @@ begin
   Session.Dispose(TTestIPIDCity, ['5']);
   AssertSQLDriverCommands([
    'WriteInteger 5',
-   'ExecSQL ' + CSQLDELETECITY + '=?']);
+   'ExecSQL ' + CSQLDELETECITY + 'ID=?']);
 end;
 
 procedure TTestOPFDeleteOneManualMappingPlainTests.EntityComposition;
@@ -849,15 +849,15 @@ begin
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
    'WriteInteger 12',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
    'WriteInteger 12',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
    'WriteInteger 12',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
    'WriteInteger 4',
-   'ExecSQL ' + CSQLDELETEADDRESS + '=?',
+   'ExecSQL ' + CSQLDELETEADDRESS + 'ID=?',
    'WriteInteger 12',
-   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
 procedure TTestOPFDeleteOneManualMappingPlainTests.EntityAggregation;
@@ -876,13 +876,13 @@ begin
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
    'WriteInteger 3',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
    'WriteInteger 3',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
    'WriteInteger 3',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
    'WriteInteger 3',
-   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
 procedure TTestOPFDeleteOneManualMappingPlainTests.CollectionCompositionOne;
@@ -904,15 +904,15 @@ begin
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
    'WriteInteger 7',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
    'WriteInteger 15',
-   'ExecSQL ' + CSQLDELETEPHONE + '=?',
+   'ExecSQL ' + CSQLDELETEPHONE + 'ID=?',
    'WriteInteger 7',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
    'WriteInteger 7',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
    'WriteInteger 7',
-   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
 procedure TTestOPFDeleteOneManualMappingPlainTests.CollectionAggregationOne;
@@ -931,13 +931,13 @@ begin
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
    'WriteInteger 6',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
    'WriteInteger 6',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
    'WriteInteger 6',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
    'WriteInteger 6',
-   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
 procedure TTestOPFDeleteOneManualMappingPlainTests.CollectionCompositionMany;
@@ -960,16 +960,16 @@ begin
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
    'WriteInteger 2',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
    'WriteInteger 17',
    'WriteInteger 18',
-   'ExecSQL ' + CSQLDELETEPHONE + ' IN (?,?)',
+   'ExecSQL ' + CSQLDELETEPHONE + 'ID IN (?,?)',
    'WriteInteger 2',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
    'WriteInteger 2',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
    'WriteInteger 2',
-   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
 procedure TTestOPFDeleteOneManualMappingPlainTests.CollectionAggregationMany;
@@ -988,13 +988,13 @@ begin
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
    'WriteInteger 5',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
    'WriteInteger 5',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + '=?',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
    'WriteInteger 5',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + '=?',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
    'WriteInteger 5',
-   'ExecSQL ' + CSQLDELETEPERSON + '=?']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
 { TTestOPFDeleteArrayManualMappingPlainTests }
@@ -1005,7 +1005,7 @@ begin
   AssertSQLDriverCommands([
    'WriteInteger 13',
    'WriteInteger 22',
-   'ExecSQL ' + CSQLDELETECITY + ' IN (?,?)']);
+   'ExecSQL ' + CSQLDELETECITY + 'ID IN (?,?)']);
 end;
 
 procedure TTestOPFDeleteArrayManualMappingPlainTests.EntityComposition;
@@ -1028,22 +1028,22 @@ begin
    'WriteInteger 9',
    'WriteInteger 11',
    'WriteInteger 16',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?,?)',
    'WriteInteger 9',
    'WriteInteger 11',
    'WriteInteger 16',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?,?)',
    'WriteInteger 9',
    'WriteInteger 11',
    'WriteInteger 16',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?,?)',
    'WriteInteger 10',
    'WriteInteger 13',
-   'ExecSQL ' + CSQLDELETEADDRESS + ' IN (?,?)',
+   'ExecSQL ' + CSQLDELETEADDRESS + 'ID IN (?,?)',
    'WriteInteger 9',
    'WriteInteger 11',
    'WriteInteger 16',
-   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?,?)']);
 end;
 
 procedure TTestOPFDeleteArrayManualMappingPlainTests.EntityAggregation;
@@ -1066,19 +1066,19 @@ begin
    'WriteInteger 21',
    'WriteInteger 22',
    'WriteInteger 23',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?,?)',
    'WriteInteger 21',
    'WriteInteger 22',
    'WriteInteger 23',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?,?)',
    'WriteInteger 21',
    'WriteInteger 22',
    'WriteInteger 23',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?,?)',
    'WriteInteger 21',
    'WriteInteger 22',
    'WriteInteger 23',
-   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?,?)']);
 end;
 
 procedure TTestOPFDeleteArrayManualMappingPlainTests.CollectionComposition;
@@ -1105,22 +1105,22 @@ begin
    'WriteInteger 10',
    'WriteInteger 12',
    'WriteInteger 14',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?,?)',
    'WriteInteger 11',
    'WriteInteger 13',
-   'ExecSQL ' + CSQLDELETEPHONE + ' IN (?,?)',
+   'ExecSQL ' + CSQLDELETEPHONE + 'ID IN (?,?)',
    'WriteInteger 10',
    'WriteInteger 12',
    'WriteInteger 14',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?,?)',
    'WriteInteger 10',
    'WriteInteger 12',
    'WriteInteger 14',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?,?)',
    'WriteInteger 10',
    'WriteInteger 12',
    'WriteInteger 14',
-   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?,?)']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?,?)']);
 end;
 
 procedure TTestOPFDeleteArrayManualMappingPlainTests.CollectionAggregation;
@@ -1141,16 +1141,16 @@ begin
   AssertSQLDriverCommands([
    'WriteInteger 15',
    'WriteInteger 18',
-   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + ' IN (?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?)',
    'WriteInteger 15',
    'WriteInteger 18',
-   'ExecSQL ' + CSQLDELETEPERSON_LANG + ' IN (?,?)',
+   'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?)',
    'WriteInteger 15',
    'WriteInteger 18',
-   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + ' IN (?,?)',
+   'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?)',
    'WriteInteger 15',
    'WriteInteger 18',
-   'ExecSQL ' + CSQLDELETEPERSON + ' IN (?,?)']);
+   'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?)']);
 end;
 
 { TTestOPFInsertManualMappingInheritanceTests }

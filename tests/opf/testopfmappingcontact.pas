@@ -6,20 +6,20 @@ interface
 
 uses
   JCoreOPFMetadata,
-  TestOPFMapping;
+  TestOPFConfig;
 
 type
 
   { TTestIPIDSimpleSQLMapping }
 
-  TTestIPIDSimpleSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDSimpleSQLMapping = class(TTestAbstractSQLManualMapping)
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
 
   { TTestIPIDPersonSQLMapping }
 
-  TTestIPIDPersonSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDPersonSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
@@ -57,7 +57,7 @@ type
 
   { TTestIPIDAddressSQLMapping }
 
-  TTestIPIDAddressSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDAddressSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -71,7 +71,7 @@ type
 
   { TTestIPIDCitySQLMapping }
 
-  TTestIPIDCitySQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDCitySQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -95,7 +95,7 @@ type
 
   { TTestIPIDPhoneSQLMapping }
 
-  TTestIPIDPhoneSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDPhoneSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -119,7 +119,7 @@ type
 
   { TTestIPIDLanguageSQLMapping }
 
-  TTestIPIDLanguageSQLMapping = class(TTestAbstractSQLMapping)
+  TTestIPIDLanguageSQLMapping = class(TTestAbstractSQLManualMapping)
   protected
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
@@ -137,25 +137,25 @@ const
   CSQLINSERTPHONE = 'INSERT INTO PHONE (ID,PERSON,NUMBER) VALUES (?,?,?)';
   CSQLINSERTLANG = 'INSERT INTO LANG (ID,NAME) VALUES (?,?)';
   CSQLINSERTPERSON_LANG = 'INSERT INTO PERSON_LANG (ID_PERSON,ID_LANG) VALUES (?,?)';
-  CSQLSELECTADDRESS = 'SELECT ID,STREET,ZIPCODE FROM ADDRESS WHERE ID';
-  CSQLSELECTCITY = 'SELECT ID,NAME FROM CITY WHERE ID';
-  CSQLSELECTPERSON = 'SELECT ID,NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ID';
+  CSQLSELECTADDRESS = 'SELECT ID,STREET,ZIPCODE FROM ADDRESS WHERE ';
+  CSQLSELECTCITY = 'SELECT ID,NAME FROM CITY WHERE ';
+  CSQLSELECTPERSON = 'SELECT ID,NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ';
   CSQLSELECTPERSON_PHONES = 'SELECT ID,NUMBER FROM PHONE WHERE PERSON=?';
   CSQLSELECTPERSON_LANG = 'SELECT L.ID,L.NAME FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON=?';
-  CSQLSELECTPERSON_FOR_DELETE = 'SELECT ID,ADDRESS FROM PERSON WHERE ID';
-  CSQLSELECTPERSON_PHONES_FOR_DELETE = 'SELECT ID FROM PHONE WHERE PERSON';
-  CSQLSELECTPERSON_LANG_FOR_DELETE = 'SELECT L.ID FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE PL.ID_PERSON';
+  CSQLSELECTPERSON_FOR_DELETE = 'SELECT ID,ADDRESS FROM PERSON WHERE ';
+  CSQLSELECTPERSON_PHONES_FOR_DELETE = 'SELECT ID FROM PHONE WHERE ';
+  CSQLSELECTPERSON_LANG_FOR_DELETE = 'SELECT L.ID FROM LANG L INNER JOIN PERSON_LANG PL ON PL.ID_LANG=L.ID WHERE ';
   CSQLUPDATEADDRESS = 'UPDATE ADDRESS SET STREET=?, ZIPCODE=? WHERE ID=?';
   CSQLUPDATECITY = 'UPDATE CITY SET NAME=? WHERE ID=?';
   CSQLUPDATEPERSON = 'UPDATE PERSON SET NAME=?, AGE=?, ADDRESS=?, CITY=? WHERE ID=?';
   CSQLUPDATEPHONE = 'UPDATE PHONE SET PERSON=?, NUMBER=? WHERE ID=?';
   CSQLUPDATELANG = 'UPDATE LANG SET NAME=? WHERE ID=?';
-  CSQLDELETEADDRESS = 'DELETE FROM ADDRESS WHERE ID';
-  CSQLDELETECITY = 'DELETE FROM CITY WHERE ID';
-  CSQLDELETEPHONE = 'DELETE FROM PHONE WHERE ID';
-  CSQLDELETEPERSON = 'DELETE FROM PERSON WHERE ID';
-  CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ID_PERSON';
-  CSQLDELETEPERSON_LANG_IDs = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=? AND ID_LANG';
+  CSQLDELETEADDRESS = 'DELETE FROM ADDRESS WHERE ';
+  CSQLDELETECITY = 'DELETE FROM CITY WHERE ';
+  CSQLDELETEPHONE = 'DELETE FROM PHONE WHERE ';
+  CSQLDELETEPERSON = 'DELETE FROM PERSON WHERE ';
+  CSQLDELETEPERSON_LANG = 'DELETE FROM PERSON_LANG WHERE ';
+  CSQLDELETEPERSON_LANG_IDs = 'DELETE FROM PERSON_LANG WHERE ID_PERSON=? AND ';
 
 implementation
 
@@ -175,7 +175,7 @@ function TTestIPIDPersonSQLMapping.GenerateDeleteExternalLinkIDsStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
-    Result := CSQLDELETEPERSON_LANG_IDs + BuildParams(AOIDCount)
+    Result := CSQLDELETEPERSON_LANG_IDs + BuildOIDCondition(['ID_LANG'], AOIDCount)
   else
     Result := inherited GenerateDeleteExternalLinkIDsStatement(AAttrMetadata, AOIDCount);
 end;
@@ -184,14 +184,14 @@ function TTestIPIDPersonSQLMapping.GenerateDeleteExternalLinksStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
-    Result := CSQLDELETEPERSON_LANG + BuildParams(AOIDCount)
+    Result := CSQLDELETEPERSON_LANG + BuildOIDCondition(['PERSON'], AOIDCount)
   else
     Result := inherited GenerateDeleteExternalLinksStatement(AAttrMetadata, AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEPERSON + BuildParams(AOIDCount);
+  Result := CSQLDELETEPERSON + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateInsertExternalLinksStatement(
@@ -211,16 +211,16 @@ end;
 function TTestIPIDPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTPERSON_FOR_DELETE + BuildParams(AOIDCount);
+  Result := CSQLSELECTPERSON_FOR_DELETE + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateSelectForDeleteStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
   if AAttrMetadata.CompositionClass = TTestIPIDPhone then
-    Result := CSQLSELECTPERSON_PHONES_FOR_DELETE + BuildParams(AOIDCount)
+    Result := CSQLSELECTPERSON_PHONES_FOR_DELETE + BuildOIDCondition(['PERSON'], AOIDCount)
   else if AAttrMetadata.CompositionClass = TTestIPIDLanguage then
-    Result := CSQLSELECTPERSON_LANG_FOR_DELETE + BuildParams(AOIDCount)
+    Result := CSQLSELECTPERSON_LANG_FOR_DELETE + BuildOIDCondition(['PL.ID_PERSON'], AOIDCount)
   else
     Result := inherited GenerateSelectForDeleteStatement(AAttrMetadata, AOIDCount);
 end;
@@ -229,7 +229,7 @@ function TTestIPIDPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCor
   const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTPERSON + BuildParams(AOIDCount);
+  Result := CSQLSELECTPERSON + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -311,7 +311,7 @@ end;
 
 function TTestIPIDAddressSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEADDRESS + BuildParams(AOIDCount);
+  Result := CSQLDELETEADDRESS + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDAddressSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -323,7 +323,7 @@ function TTestIPIDAddressSQLMapping.GenerateSelectStatement(const ABaseMap: TJCo
   const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTADDRESS + BuildParams(AOIDCount);
+  Result := CSQLSELECTADDRESS + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDAddressSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -358,7 +358,7 @@ end;
 
 function TTestIPIDCitySQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETECITY + BuildParams(AOIDCount);
+  Result := CSQLDELETECITY + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDCitySQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -370,7 +370,7 @@ function TTestIPIDCitySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreO
   const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
 begin
-  Result := CSQLSELECTCITY + BuildParams(AOIDCount);
+  Result := CSQLSELECTCITY + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDCitySQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -426,7 +426,7 @@ end;
 
 function TTestIPIDPhoneSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
 begin
-  Result := CSQLDELETEPHONE + BuildParams(AOIDCount);
+  Result := CSQLDELETEPHONE + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDPhoneSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
