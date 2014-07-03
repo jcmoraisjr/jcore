@@ -155,7 +155,7 @@ type
     class constructor Create;
     class destructor Destroy;
     class function DriverName: string; override;
-    function ReadInteger: Integer; override;
+    function ReadInt64: Int64; override;
     function ReadNull: Boolean; override;
     function ReadNullAndSkip: Boolean; override;
     function ReadString: string; override;
@@ -282,7 +282,7 @@ begin
     for VMappingClass in AMappingClassArray do
       VConfig.AddMappingClass(VMappingClass);
     VConfig.DriverName := ADriverClassArray[0].DriverName;
-    VConfig.Model.OIDClass := TJCoreOPFIntegerOID;
+    VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
     VConfig.Model.GeneratorStrategy := jgsCustom;
   except
     FreeAndNil(VConfig);
@@ -473,9 +473,9 @@ begin
   Result := 'TestSQLDriver';
 end;
 
-function TTestSQLDriver.ReadInteger: Integer;
+function TTestSQLDriver.ReadInt64: Int64;
 begin
-  Result := StrToInt(PopData);
+  Result := StrToInt64(PopData);
 end;
 
 function TTestSQLDriver.ReadNull: Boolean;

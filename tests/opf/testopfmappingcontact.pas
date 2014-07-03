@@ -243,7 +243,7 @@ var
 begin
   VPerson := AMapping.PID.Entity as TTestIPIDPerson;
   VPerson.Name := Driver.ReadString;
-  VPerson.Age := Driver.ReadInteger;
+  VPerson.Age := Driver.ReadInt64;
   VPerson.Address := ReadEntity(TTestIPIDAddress) as TTestIPIDAddress;
   VPerson.City := ReadEntity(TTestIPIDCity) as TTestIPIDCity;
   ReadCollection(AMapping.PID, 'Phones');
@@ -280,7 +280,7 @@ var
 begin
   VPerson := AMapping.PID.Entity as TTestProxyPerson;
   VPerson.Name := Driver.ReadString;
-  VPerson.Age := Driver.ReadInteger;
+  VPerson.Age := Driver.ReadInt64;
   Driver.ReadNull; // VPerson.Address := Mapper.RetrieveFromDriver(TTestIPIDAddress, Driver) as TTestIPIDAddress;
   ReadLazyEntity(AMapping.PID, 'City');
 end;

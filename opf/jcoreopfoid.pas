@@ -41,27 +41,27 @@ type
   TJCoreOPFOIDClass = class of TJCoreOPFOID;
   TJCoreOPFOIDArray = array of TJCoreOPFOID;
 
-  { TJCoreOPFIntegerOID }
+  { TJCoreOPFOIDInt64 }
 
-  TJCoreOPFIntegerOID = class(TJCoreOPFOID)
+  TJCoreOPFOIDInt64 = class(TJCoreOPFOID)
   private
-    FValue: Integer;
+    FValue: Int64;
   protected
     function GetAsString: string; override;
   public
-    constructor Create(const AValue: Integer);
+    constructor Create(const AValue: Int64);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
-    property Value: Integer read FValue;
+    property Value: Int64 read FValue;
   end;
 
-  { TJCoreOPFStringOID }
+  { TJCoreOPFOIDString }
 
-  TJCoreOPFStringOID = class(TJCoreOPFOID)
+  TJCoreOPFOIDString = class(TJCoreOPFOID)
   private
     FValue: string;
   protected
@@ -82,88 +82,88 @@ implementation
 uses
   sysutils;
 
-{ TJCoreOPFIntegerOID }
+{ TJCoreOPFOIDInt64 }
 
-function TJCoreOPFIntegerOID.GetAsString: string;
+function TJCoreOPFOIDInt64.GetAsString: string;
 begin
   Result := IntToStr(Value);
 end;
 
-constructor TJCoreOPFIntegerOID.Create(const AValue: Integer);
+constructor TJCoreOPFOIDInt64.Create(const AValue: Int64);
 begin
   inherited Create;
   FValue := AValue;
 end;
 
-constructor TJCoreOPFIntegerOID.CreateFromDriver(const ADriver: TJCoreOPFDriver);
+constructor TJCoreOPFOIDInt64.CreateFromDriver(const ADriver: TJCoreOPFDriver);
 begin
-  Create(ADriver.ReadInteger);
+  Create(ADriver.ReadInt64);
 end;
 
-constructor TJCoreOPFIntegerOID.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
+constructor TJCoreOPFOIDInt64.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
 begin
   Create(AGenerator.ReadInt64);
 end;
 
-constructor TJCoreOPFIntegerOID.CreateFromString(const AStringOID: string);
+constructor TJCoreOPFOIDInt64.CreateFromString(const AStringOID: string);
 begin
-  Create(StrToInt(AStringOID));
+  Create(StrToInt64(AStringOID));
 end;
 
-function TJCoreOPFIntegerOID.Equals(AOther: TObject): Boolean;
+function TJCoreOPFOIDInt64.Equals(AOther: TObject): Boolean;
 begin
-  Result := (AOther is TJCoreOPFIntegerOID) and (TJCoreOPFIntegerOID(AOther).Value = Value);
+  Result := (AOther is TJCoreOPFOIDInt64) and (TJCoreOPFOIDInt64(AOther).Value = Value);
 end;
 
-class procedure TJCoreOPFIntegerOID.WriteNull(const ADriver: TJCoreOPFDriver);
+class procedure TJCoreOPFOIDInt64.WriteNull(const ADriver: TJCoreOPFDriver);
 begin
   ADriver.WriteNull;
 end;
 
-procedure TJCoreOPFIntegerOID.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFOIDInt64.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
   ADriver.WriteInteger(Value);
 end;
 
-{ TJCoreOPFStringOID }
+{ TJCoreOPFOIDString }
 
-function TJCoreOPFStringOID.GetAsString: string;
+function TJCoreOPFOIDString.GetAsString: string;
 begin
   Result := Value;
 end;
 
-constructor TJCoreOPFStringOID.Create(const AValue: string);
+constructor TJCoreOPFOIDString.Create(const AValue: string);
 begin
   inherited Create;
   FValue := AValue;
 end;
 
-constructor TJCoreOPFStringOID.CreateFromDriver(const ADriver: TJCoreOPFDriver);
+constructor TJCoreOPFOIDString.CreateFromDriver(const ADriver: TJCoreOPFDriver);
 begin
   Create(ADriver.ReadString);
 end;
 
-constructor TJCoreOPFStringOID.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
+constructor TJCoreOPFOIDString.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
 begin
   Create(AGenerator.ReadString);
 end;
 
-constructor TJCoreOPFStringOID.CreateFromString(const AStringOID: string);
+constructor TJCoreOPFOIDString.CreateFromString(const AStringOID: string);
 begin
   Create(AStringOID);
 end;
 
-function TJCoreOPFStringOID.Equals(AOther: TObject): Boolean;
+function TJCoreOPFOIDString.Equals(AOther: TObject): Boolean;
 begin
-  Result := (AOther is TJCoreOPFStringOID) and (TJCoreOPFStringOID(AOther).Value = Value);
+  Result := (AOther is TJCoreOPFOIDString) and (TJCoreOPFOIDString(AOther).Value = Value);
 end;
 
-class procedure TJCoreOPFStringOID.WriteNull(const ADriver: TJCoreOPFDriver);
+class procedure TJCoreOPFOIDString.WriteNull(const ADriver: TJCoreOPFDriver);
 begin
   ADriver.WriteNull;
 end;
 
-procedure TJCoreOPFStringOID.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFOIDString.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
   ADriver.WriteString(Value);
 end;

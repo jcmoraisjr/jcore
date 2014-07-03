@@ -570,7 +570,7 @@ end;
 
 procedure TJCoreOPFADMType32.ReadFromDriver(const ADriver: TJCoreOPFDriver);
 begin
-  Value := ADriver.ReadInteger;
+  Value := ADriver.ReadInt64;
 end;
 
 procedure TJCoreOPFADMType32.WriteToDriver(const ADriver: TJCoreOPFDriver);
@@ -1613,7 +1613,7 @@ begin
   FADMClassList := TJCoreOPFADMClassList.Create;
   inherited Create;
   FMapMap := TJCoreOPFMapMap.Create;
-  FOIDClass := TJCoreOPFStringOID;
+  FOIDClass := TJCoreOPFOIDString;
   FGeneratorStrategy := jgsGUID;
 end;
 

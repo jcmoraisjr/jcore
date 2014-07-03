@@ -456,7 +456,7 @@ var
   VInvoiceItem: TInvoiceItem;
 begin
   VInvoiceItem := AMapping.PID.Entity as TInvoiceItem;
-  VInvoiceItem.Total := Driver.ReadInteger;
+  VInvoiceItem.Total := Driver.ReadInt64;
 end;
 
 procedure TInvoiceItemSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -504,7 +504,7 @@ var
   VItemProduct: TInvoiceItemProduct;
 begin
   VItemProduct := AMapping.PID.Entity as TInvoiceItemProduct;
-  VItemProduct.Qty := Driver.ReadInteger;
+  VItemProduct.Qty := Driver.ReadInt64;
   VItemProduct.Product := ReadEntity(TProduct) as TProduct;
 end;
 

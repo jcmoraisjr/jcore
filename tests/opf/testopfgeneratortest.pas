@@ -43,7 +43,7 @@ begin
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.GeneratorStrategy := jgsGUID;
-  VConfiguration.Model.OIDClass := TJCoreOPFStringOID;
+  VConfiguration.Model.OIDClass := TJCoreOPFOIDString;
   VSession := VConfiguration.CreateSession;
   VProduct := TProduct.Create;
   try

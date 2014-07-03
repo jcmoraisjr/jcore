@@ -73,7 +73,7 @@ type
     procedure WriteInteger(const AValue: Integer); virtual; abstract;
     procedure WriteNull; virtual; abstract;
     class function DriverName: string; virtual; abstract;
-    function ReadInteger: Integer; virtual; abstract;
+    function ReadInt64: Int64; virtual; abstract;
     function ReadNull: Boolean; virtual; abstract;
     function ReadNullAndSkip: Boolean; virtual; abstract;
     function ReadString: string; virtual; abstract;
