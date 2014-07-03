@@ -89,7 +89,6 @@ type
     FClassMap: TJCoreClassMap;
     FMetadataMap: TJCoreClassMetadataMap;
   protected
-    procedure AddClass(const AClassArray: array of TClass);
     function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
     function BuildClassMetadata(const AClass: TClass): TJCoreClassMetadata;
     function ClassMetadataClass: TJCoreClassMetadataClass; virtual;
@@ -103,6 +102,7 @@ type
   public
     constructor Create; virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
+    procedure AddClass(const AClassArray: array of TClass);
     function FindClass(const AClassName: string): TClass;
     function IsEntityClass(const AClass: TClass): Boolean;
   end;
@@ -188,14 +188,6 @@ begin
 end;
 
 { TJCoreModel }
-
-procedure TJCoreModel.AddClass(const AClassArray: array of TClass);
-var
-  VClass: TClass;
-begin
-  for VClass in AClassArray do
-    ClassMap.Add(VClass.ClassName, VClass);
-end;
 
 function TJCoreModel.AttributeMetadataClass: TJCoreAttrMetadataClass;
 begin
@@ -299,6 +291,14 @@ begin
   if VIndex = -1 then
     VIndex := FMetadataMap.Add(AClass, BuildClassMetadata(AClass));
   Result := FMetadataMap.Data[VIndex];
+end;
+
+procedure TJCoreModel.AddClass(const AClassArray: array of TClass);
+var
+  VClass: TClass;
+begin
+  for VClass in AClassArray do
+    ClassMap.Add(VClass.ClassName, VClass);
 end;
 
 function TJCoreModel.FindClass(const AClassName: string): TClass;

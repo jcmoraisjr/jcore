@@ -105,13 +105,6 @@ type
     constructor Create(const AClass1, AClass2: TClass);
   end;
 
-  { EJCoreOPFEntityClassNotFound }
-
-  EJCoreOPFEntityClassNotFound = class(EJCoreOPF)
-  public
-    constructor Create(const AClassName: string);
-  end;
-
   { EJCoreOPFCannotAssignOIDPersistent }
 
   EJCoreOPFCannotAssignOIDPersistent = class(EJCoreOPF)
@@ -145,6 +138,7 @@ type
   EJCoreOPFUnsupportedAttributeType = class(EJCoreOPF)
   public
     constructor Create(const AAttrTypeInfo: PTypeInfo);
+    constructor Create(const AClassName: string);
   end;
 
   { EJCoreOPFUnsupportedDMLOperation }
@@ -237,13 +231,6 @@ constructor EJCoreOPFAmbiguousInstanceClass.Create(const AClass1, AClass2: TClas
 begin
 end;
 
-{ EJCoreOPFEntityClassNotFound }
-
-constructor EJCoreOPFEntityClassNotFound.Create(const AClassName: string);
-begin
-  inherited Create(AClassName);
-end;
-
 { EJCoreOPFCannotAssignOIDPersistent }
 
 constructor EJCoreOPFCannotAssignOIDPersistent.Create;
@@ -275,6 +262,11 @@ constructor EJCoreOPFUnsupportedAttributeType.Create(
   const AAttrTypeInfo: PTypeInfo);
 begin
   inherited Create(AAttrTypeInfo^.Name);
+end;
+
+constructor EJCoreOPFUnsupportedAttributeType.Create(const AClassName: string);
+begin
+  inherited Create(AClassName);
 end;
 
 { EJCoreOPFUnsupportedDMLOperation }

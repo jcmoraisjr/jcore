@@ -1468,7 +1468,7 @@ begin
     VClassName := AClassName;
   Result := Model.FindClass(VClassName);
   if not Assigned(Result) then
-    raise EJCoreOPFEntityClassNotFound.Create(VClassName);
+    raise EJCoreOPFUnsupportedAttributeType.Create(VClassName);
 end;
 
 procedure TJCoreOPFAttrMetadata.SetCompositionMetadata(
