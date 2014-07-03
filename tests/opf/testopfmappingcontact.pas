@@ -262,7 +262,7 @@ var
 begin
   VPerson := AMapping.PID.Entity as TTestIPIDPerson;
   Driver.WriteString(VPerson.Name);
-  Driver.WriteInteger(VPerson.Age);
+  Driver.WriteInt32(VPerson.Age);
   WriteEntity(TTestIPIDAddress, VPerson.Address);
   WriteEntity(TTestIPIDCity, VPerson.City);
 end;
@@ -297,7 +297,7 @@ var
 begin
   VPerson := AMapping.PID.Entity as TTestProxyPerson;
   Driver.WriteString(VPerson.Name);
-  Driver.WriteInteger(VPerson.Age);
+  Driver.WriteInt32(VPerson.Age);
   Driver.WriteNull; // StoreEntity(TTestIPIDAddress, VPerson.Address, Driver);
   WriteEntity(TTestIPIDCity, VPerson.City);
 end;

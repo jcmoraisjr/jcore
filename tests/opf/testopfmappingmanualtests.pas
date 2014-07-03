@@ -131,9 +131,9 @@ begin
     VPerson.Age := 15;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString TheName',
-     'WriteInteger 15',
+     'WriteInt32 15',
      'WriteNull',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON]);
@@ -158,14 +158,14 @@ begin
     AssertNotNull('address pid', VPerson.Address._PID);
     AssertEquals('address oid', '2', VPerson.Address._PID.OID.AsString);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString name',
-     'WriteInteger 25',
-     'WriteInteger 2',
+     'WriteInt32 25',
+     'WriteInt64 2',
      'WriteString route 66',
      'WriteString ',
      'ExecSQL ' + CSQLINSERTADDRESS,
-     'WriteInteger 2',
+     'WriteInt64 2',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON]);
   finally
@@ -189,14 +189,14 @@ begin
     AssertNotNull('city pid', VPerson.City._PID);
     AssertEquals('city oid', '2', VPerson.City._PID.OID.AsString);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString SomeName',
-     'WriteInteger 25',
+     'WriteInt32 25',
      'WriteNull',
-     'WriteInteger 2',
+     'WriteInt64 2',
      'WriteString CityName',
      'ExecSQL ' + CSQLINSERTCITY,
-     'WriteInteger 2',
+     'WriteInt64 2',
      'ExecSQL ' + CSQLINSERTPERSON]);
   finally
     FreeAndNil(VPerson);
@@ -223,18 +223,18 @@ begin
     AssertNotNull('phone1 pid', VPerson.Phones[1]._PID);
     AssertEquals('phone1 oid', '3', VPerson.Phones[1]._PID.OID.AsString);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString thename',
-     'WriteInteger 10',
+     'WriteInt32 10',
      'WriteNull',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON,
-     'WriteInteger 2',
-     'WriteInteger 1',
+     'WriteInt64 2',
+     'WriteInt64 1',
      'WriteString 636-3626',
      'ExecSQL ' + CSQLINSERTPHONE,
-     'WriteInteger 3',
-     'WriteInteger 1',
+     'WriteInt64 3',
+     'WriteInt64 1',
      'WriteString 212-4321',
      'ExecSQL ' + CSQLINSERTPHONE]);
   finally
@@ -259,23 +259,23 @@ begin
     AssertNotNull('lang1 pid', VPerson.Languages[1]._PID);
     AssertEquals('lang1 oid', '3', VPerson.Languages[1]._PID.OID.AsString);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString SomeName',
-     'WriteInteger 0',
+     'WriteInt32 0',
      'WriteNull',
      'WriteNull',
      'ExecSQL ' + CSQLINSERTPERSON,
-     'WriteInteger 2',
+     'WriteInt64 2',
      'WriteString English',
      'ExecSQL ' + CSQLINSERTLANG,
-     'WriteInteger 3',
+     'WriteInt64 3',
      'WriteString Spanish',
      'ExecSQL ' + CSQLINSERTLANG,
-     'WriteInteger 1',
-     'WriteInteger 2',
+     'WriteInt64 1',
+     'WriteInt64 2',
      'ExecSQL ' + CSQLINSERTPERSON_LANG,
-     'WriteInteger 1',
-     'WriteInteger 3',
+     'WriteInt64 1',
+     'WriteInt64 3',
      'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
@@ -303,14 +303,14 @@ begin
       AssertNotNull('person pid', VPerson._PID);
       AssertEquals('person oid', '2', VPerson._PID.OID.AsString);
       AssertSQLDriverCommands([
-       'WriteInteger 2',
+       'WriteInt64 2',
        'WriteString name',
-       'WriteInteger 0',
+       'WriteInt32 0',
        'WriteNull',
        'WriteNull',
        'ExecSQL ' + CSQLINSERTPERSON,
-       'WriteInteger 2',
-       'WriteInteger 1',
+       'WriteInt64 2',
+       'WriteInt64 1',
        'ExecSQL ' + CSQLINSERTPERSON_LANG]);
     finally
       FreeAndNil(VLang);
@@ -335,7 +335,7 @@ begin
     Session.Store(VCity);
     AssertSQLDriverCommands([
      'WriteString OtherName',
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL ' + CSQLUPDATECITY]);
   finally
     FreeAndNil(VCity);
@@ -368,10 +368,10 @@ begin
     AssertEquals('person id', '3', VPerson._PID.OID.AsString);
     AssertSQLDriverCommands([
      'WriteString TheName',
-     'WriteInteger 18',
+     'WriteInt32 18',
      'WriteNull',
-     'WriteInteger 2',
-     'WriteInteger 3',
+     'WriteInt64 2',
+     'WriteInt64 3',
      'ExecSQL ' + CSQLUPDATEPERSON]);
   finally
     FreeAndNil(VCity2);
@@ -396,9 +396,9 @@ begin
     VPerson.Phones[1].Number := '987';
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString 987',
-     'WriteInteger 3',
+     'WriteInt64 3',
      'ExecSQL ' + CSQLUPDATEPHONE]);
   finally
     FreeAndNil(VPerson);
@@ -421,7 +421,7 @@ begin
     VPerson.Phones.Delete(1);
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 3',
+     'WriteInt64 3',
      'ExecSQL ' + CSQLDELETEPHONE + 'ID=?']);
   finally
     FreeAndNil(VPerson);
@@ -441,11 +441,11 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 3',
+     'WriteInt64 3',
      'WriteString spanish',
      'ExecSQL ' + CSQLINSERTLANG,
-     'WriteInteger 1',
-     'WriteInteger 3',
+     'WriteInt64 1',
+     'WriteInt64 3',
      'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
@@ -466,8 +466,8 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
-     'WriteInteger 2',
+     'WriteInt64 1',
+     'WriteInt64 2',
      'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + 'ID_LANG=?']);
   finally
     FreeAndNil(VPerson);
@@ -489,14 +489,14 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
-     'WriteInteger 2',
+     'WriteInt64 1',
+     'WriteInt64 2',
      'ExecSQL ' + CSQLDELETEPERSON_LANG_IDs + 'ID_LANG=?',
-     'WriteInteger 4',
+     'WriteInt64 4',
      'WriteString Spanish',
      'ExecSQL ' + CSQLINSERTLANG,
-     'WriteInteger 1',
-     'WriteInteger 4',
+     'WriteInt64 1',
+     'WriteInt64 4',
      'ExecSQL ' + CSQLINSERTPERSON_LANG]);
   finally
     FreeAndNil(VPerson);
@@ -517,10 +517,10 @@ begin
     Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteString anothername',
-     'WriteInteger 0',
+     'WriteInt32 0',
      'WriteNull',
      'WriteNull',
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL ' + CSQLUPDATEPERSON]);
   finally
     FreeAndNil(VPerson);
@@ -563,7 +563,7 @@ begin
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertSQLDriverCommands([
-     'WriteInteger 15',
+     'WriteInt64 15',
      {1}'ExecSQL ' + CSQLSELECTCITY + 'ID=?']);
     AssertNotNull(VCity);
     AssertNotNull(VCity._PID);
@@ -620,15 +620,15 @@ begin
     AssertEquals('city oid', '11', VCity._PID.OID.AsString);
     AssertEquals('city name', 'thecity', VCity.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 2',
+     'WriteInt64 2',
      {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
-     'WriteInteger 18',
+     'WriteInt64 18',
      {2}'ExecSQL ' + CSQLSELECTADDRESS + 'ID=?',
-     'WriteInteger 11',
+     'WriteInt64 11',
      {3}'ExecSQL ' + CSQLSELECTCITY + 'ID=?',
-     'WriteInteger 2',
+     'WriteInt64 2',
      {4}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 2',
+     'WriteInt64 2',
      {5}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -671,13 +671,13 @@ begin
     AssertEquals('city oid', '5', VCity._PID.OID.AsString);
     AssertEquals('city name', 'nameofcity', VCity.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 8',
+     'WriteInt64 8',
      {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
-     'WriteInteger 5',
+     'WriteInt64 5',
      {2}'ExecSQL ' + CSQLSELECTCITY + 'ID=?',
-     'WriteInteger 8',
+     'WriteInt64 8',
      {3}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 8',
+     'WriteInt64 8',
      {4}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -711,11 +711,11 @@ begin
     AssertEquals(22, VPerson.Age);
     AssertNull(VPerson.City);
     AssertSQLDriverCommands([
-     'WriteInteger 18',
+     'WriteInt64 18',
      {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
-     'WriteInteger 18',
+     'WriteInt64 18',
      {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 18',
+     'WriteInt64 18',
      {3}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertEquals(0, TTestSQLDriver.Data.Count);
     AssertEquals(0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -760,11 +760,11 @@ begin
     AssertEquals('phone1 oid', '12', VPerson.Phones[1]._PID.OID.AsString);
     AssertEquals('phone1 number', '555', VPerson.Phones[1].Number);
     AssertSQLDriverCommands([
-     'WriteInteger 9',
+     'WriteInt64 9',
      {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
-     'WriteInteger 9',
+     'WriteInt64 9',
      {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 9',
+     'WriteInt64 9',
      {3}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertEquals('data count', 0, TTestSQLDriver.Data.Count);
     AssertEquals('exprs count', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -810,11 +810,11 @@ begin
     AssertEquals('lang1 oid', '8', VPerson.Languages[1]._PID.OID.AsString);
     AssertEquals('lang1 name', 'german', VPerson.Languages[1].Name);
     AssertSQLDriverCommands([
-     'WriteInteger 5',
+     'WriteInt64 5',
      {1}'ExecSQL ' + CSQLSELECTPERSON + 'ID=?',
-     'WriteInteger 5',
+     'WriteInt64 5',
      {2}'ExecSQL ' + CSQLSELECTPERSON_PHONES,
-     'WriteInteger 5',
+     'WriteInt64 5',
      {3}'ExecSQL ' + CSQLSELECTPERSON_LANG]);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -829,7 +829,7 @@ procedure TTestOPFDeleteOneManualMappingPlainTests.Single;
 begin
   Session.Dispose(TTestIPIDCity, ['5']);
   AssertSQLDriverCommands([
-   'WriteInteger 5',
+   'WriteInt64 5',
    'ExecSQL ' + CSQLDELETECITY + 'ID=?']);
 end;
 
@@ -848,15 +848,15 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 12',
+   'WriteInt64 12',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
-   'WriteInteger 12',
+   'WriteInt64 12',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
-   'WriteInteger 12',
+   'WriteInt64 12',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
-   'WriteInteger 4',
+   'WriteInt64 4',
    'ExecSQL ' + CSQLDELETEADDRESS + 'ID=?',
-   'WriteInteger 12',
+   'WriteInt64 12',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
@@ -875,13 +875,13 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 3',
+   'WriteInt64 3',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
-   'WriteInteger 3',
+   'WriteInt64 3',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
-   'WriteInteger 3',
+   'WriteInt64 3',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
-   'WriteInteger 3',
+   'WriteInt64 3',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
@@ -903,15 +903,15 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 7',
+   'WriteInt64 7',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
-   'WriteInteger 15',
+   'WriteInt64 15',
    'ExecSQL ' + CSQLDELETEPHONE + 'ID=?',
-   'WriteInteger 7',
+   'WriteInt64 7',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
-   'WriteInteger 7',
+   'WriteInt64 7',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
-   'WriteInteger 7',
+   'WriteInt64 7',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
@@ -930,13 +930,13 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 6',
+   'WriteInt64 6',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
-   'WriteInteger 6',
+   'WriteInt64 6',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
-   'WriteInteger 6',
+   'WriteInt64 6',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
-   'WriteInteger 6',
+   'WriteInt64 6',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
@@ -959,16 +959,16 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 2',
+   'WriteInt64 2',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
-   'WriteInteger 17',
-   'WriteInteger 18',
+   'WriteInt64 17',
+   'WriteInt64 18',
    'ExecSQL ' + CSQLDELETEPHONE + 'ID IN (?,?)',
-   'WriteInteger 2',
+   'WriteInt64 2',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
-   'WriteInteger 2',
+   'WriteInt64 2',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
-   'WriteInteger 2',
+   'WriteInt64 2',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
@@ -987,13 +987,13 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 5',
+   'WriteInt64 5',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON=?',
-   'WriteInteger 5',
+   'WriteInt64 5',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON=?',
-   'WriteInteger 5',
+   'WriteInt64 5',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID=?',
-   'WriteInteger 5',
+   'WriteInt64 5',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID=?']);
 end;
 
@@ -1003,8 +1003,8 @@ procedure TTestOPFDeleteArrayManualMappingPlainTests.Single;
 begin
   Session.Dispose(TTestIPIDCity, ['13', '22']);
   AssertSQLDriverCommands([
-   'WriteInteger 13',
-   'WriteInteger 22',
+   'WriteInt64 13',
+   'WriteInt64 22',
    'ExecSQL ' + CSQLDELETECITY + 'ID IN (?,?)']);
 end;
 
@@ -1025,24 +1025,24 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 9',
-   'WriteInteger 11',
-   'WriteInteger 16',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   'WriteInt64 16',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?,?)',
-   'WriteInteger 9',
-   'WriteInteger 11',
-   'WriteInteger 16',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   'WriteInt64 16',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?,?)',
-   'WriteInteger 9',
-   'WriteInteger 11',
-   'WriteInteger 16',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   'WriteInt64 16',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?,?)',
-   'WriteInteger 10',
-   'WriteInteger 13',
+   'WriteInt64 10',
+   'WriteInt64 13',
    'ExecSQL ' + CSQLDELETEADDRESS + 'ID IN (?,?)',
-   'WriteInteger 9',
-   'WriteInteger 11',
-   'WriteInteger 16',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   'WriteInt64 16',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?,?)']);
 end;
 
@@ -1063,21 +1063,21 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 21',
-   'WriteInteger 22',
-   'WriteInteger 23',
+   'WriteInt64 21',
+   'WriteInt64 22',
+   'WriteInt64 23',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?,?)',
-   'WriteInteger 21',
-   'WriteInteger 22',
-   'WriteInteger 23',
+   'WriteInt64 21',
+   'WriteInt64 22',
+   'WriteInt64 23',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?,?)',
-   'WriteInteger 21',
-   'WriteInteger 22',
-   'WriteInteger 23',
+   'WriteInt64 21',
+   'WriteInt64 22',
+   'WriteInt64 23',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?,?)',
-   'WriteInteger 21',
-   'WriteInteger 22',
-   'WriteInteger 23',
+   'WriteInt64 21',
+   'WriteInt64 22',
+   'WriteInt64 23',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?,?)']);
 end;
 
@@ -1102,24 +1102,24 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 10',
-   'WriteInteger 12',
-   'WriteInteger 14',
+   'WriteInt64 10',
+   'WriteInt64 12',
+   'WriteInt64 14',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?,?)',
-   'WriteInteger 11',
-   'WriteInteger 13',
+   'WriteInt64 11',
+   'WriteInt64 13',
    'ExecSQL ' + CSQLDELETEPHONE + 'ID IN (?,?)',
-   'WriteInteger 10',
-   'WriteInteger 12',
-   'WriteInteger 14',
+   'WriteInt64 10',
+   'WriteInt64 12',
+   'WriteInt64 14',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?,?)',
-   'WriteInteger 10',
-   'WriteInteger 12',
-   'WriteInteger 14',
+   'WriteInt64 10',
+   'WriteInt64 12',
+   'WriteInt64 14',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?,?)',
-   'WriteInteger 10',
-   'WriteInteger 12',
-   'WriteInteger 14',
+   'WriteInt64 10',
+   'WriteInt64 12',
+   'WriteInt64 14',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?,?)']);
 end;
 
@@ -1139,17 +1139,17 @@ begin
   AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
   AssertSQLDriverCommands([
-   'WriteInteger 15',
-   'WriteInteger 18',
+   'WriteInt64 15',
+   'WriteInt64 18',
    'ExecSQL ' + CSQLSELECTPERSON_PHONES_FOR_DELETE + 'PERSON IN (?,?)',
-   'WriteInteger 15',
-   'WriteInteger 18',
+   'WriteInt64 15',
+   'WriteInt64 18',
    'ExecSQL ' + CSQLDELETEPERSON_LANG + 'PERSON IN (?,?)',
-   'WriteInteger 15',
-   'WriteInteger 18',
+   'WriteInt64 15',
+   'WriteInt64 18',
    'ExecSQL ' + CSQLSELECTPERSON_FOR_DELETE + 'ID IN (?,?)',
-   'WriteInteger 15',
-   'WriteInteger 18',
+   'WriteInt64 15',
+   'WriteInt64 18',
    'ExecSQL ' + CSQLDELETEPERSON + 'ID IN (?,?)']);
 end;
 
@@ -1165,10 +1165,10 @@ begin
     VPerson.Nick := 'J';
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString Jack',
      'ExecSQL ' + CSQLINSERTINVOICECLIENT,
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString J',
      'ExecSQL ' + CSQLINSERTINVOICEPERSON]);
   finally
@@ -1191,14 +1191,14 @@ begin
     VInvoice.Date := '01/01';
     Session.Store(VInvoice);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
-     'WriteInteger 2',
+     'WriteInt64 1',
+     'WriteInt64 2',
      'WriteString aclient',
      'ExecSQL ' + CSQLINSERTINVOICECLIENT,
-     'WriteInteger 2',
+     'WriteInt64 2',
      'WriteString cli',
      'ExecSQL ' + CSQLINSERTINVOICEPERSON,
-     'WriteInteger 2',
+     'WriteInt64 2',
      'WriteString 01/01',
      'ExecSQL ' + CSQLINSERTINVOICEINVOICE]);
   finally
@@ -1237,21 +1237,21 @@ begin
       TTestSQLDriver.Commands.Clear;
       Session.Store(VInvoice);  // ID 2
       AssertSQLDriverCommands([
-       'WriteInteger 2',
+       'WriteInt64 2',
        'WriteNull',
        'WriteString 05/01',
        'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)',
-       'WriteInteger 3',
-       'WriteInteger 28',
+       'WriteInt64 3',
+       'WriteInt32 28',
        'ExecSQL INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)',
-       'WriteInteger 3',
-       'WriteInteger 15',
-       'WriteInteger 1',
+       'WriteInt64 3',
+       'WriteInt32 15',
+       'WriteInt64 1',
        'ExecSQL INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)',
-       'WriteInteger 4',
-       'WriteInteger 90',
+       'WriteInt64 4',
+       'WriteInt32 90',
        'ExecSQL INSERT INTO INVOICEITEM (ID,TOTAL) VALUES (?,?)',
-       'WriteInteger 4',
+       'WriteInt64 4',
        'WriteString srv description',
        'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
     finally
@@ -1278,14 +1278,14 @@ begin
     Session.Store(VCompany);
     AssertSQLDriverCommands([
      'WriteString comp corp',
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL UPDATE CLIENT SET NAME=? WHERE ID=?']);
     TTestSQLDriver.Commands.Clear;
     VCompany.ContactName := 'wil';
     Session.Store(VCompany);
     AssertSQLDriverCommands([
      'WriteString wil',
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL UPDATE COMPANY SET CONTACTNAME=? WHERE ID=?']);
   finally
     FreeAndNil(VCompany);
@@ -1310,7 +1310,7 @@ begin
     AssertEquals('company name', 'company corp', VCompany.Name);
     AssertEquals('company contact', 'jack', VCompany.ContactName);
     AssertSQLDriverCommands([
-     'WriteInteger 10',
+     'WriteInt64 10',
      {1}'ExecSQL SELECT T.ID,T_1.NAME,T.CONTACTNAME FROM COMPANY T INNER JOIN CLIENT T_1 ON T.ID=T_1.ID WHERE T.ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1343,9 +1343,9 @@ begin
     AssertEquals('person name', 'johnson', VPerson.Name);
     AssertEquals('person nick', 'joe', VPerson.Nick);
     AssertSQLDriverCommands([
-     'WriteInteger 7',
+     'WriteInt64 7',
      {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
-     'WriteInteger 7',
+     'WriteInt64 7',
      {2}'ExecSQL SELECT ID,NICK FROM PERSON WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1378,9 +1378,9 @@ begin
     AssertEquals('company name', 'acorp', VCompany.Name);
     AssertEquals('company contact name', 'mike', VCompany.ContactName);
     AssertSQLDriverCommands([
-     'WriteInteger 91',
+     'WriteInt64 91',
      {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
-     'WriteInteger 91',
+     'WriteInt64 91',
      {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1406,7 +1406,7 @@ begin
     AssertTrue('client is tclient', VClient.ClassType = TClient);
     AssertEquals('client name', 'someone', VClient.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 3',
+     'WriteInt64 3',
      {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1446,11 +1446,11 @@ begin
     AssertEquals('company name', 'thecorp', VCompany.Name);
     AssertEquals('company contact', 'corp contact', VCompany.ContactName);
     AssertSQLDriverCommands([
-     'WriteInteger 3',
+     'WriteInt64 3',
      {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
-     'WriteInteger 18',
+     'WriteInt64 18',
      {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
-     'WriteInteger 18',
+     'WriteInt64 18',
      {3}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1500,13 +1500,13 @@ begin
     AssertNotNull('product not null', VProduct);
     AssertEquals('product name', 'prod', VProduct.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 8',
+     'WriteInt64 8',
      {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
-     'WriteInteger 8',
+     'WriteInt64 8',
      {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE T.ID=?',
-     'WriteInteger 12',
+     'WriteInt64 12',
      {3}'ExecSQL SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID=?',
-     'WriteInteger 55',
+     'WriteInt64 55',
      {4}'ExecSQL SELECT ID,NAME FROM PRODUCT WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1590,15 +1590,15 @@ begin
     AssertEquals('item3 total', 99, VItem3.Total);
     AssertEquals('item3 qty', 1, VItem3.Qty);
     AssertSQLDriverCommands([
-     'WriteInteger 18',
+     'WriteInt64 18',
      {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
-     'WriteInteger 18',
+     'WriteInt64 18',
      {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.TOTAL FROM INVOICEITEM T LEFT OUTER JOIN INVOICEITEMPRODUCT T_1 ON T.ID=T_1.ID LEFT OUTER JOIN INVOICEITEMSERVICE T_2 ON T.ID=T_2.ID WHERE T.ID=?',
-     'WriteInteger 12',
-     'WriteInteger 17',
+     'WriteInt64 12',
+     'WriteInt64 17',
      {3}'ExecSQL SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID IN (?,?)',
-     'WriteInteger 13',
-     'WriteInteger 16',
+     'WriteInt64 13',
+     'WriteInt64 16',
      {4}'ExecSQL SELECT ID,DESCRIPTION FROM INVOICEITEMSERVICE WHERE ID IN (?,?)']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -1620,9 +1620,9 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Dispose(VCompany);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL DELETE FROM CLIENT WHERE ID=?',
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL DELETE FROM COMPANY WHERE ID=?']);
   finally
     FreeAndNil(VCompany);
@@ -1633,11 +1633,11 @@ procedure TTestOPFDeleteManualMappingInheritanceTests.Single2;
 begin
   Session.Dispose(TPerson, ['5', '6']);
   AssertSQLDriverCommands([
-   'WriteInteger 5',
-   'WriteInteger 6',
+   'WriteInt64 5',
+   'WriteInt64 6',
    'ExecSQL DELETE FROM CLIENT WHERE ID IN (?,?)',
-   'WriteInteger 5',
-   'WriteInteger 6',
+   'WriteInt64 5',
+   'WriteInt64 6',
    'ExecSQL DELETE FROM PERSON WHERE ID IN (?,?)']);
 end;
 

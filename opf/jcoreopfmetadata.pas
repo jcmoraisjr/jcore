@@ -116,15 +116,19 @@ type
   TJCoreOPFADMType64 = class(TJCoreOPFADMSimple)
   private
     FCache: Int64;
-    function GetGetter: Int64;
     function GetValue: Int64;
+    procedure SetValue(const AValue: Int64);
+    function UseGetter: Int64;
+    procedure UseSetter(const AValue: Int64);
   protected
     procedure InternalGetter; override;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
-    property Value: Int64 read GetValue;
+    property Value: Int64 read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
   end;
 
   { TJCoreOPFADMFloat }
@@ -570,20 +574,15 @@ end;
 
 procedure TJCoreOPFADMType32.ReadFromDriver(const ADriver: TJCoreOPFDriver);
 begin
-  Value := ADriver.ReadInt64;
+  Value := ADriver.ReadInt32;
 end;
 
 procedure TJCoreOPFADMType32.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
-  ADriver.WriteInteger(Value);
+  ADriver.WriteInt32(Value);
 end;
 
 { TJCoreOPFADMType64 }
-
-function TJCoreOPFADMType64.GetGetter: Int64;
-begin
-  Result := GetInt64Prop(PID.Entity, AttrPropInfo);
-end;
 
 function TJCoreOPFADMType64.GetValue: Int64;
 begin
@@ -595,12 +594,27 @@ begin
       else raise EJCoreOPFUnsupportedAttributeType.Create(AttrPropInfo^.PropType);
     end;
   end else
-    Result := GetGetter;
+    Result := UseGetter;
+end;
+
+procedure TJCoreOPFADMType64.SetValue(const AValue: Int64);
+begin
+  UseSetter(AValue);
+end;
+
+function TJCoreOPFADMType64.UseGetter: Int64;
+begin
+  Result := GetInt64Prop(PID.Entity, AttrPropInfo);
+end;
+
+procedure TJCoreOPFADMType64.UseSetter(const AValue: Int64);
+begin
+  SetInt64Prop(PID.Entity, AttrPropInfo, AValue);
 end;
 
 procedure TJCoreOPFADMType64.InternalGetter;
 begin
-  GetGetter;
+  UseGetter;
 end;
 
 function TJCoreOPFADMType64.InternalIsDirty: Boolean;
@@ -617,6 +631,16 @@ class function TJCoreOPFADMType64.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInt64, tkQWord];
+end;
+
+procedure TJCoreOPFADMType64.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  Value := ADriver.ReadInt64;
+end;
+
+procedure TJCoreOPFADMType64.WriteToDriver(const ADriver: TJCoreOPFDriver);
+begin
+  ADriver.WriteInt64(Value);
 end;
 
 { TJCoreOPFADMFloat }

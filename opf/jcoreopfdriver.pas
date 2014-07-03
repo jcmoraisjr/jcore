@@ -70,9 +70,11 @@ type
   public
     constructor Create; virtual;
     procedure WriteString(const AValue: string); virtual; abstract;
-    procedure WriteInteger(const AValue: Integer); virtual; abstract;
+    procedure WriteInt32(const AValue: Integer); virtual; abstract;
+    procedure WriteInt64(const AValue: Int64); virtual; abstract;
     procedure WriteNull; virtual; abstract;
     class function DriverName: string; virtual; abstract;
+    function ReadInt32: Integer; virtual; abstract;
     function ReadInt64: Int64; virtual; abstract;
     function ReadNull: Boolean; virtual; abstract;
     function ReadNullAndSkip: Boolean; virtual; abstract;

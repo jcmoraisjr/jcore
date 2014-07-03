@@ -155,11 +155,13 @@ type
     class constructor Create;
     class destructor Destroy;
     class function DriverName: string; override;
+    function ReadInt32: Integer; override;
     function ReadInt64: Int64; override;
     function ReadNull: Boolean; override;
     function ReadNullAndSkip: Boolean; override;
     function ReadString: string; override;
-    procedure WriteInteger(const AValue: Integer); override;
+    procedure WriteInt32(const AValue: Integer); override;
+    procedure WriteInt64(const AValue: Int64); override;
     procedure WriteString(const AValue: string); override;
     procedure WriteNull; override;
     class property Commands: TStringList read FCommands;
@@ -473,6 +475,11 @@ begin
   Result := 'TestSQLDriver';
 end;
 
+function TTestSQLDriver.ReadInt32: Integer;
+begin
+  Result := StrToInt(PopData);
+end;
+
 function TTestSQLDriver.ReadInt64: Int64;
 begin
   Result := StrToInt64(PopData);
@@ -495,9 +502,14 @@ begin
   Result := PopData;
 end;
 
-procedure TTestSQLDriver.WriteInteger(const AValue: Integer);
+procedure TTestSQLDriver.WriteInt32(const AValue: Integer);
 begin
-  AddCommand('WriteInteger ' + IntToStr(AValue));
+  AddCommand('WriteInt32 ' + IntToStr(AValue));
+end;
+
+procedure TTestSQLDriver.WriteInt64(const AValue: Int64);
+begin
+  AddCommand('WriteInt64 ' + IntToStr(AValue));
 end;
 
 procedure TTestSQLDriver.WriteString(const AValue: string);

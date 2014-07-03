@@ -464,7 +464,7 @@ var
   VInvoiceItem: TInvoiceItem;
 begin
   VInvoiceItem := AMapping.PID.Entity as TInvoiceItem;
-  Driver.WriteInteger(VInvoiceItem.Total);
+  Driver.WriteInt32(VInvoiceItem.Total);
 end;
 
 class function TInvoiceItemSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;
@@ -513,7 +513,7 @@ var
   VItemProduct: TInvoiceItemProduct;
 begin
   VItemProduct := AMapping.PID.Entity as TInvoiceItemProduct;
-  Driver.WriteInteger(VItemProduct.Qty);
+  Driver.WriteInt32(VItemProduct.Qty);
   WriteEntity(TProduct, VItemProduct.Product);
 end;
 

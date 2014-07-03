@@ -122,7 +122,7 @@ end;
 
 procedure TJCoreOPFOIDInt64.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
-  ADriver.WriteInteger(Value);
+  ADriver.WriteInt64(Value);
 end;
 
 { TJCoreOPFOIDString }

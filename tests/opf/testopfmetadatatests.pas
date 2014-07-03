@@ -139,7 +139,7 @@ begin
     AssertEquals('person oid', '2', VPerson._Proxy.OID.AsString);
     AssertEquals('person name', 'somename', VPerson.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 2',
+     'WriteInt64 2',
      'ExecSQL ' + CSQLSELECTPERSON + 'ID=?']);
 
     TTestSQLDriver.Data.Add('4');
@@ -154,7 +154,7 @@ begin
     AssertEquals('city oid', '4', VCity._Proxy.OID.AsString);
     AssertEquals('city name', 'acity', VCity.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 4',
+     'WriteInt64 4',
      'ExecSQL ' + CSQLSELECTCITY + 'ID=?']);
   finally
     FreeAndNil(VPerson);
@@ -181,7 +181,7 @@ begin
     AssertEquals('person oid', '21', VPerson._Proxy.OID.AsString);
     AssertEquals('person name', 'name', VPerson.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 21',
+     'WriteInt64 21',
      'ExecSQL ' + CSQLSELECTPERSON + 'ID=?']);
 
     TTestSQLDriver.Data.Add('18');
@@ -207,7 +207,7 @@ begin
     AssertEquals('phone2 oid', '20', VPhones[2]._Proxy.OID.AsString);
     AssertEquals('phone2 number', '9989-3399', VPhones[2].Number);
     AssertSQLDriverCommands([
-     'WriteInteger 21',
+     'WriteInt64 21',
      'ExecSQL ' + CSQLSELECTPERSON_PHONES]);
   finally
     FreeAndNil(VPerson);

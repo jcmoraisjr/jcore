@@ -56,7 +56,7 @@ begin
     VProduct.Name := 'aprod';
     Session.Store(VProduct);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'WriteString aprod',
      'ExecSQL INSERT INTO PRODUCT (ID,NAME) VALUES (?,?)']);
   finally
@@ -79,7 +79,7 @@ begin
     AssertEquals('prod id', '6', VProduct._proxy.OID.AsString);
     AssertEquals('prod name', 'theprod', VProduct.Name);
     AssertSQLDriverCommands([
-     'WriteInteger 6',
+     'WriteInt64 6',
      {1}'ExecSQL SELECT ID,NAME FROM PRODUCT WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
@@ -103,7 +103,7 @@ begin
     Session.Store(VProduct);
     AssertSQLDriverCommands([
      'WriteString newprod',
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL UPDATE PRODUCT SET NAME=? WHERE ID=?']);
   finally
     FreeAndNil(VProduct);
@@ -123,7 +123,7 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Dispose(VProduct);
     AssertSQLDriverCommands([
-     'WriteInteger 1',
+     'WriteInt64 1',
      'ExecSQL DELETE FROM PRODUCT WHERE ID=?']);
   finally
     FreeAndNil(VProduct);
@@ -134,7 +134,7 @@ procedure TTestOPFDeleteAutoMappingTests.SingleFromClass;
 begin
   Session.Dispose(TProduct, ['7']);
   AssertSQLDriverCommands([
-   'WriteInteger 7',
+   'WriteInt64 7',
    'ExecSQL DELETE FROM PRODUCT WHERE ID=?']);
 end;
 
