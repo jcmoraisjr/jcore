@@ -19,7 +19,8 @@ interface
 uses
   JCoreClasses,
   JCoreEntity,
-  JCoreOPFDriver;
+  JCoreOPFDriver,
+  JCoreOPFGenerator;
 
 type
 
@@ -30,6 +31,7 @@ type
     function GetAsString: string; virtual; abstract;
   public
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); virtual; abstract;
     constructor CreateFromString(const AStringOID: string); virtual; abstract;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); virtual; abstract;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
@@ -49,6 +51,7 @@ type
   public
     constructor Create(const AValue: Integer);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
@@ -66,6 +69,7 @@ type
   public
     constructor Create(const AValue: string);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
@@ -94,6 +98,11 @@ end;
 constructor TJCoreOPFIntegerOID.CreateFromDriver(const ADriver: TJCoreOPFDriver);
 begin
   Create(ADriver.ReadInteger);
+end;
+
+constructor TJCoreOPFIntegerOID.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
+begin
+  Create(AGenerator.ReadInt64);
 end;
 
 constructor TJCoreOPFIntegerOID.CreateFromString(const AStringOID: string);
@@ -132,6 +141,11 @@ end;
 constructor TJCoreOPFStringOID.CreateFromDriver(const ADriver: TJCoreOPFDriver);
 begin
   Create(ADriver.ReadString);
+end;
+
+constructor TJCoreOPFStringOID.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
+begin
+  Create(AGenerator.ReadString);
 end;
 
 constructor TJCoreOPFStringOID.CreateFromString(const AStringOID: string);

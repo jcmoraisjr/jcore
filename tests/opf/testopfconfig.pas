@@ -12,8 +12,8 @@ uses
   JCoreLogger,
   JCoreEntity,
   JCoreOPFDriver,
+  JCoreOPFGenerator,
   JCoreOPFMetadata,
-  JCoreOPFOID,
   JCoreOPFMapping,
   JCoreOPFMappingSQL,
   JCoreOPFSession,
@@ -72,21 +72,9 @@ type
     property Session: ITestOPFSession read FSession;
   end;
 
-  { TTestOPFManualMappingTestCase }
+  TTestOPFManualMappingTestCase = class(TTestOPFAbstractTestCase);
 
-  TTestOPFManualMappingTestCase = class(TTestOPFAbstractTestCase)
-  protected
-    procedure SetUp; override;
-    procedure TearDown; override;
-  end;
-
-  { TTestOPFAutoMappingTestCase }
-
-  TTestOPFAutoMappingTestCase = class(TTestOPFAbstractTestCase)
-  protected
-    procedure SetUp; override;
-    procedure TearDown; override;
-  end;
+  TTestOPFAutoMappingTestCase = class(TTestOPFAbstractTestCase);
 
   { TTestOPFIPIDContactTestCase }
 
@@ -120,6 +108,19 @@ type
     function InternalMappingClassArray: TTestOPFMappingClassArray; override;
   end;
 
+  { TTestIntegerGenerator }
+
+  TTestIntegerGenerator = class(TInterfacedObject, IJCoreOPFGenerator)
+  private
+    class var FCurrentOID: Integer;
+  public
+    procedure GenerateOIDs(const AOIDCount: Integer);
+    function ReadInt64: Int64;
+    function ReadString: string;
+    class property CurrentOID: Integer read FCurrentOID;
+    class procedure ClearOID;
+  end;
+
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
@@ -131,7 +132,7 @@ type
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
-    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
+    function CreateCustomGenerator: IJCoreOPFGenerator; override;
     procedure InternalStore(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
@@ -169,30 +170,21 @@ type
   { TTestAbstractSQLManualMapping }
 
   TTestAbstractSQLManualMapping = class(TJCoreOPFSQLManualMapping)
-  private
-    class var FCurrentOID: Integer;
   protected
-    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
-  public
-    class property CurrentOID: Integer read FCurrentOID;
-    class procedure ClearOID;
+    function CreateCustomGenerator: IJCoreOPFGenerator; override;
   end;
 
   { TTestSQLAutoMapping }
 
   TTestSQLAutoMapping = class(TJCoreOPFSQLAutoMapping)
-  private
-    class var FCurrentOID: Integer;
   protected
-    function InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray; override;
-  public
-    class property CurrentOID: Integer read FCurrentOID;
-    class procedure ClearOID;
+    function CreateCustomGenerator: IJCoreOPFGenerator; override;
   end;
 
 implementation
 
 uses
+  JCoreOPFOID,
   TestOPFModelRegistry,
   TestOPFMappingContact,
   TestOPFMappingInvoice;
@@ -279,20 +271,24 @@ end;
 function TTestOPFAbstractTestCase.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
   const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
 var
+  VConfig: TTestOPFConfig;
   VDriverClass: TJCoreOPFDriverClass;
   VMappingClass: TJCoreOPFMappingClass;
 begin
-  Result := TTestOPFConfig.Create(InternalCreateModel);
+  VConfig := TTestOPFConfig.Create(InternalCreateModel);
   try
     for VDriverClass in ADriverClassArray do
-      Result.AddDriverClass(VDriverClass);
+      VConfig.AddDriverClass(VDriverClass);
     for VMappingClass in AMappingClassArray do
-      Result.AddMappingClass(VMappingClass);
-    Result.DriverName := ADriverClassArray[0].DriverName;
+      VConfig.AddMappingClass(VMappingClass);
+    VConfig.DriverName := ADriverClassArray[0].DriverName;
+    VConfig.Model.OIDClass := TJCoreOPFIntegerOID;
+    VConfig.Model.GeneratorStrategy := jgsCustom;
   except
-    FreeAndNil(Result);
+    FreeAndNil(VConfig);
     raise;
   end;
+  Result := VConfig;
 end;
 
 procedure TTestOPFAbstractTestCase.SetUp;
@@ -302,6 +298,7 @@ begin
     FLOG := TJCoreLogger.GetLogger('jcore.test.opf');
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
+  AssertEquals(0, TTestIntegerGenerator.CurrentOID);
   FConfiguration := CreateConfiguration([TTestSQLDriver], InternalMappingClassArray);
   FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
@@ -312,36 +309,9 @@ begin
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
+  TTestIntegerGenerator.ClearOID;
   FSession := nil;
   FConfiguration := nil;
-end;
-
-{ TTestOPFManualMappingTestCase }
-
-procedure TTestOPFManualMappingTestCase.SetUp;
-begin
-  inherited SetUp;
-  AssertEquals(0, TTestAbstractSQLManualMapping.CurrentOID);
-end;
-
-procedure TTestOPFManualMappingTestCase.TearDown;
-begin
-  inherited TearDown;
-  TTestAbstractSQLManualMapping.ClearOID;
-end;
-
-{ TTestOPFAutoMappingTestCase }
-
-procedure TTestOPFAutoMappingTestCase.SetUp;
-begin
-  inherited SetUp;
-  AssertEquals(0, TTestSQLAutoMapping.CurrentOID);
-end;
-
-procedure TTestOPFAutoMappingTestCase.TearDown;
-begin
-  inherited TearDown;
-  TTestSQLAutoMapping.ClearOID;
 end;
 
 { TTestOPFIPIDContactTestCase }
@@ -411,6 +381,29 @@ begin
   Result[0] := TTestSQLAutoMapping;
 end;
 
+{ TTestIntegerGenerator }
+
+procedure TTestIntegerGenerator.GenerateOIDs(const AOIDCount: Integer);
+begin
+end;
+
+function TTestIntegerGenerator.ReadInt64: Int64;
+begin
+  Inc(FCurrentOID);
+  Result := FCurrentOID;
+end;
+
+function TTestIntegerGenerator.ReadString: string;
+begin
+  Inc(FCurrentOID);
+  Result := IntToStr(FCurrentOID);
+end;
+
+class procedure TTestIntegerGenerator.ClearOID;
+begin
+  FCurrentOID := 0;
+end;
+
 { TTestEmptyDriver }
 
 class function TTestEmptyDriver.DriverName: string;
@@ -420,13 +413,9 @@ end;
 
 { TTestEmptyMapping }
 
-function TTestEmptyMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
-var
-  I: Integer;
+function TTestEmptyMapping.CreateCustomGenerator: IJCoreOPFGenerator;
 begin
-  SetLength(Result, AOIDCount);
-  for I := 0 to Pred(AOIDCount) do
-    Result[I] := TJCoreOPFIntegerOID.Create(1);
+  Result := TTestIntegerGenerator.Create;
 end;
 
 procedure TTestEmptyMapping.InternalStore(const AMapping: TJCoreOPFADMMapping);
@@ -523,40 +512,16 @@ end;
 
 { TTestAbstractSQLManualMapping }
 
-function TTestAbstractSQLManualMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
-var
-  I: Integer;
+function TTestAbstractSQLManualMapping.CreateCustomGenerator: IJCoreOPFGenerator;
 begin
-  SetLength(Result, AOIDCount);
-  for I := 0 to Pred(AOIDCount) do
-  begin
-    Inc(FCurrentOID);
-    Result[I] := TJCoreOPFIntegerOID.Create(FCurrentOID);
-  end;
-end;
-
-class procedure TTestAbstractSQLManualMapping.ClearOID;
-begin
-  FCurrentOID := 0;
+  Result := TTestIntegerGenerator.Create;
 end;
 
 { TTestSQLAutoMapping }
 
-function TTestSQLAutoMapping.InternalCreateOIDArray(const AOIDCount: Integer): TJCoreOPFOIDArray;
-var
-  I: Integer;
+function TTestSQLAutoMapping.CreateCustomGenerator: IJCoreOPFGenerator;
 begin
-  SetLength(Result, AOIDCount);
-  for I := 0 to Pred(AOIDCount) do
-  begin
-    Inc(FCurrentOID);
-    Result[I] := TJCoreOPFIntegerOID.Create(FCurrentOID);
-  end;
-end;
-
-class procedure TTestSQLAutoMapping.ClearOID;
-begin
-  FCurrentOID := 0;
+  Result := TTestIntegerGenerator.Create;
 end;
 
 end.

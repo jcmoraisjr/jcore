@@ -23,7 +23,8 @@ uses
   JCoreEntity,
   JCoreMetadata,
   JCoreOPFDriver,
-  JCoreOPFOID;
+  JCoreOPFOID,
+  JCoreOPFGenerator;
 
 type
 
@@ -382,12 +383,14 @@ type
   // In the current version these attributes must be of the same class or a
   // parent class.
   private
+    FGeneratorStrategy: TJCoreOPFGeneratorStrategy;
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDName: TJCoreStringArray;
     FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
+    property GeneratorStrategy: TJCoreOPFGeneratorStrategy read FGeneratorStrategy;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
@@ -398,6 +401,7 @@ type
 
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)
   private
+    FGeneratorStrategy: TJCoreOPFGeneratorStrategy;
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDName: TJCoreStringArray;
@@ -412,6 +416,7 @@ type
     destructor Destroy; override;
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
+    property GeneratorStrategy: TJCoreOPFGeneratorStrategy read FGeneratorStrategy;
     property Maps: TJCoreOPFMaps read GetMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
@@ -424,6 +429,7 @@ type
   { TODO : Model, map and metadata threadsafe }
   private
     FADMClassList: TJCoreOPFADMClassList;
+    FGeneratorStrategy: TJCoreOPFGeneratorStrategy;
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
@@ -442,6 +448,7 @@ type
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
+    property GeneratorStrategy: TJCoreOPFGeneratorStrategy read FGeneratorStrategy write FGeneratorStrategy;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
   end;
 
@@ -1480,6 +1487,7 @@ begin
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
   FTableName := UpperCase(Copy(Metadata.TheClass.ClassName, 2, MaxInt));
+  FGeneratorStrategy := Metadata.GeneratorStrategy;
 end;
 
 { TJCoreOPFClassMetadata }
@@ -1593,18 +1601,20 @@ var
 begin
   inherited RefineClassMetadata(AClassMetadata);
   VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
-  VMetadata.FOIDClass := OIDClass; // friend class
   SetLength(VOIDName, 1);
   VOIDName[0] := 'ID';
   VMetadata.FOIDName := VOIDName; // friend class
+  VMetadata.FOIDClass := OIDClass; // friend class
+  VMetadata.FGeneratorStrategy := GeneratorStrategy; // friend class
 end;
 
 constructor TJCoreOPFModel.Create;
 begin
   FADMClassList := TJCoreOPFADMClassList.Create;
   inherited Create;
-  FOIDClass := TJCoreOPFIntegerOID;
   FMapMap := TJCoreOPFMapMap.Create;
+  FOIDClass := TJCoreOPFStringOID;
+  FGeneratorStrategy := jgsGUID;
 end;
 
 function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;

@@ -21,7 +21,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="10">
       <Item1>
         <Filename Value="opf/jcoreopfconsts.pas"/>
         <UnitName Value="JCoreOPFConsts"/>
@@ -31,33 +31,37 @@
         <UnitName Value="JCoreOPFException"/>
       </Item2>
       <Item3>
-        <Filename Value="opf/jcoreopfoid.pas"/>
-        <UnitName Value="JCoreOPFOID"/>
-      </Item3>
-      <Item4>
         <Filename Value="opf/jcoreopfdriver.pas"/>
         <UnitName Value="JCoreOPFDriver"/>
+      </Item3>
+      <Item4>
+        <Filename Value="opf/jcoreopfoid.pas"/>
+        <UnitName Value="JCoreOPFOID"/>
       </Item4>
       <Item5>
-        <Filename Value="opf/jcoreopfmetadata.pas"/>
-        <UnitName Value="JCoreOPFMetadata"/>
+        <Filename Value="opf/jcoreopfgenerator.pas"/>
+        <UnitName Value="JCoreOPFGenerator"/>
       </Item5>
       <Item6>
-        <Filename Value="opf/jcoreopfmapping.pas"/>
-        <UnitName Value="JCoreOPFMapping"/>
+        <Filename Value="opf/jcoreopfmetadata.pas"/>
+        <UnitName Value="JCoreOPFMetadata"/>
       </Item6>
       <Item7>
-        <Filename Value="opf/jcoreopfmappingsql.pas"/>
-        <UnitName Value="JCoreOPFMappingSQL"/>
+        <Filename Value="opf/jcoreopfmapping.pas"/>
+        <UnitName Value="JCoreOPFMapping"/>
       </Item7>
       <Item8>
-        <Filename Value="opf/jcoreopfsession.pas"/>
-        <UnitName Value="JCoreOPFSession"/>
+        <Filename Value="opf/jcoreopfmappingsql.pas"/>
+        <UnitName Value="JCoreOPFMappingSQL"/>
       </Item8>
       <Item9>
+        <Filename Value="opf/jcoreopfsession.pas"/>
+        <UnitName Value="JCoreOPFSession"/>
+      </Item9>
+      <Item10>
         <Filename Value="opf/jcoreopfconfig.pas"/>
         <UnitName Value="JCoreOPFConfig"/>
-      </Item9>
+      </Item10>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

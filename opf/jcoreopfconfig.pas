@@ -31,6 +31,7 @@ type
     procedure AddMappingClass(const AMappingClassArray: array of TJCoreOPFMappingClass);
     function CreateSession: IJCoreOPFSession;
     function GetDriverName: string;
+    function Model: TJCoreOPFModel;
     procedure SetDriverName(AValue: string);
     property DriverName: string read GetDriverName write SetDriverName;
   end;
@@ -50,6 +51,7 @@ type
     procedure SetDriverName(AValue: string);
     function IJCoreOPFSessionManager.MappingClassFactory = IGetMappingClassFactory;
     function IJCoreOPFSessionManager.Model = IGetModel;
+    function IJCoreOPFConfiguration.Model = IGetModel;
   protected
     function CreateDriver: TJCoreOPFDriver;
     function InternalCreateSession(const ADriver: TJCoreOPFDriver): IJCoreOPFSession; virtual;

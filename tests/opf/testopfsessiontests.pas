@@ -24,6 +24,7 @@ uses
   fpcunit,
   testregistry,
   JCoreOPFException,
+  JCoreOPFGenerator,
   JCoreOPFConfig,
   JCoreOPFSession,
   TestOPFModelContact,
@@ -80,6 +81,7 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelIPIDContact.Create);
   VConfiguration.AddDriverClass(TTestEmptyDriver);
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
+  VConfiguration.Model.GeneratorStrategy := jgsCustom;
   VSession := VConfiguration.CreateSession;
   AssertNotNull(VSession);
   VPerson := TTestIPIDPerson.Create;

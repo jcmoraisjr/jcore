@@ -126,6 +126,13 @@ type
     constructor Create(const AOwnedClassName, AOwnerClassName: string);
   end;
 
+  { EJCoreOPFUnsupportedFeature }
+
+  EJCoreOPFUnsupportedFeature = class(EJCoreOPF)
+  public
+    constructor Create(const AName: string);
+  end;
+
   { EJCoreOPFUnsupportedLoadOperation }
 
   EJCoreOPFUnsupportedLoadOperation = class(EJCoreOPF)
@@ -247,6 +254,12 @@ end;
 
 constructor EJCoreOPFObjectAlreadyOwned.Create(const AOwnedClassName,
   AOwnerClassName: string);
+begin
+end;
+
+{ EJCoreOPFUnsupportedFeature }
+
+constructor EJCoreOPFUnsupportedFeature.Create(const AName: string);
 begin
 end;
 
