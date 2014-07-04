@@ -49,7 +49,7 @@ begin
   except
     on E: EJCoreOPFUndefinedDriver do;
   end;
-  VConfiguration.AddDriverClass(TTestEmptyDriver);
+  VConfiguration.AddDriverClass([TTestEmptyDriver]);
   try
     VConfiguration.DriverName := TTestEmptyDriver.DriverName + ' invalid';
     Fail(EJCoreOPFDriverNotFound.ClassName + ' expected');
@@ -68,8 +68,7 @@ var
   VProduct: TProduct;
 begin
   VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelIPIDContact.Create);
-  VConfiguration.AddDriverClass(TTestEmptyDriver);
-  VConfiguration.DriverName := TTestEmptyDriver.DriverName;
+  VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.Model.GeneratorStrategy := jgsCustom;
   VSession := VConfiguration.CreateSession;
   AssertNotNull(VSession);
@@ -91,8 +90,7 @@ var
   VInvoice: TInvoice;
 begin
   VConfiguration := TJCoreOPFConfiguration.Create;
-  VConfiguration.AddDriverClass(TTestSQLDriver);
-  VConfiguration.DriverName := TTestSQLDriver.DriverName;
+  VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VSession := VConfiguration.CreateSession;
   VPerson := TTestProxyPerson.Create;
@@ -130,8 +128,7 @@ var
   VProduct: TProduct;
 begin
   VConfiguration := TJCoreOPFConfiguration.Create;
-  VConfiguration.AddDriverClass(TTestSQLDriver);
-  VConfiguration.DriverName := TTestSQLDriver.DriverName;
+  VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TJCoreOPFSQLAutoMapping]);
   VConfiguration.Model.AddClass([TProduct]);
   VSession := VConfiguration.CreateSession;
@@ -155,8 +152,7 @@ var
   VCompany: TCompany;
 begin
   VConfiguration := TJCoreOPFConfiguration.Create;
-  VConfiguration.AddDriverClass(TTestSQLDriver);
-  VConfiguration.DriverName := TTestSQLDriver.DriverName;
+  VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TJCoreOPFSQLAutoMapping]);
   VConfiguration.Model.AddClass([TProduct]);
   VSession := VConfiguration.CreateSession;

@@ -63,7 +63,7 @@ type
   protected
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
-    function CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
+    function CreateConfiguration(const ADriverClass: TJCoreOPFDriverClass; const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
     function InternalCreateModel: TJCoreOPFModel; virtual; abstract;
     function InternalMappingClassArray: TTestOPFMappingClassArray; virtual; abstract;
     procedure SetUp; override;
@@ -270,20 +270,17 @@ begin
   TTestSQLDriver.Commands.Clear;
 end;
 
-function TTestOPFAbstractTestCase.CreateConfiguration(const ADriverClassArray: array of TJCoreOPFDriverClass;
+function TTestOPFAbstractTestCase.CreateConfiguration(const ADriverClass: TJCoreOPFDriverClass;
   const AMappingClassArray: array of TJCoreOPFMappingClass): IJCoreOPFConfiguration;
 var
   VConfig: TTestOPFConfig;
-  VDriverClass: TJCoreOPFDriverClass;
   VMappingClass: TJCoreOPFMappingClass;
 begin
   VConfig := TTestOPFConfig.Create(InternalCreateModel);
   try
-    for VDriverClass in ADriverClassArray do
-      VConfig.AddDriverClass(VDriverClass);
+    VConfig.DriverClass := ADriverClass;
     for VMappingClass in AMappingClassArray do
       VConfig.AddMappingClass(VMappingClass);
-    VConfig.DriverName := ADriverClassArray[0].DriverName;
     VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
     VConfig.Model.GeneratorStrategy := jgsCustom;
   except
@@ -301,7 +298,7 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   AssertEquals(0, TTestIntegerGenerator.CurrentOID);
-  FConfiguration := CreateConfiguration([TTestSQLDriver], InternalMappingClassArray);
+  FConfiguration := CreateConfiguration(TTestSQLDriver, InternalMappingClassArray);
   FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 

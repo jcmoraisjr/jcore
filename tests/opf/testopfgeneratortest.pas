@@ -39,8 +39,7 @@ var
   I: Integer;
 begin
   VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelProxyInvoice.Create);
-  VConfiguration.AddDriverClass(TTestEmptyDriver);
-  VConfiguration.DriverName := TTestEmptyDriver.DriverName;
+  VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.GeneratorStrategy := jgsGUID;
   VConfiguration.Model.OIDClass := TJCoreOPFOIDString;
