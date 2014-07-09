@@ -42,9 +42,6 @@ type
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
-    // direct attribute -> field mapping
-    procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
   protected
     //// Support ////
     procedure WriteDisposeCollectionToDriver(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of TJCoreOPFOID);
@@ -57,9 +54,10 @@ type
   protected
     //// Facade internals ////
     procedure InternalDispose(const AOIDArray: array of TJCoreOPFOID); override;
+    procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); override;
     function InternalRetrieveCollectionToDriver(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): Integer; override;
     procedure InternalRetrieveEntityToDriver(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap); override;
-    procedure InternalStore(const AMapping: TJCoreOPFADMMapping); override;
+    procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap); override;
   end;
@@ -177,14 +175,6 @@ begin
   raise EJCoreOPFUnsupportedDMLOperation.Create(Map.Metadata.TheClass, 'select for delete');
 end;
 {$warn 5033 on}
-
-procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
-begin
-end;
-
-procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
-begin
-end;
 
 procedure TJCoreOPFSQLMapping.WriteDisposeCollectionToDriver(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of TJCoreOPFOID);
@@ -383,6 +373,11 @@ begin
   Driver.ExecSQL(GenerateDeleteStatement(Length(AOIDArray)));
 end;
 
+procedure TJCoreOPFSQLMapping.InternalInsert(const AMapping: TJCoreOPFADMMapping);
+begin
+  Driver.ExecSQL(GenerateInsertStatement(AMapping));
+end;
+
 function TJCoreOPFSQLMapping.InternalRetrieveCollectionToDriver(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMCollection): Integer;
 begin
@@ -400,23 +395,9 @@ begin
   Driver.ExecSQL(GenerateSelectStatement(ABaseMap, nil, nil, Length(AOIDArray)), Length(AOIDArray));
 end;
 
-procedure TJCoreOPFSQLMapping.InternalStore(const AMapping: TJCoreOPFADMMapping);
-var
-  VPID: TJCoreOPFPID;
+procedure TJCoreOPFSQLMapping.InternalUpdate(const AMapping: TJCoreOPFADMMapping);
 begin
-  VPID := AMapping.PID;
-  if not VPID.IsPersistent then
-  begin
-    VPID.OID.WriteToDriver(Driver);
-    WriteInternalsToDriver(AMapping);
-    Driver.ExecSQL(GenerateInsertStatement(AMapping));
-  end else if AMapping.IsInternalsDirty then
-  begin
-    WriteInternalsToDriver(AMapping);
-    VPID.OID.WriteToDriver(Driver);
-    Driver.ExecSQL(GenerateUpdateStatement(AMapping));
-  end;
-  WriteExternalsToDriver(AMapping);
+  Driver.ExecSQL(GenerateUpdateStatement(AMapping));
 end;
 
 constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap);

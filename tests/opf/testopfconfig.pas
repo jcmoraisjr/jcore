@@ -126,6 +126,7 @@ type
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
   public
     class function DriverName: string; override;
+    procedure WriteString(const AValue: string); override;
   end;
 
   { TTestEmptyMapping }
@@ -133,7 +134,8 @@ type
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
     function CreateCustomGenerator: IJCoreOPFGenerator; override;
-    procedure InternalStore(const AMapping: TJCoreOPFADMMapping); override;
+    procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); override;
+    procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -410,6 +412,10 @@ begin
   Result := 'TestEmptyDriver';
 end;
 
+procedure TTestEmptyDriver.WriteString(const AValue: string);
+begin
+end;
+
 { TTestEmptyMapping }
 
 function TTestEmptyMapping.CreateCustomGenerator: IJCoreOPFGenerator;
@@ -417,7 +423,11 @@ begin
   Result := TTestIntegerGenerator.Create;
 end;
 
-procedure TTestEmptyMapping.InternalStore(const AMapping: TJCoreOPFADMMapping);
+procedure TTestEmptyMapping.InternalInsert(const AMapping: TJCoreOPFADMMapping);
+begin
+end;
+
+procedure TTestEmptyMapping.InternalUpdate(const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 

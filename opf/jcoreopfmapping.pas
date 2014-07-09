@@ -221,13 +221,16 @@ type
     // abstract facades
     function InternalCreateOIDArray(const AGenerator: IJCoreOPFGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray; virtual;
     procedure InternalDispose(const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
+    procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     function InternalRetrieveCollectionToDriver(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): Integer; virtual; abstract;
     procedure InternalRetrieveEntityToDriver(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap); virtual; abstract;
-    procedure InternalStore(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
+    procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     // custom configurations
     function CreateCustomGenerator: IJCoreOPFGenerator; virtual;
-    // direct field -> attribute mapping
+    // direct field <-> attribute mapping
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); virtual;
+    procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
+    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
     // support
     function SelectClassFromDriver(const ASubClassArray: array of TClass; const ADefaultClass: TClass): TClass;
     property Driver: TJCoreOPFDriver read FDriver;
@@ -860,6 +863,14 @@ procedure TJCoreOPFMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
+procedure TJCoreOPFMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+begin
+end;
+
+procedure TJCoreOPFMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+begin
+end;
+
 function TJCoreOPFMapping.SelectClassFromDriver(const ASubClassArray: array of TClass;
   const ADefaultClass: TClass): TClass;
 var
@@ -933,9 +944,25 @@ begin
 end;
 
 procedure TJCoreOPFMapping.Store(const AMapping: TJCoreOPFADMMapping);
+var
+  VPID: TJCoreOPFPID;
 begin
   if AMapping.IsDirty then
-    InternalStore(AMapping);
+  begin
+    VPID := AMapping.PID;
+    if not VPID.IsPersistent then
+    begin
+      VPID.OID.WriteToDriver(Driver);
+      WriteInternalsToDriver(AMapping);
+      InternalInsert(AMapping);
+    end else if AMapping.IsInternalsDirty then
+    begin
+      WriteInternalsToDriver(AMapping);
+      VPID.OID.WriteToDriver(Driver);
+      InternalUpdate(AMapping);
+    end;
+    WriteExternalsToDriver(AMapping);
+  end;
 end;
 
 end.
