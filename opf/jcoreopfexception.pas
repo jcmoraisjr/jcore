@@ -141,13 +141,6 @@ type
     constructor Create(const AClassName: string);
   end;
 
-  { EJCoreOPFUnsupportedDMLOperation }
-
-  EJCoreOPFUnsupportedDMLOperation = class(EJCoreOPF)
-  public
-    constructor Create(const AClass: TClass; const AOperationName: string);
-  end;
-
   { EJCoreOPFEntityADMExpected }
 
   EJCoreOPFEntityADMExpected = class(EJCoreOPF)
@@ -267,12 +260,6 @@ end;
 constructor EJCoreOPFUnsupportedAttributeType.Create(const AClassName: string);
 begin
   inherited Create(AClassName);
-end;
-
-{ EJCoreOPFUnsupportedDMLOperation }
-
-constructor EJCoreOPFUnsupportedDMLOperation.Create(const AClass: TClass; const AOperationName: string);
-begin
 end;
 
 { EJCoreOPFEntityADMExpected }
