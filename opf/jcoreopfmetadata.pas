@@ -405,10 +405,10 @@ type
 
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)
   private
-    FGeneratorStrategy: TJCoreOPFGeneratorStrategy;
+    FGeneratorStrategy: TJCoreOPFGeneratorStrategy; // model initializes
     FMaps: TJCoreOPFMaps;
-    FOIDClass: TJCoreOPFOIDClass;
-    FOIDName: TJCoreStringArray;
+    FOIDClass: TJCoreOPFOIDClass; // model initializes
+    FOIDName: TJCoreStringArray; // model initializes
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
     function GetModel: TJCoreOPFModel;
