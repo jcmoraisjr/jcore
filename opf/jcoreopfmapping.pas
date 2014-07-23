@@ -45,12 +45,12 @@ type
 
   TJCoreOPFMappingClassRef = class(TObject)
   private
-    FClass: TJCoreOPFMappingClass;
     FMap: TJCoreOPFMap;
+    FMappingClass: TJCoreOPFMappingClass;
   public
-    constructor Create(const AClass: TJCoreOPFMappingClass; AMap: TJCoreOPFMap);
+    constructor Create(const AMappingClass: TJCoreOPFMappingClass; AMap: TJCoreOPFMap);
     property Map: TJCoreOPFMap read FMap;
-    property TheClass: TJCoreOPFMappingClass read FClass;
+    property MappingClass: TJCoreOPFMappingClass read FMappingClass;
   end;
 
   TJCoreOPFMappingClassRefList = specialize TFPGObjectList<TJCoreOPFMappingClassRef>;
@@ -61,8 +61,6 @@ type
   { TJCoreOPFMappingClassFactory }
 
   TJCoreOPFMappingClassFactory = class(specialize TJCoreFactory<TJCoreOPFMappingClass>)
-  // Class mappings of a single class metadata, without parents.
-  // Based on TJCoreOPFMaps and synchronized with TJCoreOPFADMMapping ADMs.
   private
     FMappingClassList: TJCoreOPFMappingClassList;
     FMappingClassRefListMap: TJCoreOPFMappingClassRefListMap;
@@ -144,6 +142,8 @@ type
   { TJCoreOPFClassMapping }
 
   TJCoreOPFClassMapping = class(TObject)
+  // Class mappings of a single class metadata, without parents.
+  // Based on TJCoreOPFMaps and synchronized with TJCoreOPFADMMapping ADMs.
   private
     FDriver: TJCoreOPFDriver;
     FGenerator: IJCoreOPFGenerator;
@@ -157,7 +157,7 @@ type
     procedure Dispose(const AOIDArray: array of TJCoreOPFOID);
     procedure EnsureMappingConsistency(const APID: TJCoreOPFPID);
     function GetGenerator: IJCoreOPFGenerator;
-    function MapByIndex(const ABaseMap: TJCoreOPFMap): Integer;
+    function MapIndexByMap(const ABaseMap: TJCoreOPFMap): Integer;
     function Retrieve(const AOIDArray: array of TJCoreOPFOID): TJCoreObjectArray;
     function RetrieveFromDriver(const ARecordCount: Integer): TJCoreObjectArray;
   protected
@@ -259,11 +259,11 @@ uses
 
 { TJCoreOPFMappingClassRef }
 
-constructor TJCoreOPFMappingClassRef.Create(const AClass: TJCoreOPFMappingClass; AMap: TJCoreOPFMap);
+constructor TJCoreOPFMappingClassRef.Create(const AMappingClass: TJCoreOPFMappingClass; AMap: TJCoreOPFMap);
 begin
   inherited Create;
-  FClass := AClass;
   FMap := AMap;
+  FMappingClass := AMappingClass;
 end;
 
 { TJCoreOPFMappingClassFactory }
@@ -354,7 +354,7 @@ begin
   VMappingList := TJCoreOPFMappingList.Create(True);
   try
     for VMappingClassRef in VMappingClassRefList do
-      VMappingList.Add(VMappingClassRef.TheClass.Create(Mapper, VMappingClassRef.Map));
+      VMappingList.Add(VMappingClassRef.MappingClass.Create(Mapper, VMappingClassRef.Map));
   except
     FreeAndNil(VMappingList);
     raise;
@@ -526,7 +526,7 @@ begin
   Result := FGenerator;
 end;
 
-function TJCoreOPFClassMapping.MapByIndex(const ABaseMap: TJCoreOPFMap): Integer;
+function TJCoreOPFClassMapping.MapIndexByMap(const ABaseMap: TJCoreOPFMap): Integer;
 begin
   for Result := 0 to Pred(MappingList.Count) do
     if MappingList[Result].Map = ABaseMap then
@@ -669,7 +669,7 @@ begin
   // TJCoreOPFClassMapping.RetrieveFromDriver takes care of the remainders
   begin
     EnsureMappingConsistency(APID);
-    VBaseIndex := MapByIndex(ABaseMap) + 1;
+    VBaseIndex := MapIndexByMap(ABaseMap) + 1;
   end else
     VBaseIndex := 0;
   for I := VBaseIndex to Pred(MappingList.Count) do
