@@ -512,7 +512,7 @@ begin
   // with the entity's attribute address by the Lazyload method.
   AAttrAddrRef^ := @FAttrAddr;
   InternalGetter;
-  if not Assigned(FAttrAddr) then;
+  if not Assigned(FAttrAddr) then
     Metadata.NoLazyload;
 end;
 
