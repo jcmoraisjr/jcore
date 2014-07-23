@@ -566,7 +566,7 @@ begin
           VPID := Mapper.AcquirePID(VObjectArray[I]);
           VPID.AssignOID(VOID);
         finally
-          VPID.OID.Release;
+          FreeAndNil(VOID);
         end;
         RetrieveMapsInternal(VPID, nil);
         if VPID.ADMMappingCount <> MappingList.Count then
