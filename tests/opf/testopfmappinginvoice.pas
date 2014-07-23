@@ -17,7 +17,7 @@ type
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -31,7 +31,8 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
+    function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -45,7 +46,8 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
+    function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -59,7 +61,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -73,7 +75,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -89,7 +91,7 @@ type
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -103,7 +105,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -117,7 +119,7 @@ type
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
+    function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -186,9 +188,7 @@ begin
   Result := CSQLINSERTINVOICECLIENT;
 end;
 
-function TClientSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
-  const AOIDCount: Integer): string;
+function TClientSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
 begin
   Result := CSQLSELECTINVOICECLIENT + BuildOIDCondition(['T.ID'], AOIDCount);
 end;
@@ -231,16 +231,18 @@ begin
   Result := CSQLINSERTINVOICEPERSON;
 end;
 
-function TPersonSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+function TPersonSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
+begin
+  Result := CSQLSELECTINVOICEPERSON + BuildOIDCondition(['T.ID'], AOIDCount)
+end;
+
+function TPersonSQLMapping.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
 begin
-  if not Assigned(ABaseMap) then
-    Result := CSQLSELECTINVOICEPERSON + BuildOIDCondition(['T.ID'], AOIDCount)
-  else if ABaseMap.Metadata.TheClass = TClient then
+  if ABaseMap.Metadata.TheClass = TClient then
     Result := CSQLSELECTINVOICEPERSONCOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+    Result := inherited GenerateSelectComplementaryStatement(ABaseMap, AOIDCount);
 end;
 
 function TPersonSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -281,16 +283,18 @@ begin
   Result := CSQLINSERTINVOICECOMPANY;
 end;
 
-function TCompanySQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+function TCompanySQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
+begin
+  Result := CSQLSELECTINVOICECOMPANY + BuildOIDCondition(['T.ID'], AOIDCount)
+end;
+
+function TCompanySQLMapping.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
 begin
-  if not Assigned(ABaseMap) then
-    Result := CSQLSELECTINVOICECOMPANY + BuildOIDCondition(['T.ID'], AOIDCount)
-  else if ABaseMap.Metadata.TheClass = TClient then
+  if ABaseMap.Metadata.TheClass = TClient then
     Result := CSQLSELECTINVOICECOMPANYCOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+    Result := inherited GenerateSelectComplementaryStatement(ABaseMap, AOIDCount);
 end;
 
 function TCompanySQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -331,9 +335,7 @@ begin
   Result := CSQLINSERTINVOICEPRODUCT;
 end;
 
-function TProductSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
-  const AOIDCount: Integer): string;
+function TProductSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
 begin
   Result := CSQLSELECTINVOICEPRODUCT + BuildOIDCondition(['ID'], AOIDCount);
 end;
@@ -376,9 +378,7 @@ begin
   Result := CSQLINSERTINVOICEINVOICE;
 end;
 
-function TInvoiceSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
-  const AOIDCount: Integer): string;
+function TInvoiceSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
 begin
   Result := CSQLSELECTINVOICEINVOICE + BuildOIDCondition(['ID'], AOIDCount);
 end;
@@ -436,14 +436,13 @@ begin
   Result := CSQLINSERTINVOICEINVOICEITEM;
 end;
 
-function TInvoiceItemSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
-  const AOIDCount: Integer): string;
+function TInvoiceItemSQLMapping.GenerateSelectCollectionStatement(
+  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string;
 begin
   if AOwnerClass.TheClass = TInvoice then
-    Result := CSQLSELECTINVOICEINVOICEITEM + BuildOIDCondition(['T.ID'], AOIDCount)
+    Result := CSQLSELECTINVOICEINVOICEITEM + BuildOIDCondition(['T.ID'], 1)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+    Result := inherited GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttr);
 end;
 
 function TInvoiceItemSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -484,14 +483,13 @@ begin
   Result := CSQLINSERTINVOICEINVOICEITEMPRODUCT;
 end;
 
-function TInvoiceItemProductSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+function TInvoiceItemProductSQLMapping.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
 begin
   if ABaseMap.Metadata.TheClass = TInvoiceItem then
     Result := CSQLSELECTINVOICEINVOICEITEMPRODUCTCOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+    Result := inherited GenerateSelectComplementaryStatement(ABaseMap, AOIDCount);
 end;
 
 function TInvoiceItemProductSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -534,14 +532,13 @@ begin
   Result := CSQLINSERTINVOICEINVOICEITEMSERVICE;
 end;
 
-function TInvoiceItemServiceSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+function TInvoiceItemServiceSQLMapping.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
 begin
   if ABaseMap.Metadata.TheClass = TInvoiceItem then
     Result := CSQLSELECTINVOICEINVOICEITEMSERVICECOMPLEMENTARY + BuildOIDCondition(['ID'], AOIDCount)
   else
-    Result := inherited GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+    Result := inherited GenerateSelectComplementaryStatement(ABaseMap, AOIDCount);
 end;
 
 function TInvoiceItemServiceSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;

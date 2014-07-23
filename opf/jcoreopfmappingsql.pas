@@ -33,9 +33,9 @@ type
     function BuildDeleteCondition(const AOIDCount: Integer): string; virtual;
     function BuildInsertFieldNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
     function BuildInsertParamNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
-    function BuildSelectCondition: string; virtual;
-    function BuildSelectFieldNames: string; virtual;
-    function BuildSelectFrom: string; virtual;
+    function BuildSelectBaseFieldNames: string; virtual;
+    function BuildSelectBaseFrom: string; virtual;
+    function BuildSelectCondition(const AOIDCount: Integer): string; virtual;
     function BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string; virtual;
     function BuildUpdateNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
     property Map: TJCoreOPFMap read FMap;
@@ -43,11 +43,13 @@ type
     constructor Create(const AMap: TJCoreOPFMap); virtual;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; virtual;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; virtual;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; virtual;
+    function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; virtual;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; virtual;
     function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
+    function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     // Suport
@@ -69,12 +71,14 @@ type
     // Mandatory sql generators
     function GenerateDeleteStatement(const AOIDCount: Integer): string; virtual;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; virtual;
-    function GenerateSelectStatement(const ABaseMap: TJCoreOPFMap; const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; virtual;
+    function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; virtual;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; virtual;
     // Composition/Collection related sql generators
     function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
+    function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
   protected
@@ -152,12 +156,7 @@ begin
   Result := BuildFieldParams(Length(Map.OIDName) + Length(AMapping.ADMChanged));
 end;
 
-function TJCoreOPFSQLGenerator.BuildSelectCondition: string;
-begin
-  Result := BuildOIDCondition(Map.OIDName, 1);
-end;
-
-function TJCoreOPFSQLGenerator.BuildSelectFieldNames: string;
+function TJCoreOPFSQLGenerator.BuildSelectBaseFieldNames: string;
 var
   VOIDName: TJCoreStringArray;
   I: Integer;
@@ -171,9 +170,14 @@ begin
   SetLength(Result, Length(Result) - 1);
 end;
 
-function TJCoreOPFSQLGenerator.BuildSelectFrom: string;
+function TJCoreOPFSQLGenerator.BuildSelectBaseFrom: string;
 begin
   Result := Map.TableName;
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectCondition(const AOIDCount: Integer): string;
+begin
+  Result := BuildOIDCondition(Map.OIDName, AOIDCount);
 end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string;
@@ -190,7 +194,7 @@ begin
   Result := '';
   for I := Low(VADMChanged) to High(VADMChanged) do
     Result := Result + VADMChanged[I].Metadata.PersistentFieldName + '=?,';
-  SetLength(Result, Length(Result)-1);
+  SetLength(Result, Length(Result) - 1);
 end;
 
 constructor TJCoreOPFSQLGenerator.Create(const AMap: TJCoreOPFMap);
@@ -210,12 +214,17 @@ begin
    Map.TableName, BuildInsertFieldNames(AMapping), BuildInsertParamNames(AMapping)]);
 end;
 
-function TJCoreOPFSQLGenerator.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
-  const AOIDCount: Integer): string;
+function TJCoreOPFSQLGenerator.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
 begin
   Result := Format('SELECT %s FROM %s WHERE %s', [
-   BuildSelectFieldNames(), BuildSelectFrom(), BuildSelectCondition()]);
+   BuildSelectBaseFieldNames, BuildSelectBaseFrom, BuildSelectCondition(AOIDCount)]);
+end;
+
+function TJCoreOPFSQLGenerator.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
+  const AOIDCount: Integer): string;
+begin
+  { TODO : Implement }
+  Result := 'SELECT';
 end;
 
 function TJCoreOPFSQLGenerator.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -243,6 +252,13 @@ function TJCoreOPFSQLGenerator.GenerateInsertExternalLinksStatement(
 begin
   { TODO : Implement }
   Result := 'INSERT';
+end;
+
+function TJCoreOPFSQLGenerator.GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata;
+  const AOwnerAttr: TJCoreOPFAttrMetadata): string;
+begin
+  { TODO : Implement }
+  Result := 'SELECT';
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectCompositionsForDeleteStatement(
@@ -334,11 +350,15 @@ begin
   Result := SQLGenerator.GenerateInsertStatement(AMapping);
 end;
 
-function TJCoreOPFSQLMapping.GenerateSelectStatement(const ABaseMap: TJCoreOPFMap;
-  const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata;
+function TJCoreOPFSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
+begin
+  Result := SQLGenerator.GenerateSelectBaseStatement(AOIDCount);
+end;
+
+function TJCoreOPFSQLMapping.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
 begin
-  Result := SQLGenerator.GenerateSelectStatement(ABaseMap, AOwnerClass, AOwnerAttr, AOIDCount);
+  Result := SQLGenerator.GenerateSelectComplementaryStatement(ABaseMap, AOIDCount);
 end;
 
 function TJCoreOPFSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -362,6 +382,12 @@ function TJCoreOPFSQLMapping.GenerateInsertExternalLinksStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
   Result := SQLGenerator.GenerateInsertExternalLinksStatement(AAttrMetadata);
+end;
+
+function TJCoreOPFSQLMapping.GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata;
+  const AOwnerAttr: TJCoreOPFAttrMetadata): string;
+begin
+  Result := SQLGenerator.GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttr);
 end;
 
 function TJCoreOPFSQLMapping.GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string;
@@ -529,17 +555,22 @@ function TJCoreOPFSQLMapping.InternalRetrieveCollectionToDriver(const AOwnerPID:
   const AOwnerADM: TJCoreOPFADMCollection): Integer;
 begin
   AOwnerPID.OID.WriteToDriver(Driver);
-  Result := Driver.ExecSQL(GenerateSelectStatement(nil, AOwnerPID.Metadata, AOwnerADM.Metadata, 1));
+  Result := Driver.ExecSQL(GenerateSelectCollectionStatement(AOwnerPID.Metadata, AOwnerADM.Metadata));
 end;
 
 procedure TJCoreOPFSQLMapping.InternalRetrieveEntityToDriver(const AOIDArray: array of TJCoreOPFOID;
   const ABaseMap: TJCoreOPFMap);
 var
   VOID: TJCoreOPFOID;
+  VSelectStmt: string;
 begin
   for VOID in AOIDArray do
     VOID.WriteToDriver(Driver);
-  Driver.ExecSQL(GenerateSelectStatement(ABaseMap, nil, nil, Length(AOIDArray)), Length(AOIDArray));
+  if not Assigned(ABaseMap) then
+    VSelectStmt := GenerateSelectBaseStatement(Length(AOIDArray))
+  else
+    VSelectStmt := GenerateSelectComplementaryStatement(ABaseMap, Length(AOIDArray));
+  Driver.ExecSQL(VSelectStmt, Length(AOIDArray));
 end;
 
 procedure TJCoreOPFSQLMapping.InternalUpdate(const AMapping: TJCoreOPFADMMapping);
