@@ -130,7 +130,6 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create;
   VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TJCoreOPFSQLMapping]);
-  VConfiguration.Model.AddClass([TProduct]);
   VSession := VConfiguration.CreateSession;
   VProduct := TProduct.Create;
   try
@@ -154,7 +153,6 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create;
   VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TJCoreOPFSQLMapping]);
-  VConfiguration.Model.AddClass([TProduct]);
   VSession := VConfiguration.CreateSession;
   VCompany := TCompany.Create;
   try
