@@ -14,6 +14,7 @@ type
   TTestOPFInsertAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
   published
     procedure Single;
+    procedure Inheritance;
   end;
 
   { TTestOPFSelectAutoMappingTests }
@@ -28,6 +29,9 @@ type
   TTestOPFUpdateAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
   published
     procedure Single;
+    procedure InheritanceUpdateParentClass;
+    procedure InheritanceUpdateSubClass;
+    procedure Inheritance;
   end;
 
   { TTestOPFDeleteAutoMappingTests }
@@ -36,6 +40,9 @@ type
   published
     procedure SingleFromEntity;
     procedure SingleFromClass;
+    procedure InheritanceFromEntity;
+    procedure InheritanceFromClass;
+    procedure InheritanceFromClassWithOIDArray;
   end;
 
 implementation
@@ -61,6 +68,27 @@ begin
      'ExecSQL INSERT INTO PRODUCT (ID,NAME) VALUES (?,?)']);
   finally
     FreeAndNil(VProduct);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.Inheritance;
+var
+  VCompany: TCompany;
+begin
+  VCompany := TCompany.Create;
+  try
+    VCompany.Name := 'corp';
+    VCompany.ContactName := 'james';
+    Session.Store(VCompany);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteString corp',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteInt64 1',
+     'WriteString james',
+     'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);
+  finally
+    FreeAndNil(VCompany);
   end;
 end;
 
@@ -110,6 +138,73 @@ begin
   end;
 end;
 
+procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateParentClass;
+var
+  VPerson: TPerson;
+begin
+  VPerson := TPerson.Create;
+  try
+    VPerson.Name := 'james';
+    VPerson.Nick := 'j';
+    Session.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    VPerson.Name := 'j.james';
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteString j.james',
+     'WriteInt64 1',
+     'ExecSQL UPDATE CLIENT SET NAME=? WHERE ID=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateSubClass;
+var
+  VPerson: TPerson;
+begin
+  VPerson := TPerson.Create;
+  try
+    VPerson.Name := 'j.james';
+    VPerson.Nick := 'j';
+    Session.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    VPerson.Nick := 'jj';
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteString jj',
+     'WriteInt64 1',
+     'ExecSQL UPDATE PERSON SET NICK=? WHERE ID=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.Inheritance;
+var
+  VPerson: TPerson;
+begin
+  VPerson := TPerson.Create;
+  try
+    VPerson.Name := 'james';
+    VPerson.Nick := 'j';
+    Session.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    VPerson.Name := 'j.james';
+    VPerson.Nick := 'jj';
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteString j.james',
+     'WriteInt64 1',
+     'ExecSQL UPDATE CLIENT SET NAME=? WHERE ID=?',
+     'WriteString jj',
+     'WriteInt64 1',
+     'ExecSQL UPDATE PERSON SET NICK=? WHERE ID=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
 { TTestOPFDeleteAutoMappingTests }
 
 procedure TTestOPFDeleteAutoMappingTests.SingleFromEntity;
@@ -136,6 +231,50 @@ begin
   AssertSQLDriverCommands([
    'WriteInt64 7',
    'ExecSQL DELETE FROM PRODUCT WHERE ID=?']);
+end;
+
+procedure TTestOPFDeleteAutoMappingTests.InheritanceFromEntity;
+var
+  VPerson: TPerson;
+begin
+  VPerson := TPerson.Create;
+  try
+    VPerson.Name := 'joe';
+    Session.Store(VPerson);
+    TTestSQLDriver.Commands.Clear;
+    Session.Dispose(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'ExecSQL DELETE FROM CLIENT WHERE ID=?',
+     'WriteInt64 1',
+     'ExecSQL DELETE FROM PERSON WHERE ID=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFDeleteAutoMappingTests.InheritanceFromClass;
+begin
+  Session.Dispose(TPerson, ['5']);
+  AssertSQLDriverCommands([
+   'WriteInt64 5',
+   'ExecSQL DELETE FROM CLIENT WHERE ID=?',
+   'WriteInt64 5',
+   'ExecSQL DELETE FROM PERSON WHERE ID=?']);
+end;
+
+procedure TTestOPFDeleteAutoMappingTests.InheritanceFromClassWithOIDArray;
+begin
+  Session.Dispose(TPerson, ['7', '9', '11']);
+  AssertSQLDriverCommands([
+   'WriteInt64 7',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   'ExecSQL DELETE FROM CLIENT WHERE ID IN (?,?,?)',
+   'WriteInt64 7',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   'ExecSQL DELETE FROM PERSON WHERE ID IN (?,?,?)']);
 end;
 
 initialization
