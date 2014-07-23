@@ -74,7 +74,7 @@ end;
 procedure TTestOPFModelProxyInvoice.InitRegistry;
 begin
   inherited InitRegistry;
-  AddClass([TClient, TPerson, TProduct, TProduct, TInvoiceItem, TInvoiceItemProduct,
+  AddClass([TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct,
    TInvoiceItemService, TInvoice]);
 end;
 
