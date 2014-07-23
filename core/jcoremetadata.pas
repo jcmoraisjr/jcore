@@ -99,6 +99,7 @@ type
     function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
     procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); virtual;
     property ClassMap: TJCoreClassMap read FClassMap;
+    property MetadataMap: TJCoreClassMetadataMap read FMetadataMap;
   public
     constructor Create; virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
@@ -287,10 +288,10 @@ var
   VIndex: Integer;
 begin
   { TODO : Thread safe }
-  VIndex := FMetadataMap.IndexOf(AClass);
+  VIndex := MetadataMap.IndexOf(AClass);
   if VIndex = -1 then
-    VIndex := FMetadataMap.Add(AClass, BuildClassMetadata(AClass));
-  Result := FMetadataMap.Data[VIndex];
+    VIndex := MetadataMap.Add(AClass, BuildClassMetadata(AClass));
+  Result := MetadataMap.Data[VIndex];
 end;
 
 procedure TJCoreModel.AddClass(const AClassArray: array of TClass);
