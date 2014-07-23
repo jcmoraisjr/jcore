@@ -87,6 +87,7 @@ type
 
   //TChars = set of Char;
   TJCoreStringArray = array of string;
+  TJCoreClassArray = array of TClass;
 
   TJCoreClassMap = specialize TFPGMap<String, TClass>;
   TJCoreObjectList = specialize TFPGObjectList<TObject>;

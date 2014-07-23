@@ -22,6 +22,8 @@ type
   TTestOPFSelectAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
   published
     procedure Single;
+    procedure Inheritance;
+    procedure InheritanceFromParent;
   end;
 
   { TTestOPFUpdateAutoMappingTests }
@@ -113,6 +115,59 @@ begin
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
     FreeAndNil(VProduct);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.Inheritance;
+var
+  VCompany: TCompany;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('6');
+  TTestSQLDriver.Data.Add('acorp');
+  TTestSQLDriver.Data.Add('jack');
+  VCompany := Session.Retrieve(TCompany, '6') as TCompany;
+  try
+    AssertNotNull('comp nil', VCompany);
+    AssertEquals('comp id', '6', VCompany._proxy.OID.AsString);
+    AssertEquals('comp name', 'acorp', VCompany.Name);
+    AssertEquals('comp contact', 'jack', VCompany.ContactName);
+    AssertSQLDriverCommands([
+     'WriteInt64 6',
+     {1}'ExecSQL SELECT T_0.ID,T_0.NAME,T_1.CONTACTNAME FROM CLIENT T_0 INNER JOIN COMPANY T_1 ON T_0.ID=T_1.ID WHERE T_0.ID=?']);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.InheritanceFromParent;
+var
+  VClient: TClient;
+  VCompany: TCompany;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('thecorp');
+  {2}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('12');
+  TTestSQLDriver.Data.Add('joe');
+  VClient := Session.Retrieve(TClient, '12') as TClient;
+  try
+    AssertNotNull('client nil', VClient);
+    AssertTrue('is client TCompany', VClient is TCompany);
+    VCompany := VClient as TCompany;
+    AssertEquals('comp id', '12', VCompany._proxy.OID.AsString);
+    AssertEquals('comp name', 'thecorp', VCompany.Name);
+    AssertEquals('comp contact', 'joe', VCompany.ContactName);
+    AssertSQLDriverCommands([
+     'WriteInt64 12',
+     {1}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.NAME FROM CLIENT T_0 LEFT OUTER JOIN PERSON TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN COMPANY TS_1 ON T_0.ID=TS_1.ID WHERE T_0.ID=?',
+     'WriteInt64 12',
+     {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
+  finally
+    FreeAndNil(VClient);
   end;
 end;
 

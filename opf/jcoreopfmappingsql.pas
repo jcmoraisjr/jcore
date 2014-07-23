@@ -24,21 +24,40 @@ uses
 
 type
 
+  TJCoreOPFTablePrefixType = (jtptNone, jtptMainMap, jtptSubMap);
+
   { TJCoreOPFSQLGenerator }
 
   TJCoreOPFSQLGenerator = class(TObject)
   private
     FMap: TJCoreOPFMap;
+    FMapIndex: Integer;
+    FMaps: TJCoreOPFMaps;
+    FSubMaps: TJCoreOPFMaps;
   protected
+    // Internal Support
+    function BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex, AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function MapIndexByMap(const AMap: TJCoreOPFMap): Integer;
+  protected
+    // SQL fragments
     function BuildDeleteCondition(const AOIDCount: Integer): string; virtual;
     function BuildInsertFieldNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
     function BuildInsertParamNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
-    function BuildSelectBaseFieldNames: string; virtual;
-    function BuildSelectBaseFrom: string; virtual;
-    function BuildSelectCondition(const AOIDCount: Integer): string; virtual;
+    function BuildSelectBaseFieldNames(const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectBaseFrom(const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectComplementaryFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectComplementaryFrom(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectCondition(const AOIDCount: Integer; const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectJoinCondition(const ALeftMaps: TJCoreOPFMaps; const ALeftIndex: Integer; const ALeftTablePrefixType: TJCoreOPFTablePrefixType; const ARightMaps: TJCoreOPFMaps; const ARightIndex: Integer; const ARightTablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string; virtual;
     function BuildUpdateNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
     property Map: TJCoreOPFMap read FMap;
+    property MapIndex: Integer read FMapIndex;
+    property Maps: TJCoreOPFMaps read FMaps;
+    property SubMaps: TJCoreOPFMaps read FSubMaps;
   public
     constructor Create(const AMap: TJCoreOPFMap); virtual;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; virtual;
@@ -52,9 +71,10 @@ type
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
-    // Suport
+    // Support
     function BuildFieldParams(const AFieldCount: Integer): string; virtual;
-    function BuildOIDCondition(const AOIDNameArray: array of string; const AOIDCount: Integer): string; virtual;
+    function BuildOIDCondition(const AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildOIDCondition(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
   end;
 
   TJCoreOPFSQLGeneratorClass = class of TJCoreOPFSQLGenerator;
@@ -128,9 +148,71 @@ uses
 
 { TJCoreOPFSQLGenerator }
 
+const
+  { TODO : Review the aproach after "subclass type strategy" implementation }
+  CTablePrefix: array[TJCoreOPFTablePrefixType] of string = ('', 'T_', 'TS_');
+  CMainMapPrefix: array[Boolean] of TJCoreOPFTablePrefixType = (jtptNone, jtptMainMap);
+  CSubMapPrefix: array[Boolean] of TJCoreOPFTablePrefixType = (jtptNone, jtptSubMap);
+
+function TJCoreOPFSQLGenerator.BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex,
+  AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+var
+  VFieldName: string;
+begin
+  VFieldName := AMaps[AMapIndex][AFieldIndex].PersistentFieldName;
+  if ATablePrefixType <> jtptNone then
+    Result := Format('%s%d.%s', [CTablePrefix[ATablePrefixType], AMapIndex, VFieldName])
+  else
+    Result := VFieldName;
+end;
+
+function TJCoreOPFSQLGenerator.BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex,
+  AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+var
+  VFieldName: string;
+begin
+  VFieldName := AMaps[AMapIndex].OIDName[AOIDIndex];
+  if ATablePrefixType <> jtptNone then
+    Result := Format('%s%d.%s', [CTablePrefix[ATablePrefixType], AMapIndex, VFieldName])
+  else
+    Result := VFieldName;
+end;
+
+function TJCoreOPFSQLGenerator.BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer;
+  const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+var
+  VMap: TJCoreOPFMap;
+  I: Integer;
+begin
+  VMap := AMaps[AMapIndex];
+  Result := '';
+  for I := Low(VMap.OIDName) to High(VMap.OIDName) do
+    Result := Result + BuildOIDName(AMaps, AMapIndex, I, ATablePrefixType) + ',';
+end;
+
+function TJCoreOPFSQLGenerator.BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer;
+  const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+var
+  VMap: TJCoreOPFMap;
+begin
+  VMap := AMaps[AMapIndex];
+  if ATablePrefixType <> jtptNone then
+    Result := Format('%s %s%d', [VMap.TableName, CTablePrefix[ATablePrefixType], AMapIndex])
+  else
+    Result := VMap.TableName;
+end;
+
+function TJCoreOPFSQLGenerator.MapIndexByMap(const AMap: TJCoreOPFMap): Integer;
+begin
+  for Result := 0 to Pred(Maps.Count) do
+    if Maps[Result] = AMap then
+      Exit;
+  raise EJCoreOPFMappingNotFound.Create(AMap.Metadata.TheClass.ClassName);
+end;
+
 function TJCoreOPFSQLGenerator.BuildDeleteCondition(const AOIDCount: Integer): string;
 begin
-  Result := BuildOIDCondition(Map.OIDName, AOIDCount);
+  Result := BuildOIDCondition(AOIDCount, jtptNone);
 end;
 
 function TJCoreOPFSQLGenerator.BuildInsertFieldNames(const AMapping: TJCoreOPFADMMapping): string;
@@ -156,33 +238,98 @@ begin
   Result := BuildFieldParams(Length(Map.OIDName) + Length(AMapping.ADMChanged));
 end;
 
-function TJCoreOPFSQLGenerator.BuildSelectBaseFieldNames: string;
+function TJCoreOPFSQLGenerator.BuildSelectBaseFieldNames(const AUseTablePrefix: Boolean): string;
 var
-  VOIDName: TJCoreStringArray;
-  I: Integer;
+  VMap: TJCoreOPFMap;
+  I, J: Integer;
 begin
-  VOIDName := Map.OIDName;
-  Result := '';
-  for I := Low(VOIDName) to High(VOIDName) do
-    Result := Result + VOIDName[I] + ',';
-  for I := 0 to Pred(Map.Count) do
-    Result := Result + Map[I].PersistentFieldName + ',';
+  Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]);
+  for I := 0 to Pred(SubMaps.Count) do
+    Result := Result + BuildOIDName(SubMaps, I, 0, CSubMapPrefix[AUseTablePrefix]) + ',';
+  for I := 0 to Pred(Maps.Count) do
+  begin
+    VMap := Maps[I];
+    for J := 0 to Pred(VMap.Count) do
+      Result := Result + BuildFieldName(Maps, I, J, CMainMapPrefix[AUseTablePrefix]) + ',';
+  end;
   SetLength(Result, Length(Result) - 1);
 end;
 
-function TJCoreOPFSQLGenerator.BuildSelectBaseFrom: string;
+function TJCoreOPFSQLGenerator.BuildSelectBaseFrom(const AUseTablePrefix: Boolean): string;
+var
+  I: Integer;
 begin
-  Result := Map.TableName;
+  Result := BuildTableName(Maps, 0, CMainMapPrefix[AUseTablePrefix]);
+  for I := 1 to Pred(Maps.Count) do
+    Result := Format('%s INNER JOIN %s ON %s', [
+     Result,
+     BuildTableName(Maps, I, jtptMainMap),
+     BuildSelectJoinCondition(Maps, 0, jtptMainMap, Maps, I, jtptMainMap)]);
+  for I := 0 to Pred(SubMaps.Count) do
+    Result := Format('%s LEFT OUTER JOIN %s ON %s', [
+     Result,
+     BuildTableName(SubMaps, I, jtptSubMap),
+     BuildSelectJoinCondition(Maps, 0, jtptMainMap, SubMaps, I, jtptSubMap)]);
 end;
 
-function TJCoreOPFSQLGenerator.BuildSelectCondition(const AOIDCount: Integer): string;
+function TJCoreOPFSQLGenerator.BuildSelectComplementaryFieldNames(const ABaseMapIdx: Integer;
+  const AUseTablePrefix: Boolean): string;
+var
+  VMap: TJCoreOPFMap;
+  I, J: Integer;
 begin
-  Result := BuildOIDCondition(Map.OIDName, AOIDCount);
+  Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]);
+  for I := ABaseMapIdx to Pred(Maps.Count) do
+  begin
+    VMap := Maps[I];
+    for J := 0 to Pred(VMap.Count) do
+      Result := Result + BuildFieldName(Maps, I, J, CMainMapPrefix[AUseTablePrefix]) + ',';
+  end;
+  SetLength(Result, Length(Result) - 1);
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectComplementaryFrom(const ABaseMapIdx: Integer;
+  const AUseTablePrefix: Boolean): string;
+var
+  I: Integer;
+begin
+  Result := BuildTableName(Maps, MapIndex, CMainMapPrefix[AUseTablePrefix]);
+  for I := ABaseMapIdx to Pred(Maps.Count) do
+    if Maps[I] <> Map then
+      Result := Format('%s INNER JOIN %s ON %s', [
+       Result,
+       BuildTableName(Maps, I, CMainMapPrefix[AUseTablePrefix]),
+       BuildSelectJoinCondition(Maps, MapIndex, jtptMainMap, Maps, I, jtptMainMap)]);
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectCondition(const AOIDCount: Integer;
+  const AUseTablePrefix: Boolean): string;
+begin
+  Result := BuildOIDCondition(Maps, 0, AOIDCount, CMainMapPrefix[AUseTablePrefix]);
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectJoinCondition(const ALeftMaps: TJCoreOPFMaps;
+  const ALeftIndex: Integer; const ALeftTablePrefixType: TJCoreOPFTablePrefixType;
+  const ARightMaps: TJCoreOPFMaps; const ARightIndex: Integer;
+  const ARightTablePrefixType: TJCoreOPFTablePrefixType): string;
+var
+  VLeftMap: TJCoreOPFMap;
+  I: Integer;
+begin
+  VLeftMap := ALeftMaps[ALeftIndex];
+  Result := '';
+  { TODO : Validate OID length among related classes }
+  for I := Low(VLeftMap.OIDName) to High(VLeftMap.OIDName) do
+    Result := Format('%s%s=%s AND ', [
+     Result,
+     BuildOIDName(ALeftMaps, ALeftIndex, I, ALeftTablePrefixType),
+     BuildOIDName(ARightMaps, ARightIndex, I, ARightTablePrefixType)]);
+  SetLength(Result, Length(Result) - 5);
 end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string;
 begin
-  Result := BuildOIDCondition(Map.OIDName, 1);
+  Result := BuildOIDCondition(1, jtptNone);
 end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateNames(const AMapping: TJCoreOPFADMMapping): string;
@@ -201,6 +348,9 @@ constructor TJCoreOPFSQLGenerator.Create(const AMap: TJCoreOPFMap);
 begin
   inherited Create;
   FMap := AMap;
+  FMaps := Map.Metadata.Maps;
+  FMapIndex := MapIndexByMap(AMap);
+  FSubMaps := Map.SubMaps;
 end;
 
 function TJCoreOPFSQLGenerator.GenerateDeleteStatement(const AOIDCount: Integer): string;
@@ -215,16 +365,28 @@ begin
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
+var
+  VIsMultiMap: Boolean;
 begin
+  VIsMultiMap := (SubMaps.Count > 0) or (Maps.Count > 1);
   Result := Format('SELECT %s FROM %s WHERE %s', [
-   BuildSelectBaseFieldNames, BuildSelectBaseFrom, BuildSelectCondition(AOIDCount)]);
+   BuildSelectBaseFieldNames(VIsMultiMap),
+   BuildSelectBaseFrom(VIsMultiMap),
+   BuildSelectCondition(AOIDCount, VIsMultiMap)]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap;
   const AOIDCount: Integer): string;
+var
+  VBaseMapIdx: Integer;
+  VIsMultiMap: Boolean;
 begin
-  { TODO : Implement }
-  Result := 'SELECT';
+  VBaseMapIdx := MapIndexByMap(ABaseMap) + 1;
+  VIsMultiMap := VBaseMapIdx < Pred(Maps.Count);
+  Result := Format('SELECT %s FROM %s WHERE %s', [
+   BuildSelectComplementaryFieldNames(VBaseMapIdx, VIsMultiMap),
+   BuildSelectComplementaryFrom(VBaseMapIdx, VIsMultiMap),
+   BuildSelectCondition(AOIDCount, VIsMultiMap)]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
@@ -294,30 +456,38 @@ begin
     Result := '';
 end;
 
-function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDNameArray: array of string;
-  const AOIDCount: Integer): string;
+function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDCount: Integer;
+  const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+begin
+  Result := BuildOIDCondition(Maps, MapIndex, AOIDCount, ATablePrefixType);
+end;
+
+function TJCoreOPFSQLGenerator.BuildOIDCondition(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDCount: Integer;
+  const ATablePrefixType: TJCoreOPFTablePrefixType): string;
 var
+  VOIDName: TJCoreStringArray;
   VOIDClause: string;
   I: Integer;
 begin
   { TODO : allocate once, at the start }
-  if Length(AOIDNameArray) = 1 then
+  VOIDName := AMaps[AMapIndex].OIDName;
+  if Length(VOIDName) = 1 then
   begin
     if AOIDCount > 1 then
     begin
-      Result := AOIDNameArray[0] + ' IN (?';
+      Result := BuildOIDName(AMaps, AMapIndex, 0, ATablePrefixType) + ' IN (?';
       for I := 2 to AOIDCount do
         Result := Result + ',?';
       Result := Result + ')';
     end else if AOIDCount = 1 then
-      Result := AOIDNameArray[0] + '=?'
+      Result := BuildOIDName(AMaps, AMapIndex, 0, ATablePrefixType) + '=?'
     else
       Result := '';
   end else
   begin
     VOIDClause := '(';
-    for I := Low(AOIDNameArray) to High(AOIDNameArray) do
-      VOIDClause := AOIDNameArray[I] + '=? AND ';
+    for I := Low(VOIDName) to High(VOIDName) do
+      VOIDClause := BuildOIDName(AMaps, AMapIndex, I, ATablePrefixType) + '=? AND ';
     SetLength(VOIDClause, Length(VOIDClause) - 4);
     VOIDClause[Length(VOIDClause)] := ')';
     Result := '';
@@ -330,9 +500,14 @@ end;
 { TJCoreOPFSQLMapping }
 
 function TJCoreOPFSQLMapping.CreateEntityFromDriver: TObject;
+var
+  VClass: TClass;
 begin
-  { TODO : Implement }
-  Result := Map.Metadata.TheClass.Create;
+  VClass := SelectClassFromDriver(Map.SubClasses, nil);
+  if Assigned(VClass) then
+    Result := VClass.Create
+  else
+    Result := nil;
 end;
 
 function TJCoreOPFSQLMapping.SQLGeneratorClass: TJCoreOPFSQLGeneratorClass;
@@ -603,8 +778,35 @@ end;
 
 function TJCoreOPFSQLMapping.BuildOIDCondition(const AOIDNameArray: array of string;
   const AOIDCount: Integer): string;
+var
+  VOIDClause: string;
+  I: Integer;
 begin
-  Result := SQLGenerator.BuildOIDCondition(AOIDNameArray, AOIDCount);
+  { TODO : Fix duplicated code. Used on manual mapping of external links }
+  if Length(AOIDNameArray) = 1 then
+  begin
+    if AOIDCount > 1 then
+    begin
+      Result := AOIDNameArray[0] + ' IN (?';
+      for I := 2 to AOIDCount do
+        Result := Result + ',?';
+      Result := Result + ')';
+    end else if AOIDCount = 1 then
+      Result := AOIDNameArray[0] + '=?'
+    else
+      Result := '';
+  end else
+  begin
+    VOIDClause := '(';
+    for I := Low(AOIDNameArray) to High(AOIDNameArray) do
+      VOIDClause := AOIDNameArray[I] + '=? AND ';
+    SetLength(VOIDClause, Length(VOIDClause) - 4);
+    VOIDClause[Length(VOIDClause)] := ')';
+    Result := '';
+    for I := 0 to Pred(AOIDCount) do
+      Result := Result + VOIDClause + ' OR ';
+    SetLength(Result, Length(Result) - 4);
+  end;
 end;
 
 function TJCoreOPFSQLMapping.EnsureCollectionAttribute(const APID: TJCoreOPFPID;

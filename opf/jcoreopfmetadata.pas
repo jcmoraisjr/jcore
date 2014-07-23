@@ -391,6 +391,8 @@ type
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDName: TJCoreStringArray;
+    FSubClasses: TJCoreClassArray;
+    FSubMaps: TJCoreOPFMaps;
     FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
@@ -398,6 +400,8 @@ type
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
+    property SubClasses: TJCoreClassArray read FSubClasses;
+    property SubMaps: TJCoreOPFMaps read FSubMaps;
     property TableName: string read FTableName;
   end;
 
@@ -409,10 +413,12 @@ type
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass; // model initializes
     FOIDName: TJCoreStringArray; // model initializes
+    FSubMaps: TJCoreOPFMaps;
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
     function GetModel: TJCoreOPFModel;
     function GetParent: TJCoreOPFClassMetadata;
+    function GetSubMaps: TJCoreOPFMaps;
   protected
     property Model: TJCoreOPFModel read GetModel;
   public
@@ -425,6 +431,7 @@ type
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
     property Parent: TJCoreOPFClassMetadata read GetParent;
+    property SubMaps: TJCoreOPFMaps read GetSubMaps;
   end;
 
   { TJCoreOPFModel }
@@ -437,8 +444,10 @@ type
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
+    procedure AcquireSubMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
   protected
     procedure AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
+    function AcquireMap(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMap;
     function AttributeMetadataClass: TJCoreAttrMetadataClass; override;
     function ClassMetadataClass: TJCoreClassMetadataClass; override;
     procedure Finit; override;
@@ -452,6 +461,7 @@ type
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
+    function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     property GeneratorStrategy: TJCoreOPFGeneratorStrategy read FGeneratorStrategy write FGeneratorStrategy;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
   end;
@@ -1505,6 +1515,8 @@ end;
 { TJCoreOPFMap }
 
 constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata);
+var
+  I: Integer;
 begin
   inherited Create(False);
   FMetadata := AMetadata;
@@ -1512,6 +1524,10 @@ begin
   FOIDName := Metadata.OIDName;
   FTableName := UpperCase(Copy(Metadata.TheClass.ClassName, 2, MaxInt));
   FGeneratorStrategy := Metadata.GeneratorStrategy;
+  FSubMaps := Metadata.SubMaps;
+  SetLength(FSubClasses, FSubMaps.Count);
+  for I := Low(FSubClasses) to High(FSubClasses) do
+    FSubClasses[I] := FSubMaps[I].Metadata.TheClass;
 end;
 
 { TJCoreOPFClassMetadata }
@@ -1538,9 +1554,17 @@ begin
   Result := inherited Parent as TJCoreOPFClassMetadata;
 end;
 
+function TJCoreOPFClassMetadata.GetSubMaps: TJCoreOPFMaps;
+begin
+  if not Assigned(FSubMaps) then
+    FSubMaps := Model.CreateSubMaps(Self);
+  Result := FSubMaps;
+end;
+
 destructor TJCoreOPFClassMetadata.Destroy;
 begin
   FreeAndNil(FMaps);
+  FreeAndNil(FSubMaps);
   inherited Destroy;
 end;
 
@@ -1553,18 +1577,49 @@ end;
 { TJCoreOPFModel }
 
 procedure TJCoreOPFModel.AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
+begin
+  if Assigned(AMetadata) then
+  begin
+    AcquireMaps(AMetadata.Parent, AMaps);
+    { TODO : Proper metadata -> map conversion }
+    if AMetadata.AttributeCount > 0 then
+      AMaps.Add(AcquireMap(AMetadata));
+  end;
+end;
+
+procedure TJCoreOPFModel.AcquireSubMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
 var
-  VName: string;
-  VIndex: Integer;
-  VMap: TJCoreOPFMap;
+  VClass: TClass;
+  VOPFMetadata: TJCoreOPFClassMetadata;
   I: Integer;
 begin
-  if not Assigned(AMetadata) then
-    Exit;
-  AcquireMaps(AMetadata.Parent, AMaps);
-  if AMetadata.AttributeCount = 0 then
-    // no attribute, no map
-    Exit;
+  for I := 0 to Pred(ClassMap.Count) do
+  begin
+    VClass := ClassMap.Data[I];
+    if VClass.ClassParent = AMetadata.TheClass then
+    begin
+      VOPFMetadata := AcquireMetadata(VClass);
+      AMaps.Add(AcquireMap(VOPFMetadata));
+      AcquireSubMaps(VOPFMetadata, AMaps);
+    end;
+  end;
+end;
+
+procedure TJCoreOPFModel.AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
+var
+  VADMClass: TJCoreOPFADMClass;
+begin
+  for VADMClass in AADMClassArray do
+    ADMClassList.Add(VADMClass);
+end;
+
+function TJCoreOPFModel.AcquireMap(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMap;
+var
+  VName: string;
+  VMap: TJCoreOPFMap;
+  VIndex: Integer;
+  I: Integer;
+begin
   VName := AMetadata.TheClass.ClassName;
   VIndex := MapMap.IndexOf(VName);
   if VIndex = -1 then
@@ -1574,15 +1629,7 @@ begin
     for I := 0 to Pred(AMetadata.AttributeCount) do
       VMap.Add(AMetadata[I]);
   end;
-  AMaps.Add(MapMap.Data[VIndex]);
-end;
-
-procedure TJCoreOPFModel.AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
-var
-  VADMClass: TJCoreOPFADMClass;
-begin
-  for VADMClass in AADMClassArray do
-    ADMClassList.Add(VADMClass);
+  Result := MapMap.Data[VIndex];
 end;
 
 function TJCoreOPFModel.AttributeMetadataClass: TJCoreAttrMetadataClass;
@@ -1659,6 +1706,17 @@ begin
   Result := TJCoreOPFMaps.Create(False);
   try
     AcquireMaps(AMetadata, Result);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+function TJCoreOPFModel.CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
+begin
+  Result := TJCoreOPFMaps.Create(False);
+  try
+    AcquireSubMaps(AMetadata, Result);
   except
     FreeAndNil(Result);
     raise;
