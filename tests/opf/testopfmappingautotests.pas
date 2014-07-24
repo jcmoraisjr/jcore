@@ -44,6 +44,7 @@ type
     procedure SingleFromClass;
     procedure InheritanceFromEntity;
     procedure InheritanceFromClass;
+    procedure InheritanceFromParentClass;
     procedure InheritanceFromClassWithOIDArray;
   end;
 
@@ -316,6 +317,18 @@ begin
    'ExecSQL DELETE FROM CLIENT WHERE ID=?',
    'WriteInt64 5',
    'ExecSQL DELETE FROM PERSON WHERE ID=?']);
+end;
+
+procedure TTestOPFDeleteAutoMappingTests.InheritanceFromParentClass;
+begin
+  Session.Dispose(TClient, ['2']);
+  AssertSQLDriverCommands([
+   'WriteInt64 2',
+   'ExecSQL DELETE FROM CLIENT WHERE ID=?',
+   'WriteInt64 2',
+   'ExecSQL DELETE FROM PERSON WHERE ID=?',
+   'WriteInt64 2',
+   'ExecSQL DELETE FROM COMPANY WHERE ID=?']);
 end;
 
 procedure TTestOPFDeleteAutoMappingTests.InheritanceFromClassWithOIDArray;

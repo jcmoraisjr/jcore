@@ -506,11 +506,17 @@ end;
 
 procedure TJCoreOPFClassMapping.Dispose(const AOIDArray: array of TJCoreOPFOID);
 var
+  VSubClasses: TJCoreClassArray;
   I: Integer;
 begin
   if Length(AOIDArray) > 0 then
+  begin
     for I := 0 to Pred(MappingList.Count) do
       MappingList[I].Dispose(AOIDArray);
+    VSubClasses := Mapping.Map.SubClasses;
+    for I := Low(VSubClasses) to High(VSubClasses) do
+      Mapper.AcquireClassMapping(VSubClasses[I]).Mapping.Dispose(AOIDArray);
+  end;
 end;
 
 procedure TJCoreOPFClassMapping.EnsureMappingConsistency(const APID: TJCoreOPFPID);
