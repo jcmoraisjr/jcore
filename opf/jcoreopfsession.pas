@@ -66,6 +66,7 @@ type
     procedure LoadEntity(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
     procedure LoadCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     function PIDClass: TJCoreOPFPIDClass; virtual;
+    procedure StorePID(const APID: TJCoreOPFPID);
     function IJCoreOPFMapper.Driver = IGetDriver;
     function IJCoreOPFMapper.Model = IGetModel;
     property Driver: TJCoreOPFDriver read FDriver;
@@ -208,6 +209,11 @@ end;
 function TJCoreOPFSession.PIDClass: TJCoreOPFPIDClass;
 begin
   Result := TJCoreOPFPID;
+end;
+
+procedure TJCoreOPFSession.StorePID(const APID: TJCoreOPFPID);
+begin
+  AcquireClassMapping(APID.Entity.ClassType).StorePID(APID);
 end;
 
 constructor TJCoreOPFSession.Create(const ASessionManager: IJCoreOPFSessionManager;

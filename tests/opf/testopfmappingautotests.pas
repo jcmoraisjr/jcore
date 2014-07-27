@@ -15,6 +15,9 @@ type
   published
     procedure Single;
     procedure Inheritance;
+    procedure CompositionNull;
+    procedure CompositionSingle1;
+    procedure CompositionSingle2;
   end;
 
   { TTestOPFSelectAutoMappingTests }
@@ -92,6 +95,69 @@ begin
      'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);
   finally
     FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.CompositionNull;
+var
+  VInvoice: TInvoice;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VInvoice.Date := '02/01';
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteNull',
+     'WriteString 02/01',
+     'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.CompositionSingle1;
+var
+  VInvoice: TInvoice;
+  VClient: TClient;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VClient := TClient.Create;
+    VInvoice.Client := VClient;
+    VClient.Name := 'bar sa';
+    Session.Store(VClient);
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 2',
+     'WriteInt64 1',
+     'WriteString ',
+     'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.CompositionSingle2;
+var
+  VInvoice: TInvoice;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VInvoice.Client := TClient.Create;
+    VInvoice.Client.Name := 'bar sa';
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'WriteString bar sa',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteInt64 2',
+     'WriteString ',
+     'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 

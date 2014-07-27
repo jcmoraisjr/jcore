@@ -399,7 +399,7 @@ end;
 
 procedure TInvoiceSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
 begin
-  WriteCollection(AMapping, 'Items');
+  WriteCollection(AMapping['Items']);
 end;
 
 procedure TInvoiceSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -407,7 +407,7 @@ var
   VInvoice: TInvoice;
 begin
   VInvoice := AMapping.PID.Entity as TInvoice;
-  WriteEntity(TClient, VInvoice.Client);
+  WriteEntity(TClient, VInvoice.Client, False);
   Driver.WriteString(VInvoice.Date);
 end;
 
@@ -512,7 +512,7 @@ var
 begin
   VItemProduct := AMapping.PID.Entity as TInvoiceItemProduct;
   Driver.WriteInt32(VItemProduct.Qty);
-  WriteEntity(TProduct, VItemProduct.Product);
+  WriteEntity(TProduct, VItemProduct.Product, False);
 end;
 
 class function TInvoiceItemProductSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;

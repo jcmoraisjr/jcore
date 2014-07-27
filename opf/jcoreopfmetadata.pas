@@ -41,6 +41,7 @@ type
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     procedure LoadEntity(const APID: TJCoreOPFPID; const AADM: TJCoreOPFADMEntity);
     procedure LoadCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
+    procedure StorePID(const APID: TJCoreOPFPID);
   end;
 
   TJCoreOPFAttributeType = (jatSimple, jatEntity, jatCollection);
@@ -65,7 +66,6 @@ type
     procedure InternalUpdateCache; virtual; abstract;
     property AttrAddr: Pointer read FAttrAddr;
     property AttrPropInfo: PPropInfo read FAttrPropInfo;
-    property PID: TJCoreOPFPID read FPID;
   public
     constructor Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
@@ -77,6 +77,7 @@ type
     procedure UpdateAttrAddr(const AAttrAddrRef: PPPointer);
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
+    property PID: TJCoreOPFPID read FPID;
   end;
 
   TJCoreOPFADMClass = class of TJCoreOPFADM;
@@ -175,6 +176,7 @@ type
     function GetValue: TObject;
   protected
     procedure InternalGetter; override;
+  public
     property Value: TObject read GetValue;
   end;
 
@@ -197,6 +199,7 @@ type
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
     procedure AssignComposition(const AComposite: TObject);
     class function AttributeType: TJCoreOPFAttributeType; override;
+    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property CompositionOID: TJCoreOPFOID read FCompositionOID write SetCompositionOID;
   end;
 
@@ -238,6 +241,7 @@ type
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
     class function AttributeType: TJCoreOPFAttributeType; override;
+    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
     property PIDArray: TJCoreOPFPIDArray read GetPIDArray;
@@ -266,6 +270,7 @@ type
     FADMChanged: TJCoreOPFADMArray;
     FPID: TJCoreOPFPID;
     function GetADM(const AIndex: Integer): TJCoreOPFADM;
+    function GetADMByName(const AAttributeName: string): TJCoreOPFADM;
     function GetADMChanged: TJCoreOPFADMArray;
   protected
     function InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
@@ -274,7 +279,8 @@ type
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function IsDirty: Boolean;
     function IsInternalsDirty: Boolean;
-    property ADM[const AIndex: Integer]: TJCoreOPFADM read GetADM; default;
+    property ADM[const AIndex: Integer]: TJCoreOPFADM read GetADM;
+    property ADMByName[const AAttributeName: string]: TJCoreOPFADM read GetADMByName; default;
     property ADMChanged: TJCoreOPFADMArray read GetADMChanged;
     property PID: TJCoreOPFPID read FPID;
   end;
@@ -870,6 +876,20 @@ begin
   Result := jatEntity;
 end;
 
+procedure TJCoreOPFADMEntity.WriteToDriver(const ADriver: TJCoreOPFDriver);
+var
+  VPID: TJCoreOPFPID;
+begin
+  VPID := AcquirePID;
+  if Assigned(VPID) then
+  begin
+    if not Assigned(VPID.OID) then
+      VPID.PIDManager.StorePID(VPID);
+    VPID.OID.WriteToDriver(ADriver)
+  end else
+    Metadata.CompositionMetadata.OIDClass.WriteNull(ADriver);
+end;
+
 { TJCoreOPFADMCollection }
 
 function TJCoreOPFADMCollection.ArrayContentIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
@@ -1117,6 +1137,11 @@ begin
   Result := jatCollection;
 end;
 
+procedure TJCoreOPFADMCollection.WriteToDriver(const ADriver: TJCoreOPFDriver);
+begin
+  { TODO : Implement }
+end;
+
 { TJCoreOPFADMFPSListCollection }
 
 function TJCoreOPFADMFPSListCollection.GetList: TFPSList;
@@ -1185,7 +1210,7 @@ begin
     for I := 0 to Pred(Count) do
     begin
       VADM := Data[I];
-      if VADM.IsDirty then
+      if (VADM.AttributeType in [jatSimple, jatEntity]) and VADM.IsDirty then
       begin
         FADMChanged[VCount] := VADM;
         Inc(VCount);
@@ -1199,6 +1224,16 @@ end;
 function TJCoreOPFADMMapping.GetADM(const AIndex: Integer): TJCoreOPFADM;
 begin
   Result := Data[AIndex];
+end;
+
+function TJCoreOPFADMMapping.GetADMByName(const AAttributeName: string): TJCoreOPFADM;
+var
+  VIndex: Integer;
+begin
+  VIndex := IndexOf(AAttributeName);
+  if VIndex = -1 then
+    raise EJCoreAttributeNotFound.Create(PID.Entity.ClassName, AAttributeName);
+  Result := Data[VIndex];
 end;
 
 function TJCoreOPFADMMapping.InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
@@ -1228,13 +1263,8 @@ begin
 end;
 
 function TJCoreOPFADMMapping.AcquireADM(const AAttributeName: string): TJCoreOPFADM;
-var
-  VIndex: Integer;
 begin
-  VIndex := IndexOf(AAttributeName);
-  if VIndex = -1 then
-    raise EJCoreAttributeNotFound.Create(PID.Entity.ClassName, AAttributeName);
-  Result := Data[VIndex];
+  Result := ADMByName[AAttributeName];
 end;
 
 function TJCoreOPFADMMapping.IsDirty: Boolean;

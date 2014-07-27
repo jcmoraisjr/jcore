@@ -26,7 +26,9 @@ type
   TTestOPFUpdateManualMappingPlainTests = class(TTestOPFIPIDContactTestCase)
   published
     procedure Single;
-    procedure EntityAggregation;
+    procedure EntityAggregation1;
+    procedure EntityAggregation2;
+    procedure EntityComposition;
     procedure CollectionCompositionEmbeddedAdd;
     procedure CollectionCompositionEmbeddedRemove;
     procedure CollectionAggregationAdd;
@@ -342,7 +344,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateManualMappingPlainTests.EntityAggregation;
+procedure TTestOPFUpdateManualMappingPlainTests.EntityAggregation1;
 var
   VPerson: TTestIPIDPerson;
   VCity1: TTestIPIDCity;
@@ -376,6 +378,54 @@ begin
   finally
     FreeAndNil(VCity2);
     FreeAndNil(VCity1);
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMappingPlainTests.EntityAggregation2;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Name := 'jack';
+    VPerson.City := TTestIPIDCity.Create;
+    VPerson.City.Name := 'gotam';
+    Session.Store(VPerson);
+    VPerson.City.Name := 'gotham';
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([]);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateManualMappingPlainTests.EntityComposition;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Name := 'jack';
+    VPerson.Address := TTestIPIDAddress.Create;
+    VPerson.Address.Street := 'route';
+    Session.Store(VPerson);
+    VPerson.Address.Street := 'street';
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteString jack',
+     'WriteInt32 0',
+     'WriteString street',
+     'WriteString ',
+     'WriteInt64 2',
+     'ExecSQL UPDATE ADDRESS SET STREET=?, ZIPCODE=? WHERE ID=?',
+     'WriteInt64 2',
+     'WriteNull',
+     'WriteInt64 1',
+     'ExecSQL UPDATE PERSON SET NAME=?, AGE=?, ADDRESS=?, CITY=? WHERE ID=?']);
+  finally
     FreeAndNil(VPerson);
   end;
 end;

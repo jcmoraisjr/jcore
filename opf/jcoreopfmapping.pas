@@ -174,7 +174,7 @@ type
     procedure RetrieveCollectionInternal(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure RetrieveEntityInternal(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
     procedure RetrieveLazyEntityFromDriverInternal(const ALazyADM: TJCoreOPFADMEntity);
-    procedure StoreCollectionInternal(const AOwnerMapping: TJCoreOPFADMMapping; const AOwnerADM: TJCoreOPFADMCollection);
+    procedure StoreCollectionInternal(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
   public
     // Public facades, mapped from session facades
     constructor Create(const AMapper: IJCoreOPFMapper; const AMetadata: TJCoreOPFClassMetadata; AMappingList: TJCoreOPFMappingList);
@@ -719,7 +719,7 @@ begin
   ALazyADM.CompositionOID := CreateOIDFromDriver;
 end;
 
-procedure TJCoreOPFClassMapping.StoreCollectionInternal(const AOwnerMapping: TJCoreOPFADMMapping;
+procedure TJCoreOPFClassMapping.StoreCollectionInternal(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMCollection);
 var
   VAttrMetadata: TJCoreOPFAttrMetadata;
@@ -745,7 +745,7 @@ begin
   VPIDs := AOwnerADM.PIDArray;
   for VPID in VPIDs do
   begin
-    VPID.AssignOwner(AOwnerMapping.PID, AOwnerADM);
+    VPID.AssignOwner(AOwnerPID, AOwnerADM);
     if (VAttrMetadata.CompositionType = jctComposition) or not VPID.IsPersistent then
     { TODO : Document this approach: non composition attributes are stored if they are not persistent }
     begin
