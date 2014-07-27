@@ -20,7 +20,7 @@ type
     function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -35,7 +35,7 @@ type
     function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -50,7 +50,7 @@ type
     function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -64,7 +64,7 @@ type
     function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -78,8 +78,8 @@ type
     function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -94,7 +94,7 @@ type
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -108,7 +108,7 @@ type
     function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -122,7 +122,7 @@ type
     function GenerateSelectComplementaryStatement(const ABaseMap: TJCoreOPFMap; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -206,7 +206,7 @@ begin
   VClient.Name := Driver.ReadString;
 end;
 
-procedure TClientSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TClientSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VClient: TClient;
 begin
@@ -258,7 +258,7 @@ begin
   VPerson.Nick := Driver.ReadString;
 end;
 
-procedure TPersonSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TPersonSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VPerson: TPerson;
 begin
@@ -310,7 +310,7 @@ begin
   VCompany.ContactName := Driver.ReadString;
 end;
 
-procedure TCompanySQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TCompanySQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VCompany: TCompany;
 begin
@@ -353,7 +353,7 @@ begin
   VProduct.Name := Driver.ReadString;
 end;
 
-procedure TProductSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TProductSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VProduct: TProduct;
 begin
@@ -397,18 +397,18 @@ begin
   VInvoice.Date := Driver.ReadString;
 end;
 
-procedure TInvoiceSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
-begin
-  WriteCollection(AMapping['Items']);
-end;
-
-procedure TInvoiceSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TInvoiceSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VInvoice: TInvoice;
 begin
   VInvoice := AMapping.PID.Entity as TInvoice;
   WriteEntity(TClient, VInvoice.Client, False);
   Driver.WriteString(VInvoice.Date);
+end;
+
+procedure TInvoiceSQLMapping.WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping);
+begin
+  WriteCollection(AMapping['Items']);
 end;
 
 class function TInvoiceSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;
@@ -458,7 +458,7 @@ begin
   VInvoiceItem.Total := Driver.ReadInt64;
 end;
 
-procedure TInvoiceItemSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TInvoiceItemSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VInvoiceItem: TInvoiceItem;
 begin
@@ -506,7 +506,7 @@ begin
   VItemProduct.Product := ReadEntity(TProduct) as TProduct;
 end;
 
-procedure TInvoiceItemProductSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TInvoiceItemProductSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VItemProduct: TInvoiceItemProduct;
 begin
@@ -554,7 +554,7 @@ begin
   VItemService.Description := Driver.ReadString;
 end;
 
-procedure TInvoiceItemServiceSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TInvoiceItemServiceSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VItemService: TInvoiceItemService;
 begin

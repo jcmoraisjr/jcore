@@ -118,8 +118,8 @@ type
     procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
     // Direct attribute <-> field mapping
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping); override;
   protected
     // Manual mapping helpers
     function BuildOIDCondition(const AOIDNameArray: array of string; const AOIDCount: Integer): string;
@@ -762,12 +762,7 @@ begin
     AMapping.ADM[I].ReadFromDriver(Driver);
 end;
 
-procedure TJCoreOPFSQLMapping.WriteExternalsToDriver(const AMapping: TJCoreOPFADMMapping);
-begin
-  { TODO : Implement }
-end;
-
-procedure TJCoreOPFSQLMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TJCoreOPFSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
   VADMChanged: TJCoreOPFADMArray;
   I: Integer;
@@ -775,6 +770,11 @@ begin
   VADMChanged := AMapping.ADMChanged;
   for I := Low(VADMChanged) to High(VADMChanged) do
     VADMChanged[I].WriteToDriver(Driver);
+end;
+
+procedure TJCoreOPFSQLMapping.WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping);
+begin
+  { TODO : Implement }
 end;
 
 function TJCoreOPFSQLMapping.BuildOIDCondition(const AOIDNameArray: array of string;

@@ -136,7 +136,7 @@ type
     function CreateCustomGenerator: IJCoreOPFGenerator; override;
     procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); override;
     procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -432,7 +432,7 @@ procedure TTestEmptyMapping.InternalUpdate(const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
-procedure TTestEmptyMapping.WriteInternalsToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TTestEmptyMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
