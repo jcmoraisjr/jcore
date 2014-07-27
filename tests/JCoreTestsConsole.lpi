@@ -98,7 +98,7 @@
         <Name Value="EJCoreOPFDriverNotFound"/>
       </Item10>
       <Item11>
-        <Name Value="EJCoreOPFUndefinedMapping"/>
+        <Name Value="EJCoreOPFUnsupportedAttributeType"/>
       </Item11>
       <Item12>
         <Name Value="EJCoreOPFMappingNotFound"/>

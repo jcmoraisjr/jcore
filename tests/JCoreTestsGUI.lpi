@@ -70,7 +70,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="13">
+    <Exceptions Count="12">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -102,14 +102,11 @@
         <Name Value="EJCoreOPFDriverNotFound"/>
       </Item10>
       <Item11>
-        <Name Value="EJCoreOPFUndefinedMapping"/>
+        <Name Value="EJCoreOPFUnsupportedAttributeType"/>
       </Item11>
       <Item12>
         <Name Value="EJCoreOPFMappingNotFound"/>
       </Item12>
-      <Item13>
-        <Name Value="EJCoreOPFUnsupportedListOperations"/>
-      </Item13>
     </Exceptions>
   </Debugging>
 </CONFIG>
