@@ -172,12 +172,14 @@ type
 
   TJCoreOPFADMObject = class(TJCoreOPFADM)
   private
-    function GetGetter: TObject;
     function GetValue: TObject;
+    procedure SetValue(const AValue: TObject);
+    function UseGetter: TObject;
+    procedure UseSetter(const AValue: TObject);
   protected
     procedure InternalGetter; override;
   public
-    property Value: TObject read GetValue;
+    property Value: TObject read GetValue write SetValue;
   end;
 
   { TJCoreOPFADMEntity }
@@ -766,22 +768,35 @@ end;
 
 { TJCoreOPFADMObject }
 
-function TJCoreOPFADMObject.GetGetter: TObject;
-begin
-  Result := GetObjectProp(PID.Entity, AttrPropInfo, nil);
-end;
-
 function TJCoreOPFADMObject.GetValue: TObject;
 begin
   if Assigned(AttrAddr) then
     Result := TObject(AttrAddr^)
   else
-    Result := GetGetter;
+    Result := UseGetter;
+end;
+
+procedure TJCoreOPFADMObject.SetValue(const AValue: TObject);
+begin
+  if Assigned(AttrAddr) then
+    TObject(AttrAddr^) := AValue
+  else
+    UseSetter(AValue);
+end;
+
+function TJCoreOPFADMObject.UseGetter: TObject;
+begin
+  Result := GetObjectProp(PID.Entity, AttrPropInfo, nil);
+end;
+
+procedure TJCoreOPFADMObject.UseSetter(const AValue: TObject);
+begin
+  SetObjectProp(PID.Entity, AttrPropInfo, AValue);
 end;
 
 procedure TJCoreOPFADMObject.InternalGetter;
 begin
-  GetGetter;
+  UseGetter;
 end;
 
 { TJCoreOPFADMEntity }
@@ -1164,7 +1179,7 @@ begin
   if not Assigned(VItems) then
   begin
     VItems := TJCoreObjectList.Create;
-    SetObjectProp(PID.Entity, AttrPropInfo, VItems);
+    Value := VItems;
   end;
   VItems.Clear;
   for VItem in AArray do
