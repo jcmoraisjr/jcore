@@ -17,6 +17,7 @@ unit JCoreOPFMappingSQL;
 interface
 
 uses
+  JCoreClasses,
   JCoreOPFDriver,
   JCoreOPFOID,
   JCoreOPFMetadata,
@@ -37,6 +38,7 @@ type
   protected
     // Internal Support
     function BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex, AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray; virtual;
     function BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
@@ -44,8 +46,7 @@ type
   protected
     // SQL fragments
     function BuildDeleteCondition(const AOIDCount: Integer): string; virtual;
-    function BuildInsertFieldNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
-    function BuildInsertParamNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
+    function BuildInsertFieldNames(const AFields: TJCoreStringArray): string; virtual;
     function BuildSelectBaseFieldNames(const AUseTablePrefix: Boolean): string; virtual;
     function BuildSelectBaseFrom(const AUseTablePrefix: Boolean): string; virtual;
     function BuildSelectComplementaryFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
@@ -143,7 +144,6 @@ implementation
 uses
   sysutils,
   Classes,
-  JCoreClasses,
   JCoreMetadata,
   JCoreOPFException;
 
@@ -165,6 +165,35 @@ begin
     Result := Format('%s%d.%s', [CTablePrefix[ATablePrefixType], AMapIndex, VFieldName])
   else
     Result := VFieldName;
+end;
+
+function TJCoreOPFSQLGenerator.BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray;
+var
+  VOIDName: TJCoreStringArray;
+  VOwnerOIDName: TJCoreStringArray;
+  VADMChanged: TJCoreOPFADMArray;
+  VIndex, I: Integer;
+begin
+  VOIDName := Map.OIDName;
+  VOwnerOIDName := Map.OwnerOIDName;
+  VADMChanged := AMapping.ADMAttributeChanged;
+  SetLength(Result, Length(VOIDName) + Length(VOwnerOIDName) + Length(VADMChanged));
+  VIndex := 0;
+  for I := Low(VOIDName) to High(VOIDName) do
+  begin
+    Result[VIndex] := VOIDName[I];
+    Inc(VIndex);
+  end;
+  for I := Low(VOwnerOIDName) to High(VOwnerOIDName) do
+  begin
+    Result[VIndex] := VOwnerOIDName[I];
+    Inc(VIndex);
+  end;
+  for I := Low(VADMChanged) to High(VADMChanged) do
+  begin
+    Result[VIndex] := VADMChanged[I].Metadata.PersistentFieldName;
+    Inc(VIndex);
+  end;
 end;
 
 function TJCoreOPFSQLGenerator.BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex,
@@ -216,31 +245,17 @@ begin
   Result := BuildOIDCondition(AOIDCount, jtptNone);
 end;
 
-function TJCoreOPFSQLGenerator.BuildInsertFieldNames(const AMapping: TJCoreOPFADMMapping): string;
+function TJCoreOPFSQLGenerator.BuildInsertFieldNames(const AFields: TJCoreStringArray): string;
 var
-  VOIDName: TJCoreStringArray;
-  VADMChanged: TJCoreOPFADMArray;
   I: Integer;
 begin
   Result := '';
-  VOIDName := Map.OIDName;
-  for I := Low(VOIDName) to High(VOIDName) do
-    Result := Result + VOIDName[I] + ',';
-  VOIDName := Map.OwnerOIDName;
-  for I := Low(VOIDName) to High(VOIDName) do
-    Result := Result + VOIDName[I] + ',';
-  VADMChanged := AMapping.ADMAttributeChanged;
-  for I := Low(VADMChanged) to High(VADMChanged) do
-    Result := Result + VADMChanged[I].Metadata.PersistentFieldName + ',';
-  SetLength(Result, Length(Result) - 1);
-end;
-
-function TJCoreOPFSQLGenerator.BuildInsertParamNames(const AMapping: TJCoreOPFADMMapping): string;
-begin
-  // Insert use "admChanged" because there is a single "writeToDriver" method,
-  // shared between inserts and updates.
-  Result := BuildFieldParams(
-   Length(Map.OIDName) + Length(Map.OwnerOIDName) + Length(AMapping.ADMAttributeChanged));
+  if Length(AFields) > 0 then
+  begin
+    for I := Low(AFields) to Pred(High(AFields)) do
+      Result := Result + AFields[I] + ',';
+    Result := Result + AFields[High(AFields)];
+  end;
 end;
 
 function TJCoreOPFSQLGenerator.BuildSelectBaseFieldNames(const AUseTablePrefix: Boolean): string;
@@ -364,9 +379,12 @@ begin
 end;
 
 function TJCoreOPFSQLGenerator.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
+var
+  VFields: TJCoreStringArray;
 begin
+  VFields := BuildInsertFields(AMapping);
   Result := Format('INSERT INTO %s (%s) VALUES (%s)', [
-   Map.TableName, BuildInsertFieldNames(AMapping), BuildInsertParamNames(AMapping)]);
+   Map.TableName, BuildInsertFieldNames(VFields), BuildFieldParams(Length(VFields))]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
