@@ -18,6 +18,7 @@ type
     procedure CompositionNull;
     procedure CompositionSingle1;
     procedure CompositionSingle2;
+    procedure CompositionCollection;
   end;
 
   { TTestOPFSelectAutoMappingTests }
@@ -156,6 +157,55 @@ begin
      'WriteInt64 2',
      'WriteString ',
      'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.CompositionCollection;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+  VItemService: TInvoiceItemService;
+  VProduct: TProduct;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemService := TInvoiceItemService.Create;
+    VInvoice.Items.Add(VItemService);
+    VProduct := TProduct.Create;
+    VItemProduct.Product := VProduct;
+    VProduct.Name := 'orange';
+    VItemProduct.Qty := 5;
+    VItemProduct.Total := 50;
+    VItemService.Description := 'transport';
+    VItemService.Total := 20;
+    Session.Store(VProduct);
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 2',
+     'WriteNull',
+     'WriteString ',
+     'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)',
+     'WriteInt64 3',
+     'WriteInt64 2',
+     'WriteInt32 50',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+     'WriteInt64 3',
+     'WriteInt32 5',
+     'WriteInt64 1',
+     'ExecSQL INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)',
+     'WriteInt64 4',
+     'WriteInt64 2',
+     'WriteInt32 20',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+     'WriteInt64 4',
+     'WriteString transport',
+     'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)'
+     ]);
   finally
     FreeAndNil(VInvoice);
   end;

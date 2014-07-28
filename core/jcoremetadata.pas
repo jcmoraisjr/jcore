@@ -92,7 +92,7 @@ type
     function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
     function BuildClassMetadata(const AClass: TClass): TJCoreClassMetadata;
     function ClassMetadataClass: TJCoreClassMetadataClass; virtual;
-    function CreateAttrMetadata(const APropInfo: PPropInfo): TJCoreAttrMetadata;
+    function CreateAttrMetadata(const AMetadata: TJCoreClassMetadata; const APropInfo: PPropInfo): TJCoreAttrMetadata; virtual;
     function CreateClassMetadata(const AClass: TClass): TJCoreClassMetadata;
     procedure Finit; override;
     procedure InitRegistry; virtual;
@@ -214,7 +214,7 @@ begin
          GetTypeData(PTypeInfo(AClass.ClassParent.ClassInfo))^.PropCount;
         for I := VParentPropCount to Pred(VPropListCount) do
           if not IsReservedAttr(VPropList^[I]^.Name) then
-            Result.AddAttribute(CreateAttrMetadata(VPropList^[I]));
+            Result.AddAttribute(CreateAttrMetadata(Result, VPropList^[I]));
       finally
         Freemem(VPropList);
       end;
@@ -231,7 +231,8 @@ begin
   Result := TJCoreClassMetadata;
 end;
 
-function TJCoreModel.CreateAttrMetadata(const APropInfo: PPropInfo): TJCoreAttrMetadata;
+function TJCoreModel.CreateAttrMetadata(const AMetadata: TJCoreClassMetadata;
+  const APropInfo: PPropInfo): TJCoreAttrMetadata;
 begin
   Result := AttributeMetadataClass.Create(Self, APropInfo);
 end;

@@ -222,11 +222,14 @@ var
   VADMChanged: TJCoreOPFADMArray;
   I: Integer;
 begin
-  VOIDName := Map.OIDName;
   Result := '';
+  VOIDName := Map.OIDName;
   for I := Low(VOIDName) to High(VOIDName) do
     Result := Result + VOIDName[I] + ',';
-  VADMChanged := AMapping.ADMChanged;
+  VOIDName := Map.OwnerOIDName;
+  for I := Low(VOIDName) to High(VOIDName) do
+    Result := Result + VOIDName[I] + ',';
+  VADMChanged := AMapping.ADMAttributeChanged;
   for I := Low(VADMChanged) to High(VADMChanged) do
     Result := Result + VADMChanged[I].Metadata.PersistentFieldName + ',';
   SetLength(Result, Length(Result) - 1);
@@ -236,7 +239,8 @@ function TJCoreOPFSQLGenerator.BuildInsertParamNames(const AMapping: TJCoreOPFAD
 begin
   // Insert use "admChanged" because there is a single "writeToDriver" method,
   // shared between inserts and updates.
-  Result := BuildFieldParams(Length(Map.OIDName) + Length(AMapping.ADMChanged));
+  Result := BuildFieldParams(
+   Length(Map.OIDName) + Length(Map.OwnerOIDName) + Length(AMapping.ADMAttributeChanged));
 end;
 
 function TJCoreOPFSQLGenerator.BuildSelectBaseFieldNames(const AUseTablePrefix: Boolean): string;
@@ -338,7 +342,7 @@ var
   VADMChanged: TJCoreOPFADMArray;
   I: Integer;
 begin
-  VADMChanged := AMapping.ADMChanged;
+  VADMChanged := AMapping.ADMAttributeChanged;
   Result := '';
   for I := Low(VADMChanged) to High(VADMChanged) do
     Result := Result + VADMChanged[I].Metadata.PersistentFieldName + '=?,';
@@ -606,7 +610,7 @@ begin
       VOID.WriteToDriver(Driver);
     VOIDCount := Driver.ExecSQL(VSelectStmt);
   end;
-  if (AAttrMetadata.CompositionLinkType = jcltExternal) and
+  if AAttrMetadata.HasExternalLink and
    ((VOIDCount > 0) or (AAttrMetadata.CompositionType = jctAggregation)) then
   begin
     // Delete external links
@@ -665,7 +669,7 @@ var
   VOIDs: TJCoreOPFOIDArray;
   VOID: TJCoreOPFOID;
 begin
-  if (AADM.Metadata.CompositionLinkType = jcltExternal) and AOwnerPID.IsPersistent then
+  if AADM.Metadata.HasExternalLink and AOwnerPID.IsPersistent then
   begin
     VOIDs := AADM.OIDRemoved;
     if Length(VOIDs) > 0 then
@@ -685,7 +689,7 @@ var
   VPIDs: TJCoreOPFPIDArray;
   VPID: TJCoreOPFPID;
 begin
-  if AADM.Metadata.CompositionLinkType = jcltExternal then
+  if AADM.Metadata.HasExternalLink then
   begin
     VInsertStmt := GenerateInsertExternalLinksStatement(AADM.Metadata);
     VPIDs := AADM.PIDAdded;
@@ -767,14 +771,29 @@ var
   VADMChanged: TJCoreOPFADMArray;
   I: Integer;
 begin
-  VADMChanged := AMapping.ADMChanged;
+  if (Length(Map.OwnerOIDName) > 0) and not AMapping.PID.IsPersistent then
+    AMapping.PID.Owner.OID.WriteToDriver(Driver);
+  VADMChanged := AMapping.ADMAttributeChanged;
   for I := Low(VADMChanged) to High(VADMChanged) do
     VADMChanged[I].WriteToDriver(Driver);
 end;
 
 procedure TJCoreOPFSQLMapping.WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping);
+var
+  VADMChanged: TJCoreOPFADMArray;
+  VPID: TJCoreOPFPID;
+  I: Integer;
+  VADM: TJCoreOPFADMCollection;
 begin
-  { TODO : Implement }
+  VADMChanged := AMapping.ADMCollectionChanged;
+  VPID := AMapping.PID;
+  for I := Low(VADMChanged) to High(VADMChanged) do
+  begin
+    VADM := VADMChanged[I] as TJCoreOPFADMCollection;
+    WriteDisposeExternalLinksToDriver(VPID, VADM);
+    Mapper.AcquireClassMapping(VADM.Metadata.CompositionClass).StoreCollectionInternal(VPID, VADM);
+    WriteInsertExternalLinksToDriver(VPID, VADM);
+  end;
 end;
 
 function TJCoreOPFSQLMapping.BuildOIDCondition(const AOIDNameArray: array of string;

@@ -50,7 +50,6 @@ begin
   begin
     VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
     VMetadata.AttributeByName('Languages').CompositionType := jctAggregation;
-    VMetadata.AttributeByName('Languages').CompositionLinkType := jcltExternal;
     VMetadata.AttributeByName('City').CompositionType := jctAggregation;
   end;
 end;

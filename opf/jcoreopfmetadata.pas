@@ -45,6 +45,7 @@ type
   end;
 
   TJCoreOPFAttributeType = (jatSimple, jatEntity, jatCollection);
+  TJCoreOPFAttributeTypeSet = set of TJCoreOPFAttributeType;
 
   TJCoreOPFAttrMetadata = class;
 
@@ -269,21 +270,25 @@ type
   // ADMs of a single class metadata, without parents.
   // Based on TJCoreOPFMaps and synchronized with TJCoreOPFMappingClassFactory's mappings.
   private
-    FADMChanged: TJCoreOPFADMArray;
+    FADMAttributeChanged: TJCoreOPFADMArray;
+    FADMCollectionChanged: TJCoreOPFADMArray;
     FPID: TJCoreOPFPID;
+    function BuildChangedADMArray(const AAttributeType: TJCoreOPFAttributeTypeSet): TJCoreOPFADMArray;
     function GetADM(const AIndex: Integer): TJCoreOPFADM;
+    function GetADMAttributeChanged: TJCoreOPFADMArray;
     function GetADMByName(const AAttributeName: string): TJCoreOPFADM;
-    function GetADMChanged: TJCoreOPFADMArray;
+    function GetADMCollectionChanged: TJCoreOPFADMArray;
   protected
-    function InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
+    function InternalIsDirty(const AIncludeCollections: Boolean): Boolean;
   public
     constructor Create(const APID: TJCoreOPFPID);
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
+    function IsAttributesDirty: Boolean;
     function IsDirty: Boolean;
-    function IsInternalsDirty: Boolean;
     property ADM[const AIndex: Integer]: TJCoreOPFADM read GetADM;
     property ADMByName[const AAttributeName: string]: TJCoreOPFADM read GetADMByName; default;
-    property ADMChanged: TJCoreOPFADMArray read GetADMChanged;
+    property ADMAttributeChanged: TJCoreOPFADMArray read GetADMAttributeChanged;
+    property ADMCollectionChanged: TJCoreOPFADMArray read GetADMCollectionChanged;
     property PID: TJCoreOPFPID read FPID;
   end;
 
@@ -340,7 +345,6 @@ type
     procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure Commit;
     function IsDirty: Boolean;
-    function IsInternalsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
     property ADMMapping[const AIndex: Integer]: TJCoreOPFADMMapping read GetADMMapping; default;
     property IsPersistent: Boolean read FIsPersistent;
@@ -352,33 +356,29 @@ type
 
   TJCoreOPFModel = class;
 
-  TJCoreOPFMetadataCompositionLinkType = (jcltEmbedded, jcltExternal);
-
   { TJCoreOPFAttrMetadata }
 
   TJCoreOPFAttrMetadata = class(TJCoreAttrMetadata)
   private
     FADMClass: TJCoreOPFADMClass;
     FAttributeType: TJCoreOPFAttributeType;
-    FCompositionLinkType: TJCoreOPFMetadataCompositionLinkType;
     FHasLazyload: Boolean;
     FPersistentFieldName: string;
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
-    function GetHasExternalRef: Boolean;
+    function GetHasExternalLink: Boolean;
     function GetModel: TJCoreOPFModel;
     function ReadComposition(const AClassName: string): TClass;
     procedure SetCompositionMetadata(AValue: TJCoreOPFClassMetadata);
   protected
-    property ADMClass: TJCoreOPFADMClass read FADMClass;
     property Model: TJCoreOPFModel read GetModel;
   public
     constructor Create(const AModel: TJCoreModel; const APropInfo: PPropInfo); override;
     function CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
     procedure NoLazyload;
+    property ADMClass: TJCoreOPFADMClass read FADMClass;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
-    property CompositionLinkType: TJCoreOPFMetadataCompositionLinkType read FCompositionLinkType write FCompositionLinkType;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
-    property HasExternalRef: Boolean read GetHasExternalRef;
+    property HasExternalLink: Boolean read GetHasExternalLink;
     property HasLazyload: Boolean read FHasLazyload;
     property PersistentFieldName: string read FPersistentFieldName;
   end;
@@ -399,6 +399,7 @@ type
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDName: TJCoreStringArray;
+    FOwnerOIDName: TJCoreStringArray;
     FSubClasses: TJCoreClassArray;
     FSubMaps: TJCoreOPFMaps;
     FTableName: string;
@@ -408,6 +409,7 @@ type
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
+    property OwnerOIDName: TJCoreStringArray read FOwnerOIDName;
     property SubClasses: TJCoreClassArray read FSubClasses;
     property SubMaps: TJCoreOPFMaps read FSubMaps;
     property TableName: string read FTableName;
@@ -421,6 +423,7 @@ type
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass; // model initializes
     FOIDName: TJCoreStringArray; // model initializes
+    FOwnerClass: TJCoreOPFClassMetadata;
     FSubMaps: TJCoreOPFMaps;
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
@@ -438,6 +441,7 @@ type
     property Maps: TJCoreOPFMaps read GetMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
+    property OwnerClass: TJCoreOPFClassMetadata read FOwnerClass write FOwnerClass;
     property Parent: TJCoreOPFClassMetadata read GetParent;
     property SubMaps: TJCoreOPFMaps read GetSubMaps;
   end;
@@ -458,6 +462,7 @@ type
     function AcquireMap(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMap;
     function AttributeMetadataClass: TJCoreAttrMetadataClass; override;
     function ClassMetadataClass: TJCoreClassMetadataClass; override;
+    function CreateAttrMetadata(const AMetadata: TJCoreClassMetadata; const APropInfo: PPropInfo): TJCoreAttrMetadata; override;
     procedure Finit; override;
     procedure InitRegistry; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
@@ -1154,7 +1159,7 @@ end;
 
 procedure TJCoreOPFADMCollection.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
-  { TODO : Implement }
+  // Mapping does the job using OIDRemoved and PIDAdded properties
 end;
 
 { TJCoreOPFADMFPSListCollection }
@@ -1213,32 +1218,36 @@ end;
 
 { TJCoreOPFADMMapping }
 
-function TJCoreOPFADMMapping.GetADMChanged: TJCoreOPFADMArray;
+function TJCoreOPFADMMapping.BuildChangedADMArray(
+  const AAttributeType: TJCoreOPFAttributeTypeSet): TJCoreOPFADMArray;
 var
   VADM: TJCoreOPFADM;
   VCount, I: Integer;
 begin
-  if not Assigned(FADMChanged) then
+  SetLength(Result, Count);
+  VCount := 0;
+  for I := 0 to Pred(Count) do
   begin
-    SetLength(FADMChanged, Count);
-    VCount := 0;
-    for I := 0 to Pred(Count) do
+    VADM := Data[I];
+    if (VADM.AttributeType in AAttributeType) and VADM.IsDirty then
     begin
-      VADM := Data[I];
-      if (VADM.AttributeType in [jatSimple, jatEntity]) and VADM.IsDirty then
-      begin
-        FADMChanged[VCount] := VADM;
-        Inc(VCount);
-      end;
+      Result[VCount] := VADM;
+      Inc(VCount);
     end;
-    SetLength(FADMChanged, VCount);
   end;
-  Result := FADMChanged;
+  SetLength(Result, VCount);
 end;
 
 function TJCoreOPFADMMapping.GetADM(const AIndex: Integer): TJCoreOPFADM;
 begin
   Result := Data[AIndex];
+end;
+
+function TJCoreOPFADMMapping.GetADMAttributeChanged: TJCoreOPFADMArray;
+begin
+  if not Assigned(FADMAttributeChanged) then
+    FADMAttributeChanged := BuildChangedADMArray([jatSimple, jatEntity]);
+  Result := FADMAttributeChanged;
 end;
 
 function TJCoreOPFADMMapping.GetADMByName(const AAttributeName: string): TJCoreOPFADM;
@@ -1251,7 +1260,14 @@ begin
   Result := Data[VIndex];
 end;
 
-function TJCoreOPFADMMapping.InternalIsDirty(const AIncludeExternals: Boolean): Boolean;
+function TJCoreOPFADMMapping.GetADMCollectionChanged: TJCoreOPFADMArray;
+begin
+  if not Assigned(FADMCollectionChanged) then
+    FADMCollectionChanged := BuildChangedADMArray([jatCollection]);
+  Result := FADMCollectionChanged;
+end;
+
+function TJCoreOPFADMMapping.InternalIsDirty(const AIncludeCollections: Boolean): Boolean;
 var
   VADM: TJCoreOPFADM;
   I: Integer;
@@ -1260,9 +1276,9 @@ begin
   for I := 0 to Pred(Count) do
   begin
     VADM := Data[I];
-    if VADM.Metadata.HasExternalRef then
+    if VADM.Metadata.AttributeType = jatCollection then
     begin
-      if AIncludeExternals and VADM.IsDirty then
+      if AIncludeCollections and VADM.IsDirty then
         Exit;
     end else if VADM.IsDirty then
       Exit;
@@ -1282,14 +1298,14 @@ begin
   Result := ADMByName[AAttributeName];
 end;
 
+function TJCoreOPFADMMapping.IsAttributesDirty: Boolean;
+begin
+  Result := InternalIsDirty(False);
+end;
+
 function TJCoreOPFADMMapping.IsDirty: Boolean;
 begin
   Result := InternalIsDirty(True);
-end;
-
-function TJCoreOPFADMMapping.IsInternalsDirty: Boolean;
-begin
-  Result := InternalIsDirty(False);
 end;
 
 { TJCoreOPFPID }
@@ -1466,17 +1482,6 @@ begin
   Result := False;
 end;
 
-function TJCoreOPFPID.IsInternalsDirty: Boolean;
-var
-  I: Integer;
-begin
-  Result := True;
-  for I := 0 to Pred(ADMMappingMap.Count) do
-    if ADMMappingMap.Data[I].IsInternalsDirty then
-      Exit;
-  Result := False;
-end;
-
 function TJCoreOPFPID.Lazyload(const AAttrAddr: Pointer): Boolean;
 begin
   if not Assigned(FAttrAddrRef) then
@@ -1500,9 +1505,10 @@ begin
   Result := inherited CompositionMetadata as TJCoreOPFClassMetadata;
 end;
 
-function TJCoreOPFAttrMetadata.GetHasExternalRef: Boolean;
+function TJCoreOPFAttrMetadata.GetHasExternalLink: Boolean;
 begin
-  Result := (CompositionLinkType = jcltExternal) or (AttributeType = jatCollection);
+  Result := (CompositionType = jctAggregation) or not Assigned(CompositionMetadata) or
+   not Assigned(CompositionMetadata.OwnerClass);
 end;
 
 function TJCoreOPFAttrMetadata.GetModel: TJCoreOPFModel;
@@ -1532,8 +1538,7 @@ begin
   inherited CompositionMetadata := AValue;
 end;
 
-constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel;
-  const APropInfo: PPropInfo);
+constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel; const APropInfo: PPropInfo);
 begin
   inherited Create(AModel, APropInfo);
   FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
@@ -1542,7 +1547,6 @@ begin
     CompositionMetadata := Model.AcquireMetadata(ReadComposition(APropInfo^.PropType^.Name))
   else
     CompositionMetadata := nil;
-  FCompositionLinkType := jcltEmbedded;
   FHasLazyload := True; // which also means "I dont know yet, try it"
   FPersistentFieldName := UpperCase(Name);
 end;
@@ -1563,10 +1567,17 @@ constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata);
 var
   I: Integer;
 begin
+  { TODO : Proper metadata -> map conversion }
   inherited Create(False);
   FMetadata := AMetadata;
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
+  if Assigned(Metadata.OwnerClass) then
+  begin
+    SetLength(FOwnerOIDName, 1);
+    FOwnerOIDName[0] := UpperCase(Copy(Metadata.OwnerClass.TheClass.ClassName, 2, MaxInt));
+  end else
+    SetLength(FOwnerOIDName, 0);
   FTableName := UpperCase(Copy(Metadata.TheClass.ClassName, 2, MaxInt));
   FGeneratorStrategy := Metadata.GeneratorStrategy;
   FSubMaps := Metadata.SubMaps;
@@ -1626,7 +1637,6 @@ begin
   if Assigned(AMetadata) then
   begin
     AcquireMaps(AMetadata.Parent, AMaps);
-    { TODO : Proper metadata -> map conversion }
     if AMetadata.AttributeCount > 0 then
       AMaps.Add(AcquireMap(AMetadata));
   end;
@@ -1685,6 +1695,24 @@ end;
 function TJCoreOPFModel.ClassMetadataClass: TJCoreClassMetadataClass;
 begin
   Result := TJCoreOPFClassMetadata;
+end;
+
+function TJCoreOPFModel.CreateAttrMetadata(const AMetadata: TJCoreClassMetadata;
+  const APropInfo: PPropInfo): TJCoreAttrMetadata;
+var
+  VAttrMetadata: TJCoreOPFAttrMetadata;
+  VCompositionMetadata: TJCoreOPFClassMetadata;
+begin
+  VAttrMetadata := inherited CreateAttrMetadata(AMetadata, APropInfo) as TJCoreOPFAttrMetadata;
+  VCompositionMetadata := VAttrMetadata.CompositionMetadata;
+  if Assigned(VCompositionMetadata) and (VAttrMetadata.ADMClass.AttributeType = jatCollection) then
+  begin
+    if not Assigned(VCompositionMetadata.OwnerClass) then
+      VCompositionMetadata.OwnerClass := AMetadata as TJCoreOPFClassMetadata
+    else
+      VCompositionMetadata.OwnerClass := nil;
+  end;
+  Result := VAttrMetadata;
 end;
 
 procedure TJCoreOPFModel.Finit;

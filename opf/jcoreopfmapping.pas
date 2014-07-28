@@ -961,7 +961,7 @@ begin
       VPID.OID.WriteToDriver(Driver);
       WriteAttributesToDriver(AMapping);
       InternalInsert(AMapping);
-    end else if AMapping.IsInternalsDirty then
+    end else if AMapping.IsAttributesDirty then
     begin
       WriteAttributesToDriver(AMapping);
       VPID.OID.WriteToDriver(Driver);
