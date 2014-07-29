@@ -155,7 +155,7 @@ end;
 
 function TInvoice.GetItems: TInvoiceItemList;
 begin
-  if not Assigned(FItems) and not _proxy.Lazyload(@FItems) then
+  if not _proxy.Lazyload(@FItems) then
     FItems := TInvoiceItemList.Create(True);
   Result := FItems;
 end;

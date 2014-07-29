@@ -1484,12 +1484,16 @@ end;
 
 function TJCoreOPFPID.Lazyload(const AAttrAddr: Pointer): Boolean;
 begin
+  // Return False only if an attribute *should* but *couldn't* be loaded
   if not Assigned(FAttrAddrRef) then
   begin
     // Normal execution
-    Result := not Assigned(AAttrAddr) or not Assigned(TObject(AAttrAddr^));
-    if Result then
+    Result := Assigned(AAttrAddr) and Assigned(TObject(AAttrAddr^));
+    if not Result then
+    begin
       AcquireADMByAttrAddr(AAttrAddr).Load;
+      Result := True;
+    end;
   end else
   begin
     // PID initialization, saving attribute address

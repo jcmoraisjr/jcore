@@ -91,7 +91,12 @@ end;
 
 function TJCoreEntityProxy.Lazyload(const AAttrAddr: Pointer): Boolean;
 begin
-  Result := Assigned(Self) and Assigned(FPID);
+  // True = do nothing, the object(s) were already loaded or I just loaded the object(s)
+  // False = I failed to load the object(s), please create them yourself
+  Result := Assigned(AAttrAddr) and Assigned(TObject(AAttrAddr^));
+  if Result then
+    Exit;
+  Result := Assigned(Self) and Assigned(FPID) and Assigned(AAttrAddr);
   if Result then
     Result := FPID.Lazyload(AAttrAddr);
 end;
