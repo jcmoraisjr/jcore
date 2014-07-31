@@ -43,8 +43,7 @@ uses
   JCoreEntity,
   JCoreOPFMetadata,
   TestOPFModelContact,
-  TestOPFModelInvoice,
-  TestOPFMappingContact;
+  TestOPFModelInvoice;
 
 { TTestOPFIPIDMetadataTests }
 
@@ -140,7 +139,7 @@ begin
     AssertEquals('person name', 'somename', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInt64 2',
-     'ExecSQL ' + CSQLSELECTPERSON + 'ID=?']);
+     'ExecSQL SELECT ID,NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ID=?']);
 
     TTestSQLDriver.Data.Add('4');
     TTestSQLDriver.Data.Add('acity');
@@ -155,7 +154,7 @@ begin
     AssertEquals('city name', 'acity', VCity.Name);
     AssertSQLDriverCommands([
      'WriteInt64 4',
-     'ExecSQL ' + CSQLSELECTCITY + 'ID=?']);
+     'ExecSQL SELECT ID,NAME FROM CITY WHERE ID=?']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -182,7 +181,7 @@ begin
     AssertEquals('person name', 'name', VPerson.Name);
     AssertSQLDriverCommands([
      'WriteInt64 21',
-     'ExecSQL ' + CSQLSELECTPERSON + 'ID=?']);
+     'ExecSQL SELECT ID,NAME,AGE,ADDRESS,CITY FROM PERSON WHERE ID=?']);
 
     TTestSQLDriver.Data.Add('18');
     TTestSQLDriver.Data.Add('1213-9876');
@@ -208,7 +207,7 @@ begin
     AssertEquals('phone2 number', '9989-3399', VPhones[2].Number);
     AssertSQLDriverCommands([
      'WriteInt64 21',
-     'ExecSQL ' + CSQLSELECTPERSON_PHONES]);
+     'ExecSQL SELECT ID,NUMBER FROM PHONE WHERE PERSON=?']);
   finally
     FreeAndNil(VPerson);
   end;
