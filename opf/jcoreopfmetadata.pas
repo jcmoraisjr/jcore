@@ -283,6 +283,7 @@ type
   public
     constructor Create(const APID: TJCoreOPFPID);
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
+    procedure Commit;
     function IsAttributesDirty: Boolean;
     function IsDirty: Boolean;
     property ADM[const AIndex: Integer]: TJCoreOPFADM read GetADM;
@@ -1298,6 +1299,12 @@ begin
   Result := ADMByName[AAttributeName];
 end;
 
+procedure TJCoreOPFADMMapping.Commit;
+begin
+  SetLength(FADMAttributeChanged, 0);
+  SetLength(FADMCollectionChanged, 0);
+end;
+
 function TJCoreOPFADMMapping.IsAttributesDirty: Boolean;
 begin
   Result := InternalIsDirty(False);
@@ -1469,6 +1476,8 @@ begin
   FIsPersistent := Assigned(FOID);
   for I := 0 to Pred(ADMMap.Count) do
     ADMMap.Data[I].Commit;
+  for I := 0 to Pred(ADMMappingMap.Count) do
+    ADMMappingMap.Data[I].Commit;
 end;
 
 function TJCoreOPFPID.IsDirty: Boolean;

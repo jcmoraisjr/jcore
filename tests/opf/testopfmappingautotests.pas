@@ -35,9 +35,13 @@ type
   TTestOPFUpdateAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
   published
     procedure Single;
-    procedure InheritanceUpdateParentClass;
-    procedure InheritanceUpdateSubClass;
-    procedure Inheritance;
+    procedure InheritanceUpdateParentMap;
+    procedure InheritanceUpdateSubMap;
+    procedure InheritanceUpdateBothMaps;
+    procedure CompositionChangeItemParentMap;
+    procedure CompositionChangeItemSubMap;
+    procedure CompositionChangeItemBothMaps;
+    procedure CompositionAdd;
   end;
 
   { TTestOPFDeleteAutoMappingTests }
@@ -310,7 +314,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateParentClass;
+procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateParentMap;
 var
   VPerson: TPerson;
 begin
@@ -331,7 +335,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateSubClass;
+procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateSubMap;
 var
   VPerson: TPerson;
 begin
@@ -352,7 +356,7 @@ begin
   end;
 end;
 
-procedure TTestOPFUpdateAutoMappingTests.Inheritance;
+procedure TTestOPFUpdateAutoMappingTests.InheritanceUpdateBothMaps;
 var
   VPerson: TPerson;
 begin
@@ -374,6 +378,114 @@ begin
      'ExecSQL UPDATE PERSON SET NICK=? WHERE ID=?']);
   finally
     FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionChangeItemParentMap;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 2;
+    VItemProduct.Total := 10;
+    Session.Store(VInvoice);
+    VItemProduct.Total := 20;
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt32 20',
+     'WriteInt64 2',
+     'ExecSQL UPDATE INVOICEITEM SET TOTAL=? WHERE ID=?']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionChangeItemSubMap;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 5;
+    VItemProduct.Total := 15;
+    Session.Store(VInvoice);
+    VItemProduct.Qty := 3;
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt32 3',
+     'WriteInt64 2',
+     'ExecSQL UPDATE INVOICEITEMPRODUCT SET QTY=? WHERE ID=?']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionChangeItemBothMaps;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 1;
+    VItemProduct.Total := 10;
+    Session.Store(VInvoice);
+    VItemProduct.Qty := 10;
+    VItemProduct.Total := 100;
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt32 100',
+     'WriteInt64 2',
+     'ExecSQL UPDATE INVOICEITEM SET TOTAL=? WHERE ID=?',
+     'WriteInt32 10',
+     'WriteInt64 2',
+     'ExecSQL UPDATE INVOICEITEMPRODUCT SET QTY=? WHERE ID=?']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionAdd;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+  VItemService: TInvoiceItemService;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 1;
+    VItemProduct.Total := 12;
+    Session.Store(VInvoice);
+    VItemService := TInvoiceItemService.Create;
+    VInvoice.Items.Add(VItemService);
+    VItemService.Description := 'fix';
+    VItemService.Total := 5;
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+    'WriteInt64 3',
+    'WriteInt64 1',
+    'WriteInt32 5',
+    'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+    'WriteInt64 3',
+    'WriteString fix',
+    'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 
