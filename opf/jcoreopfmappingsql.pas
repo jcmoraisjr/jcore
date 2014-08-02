@@ -647,7 +647,6 @@ end;
 procedure TJCoreOPFSQLMapping.WriteDisposeEntityCompositionsToDriver(
   const AOIDArray: array of TJCoreOPFOID);
 var
-  VClassMetadata: TJCoreOPFClassMetadata;
   VAttrMetadata: TJCoreOPFAttrMetadata;
   VCompositionMetadatas: TJCoreOPFAttrMetadataArray;
   VCompositionMetadata: TJCoreOPFClassMetadata;
@@ -656,12 +655,11 @@ var
   VCount: Integer;
   I: Integer;
 begin
-  VClassMetadata := Map.Metadata;
-  SetLength(VCompositionMetadatas, VClassMetadata.AttributeCount);
+  SetLength(VCompositionMetadatas, Map.Count);
   VCount := 0;
-  for I := 0 to Pred(VClassMetadata.AttributeCount) do
+  for I := 0 to Pred(Map.Count) do
   begin
-    VAttrMetadata := VClassMetadata.Attributes[I];
+    VAttrMetadata := Map[I];
     if (VAttrMetadata.CompositionType = jctComposition) and (VAttrMetadata.AttributeType = jatEntity) then
     begin
       VCompositionMetadatas[VCount] := VAttrMetadata;
@@ -722,16 +720,14 @@ end;
 
 procedure TJCoreOPFSQLMapping.InternalDispose(const AOIDArray: array of TJCoreOPFOID);
 var
-  VClassMetadata: TJCoreOPFClassMetadata;
   VAttrMetadata: TJCoreOPFAttrMetadata;
   VHasEntityComposition: Boolean;
   I: Integer;
 begin
-  VClassMetadata := Map.Metadata;
   VHasEntityComposition := False;
-  for I := 0 to Pred(VClassMetadata.AttributeCount) do
+  for I := 0 to Pred(Map.Count) do
   begin
-    VAttrMetadata := VClassMetadata.Attributes[I];
+    VAttrMetadata := Map[I];
     if VAttrMetadata.AttributeType = jatCollection then
       WriteDisposeCollectionToDriver(VAttrMetadata, AOIDArray)
     else if (VAttrMetadata.AttributeType = jatEntity) and (VAttrMetadata.CompositionType = jctComposition) then
