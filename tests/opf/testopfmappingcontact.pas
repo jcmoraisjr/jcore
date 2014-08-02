@@ -184,7 +184,7 @@ end;
 function TTestIPIDPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
   const AOIDCount: Integer): string;
 begin
-  Result := 'SELECT ID,ADDRESS FROM PERSON WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
+  Result := 'SELECT ADDRESS FROM PERSON WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateSelectForDeleteStatement(

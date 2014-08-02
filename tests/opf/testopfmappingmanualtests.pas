@@ -901,7 +901,7 @@ begin
    'WriteInt64 12',
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON=?',
    'WriteInt64 12',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID=?',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID=?',
    'WriteInt64 4',
    'ExecSQL DELETE FROM ADDRESS WHERE ID=?',
    'WriteInt64 12',
@@ -928,7 +928,7 @@ begin
    'WriteInt64 3',
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON=?',
    'WriteInt64 3',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID=?',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID=?',
    'WriteInt64 3',
    'ExecSQL DELETE FROM PERSON WHERE ID=?']);
 end;
@@ -958,7 +958,7 @@ begin
    'WriteInt64 7',
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON=?',
    'WriteInt64 7',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID=?',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID=?',
    'WriteInt64 7',
    'ExecSQL DELETE FROM PERSON WHERE ID=?']);
 end;
@@ -983,7 +983,7 @@ begin
    'WriteInt64 6',
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON=?',
    'WriteInt64 6',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID=?',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID=?',
    'WriteInt64 6',
    'ExecSQL DELETE FROM PERSON WHERE ID=?']);
 end;
@@ -1015,7 +1015,7 @@ begin
    'WriteInt64 2',
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON=?',
    'WriteInt64 2',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID=?',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID=?',
    'WriteInt64 2',
    'ExecSQL DELETE FROM PERSON WHERE ID=?']);
 end;
@@ -1040,7 +1040,7 @@ begin
    'WriteInt64 5',
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON=?',
    'WriteInt64 5',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID=?',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID=?',
    'WriteInt64 5',
    'ExecSQL DELETE FROM PERSON WHERE ID=?']);
 end;
@@ -1084,7 +1084,7 @@ begin
    'WriteInt64 9',
    'WriteInt64 11',
    'WriteInt64 16',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID IN (?,?,?)',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID IN (?,?,?)',
    'WriteInt64 10',
    'WriteInt64 13',
    'ExecSQL DELETE FROM ADDRESS WHERE ID IN (?,?)',
@@ -1122,7 +1122,7 @@ begin
    'WriteInt64 21',
    'WriteInt64 22',
    'WriteInt64 23',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID IN (?,?,?)',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID IN (?,?,?)',
    'WriteInt64 21',
    'WriteInt64 22',
    'WriteInt64 23',
@@ -1164,7 +1164,7 @@ begin
    'WriteInt64 10',
    'WriteInt64 12',
    'WriteInt64 14',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID IN (?,?,?)',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID IN (?,?,?)',
    'WriteInt64 10',
    'WriteInt64 12',
    'WriteInt64 14',
@@ -1195,7 +1195,7 @@ begin
    'ExecSQL DELETE FROM PERSON_LANG WHERE PERSON IN (?,?)',
    'WriteInt64 15',
    'WriteInt64 18',
-   'ExecSQL SELECT ID,ADDRESS FROM PERSON WHERE ID IN (?,?)',
+   'ExecSQL SELECT ADDRESS FROM PERSON WHERE ID IN (?,?)',
    'WriteInt64 15',
    'WriteInt64 18',
    'ExecSQL DELETE FROM PERSON WHERE ID IN (?,?)']);
