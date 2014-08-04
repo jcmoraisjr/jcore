@@ -42,6 +42,8 @@ type
     procedure CompositionChangeItemSubMap;
     procedure CompositionChangeItemBothMaps;
     procedure CompositionAdd;
+    procedure CompositionRemove;
+    procedure CompositionAddRemove;
   end;
 
   { TTestOPFDeleteAutoMappingTests }
@@ -484,6 +486,93 @@ begin
     'WriteInt64 3',
     'WriteString fix',
     'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionRemove;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+  VItemService: TInvoiceItemService;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 15;
+    VItemProduct.Total := 150;
+    VItemService := TInvoiceItemService.Create;
+    VInvoice.Items.Add(VItemService);
+    VItemService.Description := 'cleanup';
+    VItemService.Total := 30;
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 3;
+    VItemProduct.Total := 300;
+    Session.Store(VInvoice);
+    TTestSQLDriver.Commands.Clear;
+    VInvoice.Items.Delete(2);
+    VInvoice.Items.Delete(0);
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 2',
+     'WriteInt64 4',
+     'ExecSQL DELETE FROM INVOICEITEM WHERE ID IN (?,?)',
+     'WriteInt64 2',
+     'WriteInt64 4',
+     'ExecSQL DELETE FROM INVOICEITEMPRODUCT WHERE ID IN (?,?)',
+     'WriteInt64 2',
+     'WriteInt64 4',
+     'ExecSQL DELETE FROM INVOICEITEMSERVICE WHERE ID IN (?,?)']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionAddRemove;
+var
+  VInvoice: TInvoice;
+  VItemProduct: TInvoiceItemProduct;
+  VItemService: TInvoiceItemService;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 1;
+    VItemProduct.Total := 10;
+    VItemService := TInvoiceItemService.Create;
+    VInvoice.Items.Add(VItemService);
+    VItemService.Description := 'transport';
+    VItemService.Total := 20;
+    VItemProduct := TInvoiceItemProduct.Create;
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 3;
+    VItemProduct.Total := 30;
+    Session.Store(VInvoice);
+    TTestSQLDriver.Commands.Clear;
+    VInvoice.Items.Delete(1);
+    VItemService := TInvoiceItemService.Create;
+    VInvoice.Items.Add(VItemService);
+    VItemService.Description := 'fix';
+    VItemService.Total := 40;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 3',
+     'ExecSQL DELETE FROM INVOICEITEM WHERE ID=?',
+     'WriteInt64 3',
+     'ExecSQL DELETE FROM INVOICEITEMPRODUCT WHERE ID=?',
+     'WriteInt64 3',
+     'ExecSQL DELETE FROM INVOICEITEMSERVICE WHERE ID=?',
+     'WriteInt64 5',
+     'WriteInt64 1',
+     'WriteInt32 40',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+     'WriteInt64 5',
+     'WriteString fix',
+     'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
   finally
     FreeAndNil(VInvoice);
   end;

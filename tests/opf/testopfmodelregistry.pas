@@ -30,6 +30,7 @@ type
   TTestOPFModelProxyInvoice = class(TJCoreOPFModel)
   protected
     procedure InitRegistry; override;
+    procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); override;
   end;
 
 implementation
@@ -75,6 +76,18 @@ begin
   inherited InitRegistry;
   AddClass([TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct,
    TInvoiceItemService, TInvoice]);
+end;
+
+procedure TTestOPFModelProxyInvoice.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
+var
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  inherited RefineClassMetadata(AClassMetadata);
+  if AClassMetadata.TheClass = TInvoiceItemProduct then
+  begin
+    VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
+    VMetadata.AttributeByName('Product').CompositionType := jctAggregation;
+  end;
 end;
 
 end.
