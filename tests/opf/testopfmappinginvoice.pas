@@ -12,7 +12,7 @@ type
 
   { TClientSQLMapping }
 
-  TClientSQLMapping = class(TTestAbstractSQLManualMapping)
+  TClientSQLMapping = class(TTestSQLMapping)
   protected
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
@@ -57,7 +57,7 @@ type
 
   { TProductSQLMapping }
 
-  TProductSQLMapping = class(TTestAbstractSQLManualMapping)
+  TProductSQLMapping = class(TTestSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -71,7 +71,7 @@ type
 
   { TInvoiceSQLMapping }
 
-  TInvoiceSQLMapping = class(TTestAbstractSQLManualMapping)
+  TInvoiceSQLMapping = class(TTestSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -86,7 +86,7 @@ type
 
   { TInvoiceItemSQLMapping }
 
-  TInvoiceItemSQLMapping = class(TTestAbstractSQLManualMapping)
+  TInvoiceItemSQLMapping = class(TTestSQLMapping)
   protected
     function CreateEntityFromDriver: TObject; override;
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;

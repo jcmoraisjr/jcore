@@ -12,14 +12,14 @@ type
 
   { TTestIPIDSimpleSQLMapping }
 
-  TTestIPIDSimpleSQLMapping = class(TTestAbstractSQLManualMapping)
+  TTestIPIDSimpleSQLMapping = class(TTestSQLMapping)
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
 
   { TTestIPIDPersonSQLMapping }
 
-  TTestIPIDPersonSQLMapping = class(TTestAbstractSQLManualMapping)
+  TTestIPIDPersonSQLMapping = class(TTestSQLMapping)
   protected
     function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
@@ -57,7 +57,7 @@ type
 
   { TTestIPIDAddressSQLMapping }
 
-  TTestIPIDAddressSQLMapping = class(TTestAbstractSQLManualMapping)
+  TTestIPIDAddressSQLMapping = class(TTestSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -71,7 +71,7 @@ type
 
   { TTestIPIDCitySQLMapping }
 
-  TTestIPIDCitySQLMapping = class(TTestAbstractSQLManualMapping)
+  TTestIPIDCitySQLMapping = class(TTestSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -95,7 +95,7 @@ type
 
   { TTestIPIDPhoneSQLMapping }
 
-  TTestIPIDPhoneSQLMapping = class(TTestAbstractSQLManualMapping)
+  TTestIPIDPhoneSQLMapping = class(TTestSQLMapping)
   protected
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -119,7 +119,7 @@ type
 
   { TTestIPIDLanguageSQLMapping }
 
-  TTestIPIDLanguageSQLMapping = class(TTestAbstractSQLManualMapping)
+  TTestIPIDLanguageSQLMapping = class(TTestSQLMapping)
   protected
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; override;

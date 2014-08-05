@@ -167,9 +167,9 @@ type
     class property ExpectedResultsets: TTestIntegerList read FExpectedResultsets write FExpectedResultsets;
   end;
 
-  { TTestSQLAutoMapping }
+  { TTestSQLMapping }
 
-  TTestSQLAutoMapping = class(TJCoreOPFSQLMapping)
+  TTestSQLMapping = class(TJCoreOPFSQLMapping)
   protected
     function CreateCustomGenerator: IJCoreOPFGenerator; override;
   end;
@@ -347,7 +347,7 @@ end;
 procedure TTestOPFProxyInvoiceAutoMappingTestCase.CustomizeConfiguration(const AConfig: TTestOPFConfig);
 begin
   inherited CustomizeConfiguration(AConfig);
-  AConfig.AddMappingClass([TTestSQLAutoMapping]);
+  AConfig.AddMappingClass([TTestSQLMapping]);
   AConfig.Model.AddClass([
    TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
   AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
@@ -504,16 +504,9 @@ begin
   AddCommand('WriteNull');
 end;
 
-{ TTestAbstractSQLManualMapping }
+{ TTestSQLMapping }
 
-function TTestAbstractSQLManualMapping.CreateCustomGenerator: IJCoreOPFGenerator;
-begin
-  Result := TTestIntegerGenerator.Create;
-end;
-
-{ TTestSQLAutoMapping }
-
-function TTestSQLAutoMapping.CreateCustomGenerator: IJCoreOPFGenerator;
+function TTestSQLMapping.CreateCustomGenerator: IJCoreOPFGenerator;
 begin
   Result := TTestIntegerGenerator.Create;
 end;
