@@ -28,7 +28,7 @@ type
 
   { IJCoreOPFSessionManager }
 
-  IJCoreOPFSessionManager = interface
+  IJCoreOPFSessionManager = interface(IInterface)
     function MappingClassFactory: TJCoreOPFMappingClassFactory;
     function Model: TJCoreOPFModel;
   end;
