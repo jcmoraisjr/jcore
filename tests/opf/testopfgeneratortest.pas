@@ -11,7 +11,7 @@ type
 
   { TTestOPFGeneratorTest }
 
-  TTestOPFGeneratorTest = class(TTestOPFProxyInvoiceManualMappingTestCase)
+  TTestOPFGeneratorTest = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure GUIDTest;
   end;

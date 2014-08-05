@@ -30,7 +30,7 @@ type
 
   { TTestOPFInheritanceMetadataTest }
 
-  TTestOPFInheritanceMetadataTest = class(TTestOPFProxyInvoiceManualMappingTestCase)
+  TTestOPFInheritanceMetadataTest = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure CreatePIDInheritance;
   end;

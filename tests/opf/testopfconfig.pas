@@ -57,46 +57,61 @@ type
 
   TTestOPFAbstractTestCase = class(TTestCase)
   private
-    FConfiguration: IJCoreOPFConfiguration;
-    FSession: ITestOPFSession;
+    FSessionInvoiceAuto: ITestOPFSession;
+    FSessionInvoiceManual: ITestOPFSession;
+    FSessionIPIDContact: ITestOPFSession;
+    FSessionProxyContact: ITestOPFSession;
     class var FLOG: IJCoreLogger;
+    function GetSessionInvoiceAuto: ITestOPFSession;
+    function GetSessionInvoiceManual: ITestOPFSession;
+    function GetSessionIPIDContact: ITestOPFSession;
+    function GetSessionProxyContact: ITestOPFSession;
   protected
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
+    procedure ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigIPIDContactMapping(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigProxyInvoiceModel(const AConfig: IJCoreOPFConfiguration);
     function CreateConfiguration: IJCoreOPFConfiguration;
-    procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); virtual;
     procedure SetUp; override;
     procedure TearDown; override;
     class property LOG: IJCoreLogger read FLOG;
-    property Session: ITestOPFSession read FSession;
+    property SessionInvoiceAuto: ITestOPFSession read GetSessionInvoiceAuto;
+    property SessionInvoiceManual: ITestOPFSession read GetSessionInvoiceManual;
+    property SessionIPIDContact: ITestOPFSession read GetSessionIPIDContact;
+    property SessionProxyContact: ITestOPFSession read GetSessionProxyContact;
   end;
 
   { TTestOPFIPIDContactTestCase }
 
   TTestOPFIPIDContactTestCase = class(TTestOPFAbstractTestCase)
   protected
-    procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
+    property Session: ITestOPFSession read GetSessionIPIDContact;
   end;
 
   { TTestOPFProxyContactTestCase }
 
   TTestOPFProxyContactTestCase = class(TTestOPFAbstractTestCase)
   protected
-    procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
+    property Session: ITestOPFSession read GetSessionProxyContact;
   end;
 
-  { TTestOPFProxyInvoiceManualMappingTestCase }
+  { TTestOPFInvoiceManualMappingTestCase }
 
-  TTestOPFProxyInvoiceManualMappingTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFInvoiceManualMappingTestCase = class(TTestOPFAbstractTestCase)
   protected
-    procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
+    property Session: ITestOPFSession read GetSessionInvoiceManual;
   end;
 
-  { TTestOPFProxyInvoiceAutoMappingTestCase }
+  { TTestOPFInvoiceAutoMappingTestCase }
 
-  TTestOPFProxyInvoiceAutoMappingTestCase = class(TTestOPFAbstractTestCase)
+  TTestOPFInvoiceAutoMappingTestCase = class(TTestOPFAbstractTestCase)
   protected
-    procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
+    property Session: ITestOPFSession read GetSessionInvoiceAuto;
   end;
 
   { TTestIntegerGenerator }
@@ -222,6 +237,62 @@ end;
 
 { TTestOPFAbstractTestCase }
 
+function TTestOPFAbstractTestCase.GetSessionInvoiceAuto: ITestOPFSession;
+var
+  VConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FSessionInvoiceAuto) then
+  begin
+    VConfig := CreateConfiguration;
+    ConfigAutoMapping(VConfig);
+    ConfigProxyInvoiceModel(VConfig);
+    FSessionInvoiceAuto := VConfig.CreateSession as ITestOPFSession;
+  end;
+  Result := FSessionInvoiceAuto;
+end;
+
+function TTestOPFAbstractTestCase.GetSessionInvoiceManual: ITestOPFSession;
+var
+  VConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FSessionInvoiceManual) then
+  begin
+    VConfig := CreateConfiguration;
+    ConfigProxyInvoiceMapping(VConfig);
+    ConfigProxyInvoiceModel(VConfig);
+    FSessionInvoiceManual := VConfig.CreateSession as ITestOPFSession;
+  end;
+  Result := FSessionInvoiceManual;
+end;
+
+function TTestOPFAbstractTestCase.GetSessionIPIDContact: ITestOPFSession;
+var
+  VConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FSessionIPIDContact) then
+  begin
+    VConfig := CreateConfiguration;
+    ConfigIPIDContactMapping(VConfig);
+    ConfigIPIDContactModel(VConfig);
+    FSessionIPIDContact := VConfig.CreateSession as ITestOPFSession;
+  end;
+  Result := FSessionIPIDContact;
+end;
+
+function TTestOPFAbstractTestCase.GetSessionProxyContact: ITestOPFSession;
+var
+  VConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FSessionProxyContact) then
+  begin
+    VConfig := CreateConfiguration;
+    ConfigProxyContactMapping(VConfig);
+    ConfigProxyContactModel(VConfig);
+    FSessionProxyContact := VConfig.CreateSession as ITestOPFSession;
+  end;
+  Result := FSessionProxyContact;
+end;
+
 procedure TTestOPFAbstractTestCase.AssertExceptionStore(const ASession: IJCoreOPFSession;
   const AEntity: TObject; const AException: ExceptClass);
 begin
@@ -259,25 +330,56 @@ begin
   TTestSQLDriver.Commands.Clear;
 end;
 
-function TTestOPFAbstractTestCase.CreateConfiguration: IJCoreOPFConfiguration;
-var
-  VConfig: TTestOPFConfig;
+procedure TTestOPFAbstractTestCase.ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
 begin
-  VConfig := TTestOPFConfig.Create(TJCoreOPFModel.Create);
-  try
-    CustomizeConfiguration(VConfig);
-  except
-    FreeAndNil(VConfig);
-    raise;
-  end;
-  Result := VConfig;
+  AConfig.AddMappingClass([TTestSQLMapping]);
 end;
 
-procedure TTestOPFAbstractTestCase.CustomizeConfiguration(const AConfig: TTestOPFConfig);
+procedure TTestOPFAbstractTestCase.ConfigIPIDContactMapping(const AConfig: IJCoreOPFConfiguration);
 begin
-  AConfig.DriverClass := TTestSQLDriver;
-  AConfig.Model.OIDClass := TJCoreOPFOIDInt64;
-  AConfig.Model.GeneratorStrategy := jgsCustom;
+  AConfig.AddMappingClass([
+   TTestIPIDSimpleSQLMapping, TTestIPIDPersonSQLMapping, TTestIPIDEmployeeSQLMapping,
+   TTestIPIDAddressSQLMapping, TTestIPIDCitySQLMapping, TTestIPIDPhoneSQLMapping,
+   TTestIPIDLanguageSQLMapping]);
+end;
+
+procedure TTestOPFAbstractTestCase.ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
+begin
+  AConfig.Model.AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
+  AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('Languages').CompositionType := jctAggregation;
+  AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('City').CompositionType := jctAggregation;
+end;
+
+procedure TTestOPFAbstractTestCase.ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);
+begin
+  AConfig.AddMappingClass([TTestProxyPhoneSQLMapping, TTestProxyCitySQLMapping, TTestProxyPersonSQLMapping]);
+end;
+
+procedure TTestOPFAbstractTestCase.ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
+begin
+  AConfig.Model.AddClass([TTestProxyPhone, TTestProxyCity, TTestProxyPerson]);
+end;
+
+procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
+begin
+  AConfig.AddMappingClass([
+   TClientSQLMapping, TPersonSQLMapping, TCompanySQLMapping, TProductSQLMapping, TInvoiceSQLMapping,
+   TInvoiceItemSQLMapping, TInvoiceItemProductSQLMapping, TInvoiceItemServiceSQLMapping]);
+end;
+
+procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCoreOPFConfiguration);
+begin
+  AConfig.Model.AddClass([
+   TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
+  AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
+end;
+
+function TTestOPFAbstractTestCase.CreateConfiguration: IJCoreOPFConfiguration;
+begin
+  Result := TTestOPFConfig.Create;
+  Result.DriverClass := TTestSQLDriver;
+  Result.Model.OIDClass := TJCoreOPFOIDInt64;
+  Result.Model.GeneratorStrategy := jgsCustom;
 end;
 
 procedure TTestOPFAbstractTestCase.SetUp;
@@ -288,8 +390,6 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   AssertEquals(0, TTestIntegerGenerator.CurrentOID);
-  FConfiguration := CreateConfiguration;
-  FSession := FConfiguration.CreateSession as ITestOPFSession;
 end;
 
 procedure TTestOPFAbstractTestCase.TearDown;
@@ -299,54 +399,10 @@ begin
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
   TTestIntegerGenerator.ClearOID;
-  FSession := nil;
-  FConfiguration := nil;
-end;
-
-{ TTestOPFIPIDContactTestCase }
-
-procedure TTestOPFIPIDContactTestCase.CustomizeConfiguration(const AConfig: TTestOPFConfig);
-begin
-  inherited CustomizeConfiguration(AConfig);
-  AConfig.AddMappingClass([
-   TTestIPIDSimpleSQLMapping, TTestIPIDPersonSQLMapping, TTestIPIDEmployeeSQLMapping,
-   TTestIPIDAddressSQLMapping, TTestIPIDCitySQLMapping, TTestIPIDPhoneSQLMapping, TTestIPIDLanguageSQLMapping]);
-  AConfig.Model.AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
-  AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('Languages').CompositionType := jctAggregation;
-  AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('City').CompositionType := jctAggregation;
-end;
-
-{ TTestOPFProxyContactTestCase }
-
-procedure TTestOPFProxyContactTestCase.CustomizeConfiguration(const AConfig: TTestOPFConfig);
-begin
-  inherited CustomizeConfiguration(AConfig);
-  AConfig.AddMappingClass([TTestProxyPhoneSQLMapping, TTestProxyCitySQLMapping, TTestProxyPersonSQLMapping]);
-  AConfig.Model.AddClass([TTestProxyPhone, TTestProxyCity, TTestProxyPerson]);
-end;
-
-{ TTestOPFProxyInvoiceManualMappingTestCase }
-
-procedure TTestOPFProxyInvoiceManualMappingTestCase.CustomizeConfiguration(const AConfig: TTestOPFConfig);
-begin
-  inherited CustomizeConfiguration(AConfig);
-  AConfig.AddMappingClass([
-   TClientSQLMapping, TPersonSQLMapping, TCompanySQLMapping, TProductSQLMapping, TInvoiceSQLMapping,
-   TInvoiceItemSQLMapping, TInvoiceItemProductSQLMapping, TInvoiceItemServiceSQLMapping]);
-  AConfig.Model.AddClass([
-   TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
-  AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
-end;
-
-{ TTestOPFProxyInvoiceAutoMappingTestCase }
-
-procedure TTestOPFProxyInvoiceAutoMappingTestCase.CustomizeConfiguration(const AConfig: TTestOPFConfig);
-begin
-  inherited CustomizeConfiguration(AConfig);
-  AConfig.AddMappingClass([TTestSQLMapping]);
-  AConfig.Model.AddClass([
-   TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
-  AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
+  FSessionInvoiceAuto := nil;
+  FSessionInvoiceManual := nil;
+  FSessionIPIDContact := nil;
+  FSessionProxyContact := nil;
 end;
 
 { TTestIntegerGenerator }

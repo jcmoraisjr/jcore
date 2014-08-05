@@ -11,7 +11,7 @@ type
 
   { TTestOPFInsertAutoMappingTests }
 
-  TTestOPFInsertAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
+  TTestOPFInsertAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure Single;
     procedure Inheritance;
@@ -23,7 +23,7 @@ type
 
   { TTestOPFSelectAutoMappingTests }
 
-  TTestOPFSelectAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
+  TTestOPFSelectAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure Single;
     procedure Inheritance;
@@ -32,7 +32,7 @@ type
 
   { TTestOPFUpdateAutoMappingTests }
 
-  TTestOPFUpdateAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
+  TTestOPFUpdateAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure Single;
     procedure InheritanceUpdateParentMap;
@@ -48,7 +48,7 @@ type
 
   { TTestOPFDeleteAutoMappingTests }
 
-  TTestOPFDeleteAutoMappingTests = class(TTestOPFProxyInvoiceAutoMappingTestCase)
+  TTestOPFDeleteAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure SingleFromEntity;
     procedure SingleFromClass;

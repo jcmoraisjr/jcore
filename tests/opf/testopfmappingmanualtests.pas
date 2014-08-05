@@ -76,7 +76,7 @@ type
 
   { TTestOPFInsertManualMappingInheritanceTests }
 
-  TTestOPFInsertManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
+  TTestOPFInsertManualMappingInheritanceTests = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure Single;
     procedure EntityAggregation;
@@ -85,14 +85,14 @@ type
 
   { TTestOPFUpdateManualMappingInheritanceTests }
 
-  TTestOPFUpdateManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
+  TTestOPFUpdateManualMappingInheritanceTests = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure SingleOneMappingChanged;
   end;
 
   { TTestOPFSelectManualMappingInheritanceTests }
 
-  TTestOPFSelectManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
+  TTestOPFSelectManualMappingInheritanceTests = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure SingleFromSubclass;
     procedure SingleFromSuperclass1;
@@ -105,7 +105,7 @@ type
 
   { TTestOPFDeleteManualMappingInheritanceTests }
 
-  TTestOPFDeleteManualMappingInheritanceTests = class(TTestOPFProxyInvoiceManualMappingTestCase)
+  TTestOPFDeleteManualMappingInheritanceTests = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure Single1;
     procedure Single2;
