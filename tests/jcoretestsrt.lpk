@@ -22,7 +22,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="15">
+    <Files Count="14">
       <Item1>
         <Filename Value="core/testlogger.pas"/>
         <UnitName Value="TestLogger"/>
@@ -44,45 +44,41 @@
         <UnitName Value="TestOPFModelInvoice"/>
       </Item5>
       <Item6>
-        <Filename Value="opf/testopfmodelregistry.pas"/>
-        <UnitName Value="TestOPFModelRegistry"/>
-      </Item6>
-      <Item7>
         <Filename Value="opf/testopfconfig.pas"/>
         <UnitName Value="TestOPFConfig"/>
-      </Item7>
-      <Item8>
+      </Item6>
+      <Item7>
         <Filename Value="opf/testopfsessiontests.pas"/>
         <UnitName Value="TestOPFSessionTests"/>
-      </Item8>
-      <Item9>
+      </Item7>
+      <Item8>
         <Filename Value="opf/testopfmetadatatests.pas"/>
         <UnitName Value="TestOPFMetadataTests"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="opf/testopfgeneratortest.pas"/>
         <UnitName Value="TestOPFGeneratorTest"/>
-      </Item10>
-      <Item11>
+      </Item9>
+      <Item10>
         <Filename Value="opf/testopfmappingcontact.pas"/>
         <UnitName Value="TestOPFMappingContact"/>
-      </Item11>
-      <Item12>
+      </Item10>
+      <Item11>
         <Filename Value="opf/testopfmappinginvoice.pas"/>
         <UnitName Value="TestOPFMappingInvoice"/>
-      </Item12>
-      <Item13>
+      </Item11>
+      <Item12>
         <Filename Value="opf/testopfmappingtests.pas"/>
         <UnitName Value="TestOPFMappingTests"/>
-      </Item13>
-      <Item14>
+      </Item12>
+      <Item13>
         <Filename Value="opf/testopfmappingmanualtests.pas"/>
         <UnitName Value="TestOPFMappingManualTests"/>
-      </Item14>
-      <Item15>
+      </Item13>
+      <Item14>
         <Filename Value="opf/testopfmappingautotests.pas"/>
         <UnitName Value="TestOPFMappingAutoTests"/>
-      </Item15>
+      </Item14>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

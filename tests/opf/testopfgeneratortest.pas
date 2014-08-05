@@ -21,11 +21,11 @@ implementation
 uses
   sysutils,
   testregistry,
+  JCoreOPFMetadata,
   JCoreOPFGenerator,
   JCoreOPFOID,
   JCoreOPFConfig,
   JCoreOPFSession,
-  TestOPFModelRegistry,
   TestOPFModelInvoice;
 
 { TTestOPFGeneratorTest }
@@ -38,7 +38,7 @@ var
   VID: string;
   I: Integer;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelProxyInvoice.Create);
+  VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.GeneratorStrategy := jgsGUID;

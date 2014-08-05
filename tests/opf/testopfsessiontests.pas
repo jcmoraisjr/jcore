@@ -26,13 +26,13 @@ uses
   sysutils,
   testregistry,
   JCoreOPFException,
+  JCoreOPFMetadata,
   JCoreOPFGenerator,
   JCoreOPFConfig,
   JCoreOPFSession,
   JCoreOPFMappingSQL,
   TestOPFModelContact,
-  TestOPFModelInvoice,
-  TestOPFModelRegistry;
+  TestOPFModelInvoice;
 
 { TTestOPFSessionTests }
 
@@ -67,7 +67,7 @@ var
   VSession: IJCoreOPFSession;
   VProduct: TProduct;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create(TTestOPFModelIPIDContact.Create);
+  VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.Model.GeneratorStrategy := jgsCustom;
   VSession := VConfiguration.CreateSession;
