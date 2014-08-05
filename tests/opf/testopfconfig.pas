@@ -71,34 +71,30 @@ type
     property Session: ITestOPFSession read FSession;
   end;
 
-  TTestOPFManualMappingTestCase = class(TTestOPFAbstractTestCase);
-
-  TTestOPFAutoMappingTestCase = class(TTestOPFAbstractTestCase);
-
   { TTestOPFIPIDContactTestCase }
 
-  TTestOPFIPIDContactTestCase = class(TTestOPFManualMappingTestCase)
+  TTestOPFIPIDContactTestCase = class(TTestOPFAbstractTestCase)
   protected
     procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
   end;
 
   { TTestOPFProxyContactTestCase }
 
-  TTestOPFProxyContactTestCase = class(TTestOPFManualMappingTestCase)
+  TTestOPFProxyContactTestCase = class(TTestOPFAbstractTestCase)
   protected
     procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
   end;
 
   { TTestOPFProxyInvoiceManualMappingTestCase }
 
-  TTestOPFProxyInvoiceManualMappingTestCase = class(TTestOPFManualMappingTestCase)
+  TTestOPFProxyInvoiceManualMappingTestCase = class(TTestOPFAbstractTestCase)
   protected
     procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
   end;
 
   { TTestOPFProxyInvoiceAutoMappingTestCase }
 
-  TTestOPFProxyInvoiceAutoMappingTestCase = class(TTestOPFAutoMappingTestCase)
+  TTestOPFProxyInvoiceAutoMappingTestCase = class(TTestOPFAbstractTestCase)
   protected
     procedure CustomizeConfiguration(const AConfig: TTestOPFConfig); override;
   end;
