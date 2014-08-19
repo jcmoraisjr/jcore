@@ -371,6 +371,7 @@ procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCore
 begin
   AConfig.Model.AddClass([
    TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
+  AConfig.Model.AcquireMetadata(TInvoice).AttributeByName('Client').CompositionType := jctAggregation;
   AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
 end;
 
