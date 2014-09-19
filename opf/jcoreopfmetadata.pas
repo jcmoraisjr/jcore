@@ -202,6 +202,7 @@ type
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
     procedure AssignComposition(const AComposite: TObject);
     class function AttributeType: TJCoreOPFAttributeType; override;
+    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property CompositionOID: TJCoreOPFOID read FCompositionOID write SetCompositionOID;
   end;
@@ -895,6 +896,14 @@ end;
 class function TJCoreOPFADMEntity.AttributeType: TJCoreOPFAttributeType;
 begin
   Result := jatEntity;
+end;
+
+procedure TJCoreOPFADMEntity.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  if not ADriver.ReadNull then
+    CompositionOID := Metadata.CompositionMetadata.OIDClass.CreateFromDriver(ADriver)
+  else
+    CompositionOID := nil;
 end;
 
 procedure TJCoreOPFADMEntity.WriteToDriver(const ADriver: TJCoreOPFDriver);

@@ -363,14 +363,15 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.AddMappingClass([
-   TClientSQLMapping, TPersonSQLMapping, TCompanySQLMapping, TProductSQLMapping, TInvoiceSQLMapping,
-   TInvoiceItemSQLMapping, TInvoiceItemProductSQLMapping, TInvoiceItemServiceSQLMapping]);
+   TAddressSQLMapping, TClientSQLMapping, TPersonSQLMapping, TCompanySQLMapping, TProductSQLMapping,
+   TInvoiceSQLMapping, TInvoiceItemSQLMapping, TInvoiceItemProductSQLMapping,
+   TInvoiceItemServiceSQLMapping]);
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([
-   TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
+   TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
   AConfig.Model.AcquireMetadata(TInvoice).AttributeByName('Client').CompositionType := jctAggregation;
   AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
 end;

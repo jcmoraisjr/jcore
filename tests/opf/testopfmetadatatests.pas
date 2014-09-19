@@ -231,9 +231,10 @@ begin
     VPID := VCompany._proxy.PID as TJCoreOPFPID;
     AssertNotNull('company pid', VPID);
     VADMMap := TTestPIDFriend(VPID).ADMMap;
-    AssertEquals('pid cnt adm', 2, VADMMap.Count);
+    AssertEquals('pid cnt adm', 3, VADMMap.Count);
     AssertEquals('pid.adm0', 'Name', VADMMap.Data[0].Metadata.Name);
-    AssertEquals('pid.adm1', 'ContactName', VADMMap.Data[1].Metadata.Name);
+    AssertEquals('pid.adm1', 'Address', VADMMap.Data[1].Metadata.Name);
+    AssertEquals('pid.adm2', 'ContactName', VADMMap.Data[2].Metadata.Name);
   finally
     FreeAndNil(VCompany);
   end;

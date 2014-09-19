@@ -114,7 +114,7 @@ begin
     except
       on E: EJCoreOPFUnsupportedAttributeType do;
     end;
-    VConfiguration.Model.AddClass([TClient, TInvoiceItem]);
+    VConfiguration.Model.AddClass([TAddress, TClient, TInvoiceItem]);
     VSession.Store(VInvoice);
   finally
     FreeAndNil(VInvoice);
@@ -153,6 +153,7 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create;
   VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TJCoreOPFSQLMapping]);
+  VConfiguration.Model.AddClass([TAddress]);
   VSession := VConfiguration.CreateSession;
   VCompany := TCompany.Create;
   try
@@ -162,7 +163,8 @@ begin
     AssertSQLDriverCommands([
      'WriteString ' + VCompany._proxy.OID.AsString,
      'WriteString comp',
-     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
      'WriteString ' + VCompany._proxy.OID.AsString,
      'WriteString contact',
      'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);

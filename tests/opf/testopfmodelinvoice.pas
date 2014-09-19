@@ -19,13 +19,28 @@ type
     procedure Finit; override;
   end;
 
+  { TAddress }
+
+  TAddress = class(TCustomEntity)
+  private
+    FStreet: string;
+  published
+    property Street: string read FStreet write FStreet;
+  end;
+
   { TClient }
 
   TClient = class(TCustomEntity)
   private
     FName: string;
+    FAddress: TAddress;
+    function GetAddress: TAddress;
+    procedure SetAddress(AValue: TAddress);
+  protected
+    procedure Finit; override;
   published
     property Name: string read FName write FName;
+    property Address: TAddress read GetAddress write SetAddress;
   end;
 
   { TPerson }
@@ -119,6 +134,30 @@ uses
 procedure TCustomEntity.Finit;
 begin
   FreeAndNil(_proxy);
+  inherited Finit;
+end;
+
+{ TClient }
+
+function TClient.GetAddress: TAddress;
+begin
+  if not _proxy.Lazyload(@FAddress) then
+    FAddress := TAddress.Create;
+  Result := FAddress;
+end;
+
+procedure TClient.SetAddress(AValue: TAddress);
+begin
+  if FAddress <> AValue then
+  begin
+    FreeAndNil(FAddress);
+    FAddress := AValue;
+  end;
+end;
+
+procedure TClient.Finit;
+begin
+  FreeAndNil(FAddress);
   inherited Finit;
 end;
 

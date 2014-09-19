@@ -10,6 +10,20 @@ uses
 
 type
 
+  { TAddressSQLMapping }
+
+  TAddressSQLMapping = class(TTestSQLMapping)
+  protected
+    function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
+    function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
+    function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
+    procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
+  public
+    class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
+  end;
+
   { TClientSQLMapping }
 
   TClientSQLMapping = class(TTestSQLMapping)
@@ -18,6 +32,7 @@ type
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
+    function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -132,6 +147,49 @@ implementation
 uses
   TestOPFModelInvoice;
 
+{ TAddressSQLMapping }
+
+function TAddressSQLMapping.GenerateDeleteStatement(const AOIDCount: Integer): string;
+begin
+  Result := 'DELETE FROM ADDRESS WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
+end;
+
+function TAddressSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
+begin
+  Result := 'INSERT INTO ADDRESS (ID,STREET) VALUES (?,?)';
+end;
+
+function TAddressSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
+begin
+  Result := 'SELECT ID,STREET FROM ADDRESS WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
+end;
+
+function TAddressSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
+begin
+  Result := 'UPDATE ADDRESS SET STREET=? WHERE ID=?';
+end;
+
+procedure TAddressSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
+var
+  VAddress: TAddress;
+begin
+  VAddress := AMapping.PID.Entity as TAddress;
+  VAddress.Street := Driver.ReadString;
+end;
+
+procedure TAddressSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
+var
+  VAddress: TAddress;
+begin
+  VAddress := AMapping.PID.Entity as TAddress;
+  Driver.WriteString(VAddress.Street);
+end;
+
+class function TAddressSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;
+begin
+  Result := AMap.Metadata.TheClass = TAddress;
+end;
+
 { TClientSQLMapping }
 
 function TClientSQLMapping.CreateEntityFromDriver: TObject;
@@ -149,17 +207,22 @@ end;
 
 function TClientSQLMapping.GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
-  Result := 'INSERT INTO CLIENT (ID,NAME) VALUES (?,?)';
+  Result := 'INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)';
 end;
 
 function TClientSQLMapping.GenerateSelectBaseStatement(const AOIDCount: Integer): string;
 begin
-  Result := 'SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE ' + BuildOIDCondition(['T.ID'], AOIDCount);
+  Result := 'SELECT T.ID,T_1.ID,T_2.ID,T.NAME,T.ADDRESS FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE ' + BuildOIDCondition(['T.ID'], AOIDCount);
+end;
+
+function TClientSQLMapping.GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string;
+begin
+  Result := 'SELECT ADDRESS FROM CLIENT WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
 end;
 
 function TClientSQLMapping.GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string;
 begin
-  Result := 'UPDATE CLIENT SET NAME=? WHERE ID=?';
+  Result := 'UPDATE CLIENT SET NAME=?, ADDRESS=? WHERE ID=?';
 end;
 
 procedure TClientSQLMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
@@ -168,6 +231,7 @@ var
 begin
   VClient := AMapping.PID.Entity as TClient;
   VClient.Name := Driver.ReadString;
+  VClient.Address := ReadEntity(TAddress) as TAddress;
 end;
 
 procedure TClientSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
@@ -176,6 +240,10 @@ var
 begin
   VClient := AMapping.PID.Entity as TClient;
   Driver.WriteString(VClient.Name);
+  { TODO : Approach 1 does type safety; approach 2 does not create an empty address.
+    Implement 'mapping under progress' on pid.lazyload? }
+//  WriteEntity(TAddress, VClient.Address, True);
+  WriteEntity(AMapping.PID.AcquireADM('Address'));
 end;
 
 class function TClientSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;

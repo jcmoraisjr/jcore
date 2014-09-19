@@ -96,7 +96,8 @@ begin
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteString corp',
-     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
      'WriteInt64 1',
      'WriteString james',
      'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);
@@ -159,7 +160,8 @@ begin
      'WriteInt64 1',
      'WriteInt64 2',
      'WriteString bar sa',
-     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
      'WriteInt64 2',
      'WriteString ',
      'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);
@@ -248,6 +250,7 @@ begin
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('6');
   TTestSQLDriver.Data.Add('acorp');
+  TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('jack');
   VCompany := Session.Retrieve(TCompany, '6') as TCompany;
   try
@@ -257,7 +260,7 @@ begin
     AssertEquals('comp contact', 'jack', VCompany.ContactName);
     AssertSQLDriverCommands([
      'WriteInt64 6',
-     {1}'ExecSQL SELECT T_0.ID,T_0.NAME,T_1.CONTACTNAME FROM CLIENT T_0 INNER JOIN COMPANY T_1 ON T_0.ID=T_1.ID WHERE T_0.ID=?']);
+     {1}'ExecSQL SELECT T_0.ID,T_0.NAME,T_0.ADDRESS,T_1.CONTACTNAME FROM CLIENT T_0 INNER JOIN COMPANY T_1 ON T_0.ID=T_1.ID WHERE T_0.ID=?']);
   finally
     FreeAndNil(VCompany);
   end;
@@ -273,6 +276,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('12');
   TTestSQLDriver.Data.Add('thecorp');
+  TTestSQLDriver.Data.Add('null');
   {2}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('12');
   TTestSQLDriver.Data.Add('joe');
@@ -286,7 +290,7 @@ begin
     AssertEquals('comp contact', 'joe', VCompany.ContactName);
     AssertSQLDriverCommands([
      'WriteInt64 12',
-     {1}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.NAME FROM CLIENT T_0 LEFT OUTER JOIN PERSON TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN COMPANY TS_1 ON T_0.ID=TS_1.ID WHERE T_0.ID=?',
+     {1}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.NAME,T_0.ADDRESS FROM CLIENT T_0 LEFT OUTER JOIN PERSON TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN COMPANY TS_1 ON T_0.ID=TS_1.ID WHERE T_0.ID=?',
      'WriteInt64 12',
      {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
   finally
@@ -615,8 +619,12 @@ begin
     VPerson.Name := 'joe';
     Session.Store(VPerson);
     TTestSQLDriver.Commands.Clear;
+    {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('null');
     Session.Dispose(VPerson);
     AssertSQLDriverCommands([
+     'WriteInt64 1',
+     {1}'ExecSQL SELECT',
      'WriteInt64 1',
      'ExecSQL DELETE FROM CLIENT WHERE ID=?',
      'WriteInt64 1',
@@ -628,8 +636,12 @@ end;
 
 procedure TTestOPFDeleteAutoMappingTests.InheritanceFromClass;
 begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
   Session.Dispose(TPerson, ['5']);
   AssertSQLDriverCommands([
+   'WriteInt64 5',
+   {1}'ExecSQL SELECT',
    'WriteInt64 5',
    'ExecSQL DELETE FROM CLIENT WHERE ID=?',
    'WriteInt64 5',
@@ -638,8 +650,12 @@ end;
 
 procedure TTestOPFDeleteAutoMappingTests.InheritanceFromParentClass;
 begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('null');
   Session.Dispose(TClient, ['2']);
   AssertSQLDriverCommands([
+   'WriteInt64 2',
+   {1}'ExecSQL SELECT',
    'WriteInt64 2',
    'ExecSQL DELETE FROM CLIENT WHERE ID=?',
    'WriteInt64 2',
@@ -650,8 +666,16 @@ end;
 
 procedure TTestOPFDeleteAutoMappingTests.InheritanceFromClassWithOIDArray;
 begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(3);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
   Session.Dispose(TPerson, ['7', '9', '11']);
   AssertSQLDriverCommands([
+   'WriteInt64 7',
+   'WriteInt64 9',
+   'WriteInt64 11',
+   {1}'ExecSQL SELECT',
    'WriteInt64 7',
    'WriteInt64 9',
    'WriteInt64 11',

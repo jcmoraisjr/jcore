@@ -1215,7 +1215,8 @@ begin
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteString Jack',
-     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
      'WriteInt64 1',
      'WriteString J',
      'ExecSQL INSERT INTO PERSON (ID,NICK) VALUES (?,?)']);
@@ -1242,7 +1243,8 @@ begin
      'WriteInt64 1',
      'WriteInt64 2',
      'WriteString aclient',
-     'ExecSQL INSERT INTO CLIENT (ID,NAME) VALUES (?,?)',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
      'WriteInt64 2',
      'WriteString cli',
      'ExecSQL INSERT INTO PERSON (ID,NICK) VALUES (?,?)',
@@ -1326,8 +1328,9 @@ begin
     Session.Store(VCompany);
     AssertSQLDriverCommands([
      'WriteString comp corp',
+     'WriteNull',
      'WriteInt64 1',
-     'ExecSQL UPDATE CLIENT SET NAME=? WHERE ID=?']);
+     'ExecSQL UPDATE CLIENT SET NAME=?, ADDRESS=? WHERE ID=?']);
     TTestSQLDriver.Commands.Clear;
     VCompany.ContactName := 'wil';
     Session.Store(VCompany);
@@ -1350,6 +1353,7 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('10');
   TTestSQLDriver.Data.Add('company corp');
+  TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('jack');
 
   VCompany := Session.Retrieve(TCompany, '10') as TCompany;
@@ -1378,6 +1382,7 @@ begin
   TTestSQLDriver.Data.Add('7');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('johnson');
+  TTestSQLDriver.Data.Add('null');
   {2}
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('7');
@@ -1392,7 +1397,7 @@ begin
     AssertEquals('person nick', 'joe', VPerson.Nick);
     AssertSQLDriverCommands([
      'WriteInt64 7',
-     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME,T.ADDRESS FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
      'WriteInt64 7',
      {2}'ExecSQL SELECT ID,NICK FROM PERSON WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -1413,6 +1418,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('91');
   TTestSQLDriver.Data.Add('acorp');
+  TTestSQLDriver.Data.Add('null');
   {2}
   TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('91');
@@ -1427,7 +1433,7 @@ begin
     AssertEquals('company contact name', 'mike', VCompany.ContactName);
     AssertSQLDriverCommands([
      'WriteInt64 91',
-     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME,T.ADDRESS FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
      'WriteInt64 91',
      {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -1447,6 +1453,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('someone');
+  TTestSQLDriver.Data.Add('null');
 
   VClient := Session.Retrieve(TClient, '3') as TClient;
   try
@@ -1455,7 +1462,7 @@ begin
     AssertEquals('client name', 'someone', VClient.Name);
     AssertSQLDriverCommands([
      'WriteInt64 3',
-     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?']);
+     {1}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME,T.ADDRESS FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
@@ -1479,6 +1486,7 @@ begin
     TTestSQLDriver.Data.Add('null');
     TTestSQLDriver.Data.Add('18');
     TTestSQLDriver.Data.Add('thecorp');
+    TTestSQLDriver.Data.Add('null');
     {3}
     TTestSQLDriver.ExpectedResultsets.Add(1);
     TTestSQLDriver.Data.Add('18');
@@ -1497,7 +1505,7 @@ begin
      'WriteInt64 3',
      {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?',
      'WriteInt64 18',
-     {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
+     {2}'ExecSQL SELECT T.ID,T_1.ID,T_2.ID,T.NAME,T.ADDRESS FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE T.ID=?',
      'WriteInt64 18',
      {3}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
     AssertEquals('expr cnt', 0, TTestSQLDriver.ExpectedResultsets.Count);
@@ -1663,11 +1671,19 @@ var
 begin
   VCompany := TCompany.Create;
   try
+    VCompany.Address.Street := 'street';
     Session.Store(VCompany);
     AssertEquals('company id', '1', VCompany._proxy.OID.AsString);
+    AssertEquals('address id', '2', VCompany.Address._proxy.OID.AsString);
+    {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('2');
     TTestSQLDriver.Commands.Clear;
     Session.Dispose(VCompany);
     AssertSQLDriverCommands([
+     'WriteInt64 1',
+     {1}'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID=?',
+     'WriteInt64 2',
+     'ExecSQL DELETE FROM ADDRESS WHERE ID=?',
      'WriteInt64 1',
      'ExecSQL DELETE FROM CLIENT WHERE ID=?',
      'WriteInt64 1',
@@ -1679,8 +1695,14 @@ end;
 
 procedure TTestOPFDeleteManualMappingInheritanceTests.Single2;
 begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
   Session.Dispose(TPerson, ['5', '6']);
   AssertSQLDriverCommands([
+   'WriteInt64 5',
+   'WriteInt64 6',
+   {1}'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID IN (?,?)',
    'WriteInt64 5',
    'WriteInt64 6',
    'ExecSQL DELETE FROM CLIENT WHERE ID IN (?,?)',
