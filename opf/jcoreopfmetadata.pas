@@ -1503,6 +1503,8 @@ end;
 function TJCoreOPFPID.Lazyload(const AAttrAddr: Pointer): Boolean;
 begin
   // Return False only if an attribute *should* but *couldn't* be loaded
+  // This will also return True if a composition references nil. The entity
+  // should use this result and decide if an instance should be created
   if not Assigned(FAttrAddrRef) then
   begin
     // Normal execution
@@ -1510,7 +1512,7 @@ begin
     if not Result then
     begin
       AcquireADMByAttrAddr(AAttrAddr).Load;
-      Result := True;
+      Result := Assigned(TObject(AAttrAddr^));
     end;
   end else
   begin
@@ -1529,8 +1531,7 @@ end;
 
 function TJCoreOPFAttrMetadata.GetHasExternalLink: Boolean;
 begin
-  Result := (CompositionType = jctAggregation) or not Assigned(CompositionMetadata) or
-   not Assigned(CompositionMetadata.OwnerClass);
+  Result := CompositionType = jctAggregation;
 end;
 
 function TJCoreOPFAttrMetadata.GetModel: TJCoreOPFModel;

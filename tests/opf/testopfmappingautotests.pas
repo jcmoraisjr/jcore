@@ -28,6 +28,7 @@ type
     procedure Single;
     procedure Inheritance;
     procedure InheritanceFromParent;
+    procedure LazyEntity;
   end;
 
   { TTestOPFUpdateAutoMappingTests }
@@ -56,6 +57,8 @@ type
     procedure InheritanceFromClass;
     procedure InheritanceFromParentClass;
     procedure InheritanceFromClassWithOIDArray;
+    procedure EntityComposition;
+    procedure CollectionComposition;
   end;
 
 implementation
@@ -295,6 +298,32 @@ begin
      {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
   finally
     FreeAndNil(VClient);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.LazyEntity;
+var
+  VCompany: TCompany;
+  VStreet: string;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('9');
+  TTestSQLDriver.Data.Add('');
+  TTestSQLDriver.Data.Add('11');
+  TTestSQLDriver.Data.Add('');
+  VCompany := Session.Retrieve(TCompany, '9') as TCompany;
+  try
+    {2}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('11');
+    TTestSQLDriver.Data.Add('freeway');
+    TTestSQLDriver.Commands.Clear;
+    VStreet := VCompany.Address.Street;
+    AssertSQLDriverCommands([
+     'WriteInt64 11',
+     {2}'ExecSQL SELECT ID,STREET FROM ADDRESS WHERE ID=?']);
+    AssertEquals('company.address.street', 'freeway', VStreet);
+  finally
+    FreeAndNil(VCompany);
   end;
 end;
 
@@ -624,7 +653,7 @@ begin
     Session.Dispose(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
-     {1}'ExecSQL SELECT',
+     'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID=?',
      'WriteInt64 1',
      'ExecSQL DELETE FROM CLIENT WHERE ID=?',
      'WriteInt64 1',
@@ -641,7 +670,7 @@ begin
   Session.Dispose(TPerson, ['5']);
   AssertSQLDriverCommands([
    'WriteInt64 5',
-   {1}'ExecSQL SELECT',
+   'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID=?',
    'WriteInt64 5',
    'ExecSQL DELETE FROM CLIENT WHERE ID=?',
    'WriteInt64 5',
@@ -655,7 +684,7 @@ begin
   Session.Dispose(TClient, ['2']);
   AssertSQLDriverCommands([
    'WriteInt64 2',
-   {1}'ExecSQL SELECT',
+   'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID=?',
    'WriteInt64 2',
    'ExecSQL DELETE FROM CLIENT WHERE ID=?',
    'WriteInt64 2',
@@ -675,7 +704,7 @@ begin
    'WriteInt64 7',
    'WriteInt64 9',
    'WriteInt64 11',
-   {1}'ExecSQL SELECT',
+   'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID IN (?,?,?)',
    'WriteInt64 7',
    'WriteInt64 9',
    'WriteInt64 11',
@@ -684,6 +713,45 @@ begin
    'WriteInt64 9',
    'WriteInt64 11',
    'ExecSQL DELETE FROM PERSON WHERE ID IN (?,?,?)']);
+end;
+
+procedure TTestOPFDeleteAutoMappingTests.EntityComposition;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('7');
+  TTestSQLDriver.Data.Add('8');
+  Session.Dispose(TPerson, ['1', '2']);
+  AssertSQLDriverCommands([
+   'WriteInt64 1',
+   'WriteInt64 2',
+   'ExecSQL SELECT ADDRESS FROM CLIENT WHERE ID IN (?,?)',
+   'WriteInt64 7',
+   'WriteInt64 8',
+   'ExecSQL DELETE FROM ADDRESS WHERE ID IN (?,?)',
+   'WriteInt64 1',
+   'WriteInt64 2',
+   'ExecSQL DELETE FROM CLIENT WHERE ID IN (?,?)',
+   'WriteInt64 1',
+   'WriteInt64 2',
+   'ExecSQL DELETE FROM PERSON WHERE ID IN (?,?)']);
+end;
+
+procedure TTestOPFDeleteAutoMappingTests.CollectionComposition;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('9');
+  Session.Dispose(TInvoice, ['18']);
+  AssertSQLDriverCommands([
+   'WriteInt64 18',
+   {1}'ExecSQL SELECT ID FROM INVOICEITEM WHERE INVOICE=?',
+   'WriteInt64 9',
+   'ExecSQL DELETE FROM INVOICEITEM WHERE ID=?',
+   'WriteInt64 9',
+   'ExecSQL DELETE FROM INVOICEITEMPRODUCT WHERE ID=?',
+   'WriteInt64 9',
+   'ExecSQL DELETE FROM INVOICEITEMSERVICE WHERE ID=?',
+   'WriteInt64 18',
+   'ExecSQL DELETE FROM INVOICE WHERE ID=?']);
 end;
 
 initialization

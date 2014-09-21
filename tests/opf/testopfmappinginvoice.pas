@@ -32,7 +32,7 @@ type
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
-    function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; override;
+    function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -215,7 +215,8 @@ begin
   Result := 'SELECT T.ID,T_1.ID,T_2.ID,T.NAME,T.ADDRESS FROM CLIENT T LEFT OUTER JOIN PERSON T_1 ON T.ID=T_1.ID LEFT OUTER JOIN COMPANY T_2 ON T.ID=T_2.ID WHERE ' + BuildOIDCondition(['T.ID'], AOIDCount);
 end;
 
-function TClientSQLMapping.GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string;
+function TClientSQLMapping.GenerateSelectCompositionsForDeleteStatement(
+  const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string;
 begin
   Result := 'SELECT ADDRESS FROM CLIENT WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
 end;

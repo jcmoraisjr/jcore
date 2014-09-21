@@ -40,6 +40,7 @@ type
     function BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex, AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray; virtual;
     function BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildOIDName(const AOIDNameArray: array of string; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function MapIndexByMap(const AMap: TJCoreOPFMap): Integer;
@@ -52,6 +53,7 @@ type
     function BuildSelectComplementaryFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
     function BuildSelectComplementaryFrom(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
     function BuildSelectCondition(const AOIDCount: Integer; const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectFieldNames(const AAttributes: TJCoreOPFAttrMetadataArray): string;
     function BuildSelectJoinCondition(const ALeftMaps: TJCoreOPFMaps; const ALeftIndex: Integer; const ALeftTablePrefixType: TJCoreOPFTablePrefixType; const ARightMaps: TJCoreOPFMaps; const ARightIndex: Integer; const ARightTablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string; virtual;
     function BuildUpdateNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
@@ -70,12 +72,14 @@ type
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
-    function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; virtual;
+    function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     // Support
     function BuildFieldParams(const AFieldCount: Integer): string; virtual;
     function BuildOIDCondition(const AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDCondition(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildOIDCondition(const AOIDNameArray: array of string; const AOIDCount: Integer): string; virtual;
+    function BuildOIDCondition(const AOIDNameArray: array of string; const AMapIndex, AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
   end;
 
   TJCoreOPFSQLGeneratorClass = class of TJCoreOPFSQLGenerator;
@@ -100,7 +104,7 @@ type
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
-    function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; virtual;
+    function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
   protected
     // Support
@@ -198,10 +202,16 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex,
   AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+begin
+  Result := BuildOIDName(AMaps[AMapIndex].OIDName, AMapIndex, AOIDIndex, ATablePrefixType);
+end;
+
+function TJCoreOPFSQLGenerator.BuildOIDName(const AOIDNameArray: array of string; const AMapIndex,
+  AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
 var
   VFieldName: string;
 begin
-  VFieldName := AMaps[AMapIndex].OIDName[AOIDIndex];
+  VFieldName := AOIDNameArray[AOIDIndex];
   if ATablePrefixType <> jtptNone then
     Result := Format('%s%d.%s', [CTablePrefix[ATablePrefixType], AMapIndex, VFieldName])
   else
@@ -211,13 +221,14 @@ end;
 function TJCoreOPFSQLGenerator.BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer;
   const ATablePrefixType: TJCoreOPFTablePrefixType): string;
 var
-  VMap: TJCoreOPFMap;
+  VOIDNameArray: TJCoreStringArray;
   I: Integer;
 begin
-  VMap := AMaps[AMapIndex];
+  VOIDNameArray := AMaps[AMapIndex].OIDName;
   Result := '';
-  for I := Low(VMap.OIDName) to High(VMap.OIDName) do
-    Result := Result + BuildOIDName(AMaps, AMapIndex, I, ATablePrefixType) + ',';
+  for I := Low(VOIDNameArray) to High(VOIDNameArray) do
+    Result := Result + BuildOIDName(VOIDNameArray, AMapIndex, I, ATablePrefixType) + ',';
+  SetLength(Result, Length(Result) - 1);
 end;
 
 function TJCoreOPFSQLGenerator.BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer;
@@ -263,7 +274,7 @@ var
   VMap: TJCoreOPFMap;
   I, J: Integer;
 begin
-  Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]);
+  Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]) + ',';
   for I := 0 to Pred(SubMaps.Count) do
     Result := Result + BuildOIDName(SubMaps, I, 0, CSubMapPrefix[AUseTablePrefix]) + ',';
   for I := 0 to Pred(Maps.Count) do
@@ -298,7 +309,7 @@ var
   VMap: TJCoreOPFMap;
   I, J: Integer;
 begin
-  Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]);
+  Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]) + ',';
   for I := ABaseMapIdx to Pred(Maps.Count) do
   begin
     VMap := Maps[I];
@@ -326,6 +337,16 @@ function TJCoreOPFSQLGenerator.BuildSelectCondition(const AOIDCount: Integer;
   const AUseTablePrefix: Boolean): string;
 begin
   Result := BuildOIDCondition(Maps, 0, AOIDCount, CMainMapPrefix[AUseTablePrefix]);
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectFieldNames(const AAttributes: TJCoreOPFAttrMetadataArray): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := Low(AAttributes) to High(AAttributes) do
+    Result := Result + AAttributes[I].PersistentFieldName + ',';
+  SetLength(Result, Length(Result) - 1);
 end;
 
 function TJCoreOPFSQLGenerator.BuildSelectJoinCondition(const ALeftMaps: TJCoreOPFMaps;
@@ -447,17 +468,26 @@ begin
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectCompositionsForDeleteStatement(
-  const AOIDCount: Integer): string;
+  const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string;
 begin
-  { TODO : Implement }
-  Result := 'SELECT';
+  { TODO : Rename/document - simple compositions, reference from the instance itself }
+  Result := Format('SELECT %s FROM %s WHERE %s', [
+   BuildSelectFieldNames(ACompositionMetadatas),
+   Map.TableName,
+   BuildSelectCondition(AOIDCount, False)]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata;
   const AOIDCount: Integer): string;
+var
+  VMaps: TJCoreOPFMaps;
 begin
-  { TODO : Implement }
-  Result := 'SELECT';
+  { TODO : Rename/document - collections, external references }
+  VMaps := AAttrMetadata.CompositionMetadata.Maps;
+  Result := Format('SELECT %s FROM %s WHERE %s', [
+   BuildOIDNames(VMaps, 0, jtptNone),
+   VMaps[0].TableName,
+   BuildOIDCondition(VMaps[0].OwnerOIDName, 0, 1, jtptNone)]);
 end;
 
 function TJCoreOPFSQLGenerator.BuildFieldParams(const AFieldCount: Integer): string;
@@ -487,30 +517,40 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildOIDCondition(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDCount: Integer;
   const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+begin
+  Result := BuildOIDCondition(AMaps[AMapIndex].OIDName, AMapIndex, AOIDCount, ATablePrefixType);
+end;
+
+function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDNameArray: array of string;
+  const AOIDCount: Integer): string;
+begin
+  Result := BuildOIDCondition(AOIDNameArray, 0, AOIDCount, jtptNone);
+end;
+
+function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDNameArray: array of string;
+  const AMapIndex, AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
 var
-  VOIDName: TJCoreStringArray;
   VOIDClause: string;
   I: Integer;
 begin
   { TODO : allocate once, at the start }
-  VOIDName := AMaps[AMapIndex].OIDName;
-  if Length(VOIDName) = 1 then
+  if Length(AOIDNameArray) = 1 then
   begin
     if AOIDCount > 1 then
     begin
-      Result := BuildOIDName(AMaps, AMapIndex, 0, ATablePrefixType) + ' IN (?';
+      Result := BuildOIDName(AOIDNameArray, AMapIndex, 0, ATablePrefixType) + ' IN (?';
       for I := 2 to AOIDCount do
         Result := Result + ',?';
       Result := Result + ')';
     end else if AOIDCount = 1 then
-      Result := BuildOIDName(AMaps, AMapIndex, 0, ATablePrefixType) + '=?'
+      Result := BuildOIDName(AOIDNameArray, AMapIndex, 0, ATablePrefixType) + '=?'
     else
       Result := '';
   end else
   begin
     VOIDClause := '(';
-    for I := Low(VOIDName) to High(VOIDName) do
-      VOIDClause := BuildOIDName(AMaps, AMapIndex, I, ATablePrefixType) + '=? AND ';
+    for I := Low(AOIDNameArray) to High(AOIDNameArray) do
+      VOIDClause := BuildOIDName(AOIDNameArray, AMapIndex, I, ATablePrefixType) + '=? AND ';
     SetLength(VOIDClause, Length(VOIDClause) - 4);
     VOIDClause[Length(VOIDClause)] := ')';
     Result := '';
@@ -588,9 +628,10 @@ begin
   Result := SQLGenerator.GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttr);
 end;
 
-function TJCoreOPFSQLMapping.GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string;
+function TJCoreOPFSQLMapping.GenerateSelectCompositionsForDeleteStatement(
+  const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string;
 begin
-  Result := SQLGenerator.GenerateSelectCompositionsForDeleteStatement(AOIDCount);
+  Result := SQLGenerator.GenerateSelectCompositionsForDeleteStatement(ACompositionMetadatas, AOIDCount);
 end;
 
 function TJCoreOPFSQLMapping.GenerateSelectForDeleteStatement(
@@ -612,35 +653,38 @@ begin
     * compositions (owned) with embedded link
       -- select external IDs
       -- delete objects
-    * compositions (owned) with external link
+    * compositions (owned) with external link (currently unsupported)
       -- select external IDs
       -- delete links
       -- delete objects
     * aggregations (shared) with external link
       -- delete links
   }
-  VOIDCount := 0;
-  if AAttrMetadata.CompositionType = jctComposition then
-  begin
-    // Select external IDs
-    VSelectStmt := GenerateSelectForDeleteStatement(AAttrMetadata, Length(AOIDArray));
-    for VOID in AOIDArray do
-      VOID.WriteToDriver(Driver);
-    VOIDCount := Driver.ExecSQL(VSelectStmt);
-  end;
-  if AAttrMetadata.HasExternalLink and
-   ((VOIDCount > 0) or (AAttrMetadata.CompositionType = jctAggregation)) then
-  begin
-    // Delete external links
-    VDeleteStmt := GenerateDeleteExternalLinksStatement(AAttrMetadata, Length(AOIDArray));
-    for VOID in AOIDArray do
-      VOID.WriteToDriver(Driver);
-    Driver.ExecSQL(VDeleteStmt);
-  end;
-  if (VOIDCount > 0) and (AAttrMetadata.CompositionType = jctComposition) then
-  begin
-    // Delete external objects
-    Mapper.AcquireClassMapping(AAttrMetadata.CompositionClass).DisposeFromDriverInternal(VOIDCount);
+  case AAttrMetadata.CompositionType of
+    jctComposition:
+    begin
+      VOIDCount := 0;
+      // Select external IDs
+      // DisposeFromDriverInternal internally uses InternalDispose, which need the
+      // object ID to dispose it's own compositions
+      { TODO : select for delete isn't necessary if deleted objects doesn't have compositions }
+      { TODO : external links of owned compositions }
+      VSelectStmt := GenerateSelectForDeleteStatement(AAttrMetadata, Length(AOIDArray));
+      for VOID in AOIDArray do
+        VOID.WriteToDriver(Driver);
+      VOIDCount := Driver.ExecSQL(VSelectStmt);
+      // Delete external objects
+      if VOIDCount > 0 then
+        Mapper.AcquireClassMapping(AAttrMetadata.CompositionClass).DisposeFromDriverInternal(VOIDCount);
+    end;
+    jctAggregation:
+    begin
+      // Delete external links
+      VDeleteStmt := GenerateDeleteExternalLinksStatement(AAttrMetadata, Length(AOIDArray));
+      for VOID in AOIDArray do
+        VOID.WriteToDriver(Driver);
+      Driver.ExecSQL(VDeleteStmt);
+    end;
   end;
 end;
 
@@ -653,7 +697,7 @@ begin
   { TODO : Implement reading of more than one entity composition }
   if Length(ACompositionMetadatas) = 1 then
   begin
-    VSelectStmt := GenerateSelectCompositionsForDeleteStatement(Length(AOIDArray));
+    VSelectStmt := GenerateSelectCompositionsForDeleteStatement(ACompositionMetadatas, Length(AOIDArray));
     for VOID in AOIDArray do
       VOID.WriteToDriver(Driver);
     Driver.ExecSQL(VSelectStmt, Length(AOIDArray));
@@ -801,35 +845,8 @@ end;
 
 function TJCoreOPFSQLMapping.BuildOIDCondition(const AOIDNameArray: array of string;
   const AOIDCount: Integer): string;
-var
-  VOIDClause: string;
-  I: Integer;
 begin
-  { TODO : Fix duplicated code. Used on manual mapping of external links }
-  if Length(AOIDNameArray) = 1 then
-  begin
-    if AOIDCount > 1 then
-    begin
-      Result := AOIDNameArray[0] + ' IN (?';
-      for I := 2 to AOIDCount do
-        Result := Result + ',?';
-      Result := Result + ')';
-    end else if AOIDCount = 1 then
-      Result := AOIDNameArray[0] + '=?'
-    else
-      Result := '';
-  end else
-  begin
-    VOIDClause := '(';
-    for I := Low(AOIDNameArray) to High(AOIDNameArray) do
-      VOIDClause := AOIDNameArray[I] + '=? AND ';
-    SetLength(VOIDClause, Length(VOIDClause) - 4);
-    VOIDClause[Length(VOIDClause)] := ')';
-    Result := '';
-    for I := 0 to Pred(AOIDCount) do
-      Result := Result + VOIDClause + ' OR ';
-    SetLength(Result, Length(Result) - 4);
-  end;
+  Result := SQLGenerator.BuildOIDCondition(AOIDNameArray, AOIDCount);
 end;
 
 function TJCoreOPFSQLMapping.EnsureCollectionAttribute(const AADM: TJCoreOPFADM): TJCoreOPFADMCollection;

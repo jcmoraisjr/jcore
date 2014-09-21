@@ -26,7 +26,7 @@ type
     function GenerateDeleteStatement(const AOIDCount: Integer): string; override;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; override;
     function GenerateInsertStatement(const AMapping: TJCoreOPFADMMapping): string; override;
-    function GenerateSelectCompositionsForDeleteStatement(const AOIDCount: Integer): string; override;
+    function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; override;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; override;
     function GenerateSelectBaseStatement(const AOIDCount: Integer): string; override;
     function GenerateUpdateStatement(const AMapping: TJCoreOPFADMMapping): string; override;
@@ -182,7 +182,7 @@ begin
 end;
 
 function TTestIPIDPersonSQLMapping.GenerateSelectCompositionsForDeleteStatement(
-  const AOIDCount: Integer): string;
+  const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string;
 begin
   Result := 'SELECT ADDRESS FROM PERSON WHERE ' + BuildOIDCondition(['ID'], AOIDCount);
 end;
