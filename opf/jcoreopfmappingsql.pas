@@ -462,9 +462,14 @@ end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata;
   const AOwnerAttr: TJCoreOPFAttrMetadata): string;
+var
+  VIsMultiMap: Boolean;
 begin
-  { TODO : Implement }
-  Result := 'SELECT';
+  VIsMultiMap := (SubMaps.Count > 0) or (Maps.Count > 1);
+  Result := Format('SELECT %s FROM %s WHERE %s', [
+   BuildSelectBaseFieldNames(VIsMultiMap),
+   BuildSelectBaseFrom(VIsMultiMap),
+   BuildOIDCondition(Map.OwnerOIDName, 0, 1, CMainMapPrefix[VIsMultiMap])]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectCompositionsForDeleteStatement(

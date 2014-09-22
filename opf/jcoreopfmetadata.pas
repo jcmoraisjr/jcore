@@ -245,6 +245,7 @@ type
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
     class function AttributeType: TJCoreOPFAttributeType; override;
+    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
@@ -425,8 +426,9 @@ type
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass; // model initializes
     FOIDName: TJCoreStringArray; // model initializes
-    FOwnerClass: TJCoreOPFClassMetadata;
+    FOwnerMetadata: TJCoreOPFClassMetadata; // model initializes
     FSubMaps: TJCoreOPFMaps;
+    FTableName: string; // model initializes
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
     function GetModel: TJCoreOPFModel;
@@ -443,9 +445,10 @@ type
     property Maps: TJCoreOPFMaps read GetMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
-    property OwnerClass: TJCoreOPFClassMetadata read FOwnerClass write FOwnerClass;
+    property OwnerMetadata: TJCoreOPFClassMetadata read FOwnerMetadata;
     property Parent: TJCoreOPFClassMetadata read GetParent;
     property SubMaps: TJCoreOPFMaps read GetSubMaps;
+    property TableName: string read FTableName;
   end;
 
   { TJCoreOPFModel }
@@ -1167,6 +1170,11 @@ begin
   Result := jatCollection;
 end;
 
+procedure TJCoreOPFADMCollection.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+begin
+  { TODO : Implement for non lazy loading attributes }
+end;
+
 procedure TJCoreOPFADMCollection.WriteToDriver(const ADriver: TJCoreOPFDriver);
 begin
   // Mapping does the job using OIDRemoved and PIDAdded properties
@@ -1588,6 +1596,9 @@ end;
 
 constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata);
 var
+  VOwner: TJCoreOPFClassMetadata;
+  VTableName: string;
+  VOIDName: TJCoreStringArray;
   I: Integer;
 begin
   { TODO : Proper metadata -> map conversion }
@@ -1595,13 +1606,20 @@ begin
   FMetadata := AMetadata;
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
-  if Assigned(Metadata.OwnerClass) then
+  FTableName := Metadata.TableName;
+  VOwner := Metadata.OwnerMetadata;
+  if Assigned(VOwner) then
   begin
-    SetLength(FOwnerOIDName, 1);
-    FOwnerOIDName[0] := UpperCase(Copy(Metadata.OwnerClass.TheClass.ClassName, 2, MaxInt));
+    VTableName := VOwner.TableName;
+    VOIDName := VOwner.OIDName;
+    SetLength(FOwnerOIDName, Length(VOIDName));
+    if Length(VOIDName) = 1 then
+      FOwnerOIDName[0] := VTableName
+    else
+      for I := 0 to Pred(Length(VOIDName)) do
+        FOwnerOIDName[I] := VTableName + '_' + VOIDName[I];
   end else
     SetLength(FOwnerOIDName, 0);
-  FTableName := UpperCase(Copy(Metadata.TheClass.ClassName, 2, MaxInt));
   FGeneratorStrategy := Metadata.GeneratorStrategy;
   FSubMaps := Metadata.SubMaps;
   SetLength(FSubClasses, FSubMaps.Count);
@@ -1730,10 +1748,11 @@ begin
   VCompositionMetadata := VAttrMetadata.CompositionMetadata;
   if Assigned(VCompositionMetadata) and (VAttrMetadata.ADMClass.AttributeType = jatCollection) then
   begin
-    if not Assigned(VCompositionMetadata.OwnerClass) then
-      VCompositionMetadata.OwnerClass := AMetadata as TJCoreOPFClassMetadata
+    if not Assigned(VCompositionMetadata.OwnerMetadata) then
+      VCompositionMetadata.FOwnerMetadata := AMetadata as TJCoreOPFClassMetadata // friend class
     else
-      VCompositionMetadata.OwnerClass := nil;
+      { TODO : Implement }
+      ;
   end;
   Result := VAttrMetadata;
 end;
@@ -1772,6 +1791,7 @@ begin
   VOIDName[0] := 'ID';
   VMetadata.FOIDName := VOIDName; // friend class
   VMetadata.FOIDClass := OIDClass; // friend class
+  VMetadata.FTableName := UpperCase(Copy(VMetadata.TheClass.ClassName, 2, MaxInt)); // friend class
   VMetadata.FGeneratorStrategy := GeneratorStrategy; // friend class
 end;
 

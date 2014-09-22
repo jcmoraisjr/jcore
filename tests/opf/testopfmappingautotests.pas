@@ -28,7 +28,9 @@ type
     procedure Single;
     procedure Inheritance;
     procedure InheritanceFromParent;
-    procedure LazyEntity;
+    procedure LazyEntityComposition;
+    procedure LazyEntityAggregation;
+    procedure LazyCollectionComposition;
   end;
 
   { TTestOPFUpdateAutoMappingTests }
@@ -301,7 +303,7 @@ begin
   end;
 end;
 
-procedure TTestOPFSelectAutoMappingTests.LazyEntity;
+procedure TTestOPFSelectAutoMappingTests.LazyEntityComposition;
 var
   VCompany: TCompany;
   VStreet: string;
@@ -324,6 +326,74 @@ begin
     AssertEquals('company.address.street', 'freeway', VStreet);
   finally
     FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.LazyEntityAggregation;
+var
+  VInvoice: TInvoice;
+  VClient: TClient;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('7');
+  TTestSQLDriver.Data.Add('5');
+  TTestSQLDriver.Data.Add('');
+  VInvoice := Session.Retrieve(TInvoice, '7') as TInvoice;
+  try
+    {2}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('5');
+    TTestSQLDriver.Data.Add('5');
+    TTestSQLDriver.Data.Add('null');
+    TTestSQLDriver.Data.Add('joseph');
+    TTestSQLDriver.Data.Add('null');
+    {3}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('5');
+    TTestSQLDriver.Data.Add('joe');
+    TTestSQLDriver.Commands.Clear;
+    VClient := VInvoice.Client;
+    AssertSQLDriverCommands([
+     'WriteInt64 5',
+     {2}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.NAME,T_0.ADDRESS FROM CLIENT T_0 LEFT OUTER JOIN PERSON TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN COMPANY TS_1 ON T_0.ID=TS_1.ID WHERE T_0.ID=?',
+     'WriteInt64 5',
+     {3}'ExecSQL SELECT ID,NICK FROM PERSON WHERE ID=?']);
+    AssertEquals('invoice.client class', 'TPerson', VClient.ClassName);
+    AssertEquals('invoice.client.name', 'joseph', VClient.Name);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.LazyCollectionComposition;
+var
+  VInvoice: TInvoice;
+  VItems: TInvoiceItemList;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('6');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('');
+  VInvoice := Session.Retrieve(TInvoice, '6') as TInvoice;
+  try
+    {2}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('7');
+    TTestSQLDriver.Data.Add('7');
+    TTestSQLDriver.Data.Add('null');
+    TTestSQLDriver.Data.Add('199');
+    {3}TTestSQLDriver.ExpectedResultsets.Add(1);
+    TTestSQLDriver.Data.Add('7');
+    TTestSQLDriver.Data.Add('1');
+    TTestSQLDriver.Data.Add('null');
+    TTestSQLDriver.Commands.Clear;
+    VItems := VInvoice.Items;
+    AssertSQLDriverCommands([
+     'WriteInt64 6',
+     {2}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.TOTAL FROM INVOICEITEM T_0 LEFT OUTER JOIN INVOICEITEMPRODUCT TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN INVOICEITEMSERVICE TS_1 ON T_0.ID=TS_1.ID WHERE T_0.INVOICE=?',
+     'WriteInt64 7',
+     {3}'ExecSQL SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID=?']);
+    AssertEquals('invoice.items count', 1, VItems.Count);
+    AssertEquals('invoice.items[0].total', 199, VItems[0].Total);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 
