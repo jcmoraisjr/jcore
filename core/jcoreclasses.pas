@@ -19,6 +19,7 @@ interface
 uses
   fgl,
   SysUtils,
+  typinfo,
   Classes;
 
 type
@@ -63,6 +64,23 @@ type
   EJCoreAttributeNotFound = class(EJCoreException)
   public
     constructor Create(const AClassName, AAttributeName: string);
+  end;
+
+  { EJCoreListTypeExpected }
+
+  EJCoreListTypeExpected = class(EJCoreException)
+  private
+    FExpectedType: PTypeInfo;
+  public
+    constructor Create(const AExpectedType: PTypeInfo);
+    property ExpectedType: PTypeInfo read FExpectedType;
+  end;
+
+  { EJCoreListIsEmpty }
+
+  EJCoreListIsEmpty = class(EJCoreException)
+  public
+    constructor Create;
   end;
 
   EJCoreConversionError = class(EJCoreError);
@@ -213,6 +231,19 @@ end;
 
 constructor EJCoreAttributeNotFound.Create(const AClassName,
   AAttributeName: string);
+begin
+end;
+
+{ EJCoreListTypeExpected }
+
+constructor EJCoreListTypeExpected.Create(const AExpectedType: PTypeInfo);
+begin
+  FExpectedType := AExpectedType;
+end;
+
+{ EJCoreListIsEmpty }
+
+constructor EJCoreListIsEmpty.Create;
 begin
 end;
 

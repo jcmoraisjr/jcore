@@ -66,7 +66,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="12">
+    <Exceptions Count="14">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -86,23 +86,29 @@
         <Name Value="EAssertionFailedError"/>
       </Item6>
       <Item7>
-        <Name Value="EJCoreDICImplNotFoundException"/>
+        <Name Value="EJCoreListIsEmpty"/>
       </Item7>
       <Item8>
-        <Name Value="EJCoreDICAmbiguousImplementationException"/>
+        <Name Value="EJCoreListTypeExpected"/>
       </Item8>
       <Item9>
-        <Name Value="EJCoreOPFUndefinedDriver"/>
+        <Name Value="EJCoreDICImplNotFoundException"/>
       </Item9>
       <Item10>
-        <Name Value="EJCoreOPFDriverNotFound"/>
+        <Name Value="EJCoreDICAmbiguousImplementationException"/>
       </Item10>
       <Item11>
-        <Name Value="EJCoreOPFUnsupportedAttributeType"/>
+        <Name Value="EJCoreOPFUndefinedDriver"/>
       </Item11>
       <Item12>
-        <Name Value="EJCoreOPFMappingNotFound"/>
+        <Name Value="EJCoreOPFDriverNotFound"/>
       </Item12>
+      <Item13>
+        <Name Value="EJCoreOPFUnsupportedAttributeType"/>
+      </Item13>
+      <Item14>
+        <Name Value="EJCoreOPFMappingNotFound"/>
+      </Item14>
     </Exceptions>
   </Debugging>
 </CONFIG>

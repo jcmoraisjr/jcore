@@ -22,63 +22,67 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="14">
+    <Files Count="15">
       <Item1>
-        <Filename Value="core/testlogger.pas"/>
-        <UnitName Value="TestLogger"/>
+        <Filename Value="core/testlist.pas"/>
+        <UnitName Value="TestList"/>
       </Item1>
       <Item2>
-        <Filename Value="core/testexpression.pas"/>
-        <UnitName Value="TestExpression"/>
+        <Filename Value="core/testlogger.pas"/>
+        <UnitName Value="TestLogger"/>
       </Item2>
       <Item3>
-        <Filename Value="core/testdic.pas"/>
-        <UnitName Value="TestDIC"/>
+        <Filename Value="core/testexpression.pas"/>
+        <UnitName Value="TestExpression"/>
       </Item3>
       <Item4>
-        <Filename Value="opf/testopfmodelcontact.pas"/>
-        <UnitName Value="TestOPFModelContact"/>
+        <Filename Value="core/testdic.pas"/>
+        <UnitName Value="TestDIC"/>
       </Item4>
       <Item5>
-        <Filename Value="opf/testopfmodelinvoice.pas"/>
-        <UnitName Value="TestOPFModelInvoice"/>
+        <Filename Value="opf/testopfmodelcontact.pas"/>
+        <UnitName Value="TestOPFModelContact"/>
       </Item5>
       <Item6>
-        <Filename Value="opf/testopfconfig.pas"/>
-        <UnitName Value="TestOPFConfig"/>
+        <Filename Value="opf/testopfmodelinvoice.pas"/>
+        <UnitName Value="TestOPFModelInvoice"/>
       </Item6>
       <Item7>
-        <Filename Value="opf/testopfsessiontests.pas"/>
-        <UnitName Value="TestOPFSessionTests"/>
+        <Filename Value="opf/testopfconfig.pas"/>
+        <UnitName Value="TestOPFConfig"/>
       </Item7>
       <Item8>
-        <Filename Value="opf/testopfmetadatatests.pas"/>
-        <UnitName Value="TestOPFMetadataTests"/>
+        <Filename Value="opf/testopfsessiontests.pas"/>
+        <UnitName Value="TestOPFSessionTests"/>
       </Item8>
       <Item9>
-        <Filename Value="opf/testopfgeneratortest.pas"/>
-        <UnitName Value="TestOPFGeneratorTest"/>
+        <Filename Value="opf/testopfmetadatatests.pas"/>
+        <UnitName Value="TestOPFMetadataTests"/>
       </Item9>
       <Item10>
-        <Filename Value="opf/testopfmappingcontact.pas"/>
-        <UnitName Value="TestOPFMappingContact"/>
+        <Filename Value="opf/testopfgeneratortest.pas"/>
+        <UnitName Value="TestOPFGeneratorTest"/>
       </Item10>
       <Item11>
-        <Filename Value="opf/testopfmappinginvoice.pas"/>
-        <UnitName Value="TestOPFMappingInvoice"/>
+        <Filename Value="opf/testopfmappingcontact.pas"/>
+        <UnitName Value="TestOPFMappingContact"/>
       </Item11>
       <Item12>
-        <Filename Value="opf/testopfmappingtests.pas"/>
-        <UnitName Value="TestOPFMappingTests"/>
+        <Filename Value="opf/testopfmappinginvoice.pas"/>
+        <UnitName Value="TestOPFMappingInvoice"/>
       </Item12>
       <Item13>
-        <Filename Value="opf/testopfmappingmanualtests.pas"/>
-        <UnitName Value="TestOPFMappingManualTests"/>
+        <Filename Value="opf/testopfmappingtests.pas"/>
+        <UnitName Value="TestOPFMappingTests"/>
       </Item13>
       <Item14>
+        <Filename Value="opf/testopfmappingmanualtests.pas"/>
+        <UnitName Value="TestOPFMappingManualTests"/>
+      </Item14>
+      <Item15>
         <Filename Value="opf/testopfmappingautotests.pas"/>
         <UnitName Value="TestOPFMappingAutoTests"/>
-      </Item14>
+      </Item15>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
