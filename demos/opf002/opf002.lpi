@@ -9,7 +9,7 @@
       </Flags>
       <SessionStorage Value="InProjectDir"/>
       <MainUnit Value="0"/>
-      <Title Value="opf001"/>
+      <Title Value="opf002"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
@@ -40,9 +40,9 @@
     </RequiredPackages>
     <Units Count="1">
       <Unit0>
-        <Filename Value="opf001.lpr"/>
+        <Filename Value="opf002.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="opf001"/>
+        <UnitName Value="opf002"/>
       </Unit0>
     </Units>
   </ProjectOptions>

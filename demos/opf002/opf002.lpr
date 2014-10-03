@@ -1,4 +1,4 @@
-program opf001;
+program opf002;
 
 {$mode objfpc}{$H+}
 
@@ -16,24 +16,37 @@ uses
 
 type
 
-  { TPerson }
-
-  TPerson = class(TJCoreEntity)
+  TCity = class(TJCoreEntity)
   private
     FName: string;
   published
     property Name: string read FName write FName;
   end;
 
+  TPerson = class(TJCoreEntity)
+  private
+    FName: string;
+    FCity: TCity;
+  published
+    property Name: string read FName write FName;
+    property City: TCity read FCity write FCity;
+  end;
+
 var
   VConfig: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
   VPerson: TPerson;
+  VCity: TCity;
 
 {
-  create table (
+  create table city (
     id varchar(32),
     name varchar(255)
+  )
+  create table person (
+    id varchar(32),
+    name varchar(255),
+    city varchar(32)
   )
 }
 
@@ -47,11 +60,19 @@ begin
   VConfig.Params.Values['password'] := 'jcore';
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
+  VConfig.Model.AddClass([TPerson, TCity]);
   VSession := VConfig.CreateSession;
   VPerson := TPerson.Create;
   try
-    VPerson.Name := 'jack';
-    VSession.Store(VPerson);
+    VCity := TCity.Create;
+    try
+      VCity.Name := 'dubai';
+      VPerson.Name := 'joe';
+      VPerson.City := VCity;
+      VSession.Store(VPerson);
+    finally
+      FreeAndNil(VCity);
+    end;
   finally
     FreeAndNil(VPerson);
   end;
