@@ -58,11 +58,11 @@ type
   protected
     function AcquireClassMapping(const AClass: TClass): TJCoreOPFClassMapping;
     procedure AddInTransactionPID(const APID: TJCoreOPFPID);
-    procedure Commit; virtual;
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
     function CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy; virtual;
     function IGetDriver: TJCoreOPFDriver;
     function IGetModel: TJCoreOPFModel;
+    procedure InternalCommit; virtual;
     procedure LoadEntity(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
     procedure LoadCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     function PIDClass: TJCoreOPFPIDClass; virtual;
@@ -161,16 +161,6 @@ begin
     InTransactionPIDList.Add(APID);
 end;
 
-procedure TJCoreOPFSession.Commit;
-var
-  I: Integer;
-begin
-  { TODO : Implement failure check }
-  for I := 0 to Pred(InTransactionPIDList.Count) do
-    InTransactionPIDList[I].Commit;
-  InTransactionPIDList.Clear;
-end;
-
 function TJCoreOPFSession.CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
 var
   I: Integer;
@@ -193,6 +183,17 @@ end;
 function TJCoreOPFSession.IGetModel: TJCoreOPFModel;
 begin
   Result := FModel;
+end;
+
+procedure TJCoreOPFSession.InternalCommit;
+var
+  I: Integer;
+begin
+  { TODO : Implement failure check }
+  Driver.Commit;
+  for I := 0 to Pred(InTransactionPIDList.Count) do
+    InTransactionPIDList[I].Commit;
+  InTransactionPIDList.Clear;
 end;
 
 procedure TJCoreOPFSession.LoadCollection(const AOwnerPID: TJCoreOPFPID;
@@ -260,25 +261,31 @@ end;
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);
 begin
   AcquireClassMapping(AClass).DisposeOID(AStringOIDArray);
-  Commit;
+  InternalCommit;
 end;
 
 procedure TJCoreOPFSession.Dispose(const AEntity: TObject);
 begin
   AcquireClassMapping(AEntity.ClassType).DisposePID(AcquirePID(AEntity));
-  Commit;
+  InternalCommit;
 end;
 
 function TJCoreOPFSession.Retrieve(const AClass: TClass; const AOID: string): TObject;
 begin
-  Result := AcquireClassMapping(AClass).RetrieveOID(AOID);
-  Commit;
+  Result := nil;
+  try
+    Result := AcquireClassMapping(AClass).RetrieveOID(AOID);
+    InternalCommit;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 procedure TJCoreOPFSession.Store(const AEntity: TObject);
 begin
   AcquireClassMapping(AEntity.ClassType).StorePID(AcquirePID(AEntity));
-  Commit;
+  InternalCommit;
 end;
 
 end.

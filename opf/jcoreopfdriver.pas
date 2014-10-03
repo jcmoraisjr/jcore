@@ -17,7 +17,9 @@ unit JCoreOPFDriver;
 interface
 
 uses
+  Classes,
   fgl,
+  JCoreList,
   JCoreLogger;
 
 type
@@ -48,14 +50,26 @@ type
     - ExecSQL DELETE FROM PERSON WHERE ID=?
 
     * Selects read params from the same stack and create a separate queue for
-      future reading
+      future reading:
     - WriteInteger 15
     - ExecSQL SELECT NAME,CITY FROM PERSON WHERE ID=?
     - ReadString
     - ReadInteger
 
-    * The number of Query fields need to match the number of Write<Data>. On the
-      commit event, if there are some Write<Data> in the stack, raise an exception
+    * Read new selects first, old selects later:
+    - ExecSQL SELECT ID,NAME,CITY,BIRTHDAY FROM PERSON WHERE...
+    - ReadInteger // person.id
+    - ReadString // person.name
+    - ReadInteger // person.city
+    - ExecSQL SELECT ID,NAME FROM CITY WHERE...
+    - ReadInteger // city.id
+    - ReadString // city.name
+    - ReadDate // person.birthday
+
+    * The number of resultset fields need to match the number of Read<Data> and
+      the number of Query fields need to match the number of Write<Data>. On the
+      commit event, if there are some pending Read<Data> or Write<Data>, raise
+      an exception
 
     * Always return the ExecSQL function with the number of the affected rows.
 
@@ -67,18 +81,27 @@ type
   { TJCoreOPFDriver }
 
   TJCoreOPFDriver = class(TObject)
+  private
+    FParams: TStringList;
+    FStack: TJCoreNativeTypeStack;
+  protected
+    procedure InternalCommit; virtual; abstract;
+    property Params: TStringList read FParams;
+    property Stack: TJCoreNativeTypeStack read FStack;
   public
-    constructor Create; virtual;
-    procedure WriteString(const AValue: string); virtual; abstract;
-    procedure WriteInt32(const AValue: Integer); virtual; abstract;
-    procedure WriteInt64(const AValue: Int64); virtual; abstract;
-    procedure WriteNull; virtual; abstract;
+    constructor Create(const AParams: TStringList); virtual;
+    destructor Destroy; override;
+    procedure Commit;
     class function DriverName: string; virtual; abstract;
     function ReadInt32: Integer; virtual; abstract;
     function ReadInt64: Int64; virtual; abstract;
     function ReadNull: Boolean; virtual; abstract;
     function ReadNullAndSkip: Boolean; virtual; abstract;
     function ReadString: string; virtual; abstract;
+    procedure WriteInt32(const AValue: Integer); virtual;
+    procedure WriteInt64(const AValue: Int64); virtual;
+    procedure WriteNull; virtual;
+    procedure WriteString(const AValue: string); virtual;
   end;
 
   TJCoreOPFDriverClass = class of TJCoreOPFDriver;
@@ -93,7 +116,7 @@ type
     function InternalExecSQL(const ASQL: string): Integer; virtual; abstract;
     class property LOGSQL: IJCoreLogger read FLOGSQL;
   public
-    constructor Create; override;
+    constructor Create(const AParams: TStringList); override;
     function ExecSQL(const ASQL: string): Integer;
     procedure ExecSQL(const ASQL: string; const AExpectedSize: Integer);
   end;
@@ -101,20 +124,54 @@ type
 implementation
 
 uses
+  sysutils,
   JCoreOPFException;
 
 { TJCoreOPFDriver }
 
-constructor TJCoreOPFDriver.Create;
+constructor TJCoreOPFDriver.Create(const AParams: TStringList);
 begin
   inherited Create;
+  FParams := AParams;
+  FStack := TJCoreNativeTypeStack.Create;
+end;
+
+destructor TJCoreOPFDriver.Destroy;
+begin
+  FreeAndNil(FStack);
+  inherited Destroy;
+end;
+
+procedure TJCoreOPFDriver.Commit;
+begin
+  InternalCommit;
+end;
+
+procedure TJCoreOPFDriver.WriteInt32(const AValue: Integer);
+begin
+  Stack.PushInt32(AValue);
+end;
+
+procedure TJCoreOPFDriver.WriteInt64(const AValue: Int64);
+begin
+  Stack.PushInt64(AValue);
+end;
+
+procedure TJCoreOPFDriver.WriteNull;
+begin
+  Stack.PushNull;
+end;
+
+procedure TJCoreOPFDriver.WriteString(const AValue: string);
+begin
+  Stack.PushString(AValue);
 end;
 
 { TJCoreOPFSQLDriver }
 
-constructor TJCoreOPFSQLDriver.Create;
+constructor TJCoreOPFSQLDriver.Create(const AParams: TStringList);
 begin
-  inherited Create;
+  inherited Create(AParams);
   if not Assigned(FLOGSQL) then
     FLOGSQL := TJCoreLogger.GetLogger('jcore.opf.driver.sql');
 end;

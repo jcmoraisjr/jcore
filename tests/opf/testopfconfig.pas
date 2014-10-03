@@ -41,7 +41,7 @@ type
     class var FCommitCount: Integer;
     class var FLastCommitPIDList: TJCoreOPFPIDList;
   protected
-    procedure Commit; override;
+    procedure InternalCommit; override;
   public
     class constructor Create;
     class destructor Destroy;
@@ -62,6 +62,7 @@ type
     FSessionIPIDContact: ITestOPFSession;
     FSessionProxyContact: ITestOPFSession;
     class var FLOG: IJCoreLogger;
+    procedure AssertCommands(const AList: TStringList; const AShortName, ALongName: string; const ACommands: array of string);
     function GetSessionInvoiceAuto: ITestOPFSession;
     function GetSessionInvoiceManual: ITestOPFSession;
     function GetSessionIPIDContact: ITestOPFSession;
@@ -69,6 +70,7 @@ type
   protected
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
+    procedure AssertSQLDriverTransaction(const ATransactions: array of string);
     procedure ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigIPIDContactMapping(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
@@ -130,6 +132,8 @@ type
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
+  protected
+    procedure InternalCommit; override;
   public
     class function DriverName: string; override;
     procedure WriteString(const AValue: string); override;
@@ -158,7 +162,9 @@ type
     class var FCommands: TStringList;
     class var FData:  TStringList;
     class var FExpectedResultsets: TTestIntegerList;
+    class var FTransaction: TStringList;
   protected
+    procedure InternalCommit; override;
     function InternalExecSQL(const ASQL: string): Integer; override;
   public
     class constructor Create;
@@ -176,6 +182,7 @@ type
     class property Commands: TStringList read FCommands;
     class property Data: TStringList read FData;
     class property ExpectedResultsets: TTestIntegerList read FExpectedResultsets write FExpectedResultsets;
+    class property Transaction: TStringList read FTransaction;
   end;
 
   { TTestSQLMapping }
@@ -204,7 +211,7 @@ end;
 
 { TTestOPFSession }
 
-procedure TTestOPFSession.Commit;
+procedure TTestOPFSession.InternalCommit;
 var
   I: Integer;
 begin
@@ -212,7 +219,7 @@ begin
   LastCommitPIDList.Clear;
   for I := 0 to Pred(InTransactionPIDList.Count) do
     LastCommitPIDList.Add(InTransactionPIDList[I]);
-  inherited Commit;
+  inherited InternalCommit;
 end;
 
 class constructor TTestOPFSession.Create;
@@ -236,6 +243,27 @@ begin
 end;
 
 { TTestOPFAbstractTestCase }
+
+procedure TTestOPFAbstractTestCase.AssertCommands(const AList: TStringList; const AShortName,
+  ALongName: string; const ACommands: array of string);
+var
+  I: Integer;
+begin
+  try
+    AssertEquals(AShortName + ' count', Length(ACommands), AList.Count);
+    for I := Low(ACommands) to High(ACommands) do
+      AssertEquals(AShortName + '[' + IntToStr(I) + ']', ACommands[I], AList[I]);
+  except
+    LOG.Warn('Expected ' + ALongName + ':');
+    for I := Low(ACommands) to High(ACommands) do
+      LOG.Warn('  ' + IntToStr(I) + ': ' + ACommands[I]);
+    LOG.Warn('Executed ' + ALongName + ':');
+    for I := 0 to Pred(AList.Count) do
+      LOG.Warn('  ' + IntToStr(I) + ': ' + AList[I]);
+    raise;
+  end;
+  AList.Clear;
+end;
 
 function TTestOPFAbstractTestCase.GetSessionInvoiceAuto: ITestOPFSession;
 var
@@ -311,23 +339,13 @@ begin
 end;
 
 procedure TTestOPFAbstractTestCase.AssertSQLDriverCommands(const ACommands: array of string);
-var
-  I: Integer;
 begin
-  try
-    AssertEquals('cmd count', Length(ACommands), TTestSQLDriver.Commands.Count);
-    for I := Low(ACommands) to High(ACommands) do
-      AssertEquals('cmd' + IntToStr(I), ACommands[I], TTestSQLDriver.Commands[I]);
-  except
-    LOG.Warn('Expected commands:');
-    for I := Low(ACommands) to High(ACommands) do
-      LOG.Warn('  ' + IntToStr(I) + ': ' + ACommands[I]);
-    LOG.Warn('Executed commands:');
-    for I := 0 to Pred(TTestSQLDriver.Commands.Count) do
-      LOG.Warn('  ' + IntToStr(I) + ': ' + TTestSQLDriver.Commands[I]);
-    raise;
-  end;
-  TTestSQLDriver.Commands.Clear;
+  AssertCommands(TTestSQLDriver.Commands, 'cmd', 'commands', ACommands);
+end;
+
+procedure TTestOPFAbstractTestCase.AssertSQLDriverTransaction(const ATransactions: array of string);
+begin
+  AssertCommands(TTestSQLDriver.Transaction, 'tr', 'transactions', ATransactions);
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
@@ -391,6 +409,7 @@ begin
     FLOG := TJCoreLogger.GetLogger('jcore.test.opf');
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
+  AssertEquals(0, TTestSQLDriver.Transaction.Count);
   AssertEquals(0, TTestIntegerGenerator.CurrentOID);
 end;
 
@@ -400,6 +419,7 @@ begin
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
+  TTestSQLDriver.Transaction.Clear;
   TTestIntegerGenerator.ClearOID;
   FSessionInvoiceAuto := nil;
   FSessionInvoiceManual := nil;
@@ -431,6 +451,10 @@ begin
 end;
 
 { TTestEmptyDriver }
+
+procedure TTestEmptyDriver.InternalCommit;
+begin
+end;
 
 class function TTestEmptyDriver.DriverName: string;
 begin
@@ -481,6 +505,11 @@ begin
     Data.Delete(0);
 end;
 
+procedure TTestSQLDriver.InternalCommit;
+begin
+  Transaction.Add('commit');
+end;
+
 function TTestSQLDriver.InternalExecSQL(const ASQL: string): Integer;
 begin
   FCommands.Add('ExecSQL ' + ASQL);
@@ -497,10 +526,12 @@ begin
   FCommands := TStringList.Create;
   FData := TStringList.Create;
   FExpectedResultsets := TTestIntegerList.Create;
+  FTransaction := TStringList.Create;
 end;
 
 class destructor TTestSQLDriver.Destroy;
 begin
+  FreeAndNil(FTransaction);
   FreeAndNil(FCommands);
   FreeAndNil(FData);
   FreeAndNil(FExpectedResultsets);

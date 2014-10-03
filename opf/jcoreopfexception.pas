@@ -28,6 +28,13 @@ type
   EJCoreOPF = class(EJCoreException)
   end;
 
+  { EJCoreOPFDriver }
+
+  EJCoreOPFDriver = class(EJCoreOPF)
+  public
+    constructor Create(const AMsg: string; const AParams: array of const);
+  end;
+
   { EJCoreOPFDriverNotFound }
 
   EJCoreOPFDriverNotFound = class(EJCoreOPF)
@@ -156,6 +163,13 @@ type
   end;
 
 implementation
+
+{ EJCoreOPFDriver }
+
+constructor EJCoreOPFDriver.Create(const AMsg: string; const AParams: array of const);
+begin
+  inherited CreateFmt(AMsg, AParams);
+end;
 
 { EJCoreOPFDriverNotFound }
 

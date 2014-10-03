@@ -61,6 +61,12 @@ type
     function Owner: IJCorePID;
     function PID: IJCorePID;
   end;
+
+  TJCoreEntity = class(TObject)
+    _proxy: TJCoreEntityProxy;
+  public
+    destructor Destroy; override;
+  end;
   {$M-}
 
 implementation
@@ -123,6 +129,15 @@ begin
     Result := FPID
   else
     Result := nil;
+end;
+
+{ TJCoreEntity }
+
+destructor TJCoreEntity.Destroy;
+begin
+  _proxy.Free;
+  _proxy := nil;
+  inherited Destroy;
 end;
 
 end.

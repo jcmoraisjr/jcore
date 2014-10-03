@@ -6,7 +6,7 @@
       <Version Value="11"/>
       <SearchPaths>
         <IncludeFiles Value="core"/>
-        <OtherUnitFiles Value="opf"/>
+        <OtherUnitFiles Value="opf;opf/drivers"/>
         <UnitOutputDirectory Value="lib/opf/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Linking>
@@ -21,7 +21,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="10">
+    <Files Count="11">
       <Item1>
         <Filename Value="opf/jcoreopfconsts.pas"/>
         <UnitName Value="JCoreOPFConsts"/>
@@ -62,6 +62,10 @@
         <Filename Value="opf/jcoreopfconfig.pas"/>
         <UnitName Value="JCoreOPFConfig"/>
       </Item10>
+      <Item11>
+        <Filename Value="opf/drivers/jcoreopfdriversqldb.pas"/>
+        <UnitName Value="JCoreOPFDriverSQLdb"/>
+      </Item11>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
