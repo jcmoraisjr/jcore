@@ -152,7 +152,10 @@ begin
   for I := Pred(Query.Params.Count) downto 0 do
     PopParam(Query.Params[I]);
   if IsSelectStatement(ASQL) then
-    Query.Open
+  begin
+    Query.Open;
+    FFieldCount := Query.FieldCount;
+  end
   else
     Query.ExecSQL;
   Result := Query.RowsAffected;
