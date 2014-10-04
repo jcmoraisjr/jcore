@@ -27,6 +27,7 @@ type
   published
     procedure Single;
     procedure SingleWithCollection;
+    procedure ObjectNotFound;
     procedure Inheritance;
     procedure InheritanceFromParent;
     procedure LazyEntityComposition;
@@ -69,6 +70,7 @@ implementation
 uses
   testregistry,
   sysutils,
+  JCoreOPFException,
   TestOPFModelInvoice;
 
 { TTestOPFInsertAutoMappingTests }
@@ -276,6 +278,25 @@ begin
     AssertEquals('invoice.items[1].total', 75, VInvoice.Items[1].Total);
   finally
     FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.ObjectNotFound;
+var
+  VCompany: TObject;
+begin
+  TTestSQLDriver.ExpectedResultsets.Add(0);
+  VCompany := nil;
+  try
+    try
+      VCompany := Session.Retrieve(TCompany, '1');
+      Fail('EJCoreOPFObjectNotFound expected');
+    except
+      on E: EJCoreOPFObjectNotFound do
+        ;
+    end;
+  finally
+    FreeAndNil(VCompany);
   end;
 end;
 

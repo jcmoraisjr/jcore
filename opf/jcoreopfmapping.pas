@@ -812,7 +812,12 @@ begin
   begin
     VOID := CreateOIDFromString(AStringOID);
     try
-      Result := Retrieve([VOID])[0];
+      try
+        Result := Retrieve([VOID])[0];
+      except
+        on E: EJCoreOPFEmptyResultSet do
+          raise EJCoreOPFObjectNotFound.Create(AStringOID);
+      end;
     finally
       FreeAndNil(VOID);
     end;
