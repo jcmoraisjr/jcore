@@ -62,6 +62,7 @@ begin
 end;
 
 var
+  LOG: IJCoreLogger;
   VConfig: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
   VInvoice: TInvoice;
@@ -94,6 +95,7 @@ var
 
 begin
   TJCoreDIC.LazyRegister(IJCoreLogFactory, TJCoreConsoleLogFactory, jdsApplication);
+  LOG := TJCoreLogger.GetLogger('demos.opf004');
   VConfig := TJCoreOPFConfiguration.Create;
   VConfig.Params.Values['connection'] := 'PostgreSQL';
   VConfig.Params.Values['hostname'] := 'localhost';
@@ -105,21 +107,23 @@ begin
   VConfig.Model.AddClass([TInvoice, TInvoiceItem]);
   VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
   VSession := VConfig.CreateSession;
-  writeln('1 ----- now retrieving main object');
+  LOG.Info('1 ----- now retrieving main object');
   VInvoice := VSession.Retrieve(TInvoice, '2') as TInvoice;
   try
-    writeln('2 ----- iterating the list');
+    LOG.Info('2 ----- iterating the list');
     for I := 0 to Pred(VInvoice.Items.Count) do
-      writeln('Item ', I, ': qty=', VInvoice.Items[I].Qty, '; product=', VInvoice.Items[I].Product);
+      LOG.Info(Format('Item %d: qty=%d; product=%s', [
+       I, VInvoice.Items[I].Qty, VInvoice.Items[I].Product]));
   finally
     FreeAndNil(VInvoice);
   end;
-  writeln('3 ----- nice, now another object');
+  LOG.Info('3 ----- nice, now another object');
   VInvoice := VSession.Retrieve(TInvoice, '1') as TInvoice;
   try
-    writeln('4 ----- iterating it`s list');
+    LOG.Info('4 ----- iterating it`s list');
     for I := 0 to Pred(VInvoice.Items.Count) do
-      writeln('Item ', I, ': qty=', VInvoice.Items[I].Qty, '; product=', VInvoice.Items[I].Product);
+      LOG.Info(Format('Item %d: qty=%d; product=%s', [
+       I, VInvoice.Items[I].Qty, VInvoice.Items[I].Product]));
   finally
     FreeAndNil(VInvoice);
   end;

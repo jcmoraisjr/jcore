@@ -46,6 +46,7 @@ type
   end;
 
 var
+  LOG: IJCoreLogger;
   VConfig: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
   VClient: TClient;
@@ -80,6 +81,7 @@ var
 
 begin
   TJCoreDIC.LazyRegister(IJCoreLogFactory, TJCoreConsoleLogFactory, jdsApplication);
+  LOG := TJCoreLogger.GetLogger('demo.opf005');
   VConfig := TJCoreOPFConfiguration.Create;
   VConfig.Params.Values['connection'] := 'PostgreSQL';
   VConfig.Params.Values['hostname'] := 'localhost';
@@ -90,7 +92,7 @@ begin
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   VConfig.Model.AddClass([TClient, TPerson, TCompany]);
   VSession := VConfig.CreateSession;
-  writeln('1 ----- adding some objects');
+  LOG.Info('1 ----- adding some objects');
   VClient := TClient.Create;
   try
     VClient.Name := 'neither';
@@ -117,22 +119,22 @@ begin
   finally
     FreeAndNil(VCompany);
   end;
-  writeln('2 ----- done, now retrieving "Person" from the concrete class');
+  LOG.Info('2 ----- done, now retrieving "Person" from the concrete class');
   VPerson := VSession.Retrieve(TPerson, VPersonID) as TPerson;
   try
-    writeln('Name=', VPerson.Name, '; Age=', VPerson.Age);
+    LOG.Info('Name=' + VPerson.Name + '; Age=' + IntToStr(VPerson.Age));
   finally
     FreeAndNil(VPerson);
   end;
-  writeln('3 ----- retrieving "Company" from the abstract class');
+  LOG.Info('3 ----- retrieving "Company" from the abstract class');
   VClient := VSession.Retrieve(TClient, VCompanyID) as TClient;
   try
     if VClient is TCompany then
     begin
       VCompany := TCompany(VClient);
-      writeln('Name=', VCompany.Name, '; employees=', VCompany.Employees);
+      LOG.Info('Name=' + VCompany.Name + '; employees=' + IntToStr(VCompany.Employees));
     end else
-      writeln('3.1 --- oops, opf retrieved an instance of "', VClient.ClassName , '"');
+      LOG.Warn('3.1 --- oops, opf retrieved an instance of "' + VClient.ClassName + '"');
   finally
     FreeAndNil(VClient);
   end;
