@@ -26,6 +26,7 @@ type
   TTestOPFSelectAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure Single;
+    procedure SingleWithCollection;
     procedure Inheritance;
     procedure InheritanceFromParent;
     procedure LazyEntityComposition;
@@ -245,6 +246,36 @@ begin
     AssertEquals('data cnt', 0, TTestSQLDriver.Data.Count);
   finally
     FreeAndNil(VProduct);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.SingleWithCollection;
+var
+  VInvoice: TInvoice;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('2');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('');
+  {2(lazy)}TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('3');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('50');
+  TTestSQLDriver.Data.Add('4');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('75');
+  VInvoice := Session.Retrieve(TInvoice, '2') as TInvoice;
+  try
+    AssertSQLDriverCommands([
+     'WriteInt64 2',
+     {1}'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE WHERE ID=?']);
+    AssertEquals('invoice.items.count', 2, VInvoice.Items.Count);
+    AssertEquals('invoice.items[0].total', 50, VInvoice.Items[0].Total);
+    AssertEquals('invoice.items[1].total', 75, VInvoice.Items[1].Total);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 

@@ -38,6 +38,7 @@ type
   protected
     // Internal Support
     function BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex, AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string;
     function BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray; virtual;
     function BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDName(const AOIDNameArray: array of string; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
@@ -171,6 +172,22 @@ begin
     Result := VFieldName;
 end;
 
+function TJCoreOPFSQLGenerator.BuildFieldNames(const ABaseMapIdx: Integer;
+  const AUseTablePrefix: Boolean): string;
+var
+  VMap: TJCoreOPFMap;
+  I, J: Integer;
+begin
+  Result := '';
+  for I := ABaseMapIdx to Pred(Maps.Count) do
+  begin
+    VMap := Maps[I];
+    for J := 0 to Pred(VMap.Count) do
+      if VMap[J].AttributeType <> jatCollection then
+        Result := Result + BuildFieldName(Maps, I, J, CMainMapPrefix[AUseTablePrefix]) + ',';
+  end;
+end;
+
 function TJCoreOPFSQLGenerator.BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray;
 var
   VOIDName: TJCoreStringArray;
@@ -271,18 +288,12 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildSelectBaseFieldNames(const AUseTablePrefix: Boolean): string;
 var
-  VMap: TJCoreOPFMap;
-  I, J: Integer;
+  I: Integer;
 begin
   Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]) + ',';
   for I := 0 to Pred(SubMaps.Count) do
     Result := Result + BuildOIDName(SubMaps, I, 0, CSubMapPrefix[AUseTablePrefix]) + ',';
-  for I := 0 to Pred(Maps.Count) do
-  begin
-    VMap := Maps[I];
-    for J := 0 to Pred(VMap.Count) do
-      Result := Result + BuildFieldName(Maps, I, J, CMainMapPrefix[AUseTablePrefix]) + ',';
-  end;
+  Result := Result + BuildFieldNames(0, AUseTablePrefix);
   SetLength(Result, Length(Result) - 1);
 end;
 
@@ -305,17 +316,9 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildSelectComplementaryFieldNames(const ABaseMapIdx: Integer;
   const AUseTablePrefix: Boolean): string;
-var
-  VMap: TJCoreOPFMap;
-  I, J: Integer;
 begin
   Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]) + ',';
-  for I := ABaseMapIdx to Pred(Maps.Count) do
-  begin
-    VMap := Maps[I];
-    for J := 0 to Pred(VMap.Count) do
-      Result := Result + BuildFieldName(Maps, I, J, CMainMapPrefix[AUseTablePrefix]) + ',';
-  end;
+  Result := Result + BuildFieldNames(ABaseMapIdx, AUseTablePrefix);
   SetLength(Result, Length(Result) - 1);
 end;
 
