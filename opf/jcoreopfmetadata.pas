@@ -1201,7 +1201,7 @@ begin
   VItems := GetList;
   if not Assigned(VItems) then
   begin
-    VItems := TJCoreObjectList.Create;
+    VItems := TJCoreObjectList.Create(True);
     Value := VItems;
   end;
   VItems.Clear;
