@@ -34,7 +34,9 @@ var
   create table (
     id varchar(32),
     name varchar(255)
-  )
+  );
+  alter table person
+    add constraint pk_person primary key (id);
 }
 
 begin

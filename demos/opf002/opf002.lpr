@@ -42,12 +42,18 @@ var
   create table city (
     id varchar(32),
     name varchar(255)
-  )
+  );
   create table person (
     id varchar(32),
     name varchar(255),
     city varchar(32)
-  )
+  );
+  alter table city
+    add constraint pk_city primary key (id);
+  alter table person
+    add constraint pk_person primary key (id);
+  alter table person
+    add constraint fk_person_city foreign key (city) references city (id);
 }
 
 begin
