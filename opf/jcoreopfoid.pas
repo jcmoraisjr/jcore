@@ -27,6 +27,8 @@ type
   { TJCoreOPFOID }
 
   TJCoreOPFOID = class(TJCoreManagedObject, IJCoreOID)
+  private
+    function IJCoreOID.AsString = GetAsString;
   protected
     function GetAsString: string; virtual; abstract;
   public
