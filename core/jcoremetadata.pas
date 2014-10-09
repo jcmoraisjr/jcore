@@ -91,7 +91,7 @@ type
     FMetadataMap: TJCoreClassMetadataMap;
   protected
     function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
-    function BuildClassMetadata(const AClass: TClass): TJCoreClassMetadata;
+    procedure BuildClassMetadata(const AMetadata: TJCoreClassMetadata);
     function ClassMetadataClass: TJCoreClassMetadataClass; virtual;
     function CreateAttrMetadata(const AMetadata: TJCoreClassMetadata; const APropInfo: PPropInfo): TJCoreAttrMetadata; virtual;
     function CreateClassMetadata(const AClass: TClass): TJCoreClassMetadata;
@@ -129,7 +129,7 @@ begin
 end;
 
 procedure TJCoreAttrMetadata.SetCompositionClass(AValue: TClass);
-  begin
+begin
   if FCompositionClass <> AValue then
   begin
     FCompositionClass := AValue;
@@ -200,35 +200,31 @@ begin
   Result := TJCoreAttrMetadata;
 end;
 
-function TJCoreModel.BuildClassMetadata(const AClass: TClass): TJCoreClassMetadata;
+procedure TJCoreModel.BuildClassMetadata(const AMetadata: TJCoreClassMetadata);
 var
+  VClass: TClass;
   VPropList: PPropList;
   VPropListCount: Integer;
   VParentPropCount: Integer;
   I: Integer;
 begin
-  Result := CreateClassMetadata(AClass);
-  if AClass = TObject then
+  VClass := AMetadata.TheClass;
+  if VClass = TObject then
     Exit;
-  try
-    VPropListCount := GetPropList(AClass, VPropList);
-    if Assigned(VPropList) then
-    begin
-      try
-        VParentPropCount :=
-         GetTypeData(PTypeInfo(AClass.ClassParent.ClassInfo))^.PropCount;
-        for I := VParentPropCount to Pred(VPropListCount) do
-          if not IsReservedAttr(VPropList^[I]^.Name) then
-            Result.AddAttribute(CreateAttrMetadata(Result, VPropList^[I]));
-      finally
-        Freemem(VPropList);
-      end;
+  VPropListCount := GetPropList(VClass, VPropList);
+  if Assigned(VPropList) then
+  begin
+    try
+      VParentPropCount :=
+       GetTypeData(PTypeInfo(VClass.ClassParent.ClassInfo))^.PropCount;
+      for I := VParentPropCount to Pred(VPropListCount) do
+        if not IsReservedAttr(VPropList^[I]^.Name) then
+          AMetadata.AddAttribute(CreateAttrMetadata(AMetadata, VPropList^[I]));
+    finally
+      Freemem(VPropList);
     end;
-    RefineClassMetadata(Result);
-  except
-    FreeAndNil(Result);
-    raise;
   end;
+  RefineClassMetadata(AMetadata);
 end;
 
 function TJCoreModel.ClassMetadataClass: TJCoreClassMetadataClass;
@@ -291,12 +287,23 @@ end;
 
 function TJCoreModel.AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
 var
+  VMetadata: TJCoreClassMetadata;
   VIndex: Integer;
 begin
   { TODO : Thread safe }
   VIndex := MetadataMap.IndexOf(AClass);
   if VIndex = -1 then
-    VIndex := MetadataMap.Add(AClass, BuildClassMetadata(AClass));
+  begin
+    VMetadata := CreateClassMetadata(AClass);
+    VIndex := MetadataMap.Add(AClass, VMetadata);
+    try
+      BuildClassMetadata(VMetadata);
+    except
+      MetadataMap.Delete(VIndex);
+      FreeAndNil(VMetadata);
+      raise;
+    end;
+  end;
   Result := MetadataMap.Data[VIndex];
 end;
 

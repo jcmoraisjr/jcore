@@ -14,6 +14,7 @@ type
   TTestOPFMetadataTest = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure CreatePIDInheritance;
+    procedure CircularReference;
   end;
 
   { TTestOPFIPIDMetadataTests }
@@ -41,9 +42,13 @@ uses
   sysutils,
   testregistry,
   JCoreEntity,
+  JCoreOPFConfig,
+  JCoreOPFSession,
+  JCoreOPFMappingSQL,
   JCoreOPFMetadata,
   TestOPFModelContact,
-  TestOPFModelInvoice;
+  TestOPFModelInvoice,
+  TTestOPFModelCircular;
 
 type
   TTestPIDFriend = class(TJCoreOPFPID);
@@ -69,6 +74,25 @@ begin
     AssertEquals('pid.adm2', 'ContactName', VADMMap.Data[2].Metadata.Name);
   finally
     FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFMetadataTest.CircularReference;
+var
+  VConfig: IJCoreOPFConfiguration;
+  VSession: IJCoreOPFSession;
+  VPerson: TCircularPerson;
+begin
+  VConfig := TJCoreOPFConfiguration.Create;
+  VConfig.DriverClass := TTestSQLDriver;
+  VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
+  VConfig.Model.AddClass([TCircularPerson]);
+  VSession := VConfig.CreateSession;
+  VPerson := TCircularPerson.Create;
+  try
+    VSession.Store(VPerson);
+  finally
+    FreeAndNil(VPerson);
   end;
 end;
 

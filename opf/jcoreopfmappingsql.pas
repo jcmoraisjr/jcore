@@ -823,11 +823,18 @@ end;
 
 procedure TJCoreOPFSQLMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
 var
+  VPID: TJCoreOPFPID;
   VADMChanged: TJCoreOPFADMArray;
   I: Integer;
 begin
+  VPID := AMapping.PID;
   if (Length(Map.OwnerOIDName) > 0) and not AMapping.PID.IsPersistent then
-    AMapping.PID.Owner.OID.WriteToDriver(Driver);
+  begin
+    if Assigned(VPID.Owner) then
+      VPID.Owner.OID.WriteToDriver(Driver)
+    else
+      Map.Metadata.OIDClass.WriteNull(Driver);
+  end;
   VADMChanged := AMapping.ADMAttributeChanged;
   for I := Low(VADMChanged) to High(VADMChanged) do
     VADMChanged[I].WriteToDriver(Driver);
