@@ -371,7 +371,6 @@ type
     function GetHasExternalLink: Boolean;
     function GetModel: TJCoreOPFModel;
     function ReadComposition(const AClassName: string): TClass;
-    procedure SetCompositionMetadata(AValue: TJCoreOPFClassMetadata);
   protected
     property Model: TJCoreOPFModel read GetModel;
   public
@@ -380,7 +379,7 @@ type
     procedure NoLazyload;
     property ADMClass: TJCoreOPFADMClass read FADMClass;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
-    property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata write SetCompositionMetadata;
+    property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata;
     property HasExternalLink: Boolean read GetHasExternalLink;
     property HasLazyload: Boolean read FHasLazyload;
     property PersistentFieldName: string read FPersistentFieldName;
@@ -1563,21 +1562,15 @@ begin
     raise EJCoreOPFUnsupportedAttributeType.Create(VClassName);
 end;
 
-procedure TJCoreOPFAttrMetadata.SetCompositionMetadata(
-  AValue: TJCoreOPFClassMetadata);
-begin
-  inherited CompositionMetadata := AValue;
-end;
-
 constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel; const APropInfo: PPropInfo);
 begin
   inherited Create(AModel, APropInfo);
   FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
   FAttributeType := ADMClass.AttributeType;
   if IsClass then
-    CompositionMetadata := Model.AcquireMetadata(ReadComposition(APropInfo^.PropType^.Name))
+    CompositionClass := ReadComposition(APropInfo^.PropType^.Name)
   else
-    CompositionMetadata := nil;
+    CompositionClass := nil;
   FHasLazyload := True; // which also means "I dont know yet, try it"
   FPersistentFieldName := UpperCase(Name);
 end;

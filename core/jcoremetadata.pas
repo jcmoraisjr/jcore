@@ -40,14 +40,15 @@ type
     FModel: TJCoreModel;
     FName: string;
     FPropInfo: PPropInfo;
+    function GetCompositionMetadata: TJCoreClassMetadata;
     function GetIsClass: Boolean;
-    procedure SetCompositionMetadata(AValue: TJCoreClassMetadata);
+    procedure SetCompositionClass(AValue: TClass);
   protected
     property Model: TJCoreModel read FModel;
   public
     constructor Create(const AModel: TJCoreModel; const APropInfo: PPropInfo); virtual;
-    property CompositionClass: TClass read FCompositionClass;
-    property CompositionMetadata: TJCoreClassMetadata read FCompositionMetadata write SetCompositionMetadata;
+    property CompositionClass: TClass read FCompositionClass write SetCompositionClass;
+    property CompositionMetadata: TJCoreClassMetadata read GetCompositionMetadata;
     property CompositionType: TJCoreMetadataCompositionType read FCompositionType write FCompositionType;
     property IsClass: Boolean read GetIsClass;
     property Name: string read FName;
@@ -120,15 +121,19 @@ begin
   Result := PropInfo^.PropType^.Kind = tkClass;
 end;
 
-procedure TJCoreAttrMetadata.SetCompositionMetadata(AValue: TJCoreClassMetadata);
+function TJCoreAttrMetadata.GetCompositionMetadata: TJCoreClassMetadata;
 begin
-  if FCompositionMetadata <> AValue then
+  if not Assigned(FCompositionMetadata) and Assigned(CompositionClass) then
+    FCompositionMetadata := Model.AcquireMetadata(CompositionClass);
+  Result := FCompositionMetadata;
+end;
+
+procedure TJCoreAttrMetadata.SetCompositionClass(AValue: TClass);
   begin
-    FCompositionMetadata := AValue;
-    if Assigned(FCompositionMetadata) then
-      FCompositionClass := FCompositionMetadata.TheClass
-    else
-      FCompositionClass := nil;
+  if FCompositionClass <> AValue then
+  begin
+    FCompositionClass := AValue;
+    FCompositionMetadata := nil;
   end;
 end;
 
