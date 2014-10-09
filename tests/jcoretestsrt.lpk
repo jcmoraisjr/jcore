@@ -48,8 +48,8 @@
         <UnitName Value="TestOPFModelInvoice"/>
       </Item6>
       <Item7>
-        <Filename Value="opf/ttestopfmodelcircular.pas"/>
-        <UnitName Value="TTestOPFModelCircular"/>
+        <Filename Value="opf/testopfmodelcircular.pas"/>
+        <UnitName Value="TestOPFModelCircular"/>
       </Item7>
       <Item8>
         <Filename Value="opf/testopfconfig.pas"/>

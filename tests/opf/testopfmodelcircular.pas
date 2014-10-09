@@ -1,4 +1,4 @@
-unit TTestOPFModelCircular;
+unit TestOPFModelCircular;
 
 {$mode objfpc}{$H+}
 
@@ -12,7 +12,7 @@ type
   TCircularPerson = class;
   TCircularPersonList = specialize TFPGObjectList<TCircularPerson>;
 
-  { TPerson }
+  { TCircularPerson }
 
   TCircularPerson = class(TJCoreEntity)
   private

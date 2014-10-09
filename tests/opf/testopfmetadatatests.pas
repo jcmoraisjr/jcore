@@ -48,7 +48,7 @@ uses
   JCoreOPFMetadata,
   TestOPFModelContact,
   TestOPFModelInvoice,
-  TTestOPFModelCircular;
+  TestOPFModelCircular;
 
 type
   TTestPIDFriend = class(TJCoreOPFPID);
