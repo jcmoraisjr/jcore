@@ -31,7 +31,7 @@ var
   VPerson: TPerson;
 
 {
-  create table (
+  create table person (
     id varchar(32),
     name varchar(255)
   );
