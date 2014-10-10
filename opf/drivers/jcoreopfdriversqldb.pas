@@ -155,10 +155,12 @@ begin
   begin
     Query.Open;
     FFieldCount := Query.FieldCount;
-  end
-  else
+    Result := Query.RecordCount;
+  end else
+  begin
     Query.ExecSQL;
-  Result := Query.RowsAffected;
+    Result := Query.RowsAffected;
+  end;
 end;
 
 constructor TJCoreOPFDriverSQLdb.Create(const AParams: TStringList);
