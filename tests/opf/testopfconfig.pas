@@ -57,12 +57,14 @@ type
 
   TTestOPFAbstractTestCase = class(TTestCase)
   private
+    FSessionCircularAuto: ITestOPFSession;
     FSessionInvoiceAuto: ITestOPFSession;
     FSessionInvoiceManual: ITestOPFSession;
     FSessionIPIDContact: ITestOPFSession;
     FSessionProxyContact: ITestOPFSession;
     class var FLOG: IJCoreLogger;
     procedure AssertCommands(const AList: TStringList; const AShortName, ALongName: string; const ACommands: array of string);
+    function GetSessionCircularAuto: ITestOPFSession;
     function GetSessionInvoiceAuto: ITestOPFSession;
     function GetSessionInvoiceManual: ITestOPFSession;
     function GetSessionIPIDContact: ITestOPFSession;
@@ -74,6 +76,7 @@ type
     procedure ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigIPIDContactMapping(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
+    procedure ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
     procedure ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
@@ -82,6 +85,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
     class property LOG: IJCoreLogger read FLOG;
+    property SessionCircularAuto: ITestOPFSession read GetSessionCircularAuto;
     property SessionInvoiceAuto: ITestOPFSession read GetSessionInvoiceAuto;
     property SessionInvoiceManual: ITestOPFSession read GetSessionInvoiceManual;
     property SessionIPIDContact: ITestOPFSession read GetSessionIPIDContact;
@@ -197,6 +201,7 @@ implementation
 uses
   JCoreMetadata,
   JCoreOPFOID,
+  TestOPFModelCircular,
   TestOPFModelContact,
   TestOPFModelInvoice,
   TestOPFMappingContact,
@@ -263,6 +268,20 @@ begin
     raise;
   end;
   AList.Clear;
+end;
+
+function TTestOPFAbstractTestCase.GetSessionCircularAuto: ITestOPFSession;
+var
+  VConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FSessionCircularAuto) then
+  begin
+    VConfig := CreateConfiguration;
+    ConfigAutoMapping(VConfig);
+    ConfigProxyCircularModel(VConfig);
+    FSessionCircularAuto := VConfig.CreateSession as ITestOPFSession;
+  end;
+  Result := FSessionCircularAuto;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionInvoiceAuto: ITestOPFSession;
@@ -366,6 +385,11 @@ begin
   AConfig.Model.AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
   AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('Languages').CompositionType := jctAggregation;
   AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('City').CompositionType := jctAggregation;
+end;
+
+procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
+begin
+  AConfig.Model.AddClass([TCircularPerson]);
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);

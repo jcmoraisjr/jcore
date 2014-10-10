@@ -42,9 +42,6 @@ uses
   sysutils,
   testregistry,
   JCoreEntity,
-  JCoreOPFConfig,
-  JCoreOPFSession,
-  JCoreOPFMappingSQL,
   JCoreOPFMetadata,
   TestOPFModelContact,
   TestOPFModelInvoice,
@@ -79,18 +76,11 @@ end;
 
 procedure TTestOPFMetadataTest.CircularReference;
 var
-  VConfig: IJCoreOPFConfiguration;
-  VSession: IJCoreOPFSession;
   VPerson: TCircularPerson;
 begin
-  VConfig := TJCoreOPFConfiguration.Create;
-  VConfig.DriverClass := TTestSQLDriver;
-  VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
-  VConfig.Model.AddClass([TCircularPerson]);
-  VSession := VConfig.CreateSession;
   VPerson := TCircularPerson.Create;
   try
-    VSession.Store(VPerson);
+    SessionCircularAuto.Store(VPerson);
   finally
     FreeAndNil(VPerson);
   end;
