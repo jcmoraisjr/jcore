@@ -15,6 +15,7 @@ type
   published
     procedure Single;
     procedure Inheritance;
+    procedure CircularModel;
     procedure CompositionNull;
     procedure CompositionSingle1;
     procedure CompositionSingle2;
@@ -71,7 +72,8 @@ uses
   testregistry,
   sysutils,
   JCoreOPFException,
-  TestOPFModelInvoice;
+  TestOPFModelInvoice,
+  TestOPFModelCircular;
 
 { TTestOPFInsertAutoMappingTests }
 
@@ -111,6 +113,39 @@ begin
      'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);
   finally
     FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.CircularModel;
+var
+  VPerson: TCircularPerson;
+  VDependent: TCircularPerson;
+begin
+  VPerson := TCircularPerson.Create;
+  try
+    VPerson.Name := 'jack';
+    VDependent := TCircularPerson.Create;
+    VPerson.Dependent.Add(VDependent);
+    VDependent.Name := 'joe';
+    VDependent := TCircularPerson.Create;
+    VPerson.Dependent.Add(VDependent);
+    VDependent.Name := 'jane';
+    SessionCircularAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteNull',
+     'WriteString jack',
+     'ExecSQL INSERT INTO CIRCULARPERSON (ID,CIRCULARPERSON,NAME) VALUES (?,?,?)',
+     'WriteInt64 2',
+     'WriteInt64 1',
+     'WriteString joe',
+     'ExecSQL INSERT INTO CIRCULARPERSON (ID,CIRCULARPERSON,NAME) VALUES (?,?,?)',
+     'WriteInt64 3',
+     'WriteInt64 1',
+     'WriteString jane',
+     'ExecSQL INSERT INTO CIRCULARPERSON (ID,CIRCULARPERSON,NAME) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VPerson);
   end;
 end;
 

@@ -97,10 +97,12 @@ end;
 function TJCoreEntityProxy.Lazyload(const AAttrAddr: Pointer): Boolean;
 begin
   // True = do nothing, the object(s) were already loaded or I just loaded the object(s)
-  // False = I failed to load the object(s), please create them yourself
-  Result := Assigned(AAttrAddr) and Assigned(TObject(AAttrAddr^));
-  if Result then
+  // False = I failed to load the attribute, please create it yourself
+  Result := Assigned(AAttrAddr) and Assigned(TObject(AAttrAddr^)) and not Assigned(Self);
+  if Result then // there is an instance and there isn't a proxy/PID, so nothing to do
     Exit;
+  // without an instance: pid.lazyload should be called to retrieve the instance
+  // with an instance: pid.lazyload will check if the ADM was properly initialized
   Result := Assigned(Self) and Assigned(FPID) and Assigned(AAttrAddr);
   if Result then
     Result := FPID.Lazyload(AAttrAddr);
