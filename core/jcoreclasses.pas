@@ -83,6 +83,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreMetadataAlreadyOwned }
+
+  EJCoreMetadataAlreadyOwned = class(EJCoreException)
+  public
+    constructor Create;
+  end;
+
   EJCoreConversionError = class(EJCoreError);
 
   TJCoreTextPos = record
@@ -244,6 +251,12 @@ end;
 { EJCoreListIsEmpty }
 
 constructor EJCoreListIsEmpty.Create;
+begin
+end;
+
+{ EJCoreMetadataAlreadyOwned }
+
+constructor EJCoreMetadataAlreadyOwned.Create;
 begin
 end;
 

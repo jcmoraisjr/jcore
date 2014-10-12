@@ -20,6 +20,7 @@ type
     procedure CompositionSingle1;
     procedure CompositionSingle2;
     procedure CompositionCollection;
+    procedure AggregationCollection;
   end;
 
   { TTestOPFSelectAutoMappingTests }
@@ -72,6 +73,7 @@ uses
   testregistry,
   sysutils,
   JCoreOPFException,
+  TestOPFModelContact,
   TestOPFModelInvoice,
   TestOPFModelCircular;
 
@@ -259,6 +261,34 @@ begin
      ]);
   finally
     FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.AggregationCollection;
+var
+  VPerson: TTestIPIDPerson;
+  VLang: TTestIPIDLanguage;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VLang := TTestIPIDLanguage.Create('en');
+    VPerson.Languages.Add(VLang);
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteString ',
+     'WriteInt32 0',
+     'WriteNull',
+     'WriteNull',
+     'ExecSQL INSERT INTO TESTIPIDPERSON (ID,NAME,AGE,ADDRESS,CITY) VALUES (?,?,?,?,?)',
+     'WriteInt64 2',
+     'WriteString en',
+     'ExecSQL INSERT INTO TESTIPIDLANGUAGE (ID,NAME) VALUES (?,?)',
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'ExecSQL INSERT INTO TESTIPIDPERSON_LANGUAGES (TESTIPIDPERSON,TESTIPIDLANGUAGE) VALUES (?,?)']);
+  finally
+    FreeAndNil(VPerson);
   end;
 end;
 

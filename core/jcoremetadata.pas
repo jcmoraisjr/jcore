@@ -39,19 +39,23 @@ type
     FCompositionType: TJCoreMetadataCompositionType;
     FModel: TJCoreModel;
     FName: string;
+    FOwner: TJCoreClassMetadata;
     FPropInfo: PPropInfo;
     function GetCompositionMetadata: TJCoreClassMetadata;
-    function GetIsClass: Boolean;
     procedure SetCompositionClass(AValue: TClass);
+    procedure SetCompositionType(AValue: TJCoreMetadataCompositionType);
   protected
     property Model: TJCoreModel read FModel;
   public
-    constructor Create(const AModel: TJCoreModel; const APropInfo: PPropInfo); virtual;
+    constructor Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata; const APropInfo: PPropInfo); virtual;
+    procedure Changed;
+    function IsClass: Boolean;
+    function IsCollection: Boolean; virtual; abstract;
     property CompositionClass: TClass read FCompositionClass write SetCompositionClass;
     property CompositionMetadata: TJCoreClassMetadata read GetCompositionMetadata;
-    property CompositionType: TJCoreMetadataCompositionType read FCompositionType write FCompositionType;
-    property IsClass: Boolean read GetIsClass;
+    property CompositionType: TJCoreMetadataCompositionType read FCompositionType write SetCompositionType;
     property Name: string read FName;
+    property Owner: TJCoreClassMetadata read FOwner;
     property PropInfo: PPropInfo read FPropInfo;
   end;
 
@@ -65,8 +69,10 @@ type
     FAttrList: TJCoreAttrMetadataList;
     FClass: TClass;
     FModel: TJCoreModel;
+    FOwnerMetadata: TJCoreClassMetadata;
     FParent: TJCoreClassMetadata;
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
+    procedure SetOwnerMetadata(AValue: TJCoreClassMetadata);
   protected
     property AttrList: TJCoreAttrMetadataList read FAttrList;
     property Model: TJCoreModel read FModel;
@@ -77,6 +83,7 @@ type
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
     function AttributeCount: Integer;
     property Attributes[const AIndex: Integer]: TJCoreAttrMetadata read GetAttributes; default;
+    property OwnerMetadata: TJCoreClassMetadata read FOwnerMetadata write SetOwnerMetadata;
     property Parent: TJCoreClassMetadata read FParent;
     property TheClass: TClass read FClass;
   end;
@@ -116,11 +123,6 @@ uses
 
 { TJCoreAttrMetadata }
 
-function TJCoreAttrMetadata.GetIsClass: Boolean;
-begin
-  Result := PropInfo^.PropType^.Kind = tkClass;
-end;
-
 function TJCoreAttrMetadata.GetCompositionMetadata: TJCoreClassMetadata;
 begin
   if not Assigned(FCompositionMetadata) and Assigned(CompositionClass) then
@@ -137,11 +139,21 @@ begin
   end;
 end;
 
-constructor TJCoreAttrMetadata.Create(const AModel: TJCoreModel;
+procedure TJCoreAttrMetadata.SetCompositionType(AValue: TJCoreMetadataCompositionType);
+begin
+  if FCompositionType <> AValue then
+  begin
+    FCompositionType := AValue;
+    Changed;
+  end;
+end;
+
+constructor TJCoreAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
   const APropInfo: PPropInfo);
 begin
   inherited Create;
   FModel := AModel;
+  FOwner := AOwner;
   FPropInfo := APropInfo;
   FName := APropInfo^.Name;
   if IsClass then
@@ -150,12 +162,39 @@ begin
     FCompositionType := jctNone;
 end;
 
+procedure TJCoreAttrMetadata.Changed;
+var
+  VCompositionMetadata: TJCoreClassMetadata;
+begin
+  VCompositionMetadata := CompositionMetadata;
+  if Assigned(VCompositionMetadata) and IsCollection then
+  begin
+    if CompositionType = jctComposition then
+      VCompositionMetadata.OwnerMetadata := Owner
+    else // jctAggregation
+      VCompositionMetadata.OwnerMetadata := nil;
+  end;
+end;
+
+function TJCoreAttrMetadata.IsClass: Boolean;
+begin
+  Result := PropInfo^.PropType^.Kind = tkClass;
+end;
+
 { TJCoreClassMetadata }
 
 function TJCoreClassMetadata.GetAttributes(
   const AIndex: Integer): TJCoreAttrMetadata;
 begin
   Result := AttrList[AIndex];
+end;
+
+procedure TJCoreClassMetadata.SetOwnerMetadata(AValue: TJCoreClassMetadata);
+begin
+  if not Assigned(FOwnerMetadata) or not Assigned(AValue) then
+    FOwnerMetadata := AValue
+  else if FOwnerMetadata <> AValue then
+    raise EJCoreMetadataAlreadyOwned.Create;
 end;
 
 constructor TJCoreClassMetadata.Create(const AModel: TJCoreModel; const AClass: TClass;
@@ -212,6 +251,7 @@ begin
   if VClass = TObject then
     Exit;
   VPropListCount := GetPropList(VClass, VPropList);
+  RefineClassMetadata(AMetadata);
   if Assigned(VPropList) then
   begin
     try
@@ -224,7 +264,6 @@ begin
       Freemem(VPropList);
     end;
   end;
-  RefineClassMetadata(AMetadata);
 end;
 
 function TJCoreModel.ClassMetadataClass: TJCoreClassMetadataClass;
@@ -235,7 +274,7 @@ end;
 function TJCoreModel.CreateAttrMetadata(const AMetadata: TJCoreClassMetadata;
   const APropInfo: PPropInfo): TJCoreAttrMetadata;
 begin
-  Result := AttributeMetadataClass.Create(Self, APropInfo);
+  Result := AttributeMetadataClass.Create(Self, AMetadata, APropInfo);
 end;
 
 function TJCoreModel.CreateClassMetadata(const AClass: TClass): TJCoreClassMetadata;

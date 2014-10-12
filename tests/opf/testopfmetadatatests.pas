@@ -15,6 +15,7 @@ type
   published
     procedure CreatePIDInheritance;
     procedure CircularReference;
+    procedure OwnOwnedMetadata;
   end;
 
   { TTestOPFIPIDMetadataTests }
@@ -41,7 +42,9 @@ implementation
 uses
   sysutils,
   testregistry,
+  JCoreClasses,
   JCoreEntity,
+  JCoreOPFConfig,
   JCoreOPFMetadata,
   TestOPFModelContact,
   TestOPFModelInvoice,
@@ -83,6 +86,29 @@ begin
     SessionCircularAuto.Store(VPerson);
   finally
     FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFMetadataTest.OwnOwnedMetadata;
+var
+  VConfig: IJCoreOPFConfiguration;
+  VPersonMetadata: TJCoreOPFClassMetadata;
+  VInvoiceMetadata: TJCoreOPFClassMetadata;
+  VInvoiceItemMetadata: TJCoreOPFClassMetadata;
+begin
+  VConfig := TJCoreOPFConfiguration.Create;
+  VConfig.Model.AddClass([TCLient, TPerson, TAddress, TInvoice, TInvoiceItem]);
+  VInvoiceMetadata := VConfig.Model.AcquireMetadata(TInvoice);
+  VInvoiceItemMetadata := VConfig.Model.AcquireMetadata(TInvoiceItem);
+  AssertEquals('invoice item owned by invoice',
+   VInvoiceMetadata.TheClass, VInvoiceItemMetadata.OwnerMetadata.TheClass);
+  VPersonMetadata := VConfig.Model.AcquireMetadata(TPerson);
+  try
+    VInvoiceItemMetadata.OwnerMetadata := VPersonMetadata;
+    Fail('EJCoreMetadataAlreadyOwned expected');
+  except
+    on E: EJCoreMetadataAlreadyOwned do
+      ;
   end;
 end;
 

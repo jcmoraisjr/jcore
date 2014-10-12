@@ -365,6 +365,8 @@ type
   private
     FADMClass: TJCoreOPFADMClass;
     FAttributeType: TJCoreOPFAttributeType;
+    FExternalLinkFieldName: string;
+    FExternalLinkTableName: string;
     FHasLazyload: Boolean;
     FPersistentFieldName: string;
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
@@ -374,12 +376,15 @@ type
   protected
     property Model: TJCoreOPFModel read GetModel;
   public
-    constructor Create(const AModel: TJCoreModel; const APropInfo: PPropInfo); override;
+    constructor Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata; const APropInfo: PPropInfo); override;
     function CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
+    function IsCollection: Boolean; override;
     procedure NoLazyload;
     property ADMClass: TJCoreOPFADMClass read FADMClass;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata;
+    property ExternalLinkFieldName: string read FExternalLinkFieldName write FExternalLinkFieldName;
+    property ExternalLinkTableName: string read FExternalLinkTableName write FExternalLinkTableName;
     property HasExternalLink: Boolean read GetHasExternalLink;
     property HasLazyload: Boolean read FHasLazyload;
     property PersistentFieldName: string read FPersistentFieldName;
@@ -397,6 +402,7 @@ type
   // In the current version these attributes must be of the same class or a
   // parent class.
   private
+    FExternalLinkFieldName: string;
     FGeneratorStrategy: TJCoreOPFGeneratorStrategy;
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
@@ -407,6 +413,7 @@ type
     FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
+    property ExternalLinkFieldName: string read FExternalLinkFieldName;
     property GeneratorStrategy: TJCoreOPFGeneratorStrategy read FGeneratorStrategy;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
@@ -425,7 +432,6 @@ type
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass; // model initializes
     FOIDName: TJCoreStringArray; // model initializes
-    FOwnerMetadata: TJCoreOPFClassMetadata; // model initializes
     FSubMaps: TJCoreOPFMaps;
     FTableName: string; // model initializes
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
@@ -444,7 +450,6 @@ type
     property Maps: TJCoreOPFMaps read GetMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
-    property OwnerMetadata: TJCoreOPFClassMetadata read FOwnerMetadata;
     property Parent: TJCoreOPFClassMetadata read GetParent;
     property SubMaps: TJCoreOPFMaps read GetSubMaps;
     property TableName: string read FTableName;
@@ -1562,22 +1567,36 @@ begin
     raise EJCoreOPFUnsupportedAttributeType.Create(VClassName);
 end;
 
-constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel; const APropInfo: PPropInfo);
+constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
+  const APropInfo: PPropInfo);
+var
+  VOwner: TJCoreOPFClassMetadata;
 begin
-  inherited Create(AModel, APropInfo);
+  inherited Create(AModel, AOwner, APropInfo);
   FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
   FAttributeType := ADMClass.AttributeType;
+  FPersistentFieldName := UpperCase(Name);
   if IsClass then
-    CompositionClass := ReadComposition(APropInfo^.PropType^.Name)
-  else
+  begin
+    CompositionClass := ReadComposition(APropInfo^.PropType^.Name);
+    VOwner := Owner as TJCoreOPFClassMetadata;
+    FExternalLinkTableName := VOwner.TableName + '_' + PersistentFieldName;
+    FExternalLinkFieldName := CompositionMetadata.TableName;
+    if VOwner = CompositionMetadata then
+      FExternalLinkFieldName := FExternalLinkFieldName + '_' + PersistentFieldName;
+  end else
     CompositionClass := nil;
   FHasLazyload := True; // which also means "I dont know yet, try it"
-  FPersistentFieldName := UpperCase(Name);
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
 begin
   Result := ADMClass.Create(APID, Self);
+end;
+
+function TJCoreOPFAttrMetadata.IsCollection: Boolean;
+begin
+  Result := AttributeType = jatCollection;
 end;
 
 procedure TJCoreOPFAttrMetadata.NoLazyload;
@@ -1600,7 +1619,8 @@ begin
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
   FTableName := Metadata.TableName;
-  VOwner := Metadata.OwnerMetadata;
+  FExternalLinkFieldName := TableName;
+  VOwner := Metadata.OwnerMetadata as TJCoreOPFClassMetadata;
   if Assigned(VOwner) then
   begin
     VTableName := VOwner.TableName;
@@ -1735,18 +1755,9 @@ function TJCoreOPFModel.CreateAttrMetadata(const AMetadata: TJCoreClassMetadata;
   const APropInfo: PPropInfo): TJCoreAttrMetadata;
 var
   VAttrMetadata: TJCoreOPFAttrMetadata;
-  VCompositionMetadata: TJCoreOPFClassMetadata;
 begin
   VAttrMetadata := inherited CreateAttrMetadata(AMetadata, APropInfo) as TJCoreOPFAttrMetadata;
-  VCompositionMetadata := VAttrMetadata.CompositionMetadata;
-  if Assigned(VCompositionMetadata) and (VAttrMetadata.ADMClass.AttributeType = jatCollection) then
-  begin
-    if not Assigned(VCompositionMetadata.OwnerMetadata) then
-      VCompositionMetadata.FOwnerMetadata := AMetadata as TJCoreOPFClassMetadata // friend class
-    else
-      { TODO : Implement }
-      ;
-  end;
+  VAttrMetadata.Changed;
   Result := VAttrMetadata;
 end;
 

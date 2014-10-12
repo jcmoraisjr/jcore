@@ -40,6 +40,7 @@ type
     function BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex, AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string;
     function BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray; virtual;
+    function BuildInsertLinkFields(const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreStringArray; virtual;
     function BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDName(const AOIDNameArray: array of string; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
@@ -215,6 +216,14 @@ begin
     Result[VIndex] := VADMChanged[I].Metadata.PersistentFieldName;
     Inc(VIndex);
   end;
+end;
+
+function TJCoreOPFSQLGenerator.BuildInsertLinkFields(
+  const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreStringArray;
+begin
+  SetLength(Result, 2);
+  Result[0] := Map.ExternalLinkFieldName;
+  Result[1] := AAttrMetadata.ExternalLinkFieldName;
 end;
 
 function TJCoreOPFSQLGenerator.BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex,
@@ -458,9 +467,12 @@ end;
 
 function TJCoreOPFSQLGenerator.GenerateInsertExternalLinksStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata): string;
+var
+  VFields: TJCoreStringArray;
 begin
-  { TODO : Implement }
-  Result := 'INSERT';
+  VFields := BuildInsertLinkFields(AAttrMetadata);
+  Result := Format('INSERT INTO %s (%s) VALUES (%s)', [
+   AAttrMetadata.ExternalLinkTableName, BuildInsertFieldNames(VFields), BuildFieldParams(Length(VFields))]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata;
