@@ -60,14 +60,16 @@ type
     FSessionCircularAuto: ITestOPFSession;
     FSessionInvoiceAuto: ITestOPFSession;
     FSessionInvoiceManual: ITestOPFSession;
-    FSessionIPIDContact: ITestOPFSession;
+    FSessionIPIDContactAuto: ITestOPFSession;
+    FSessionIPIDContactManual: ITestOPFSession;
     FSessionProxyContact: ITestOPFSession;
     class var FLOG: IJCoreLogger;
     procedure AssertCommands(const AList: TStringList; const AShortName, ALongName: string; const ACommands: array of string);
     function GetSessionCircularAuto: ITestOPFSession;
     function GetSessionInvoiceAuto: ITestOPFSession;
     function GetSessionInvoiceManual: ITestOPFSession;
-    function GetSessionIPIDContact: ITestOPFSession;
+    function GetSessionIPIDContactAuto: ITestOPFSession;
+    function GetSessionIPIDContactManual: ITestOPFSession;
     function GetSessionProxyContact: ITestOPFSession;
   protected
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
@@ -88,7 +90,8 @@ type
     property SessionCircularAuto: ITestOPFSession read GetSessionCircularAuto;
     property SessionInvoiceAuto: ITestOPFSession read GetSessionInvoiceAuto;
     property SessionInvoiceManual: ITestOPFSession read GetSessionInvoiceManual;
-    property SessionIPIDContact: ITestOPFSession read GetSessionIPIDContact;
+    property SessionIPIDContactAuto: ITestOPFSession read GetSessionIPIDContactAuto;
+    property SessionIPIDContactManual: ITestOPFSession read GetSessionIPIDContactManual;
     property SessionProxyContact: ITestOPFSession read GetSessionProxyContact;
   end;
 
@@ -96,7 +99,7 @@ type
 
   TTestOPFIPIDContactTestCase = class(TTestOPFAbstractTestCase)
   protected
-    property Session: ITestOPFSession read GetSessionIPIDContact;
+    property Session: ITestOPFSession read GetSessionIPIDContactManual;
   end;
 
   { TTestOPFProxyContactTestCase }
@@ -312,18 +315,32 @@ begin
   Result := FSessionInvoiceManual;
 end;
 
-function TTestOPFAbstractTestCase.GetSessionIPIDContact: ITestOPFSession;
+function TTestOPFAbstractTestCase.GetSessionIPIDContactAuto: ITestOPFSession;
 var
   VConfig: IJCoreOPFConfiguration;
 begin
-  if not Assigned(FSessionIPIDContact) then
+  if not Assigned(FSessionIPIDContactAuto) then
+  begin
+    VConfig := CreateConfiguration;
+    ConfigAutoMapping(VConfig);
+    ConfigIPIDContactModel(VConfig);
+    FSessionIPIDContactAuto := VConfig.CreateSession as ITestOPFSession;
+  end;
+  Result := FSessionIPIDContactAuto;
+end;
+
+function TTestOPFAbstractTestCase.GetSessionIPIDContactManual: ITestOPFSession;
+var
+  VConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FSessionIPIDContactManual) then
   begin
     VConfig := CreateConfiguration;
     ConfigIPIDContactMapping(VConfig);
     ConfigIPIDContactModel(VConfig);
-    FSessionIPIDContact := VConfig.CreateSession as ITestOPFSession;
+    FSessionIPIDContactManual := VConfig.CreateSession as ITestOPFSession;
   end;
-  Result := FSessionIPIDContact;
+  Result := FSessionIPIDContactManual;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionProxyContact: ITestOPFSession;
@@ -445,9 +462,11 @@ begin
   TTestSQLDriver.ExpectedResultsets.Clear;
   TTestSQLDriver.Transaction.Clear;
   TTestIntegerGenerator.ClearOID;
+  FSessionCircularAuto := nil;
   FSessionInvoiceAuto := nil;
   FSessionInvoiceManual := nil;
-  FSessionIPIDContact := nil;
+  FSessionIPIDContactAuto := nil;
+  FSessionIPIDContactManual := nil;
   FSessionProxyContact := nil;
 end;
 
