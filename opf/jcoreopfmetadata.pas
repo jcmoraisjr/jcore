@@ -481,6 +481,7 @@ type
   public
     constructor Create; override;
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
+    function AcquireAttrMetadata(const AClass: TClass; const AAttributeName: string): TJCoreOPFAttrMetadata;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
@@ -1814,6 +1815,12 @@ begin
     if Result.Apply(Self, AAttrTypeInfo) then
       Exit;
   raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
+end;
+
+function TJCoreOPFModel.AcquireAttrMetadata(const AClass: TClass;
+  const AAttributeName: string): TJCoreOPFAttrMetadata;
+begin
+  Result := AcquireMetadata(AClass).AttributeByName(AAttributeName);
 end;
 
 function TJCoreOPFModel.AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
