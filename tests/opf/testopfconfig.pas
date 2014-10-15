@@ -400,8 +400,8 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
-  AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('Languages').CompositionType := jctAggregation;
-  AConfig.Model.AcquireMetadata(TTestIPIDPerson).AttributeByName('City').CompositionType := jctAggregation;
+  AConfig.Model.AcquireAttrMetadata(TTestIPIDPerson, 'Languages').CompositionType := jctAggregation;
+  AConfig.Model.AcquireAttrMetadata(TTestIPIDPerson, 'City').CompositionType := jctAggregation;
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
@@ -432,8 +432,8 @@ procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCore
 begin
   AConfig.Model.AddClass([
    TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
-  AConfig.Model.AcquireMetadata(TInvoice).AttributeByName('Client').CompositionType := jctAggregation;
-  AConfig.Model.AcquireMetadata(TInvoiceItemProduct).AttributeByName('Product').CompositionType := jctAggregation;
+  AConfig.Model.AcquireAttrMetadata(TInvoice, 'Client').CompositionType := jctAggregation;
+  AConfig.Model.AcquireAttrMetadata(TInvoiceItemProduct, 'Product').CompositionType := jctAggregation;
 end;
 
 function TTestOPFAbstractTestCase.CreateConfiguration: IJCoreOPFConfiguration;
