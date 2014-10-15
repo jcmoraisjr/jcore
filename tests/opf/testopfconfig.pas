@@ -407,6 +407,7 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([TCircularPerson]);
+  AConfig.Model.AcquireAttrMetadata(TCircularPerson, 'Dependent').CompositionType := jctAggregation;
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);

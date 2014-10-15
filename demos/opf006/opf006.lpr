@@ -10,6 +10,7 @@ uses
   JCoreDIC,
   JCoreLogger,
   JCoreEntity,
+  JCoreMetadata,
   JCoreOPFConfig,
   JCoreOPFSession,
   JCoreOPFMappingSQL,
@@ -70,13 +71,20 @@ var
 {
   create table person (
     id varchar(32),
-    person varchar(32),
     name varchar(255)
+  );
+  create table person_dependent (
+    person varchar(32),
+    person_dependent varchar(32)
   );
   alter table person
     add constraint pk_person primary key (id);
-  alter table person
-    add constraint fk_person_person foreign key (person) references person (id);
+  alter table person_dependent
+    add constraint pk_person_dependent primary key (person,person_dependent);
+  alter table person_dependent
+    add constraint fk_person_dependent_person foreign key (person) references person (id);
+  alter table person_dependent
+    add constraint fk_person_dependent_dependent foreign key (person_dependent) references person (id);
 }
 
 procedure Print(const AIndent: string; const APerson: TPerson);
@@ -101,6 +109,7 @@ begin
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   VConfig.Model.AddClass([TPerson]);
+  VConfig.Model.AcquireAttrMetadata(TPerson, 'Dependent').CompositionType := jctAggregation;
   VSession := VConfig.CreateSession;
   VPerson := TPerson.Create;
   try

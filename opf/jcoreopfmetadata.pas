@@ -365,7 +365,8 @@ type
   private
     FADMClass: TJCoreOPFADMClass;
     FAttributeType: TJCoreOPFAttributeType;
-    FExternalLinkFieldName: string;
+    FExternalLinkLeftFieldName: string;
+    FExternalLinkRightFieldName: string;
     FExternalLinkTableName: string;
     FHasLazyload: Boolean;
     FPersistentFieldName: string;
@@ -383,7 +384,8 @@ type
     property ADMClass: TJCoreOPFADMClass read FADMClass;
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata;
-    property ExternalLinkFieldName: string read FExternalLinkFieldName write FExternalLinkFieldName;
+    property ExternalLinkLeftFieldName: string read FExternalLinkLeftFieldName write FExternalLinkLeftFieldName;
+    property ExternalLinkRightFieldName: string read FExternalLinkRightFieldName write FExternalLinkRightFieldName;
     property ExternalLinkTableName: string read FExternalLinkTableName write FExternalLinkTableName;
     property HasExternalLink: Boolean read GetHasExternalLink;
     property HasLazyload: Boolean read FHasLazyload;
@@ -402,7 +404,6 @@ type
   // In the current version these attributes must be of the same class or a
   // parent class.
   private
-    FExternalLinkFieldName: string;
     FGeneratorStrategy: TJCoreOPFGeneratorStrategy;
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
@@ -413,7 +414,6 @@ type
     FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
-    property ExternalLinkFieldName: string read FExternalLinkFieldName;
     property GeneratorStrategy: TJCoreOPFGeneratorStrategy read FGeneratorStrategy;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
@@ -1177,7 +1177,8 @@ end;
 
 procedure TJCoreOPFADMCollection.ReadFromDriver(const ADriver: TJCoreOPFDriver);
 begin
-  { TODO : Implement for non lazy loading attributes }
+  if not Metadata.HasLazyload then
+    Load;
 end;
 
 procedure TJCoreOPFADMCollection.WriteToDriver(const ADriver: TJCoreOPFDriver);
@@ -1582,9 +1583,11 @@ begin
     CompositionClass := ReadComposition(APropInfo^.PropType^.Name);
     VOwner := Owner as TJCoreOPFClassMetadata;
     FExternalLinkTableName := VOwner.TableName + '_' + PersistentFieldName;
-    FExternalLinkFieldName := CompositionMetadata.TableName;
-    if VOwner = CompositionMetadata then
-      FExternalLinkFieldName := FExternalLinkFieldName + '_' + PersistentFieldName;
+    FExternalLinkLeftFieldName := VOwner.TableName;
+    if VOwner <> CompositionMetadata then
+      FExternalLinkRightFieldName := CompositionMetadata.TableName
+    else
+      FExternalLinkRightFieldName := ExternalLinkTableName;
   end else
     CompositionClass := nil;
   FHasLazyload := True; // which also means "I dont know yet, try it"
@@ -1620,7 +1623,6 @@ begin
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
   FTableName := Metadata.TableName;
-  FExternalLinkFieldName := TableName;
   VOwner := Metadata.OwnerMetadata as TJCoreOPFClassMetadata;
   if Assigned(VOwner) then
   begin

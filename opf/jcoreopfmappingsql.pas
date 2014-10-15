@@ -25,7 +25,7 @@ uses
 
 type
 
-  TJCoreOPFTablePrefixType = (jtptNone, jtptMainMap, jtptSubMap);
+  TJCoreOPFTablePrefixType = (jtptNone, jtptMainMap, jtptSubMap, jtptExternalLink);
 
   { TJCoreOPFSQLGenerator }
 
@@ -45,6 +45,7 @@ type
     function BuildOIDName(const AOIDNameArray: array of string; const AMapIndex, AOIDIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildOIDNames(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
+    function BuildTableName(const ATableName: string; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function MapIndexByMap(const AMap: TJCoreOPFMap): Integer;
   protected
     // SQL fragments
@@ -55,6 +56,8 @@ type
     function BuildSelectComplementaryFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
     function BuildSelectComplementaryFrom(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string; virtual;
     function BuildSelectCondition(const AOIDCount: Integer; const AUseTablePrefix: Boolean): string; virtual;
+    function BuildSelectExternalLinksCondition(const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
+    function BuildSelectExternalLinksFrom(const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function BuildSelectFieldNames(const AAttributes: TJCoreOPFAttrMetadataArray): string;
     function BuildSelectJoinCondition(const ALeftMaps: TJCoreOPFMaps; const ALeftIndex: Integer; const ALeftTablePrefixType: TJCoreOPFTablePrefixType; const ARightMaps: TJCoreOPFMaps; const ARightIndex: Integer; const ARightTablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string; virtual;
@@ -73,6 +76,7 @@ type
     function GenerateDeleteExternalLinkIDsStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateDeleteExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
     function GenerateInsertExternalLinksStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
+    function GenerateSelectCollectionExternalLinksStatement(const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
@@ -157,7 +161,7 @@ uses
 
 const
   { TODO : Review the aproach after "subclass type strategy" implementation }
-  CTablePrefix: array[TJCoreOPFTablePrefixType] of string = ('', 'T_', 'TS_');
+  CTablePrefix: array[TJCoreOPFTablePrefixType] of string = ('', 'T_', 'TS_', 'TL_');
   CMainMapPrefix: array[Boolean] of TJCoreOPFTablePrefixType = (jtptNone, jtptMainMap);
   CSubMapPrefix: array[Boolean] of TJCoreOPFTablePrefixType = (jtptNone, jtptSubMap);
 
@@ -222,8 +226,8 @@ function TJCoreOPFSQLGenerator.BuildInsertLinkFields(
   const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreStringArray;
 begin
   SetLength(Result, 2);
-  Result[0] := Map.ExternalLinkFieldName;
-  Result[1] := AAttrMetadata.ExternalLinkFieldName;
+  Result[0] := AAttrMetadata.ExternalLinkLeftFieldName;
+  Result[1] := AAttrMetadata.ExternalLinkRightFieldName;
 end;
 
 function TJCoreOPFSQLGenerator.BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex,
@@ -259,14 +263,17 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildTableName(const AMaps: TJCoreOPFMaps; const AMapIndex: Integer;
   const ATablePrefixType: TJCoreOPFTablePrefixType): string;
-var
-  VMap: TJCoreOPFMap;
 begin
-  VMap := AMaps[AMapIndex];
+  Result := BuildTableName(AMaps[AMapIndex].TableName, AMapIndex, ATablePrefixType);
+end;
+
+function TJCoreOPFSQLGenerator.BuildTableName(const ATableName: string; const AMapIndex: Integer;
+  const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+begin
   if ATablePrefixType <> jtptNone then
-    Result := Format('%s %s%d', [VMap.TableName, CTablePrefix[ATablePrefixType], AMapIndex])
+    Result := Format('%s %s%d', [ATableName, CTablePrefix[ATablePrefixType], AMapIndex])
   else
-    Result := VMap.TableName;
+    Result := ATableName;
 end;
 
 function TJCoreOPFSQLGenerator.MapIndexByMap(const AMap: TJCoreOPFMap): Integer;
@@ -349,6 +356,22 @@ function TJCoreOPFSQLGenerator.BuildSelectCondition(const AOIDCount: Integer;
   const AUseTablePrefix: Boolean): string;
 begin
   Result := BuildOIDCondition(Maps, 0, AOIDCount, CMainMapPrefix[AUseTablePrefix]);
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectExternalLinksCondition(
+  const AOwnerAttr: TJCoreOPFAttrMetadata): string;
+begin
+  Result := BuildOIDCondition([AOwnerAttr.ExternalLinkLeftFieldName], 0, 1, jtptExternalLink);
+end;
+
+function TJCoreOPFSQLGenerator.BuildSelectExternalLinksFrom(
+  const AOwnerAttr: TJCoreOPFAttrMetadata): string;
+begin
+  Result := Format('%s INNER JOIN %s ON %s=%s', [
+   BuildSelectBaseFrom(True),
+   BuildTableName(AOwnerAttr.ExternalLinkTableName, 0, jtptExternalLink),
+   BuildOIDName(Maps, 0, 0, CMainMapPrefix[True]),
+   BuildOIDName([AOwnerAttr.ExternalLinkRightFieldName], 0, 0, jtptExternalLink)]);
 end;
 
 function TJCoreOPFSQLGenerator.BuildSelectFieldNames(const AAttributes: TJCoreOPFAttrMetadataArray): string;
@@ -473,6 +496,15 @@ begin
   VFields := BuildInsertLinkFields(AAttrMetadata);
   Result := Format('INSERT INTO %s (%s) VALUES (%s)', [
    AAttrMetadata.ExternalLinkTableName, BuildInsertFieldNames(VFields), BuildFieldParams(Length(VFields))]);
+end;
+
+function TJCoreOPFSQLGenerator.GenerateSelectCollectionExternalLinksStatement(
+  const AOwnerAttr: TJCoreOPFAttrMetadata): string;
+begin
+  Result := Format('SELECT %s FROM %s WHERE %s', [
+   BuildSelectBaseFieldNames(True),
+   BuildSelectExternalLinksFrom(AOwnerAttr),
+   BuildSelectExternalLinksCondition(AOwnerAttr)]);
 end;
 
 function TJCoreOPFSQLGenerator.GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata;
@@ -645,7 +677,10 @@ end;
 function TJCoreOPFSQLMapping.GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata;
   const AOwnerAttr: TJCoreOPFAttrMetadata): string;
 begin
-  Result := SQLGenerator.GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttr);
+  if not AOwnerAttr.HasExternalLink then
+    Result := SQLGenerator.GenerateSelectCollectionStatement(AOwnerClass, AOwnerAttr)
+  else
+    Result := SQLGenerator.GenerateSelectCollectionExternalLinksStatement(AOwnerAttr);
 end;
 
 function TJCoreOPFSQLMapping.GenerateSelectCompositionsForDeleteStatement(

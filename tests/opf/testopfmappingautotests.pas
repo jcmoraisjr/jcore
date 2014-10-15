@@ -32,6 +32,8 @@ type
     procedure ObjectNotFound;
     procedure Inheritance;
     procedure InheritanceFromParent;
+    procedure CircularModel;
+    procedure EagerCollectionAggregation;
     procedure LazyEntityComposition;
     procedure LazyEntityAggregation;
     procedure LazyCollectionComposition;
@@ -135,17 +137,20 @@ begin
     SessionCircularAuto.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
-     'WriteNull',
      'WriteString jack',
-     'ExecSQL INSERT INTO CIRCULARPERSON (ID,CIRCULARPERSON,NAME) VALUES (?,?,?)',
+     'ExecSQL INSERT INTO CIRCULARPERSON (ID,NAME) VALUES (?,?)',
      'WriteInt64 2',
-     'WriteInt64 1',
      'WriteString joe',
-     'ExecSQL INSERT INTO CIRCULARPERSON (ID,CIRCULARPERSON,NAME) VALUES (?,?,?)',
+     'ExecSQL INSERT INTO CIRCULARPERSON (ID,NAME) VALUES (?,?)',
      'WriteInt64 3',
-     'WriteInt64 1',
      'WriteString jane',
-     'ExecSQL INSERT INTO CIRCULARPERSON (ID,CIRCULARPERSON,NAME) VALUES (?,?,?)']);
+     'ExecSQL INSERT INTO CIRCULARPERSON (ID,NAME) VALUES (?,?)',
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'ExecSQL INSERT INTO CIRCULARPERSON_DEPENDENT (CIRCULARPERSON,CIRCULARPERSON_DEPENDENT) VALUES (?,?)',
+     'WriteInt64 1',
+     'WriteInt64 3',
+     'ExecSQL INSERT INTO CIRCULARPERSON_DEPENDENT (CIRCULARPERSON,CIRCULARPERSON_DEPENDENT) VALUES (?,?)']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -417,6 +422,72 @@ begin
      {2}'ExecSQL SELECT ID,CONTACTNAME FROM COMPANY WHERE ID=?']);
   finally
     FreeAndNil(VClient);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.CircularModel;
+
+  procedure ReadDependents(const APerson: TCircularPerson);
+  var
+    I: Integer;
+  begin
+    for I := 0 to Pred(APerson.Dependent.Count) do
+      ReadDependents(APerson.Dependent[I]);
+  end;
+
+var
+  VPerson: TCircularPerson;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('1');
+  TTestSQLDriver.Data.Add('joe');
+  {2}TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.Data.Add('2');
+  TTestSQLDriver.Data.Add('jack');
+  TTestSQLDriver.Data.Add('3');
+  TTestSQLDriver.Data.Add('jane');
+  {3}TTestSQLDriver.ExpectedResultsets.Add(0);
+  {4}TTestSQLDriver.ExpectedResultsets.Add(0);
+  VPerson := SessionCircularAuto.Retrieve(TCircularPerson, '1') as TCircularPerson;
+  try
+    ReadDependents(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     {1}'ExecSQL SELECT ID,NAME FROM CIRCULARPERSON WHERE ID=?',
+     'WriteInt64 1',
+     {2}'ExecSQL SELECT T_0.ID,T_0.NAME FROM CIRCULARPERSON T_0 INNER JOIN CIRCULARPERSON_DEPENDENT TL_0 ON T_0.ID=TL_0.CIRCULARPERSON_DEPENDENT WHERE TL_0.CIRCULARPERSON=?',
+     'WriteInt64 2',
+     {3}'ExecSQL SELECT T_0.ID,T_0.NAME FROM CIRCULARPERSON T_0 INNER JOIN CIRCULARPERSON_DEPENDENT TL_0 ON T_0.ID=TL_0.CIRCULARPERSON_DEPENDENT WHERE TL_0.CIRCULARPERSON=?',
+     'WriteInt64 3',
+     {4}'ExecSQL SELECT T_0.ID,T_0.NAME FROM CIRCULARPERSON T_0 INNER JOIN CIRCULARPERSON_DEPENDENT TL_0 ON T_0.ID=TL_0.CIRCULARPERSON_DEPENDENT WHERE TL_0.CIRCULARPERSON=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFSelectAutoMappingTests.EagerCollectionAggregation;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('1');
+  TTestSQLDriver.Data.Add('');
+  TTestSQLDriver.Data.Add('0');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('null');
+  {2}TTestSQLDriver.ExpectedResultsets.Add(0);
+  {3}TTestSQLDriver.ExpectedResultsets.Add(0);
+  VPerson := SessionIPIDContactAuto.Retrieve(TTestIPIDPerson, '1') as TTestIPIDPerson;
+  try
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     {1}'ExecSQL SELECT ID,NAME,AGE,ADDRESS,CITY FROM TESTIPIDPERSON WHERE ID=?',
+     'WriteInt64 1',
+     {2}'ExecSQL SELECT ID,NUMBER FROM TESTIPIDPHONE WHERE TESTIPIDPERSON=?',
+     'WriteInt64 1',
+     {3}'ExecSQL SELECT T_0.ID,T_0.NAME FROM TESTIPIDLANGUAGE T_0 INNER JOIN TESTIPIDPERSON_LANGUAGES TL_0 ON T_0.ID=TL_0.TESTIPIDLANGUAGE WHERE TL_0.TESTIPIDPERSON=?']);
+  finally
+    FreeAndNil(VPerson);
   end;
 end;
 
