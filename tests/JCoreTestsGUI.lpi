@@ -70,7 +70,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="16">
+    <Exceptions Count="17">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -119,6 +119,9 @@
       <Item16>
         <Name Value="EJCoreOPFObjectNotFound"/>
       </Item16>
+      <Item17>
+        <Name Value="EJCoreMetadataAlreadyOwned"/>
+      </Item17>
     </Exceptions>
   </Debugging>
 </CONFIG>
