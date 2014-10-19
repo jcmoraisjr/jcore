@@ -31,16 +31,16 @@
         <UnitName Value="JCoreOPFException"/>
       </Item2>
       <Item3>
-        <Filename Value="opf/jcoreopfdriver.pas"/>
-        <UnitName Value="JCoreOPFDriver"/>
+        <Filename Value="opf/jcoreopfoidgen.pas"/>
+        <UnitName Value="JCoreOPFOIDGen"/>
       </Item3>
       <Item4>
         <Filename Value="opf/jcoreopfoid.pas"/>
         <UnitName Value="JCoreOPFOID"/>
       </Item4>
       <Item5>
-        <Filename Value="opf/jcoreopfgenerator.pas"/>
-        <UnitName Value="JCoreOPFGenerator"/>
+        <Filename Value="opf/jcoreopfdriver.pas"/>
+        <UnitName Value="JCoreOPFDriver"/>
       </Item5>
       <Item6>
         <Filename Value="opf/jcoreopfmetadata.pas"/>

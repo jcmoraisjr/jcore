@@ -20,7 +20,7 @@ uses
   JCoreClasses,
   JCoreEntity,
   JCoreOPFDriver,
-  JCoreOPFGenerator;
+  JCoreOPFOIDGen;
 
 type
 
@@ -33,7 +33,7 @@ type
     function GetAsString: string; virtual; abstract;
   public
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
-    constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); virtual; abstract;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); virtual; abstract;
     constructor CreateFromString(const AStringOID: string); virtual; abstract;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); virtual; abstract;
     procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
@@ -53,7 +53,7 @@ type
   public
     constructor Create(const AValue: Int64);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
-    constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); override;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
@@ -71,7 +71,7 @@ type
   public
     constructor Create(const AValue: string);
     constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
-    constructor CreateFromGenerator(const AGenerator: IJCoreOPFGenerator); override;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
     class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
@@ -102,7 +102,7 @@ begin
   Create(ADriver.ReadInt64);
 end;
 
-constructor TJCoreOPFOIDInt64.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
+constructor TJCoreOPFOIDInt64.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator);
 begin
   Create(AGenerator.ReadInt64);
 end;
@@ -145,7 +145,7 @@ begin
   Create(ADriver.ReadString);
 end;
 
-constructor TJCoreOPFOIDString.CreateFromGenerator(const AGenerator: IJCoreOPFGenerator);
+constructor TJCoreOPFOIDString.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator);
 begin
   Create(AGenerator.ReadString);
 end;

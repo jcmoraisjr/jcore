@@ -27,7 +27,7 @@ uses
   testregistry,
   JCoreOPFException,
   JCoreOPFMetadata,
-  JCoreOPFGenerator,
+  JCoreOPFOIDGen,
   JCoreOPFConfig,
   JCoreOPFSession,
   JCoreOPFMappingSQL,

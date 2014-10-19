@@ -22,7 +22,7 @@ uses
   sysutils,
   testregistry,
   JCoreOPFMetadata,
-  JCoreOPFGenerator,
+  JCoreOPFOIDGen,
   JCoreOPFOID,
   JCoreOPFConfig,
   JCoreOPFSession,

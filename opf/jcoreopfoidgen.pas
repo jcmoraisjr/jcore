@@ -1,5 +1,5 @@
 (*
-  JCore, OPF Generator Classes
+  JCore, OPF OID Generator Classes
   Copyright (C) 2014 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
@@ -10,7 +10,7 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *)
 
-unit JCoreOPFGenerator;
+unit JCoreOPFOIDGen;
 
 {$I jcore.inc}
 
@@ -18,17 +18,17 @@ interface
 
 type
 
-  TJCoreOPFGeneratorStrategy = (jgsGUID, jgsCustom);
+  TJCoreOPFOIDGeneratorStrategy = (jgsGUID, jgsCustom);
 
-  IJCoreOPFGenerator = interface(IInterface)
+  IJCoreOPFOIDGenerator = interface(IInterface)
     procedure GenerateOIDs(const AOIDCount: Integer);
     function ReadInt64: Int64;
     function ReadString: string;
   end;
 
-  { TJCoreOPFGeneratorGUID }
+  { TJCoreOPFOIDGeneratorGUID }
 
-  TJCoreOPFGeneratorGUID = class(TInterfacedObject, IJCoreOPFGenerator)
+  TJCoreOPFOIDGeneratorGUID = class(TInterfacedObject, IJCoreOPFOIDGenerator)
   public
     procedure GenerateOIDs(const AOIDCount: Integer);
     function ReadInt64: Int64;
@@ -41,20 +41,20 @@ uses
   sysutils,
   JCoreOPFException;
 
-{ TJCoreOPFGeneratorGUID }
+{ TJCoreOPFOIDGeneratorGUID }
 
-procedure TJCoreOPFGeneratorGUID.GenerateOIDs(const AOIDCount: Integer);
+procedure TJCoreOPFOIDGeneratorGUID.GenerateOIDs(const AOIDCount: Integer);
 begin
 end;
 
 {$warn 5033 off}
-function TJCoreOPFGeneratorGUID.ReadInt64: Int64;
+function TJCoreOPFOIDGeneratorGUID.ReadInt64: Int64;
 begin
   raise EJCoreOPFUnsupportedAttributeType.Create(TypeInfo(Int64));
 end;
 {$warn 5033 on}
 
-function TJCoreOPFGeneratorGUID.ReadString: string;
+function TJCoreOPFOIDGeneratorGUID.ReadString: string;
 var
   VGUID: array[0..15] of Byte;
   I: Integer;

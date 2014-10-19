@@ -12,7 +12,7 @@ uses
   JCoreLogger,
   JCoreEntity,
   JCoreOPFDriver,
-  JCoreOPFGenerator,
+  JCoreOPFOIDGen,
   JCoreOPFMetadata,
   JCoreOPFMapping,
   JCoreOPFMappingSQL,
@@ -125,7 +125,7 @@ type
 
   { TTestIntegerGenerator }
 
-  TTestIntegerGenerator = class(TInterfacedObject, IJCoreOPFGenerator)
+  TTestIntegerGenerator = class(TInterfacedObject, IJCoreOPFOIDGenerator)
   private
     class var FCurrentOID: Integer;
   public
@@ -150,7 +150,7 @@ type
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
-    function CreateCustomGenerator: IJCoreOPFGenerator; override;
+    function CreateCustomGenerator: IJCoreOPFOIDGenerator; override;
     procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); override;
     procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -196,7 +196,7 @@ type
 
   TTestSQLMapping = class(TJCoreOPFSQLMapping)
   protected
-    function CreateCustomGenerator: IJCoreOPFGenerator; override;
+    function CreateCustomGenerator: IJCoreOPFOIDGenerator; override;
   end;
 
 implementation
@@ -511,7 +511,7 @@ end;
 
 { TTestEmptyMapping }
 
-function TTestEmptyMapping.CreateCustomGenerator: IJCoreOPFGenerator;
+function TTestEmptyMapping.CreateCustomGenerator: IJCoreOPFOIDGenerator;
 begin
   Result := TTestIntegerGenerator.Create;
 end;
@@ -635,7 +635,7 @@ end;
 
 { TTestSQLMapping }
 
-function TTestSQLMapping.CreateCustomGenerator: IJCoreOPFGenerator;
+function TTestSQLMapping.CreateCustomGenerator: IJCoreOPFOIDGenerator;
 begin
   Result := TTestIntegerGenerator.Create;
 end;

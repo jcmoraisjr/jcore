@@ -22,7 +22,7 @@ uses
   JCoreClasses,
   JCoreOPFDriver,
   JCoreOPFOID,
-  JCoreOPFGenerator,
+  JCoreOPFOIDGen,
   JCoreOPFMetadata;
 
 type
@@ -146,7 +146,7 @@ type
   // Based on TJCoreOPFMaps and synchronized with TJCoreOPFADMMapping ADMs.
   private
     FDriver: TJCoreOPFDriver;
-    FGenerator: IJCoreOPFGenerator;
+    FGenerator: IJCoreOPFOIDGenerator;
     FMapper: IJCoreOPFMapper;
     FMapping: TJCoreOPFMapping;
     FMappingList: TJCoreOPFMappingList;
@@ -156,13 +156,13 @@ type
     function CreateOIDFromString(const AOID: string): TJCoreOPFOID;
     procedure Dispose(const AOIDArray: array of TJCoreOPFOID);
     procedure EnsureMappingConsistency(const APID: TJCoreOPFPID);
-    function GetGenerator: IJCoreOPFGenerator;
+    function GetGenerator: IJCoreOPFOIDGenerator;
     function MapIndexByMap(const ABaseMap: TJCoreOPFMap): Integer;
     function Retrieve(const AOIDArray: array of TJCoreOPFOID): TJCoreObjectArray;
     function RetrieveFromDriver(const ARecordCount: Integer): TJCoreObjectArray;
   protected
     property Driver: TJCoreOPFDriver read FDriver;
-    property Generator: IJCoreOPFGenerator read GetGenerator;
+    property Generator: IJCoreOPFOIDGenerator read GetGenerator;
     property Mapper: IJCoreOPFMapper read FMapper;
     property MappingList: TJCoreOPFMappingList read FMappingList;
   public
@@ -219,14 +219,14 @@ type
     // some help.
     function CreateEntityFromDriver: TObject; virtual;
     // abstract facades
-    function InternalCreateOIDArray(const AGenerator: IJCoreOPFGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray; virtual;
+    function InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray; virtual;
     procedure InternalDispose(const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
     procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     function InternalRetrieveCollectionToDriver(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): Integer; virtual; abstract;
     procedure InternalRetrieveEntityToDriver(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap); virtual; abstract;
     procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     // custom configurations
-    function CreateCustomGenerator: IJCoreOPFGenerator; virtual;
+    function CreateCustomGenerator: IJCoreOPFOIDGenerator; virtual;
     // direct field <-> attribute mapping
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); virtual;
     procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
@@ -241,8 +241,8 @@ type
     constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap); virtual;
     class function Apply(const AMap: TJCoreOPFMap): Boolean; virtual; abstract;
     function CreateEntity: TObject;
-    function CreateGenerator: IJCoreOPFGenerator;
-    function CreateOID(const AGenerator: IJCoreOPFGenerator): TJCoreOPFOID;
+    function CreateGenerator: IJCoreOPFOIDGenerator;
+    function CreateOID(const AGenerator: IJCoreOPFOIDGenerator): TJCoreOPFOID;
     procedure Dispose(const AOIDArray: array of TJCoreOPFOID);
     function RetrieveCollectionToDriver(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): Integer;
     procedure RetrieveEntityToDriver(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap);
@@ -525,7 +525,7 @@ begin
     raise EJCoreOPFInconsistentMappingSizes.Create(MappingList.Count, APID.ADMMappingCount);
 end;
 
-function TJCoreOPFClassMapping.GetGenerator: IJCoreOPFGenerator;
+function TJCoreOPFClassMapping.GetGenerator: IJCoreOPFOIDGenerator;
 begin
   if not Assigned(FGenerator) then
     FGenerator := Mapping.CreateGenerator;
@@ -852,7 +852,7 @@ begin
   Result := nil;
 end;
 
-function TJCoreOPFMapping.InternalCreateOIDArray(const AGenerator: IJCoreOPFGenerator;
+function TJCoreOPFMapping.InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator;
   const AOIDCount: Integer): TJCoreOPFOIDArray;
 var
   I: Integer;
@@ -864,7 +864,7 @@ begin
 end;
 
 {$warn 5033 off}
-function TJCoreOPFMapping.CreateCustomGenerator: IJCoreOPFGenerator;
+function TJCoreOPFMapping.CreateCustomGenerator: IJCoreOPFOIDGenerator;
 begin
   raise EJCoreOPFUnsupportedFeature.Create('custom generator');
 end;
@@ -918,16 +918,16 @@ begin
     Result := Map.Metadata.TheClass.Create;
 end;
 
-function TJCoreOPFMapping.CreateGenerator: IJCoreOPFGenerator;
+function TJCoreOPFMapping.CreateGenerator: IJCoreOPFOIDGenerator;
 begin
   { TODO : Factory }
   case Map.GeneratorStrategy of
-    jgsGUID: Result := TJCoreOPFGeneratorGUID.Create;
+    jgsGUID: Result := TJCoreOPFOIDGeneratorGUID.Create;
     else Result := CreateCustomGenerator;
   end;
 end;
 
-function TJCoreOPFMapping.CreateOID(const AGenerator: IJCoreOPFGenerator): TJCoreOPFOID;
+function TJCoreOPFMapping.CreateOID(const AGenerator: IJCoreOPFOIDGenerator): TJCoreOPFOID;
 begin
   Result := InternalCreateOIDArray(AGenerator, 1)[0];
 end;
