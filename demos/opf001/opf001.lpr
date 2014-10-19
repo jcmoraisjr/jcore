@@ -12,6 +12,7 @@ uses
   JCoreOPFConfig,
   JCoreOPFSession,
   JCoreOPFMappingSQL,
+  JCoreOPFOID,
   JCoreOPFDriverSQLdb;
 
 type
@@ -31,8 +32,9 @@ var
   VPerson: TPerson;
 
 {
+  create sequence seq_person;
   create table person (
-    id varchar(32),
+    id integer,
     name varchar(255)
   );
   alter table person
@@ -49,6 +51,8 @@ begin
   VConfig.Params.Values['password'] := 'jcore';
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
+  VConfig.Model.GeneratorName := 'seq_person';
+  VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
   VSession := VConfig.CreateSession;
   VPerson := TPerson.Create;
   try

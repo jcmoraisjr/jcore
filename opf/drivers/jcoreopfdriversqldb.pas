@@ -20,6 +20,7 @@ uses
   Classes,
   db,
   sqldb,
+  JCoreOPFOIDGen,
   JCoreOPFDriver;
 
 type
@@ -29,6 +30,7 @@ type
   TJCoreOPFDriverSQLdb = class(TJCoreOPFSQLDriver)
   private
     FConnection: TSQLConnection;
+    FConnectionName: string;
     FCurrentField: Integer;
     FFieldCount: Integer;
     FQuery: TSQLQuery;
@@ -48,12 +50,21 @@ type
   public
     constructor Create(const AParams: TStringList); override;
     destructor Destroy; override;
+    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
     class function DriverName: string; override;
     function ReadInt32: Integer; override;
     function ReadInt64: Int64; override;
     function ReadNull: Boolean; override;
     function ReadNullAndSkip: Boolean; override;
     function ReadString: string; override;
+    property ConnectionName: string read FConnectionName;
+  end;
+
+  { TJCoreOPFGeneratorSQLdbPostgreSQL }
+
+  TJCoreOPFGeneratorSQLdbPostgreSQL = class(TJCoreOPFOIDGeneratorSQLDriver)
+  protected
+    procedure InternalGenerateOIDs(const AOIDCount: Integer); override;
   end;
 
 implementation
@@ -75,12 +86,10 @@ end;
 procedure TJCoreOPFDriverSQLdb.CreateConnection;
 var
   VConnectionDef: TConnectionDef;
-  VConnectorName: string;
 begin
-  VConnectorName := Params.Values['connection'];
-  VConnectionDef := GetConnectionDef(VConnectorName);
+  VConnectionDef := GetConnectionDef(ConnectionName);
   if not Assigned(VConnectionDef) then
-    raise EJCoreOPFDriver.Create('Connection not found: %s', [VConnectorName]);
+    raise EJCoreOPFDriver.Create('Connection not found: %s', [ConnectionName]);
   FConnection := VConnectionDef.ConnectionClass.Create(nil);
   FTransaction := TSQLTransaction.Create(nil);
   FQuery := TSQLQuery.Create(nil);
@@ -166,6 +175,7 @@ end;
 constructor TJCoreOPFDriverSQLdb.Create(const AParams: TStringList);
 begin
   inherited Create(AParams);
+  FConnectionName := Params.Values['connection'];
   CreateConnection;
 end;
 
@@ -175,6 +185,19 @@ begin
   FreeAndNil(FTransaction);
   FreeAndNil(FConnection);
   inherited Destroy;
+end;
+
+function TJCoreOPFDriverSQLdb.CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator;
+type
+  TSQLdbGeneratorClass = class of TJCoreOPFOIDGeneratorSQLDriver;
+var
+  VSQLdbGeneratorClass: TSQLdbGeneratorClass;
+begin
+  if SameText(ConnectionName, 'postgresql') then
+    VSQLdbGeneratorClass := TJCoreOPFGeneratorSQLdbPostgreSQL
+  else
+    raise EJCoreOPFDriver.Create('Unsupported connection: %s', [ConnectionName]);
+  Result := VSQLdbGeneratorClass.Create(Self, AGeneratorName)
 end;
 
 class function TJCoreOPFDriverSQLdb.DriverName: string;
@@ -211,6 +234,18 @@ function TJCoreOPFDriverSQLdb.ReadString: string;
 begin
   Result := Query.Fields[CurrentField].AsString;
   NextField;
+end;
+
+{ TJCoreOPFGeneratorSQLdbPostgreSQL }
+
+procedure TJCoreOPFGeneratorSQLdbPostgreSQL.InternalGenerateOIDs(const AOIDCount: Integer);
+var
+  I: Integer;
+begin
+  Driver.ExecSQL(
+   Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [GeneratorName, AOIDCount]), AOIDCount);
+  for I := 0 to Pred(AOIDCount) do
+    OIDList.Add(Driver.ReadInt64);
 end;
 
 end.
