@@ -225,13 +225,12 @@ type
     function InternalRetrieveCollectionToDriver(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): Integer; virtual; abstract;
     procedure InternalRetrieveEntityToDriver(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap); virtual; abstract;
     procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); virtual; abstract;
-    // custom configurations
-    function CreateCustomGenerator: IJCoreOPFOIDGenerator; virtual;
     // direct field <-> attribute mapping
     procedure ReadFromDriver(const AMapping: TJCoreOPFADMMapping); virtual;
     procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
     procedure WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping); virtual;
     // support
+    function InternalCreateGenerator: IJCoreOPFOIDGenerator; virtual;
     function SelectClassFromDriver(const ASubClassArray: array of TClass; const ADefaultClass: TClass): TClass;
     property Driver: TJCoreOPFDriver read FDriver;
     property Map: TJCoreOPFMap read FMap;
@@ -527,6 +526,7 @@ end;
 
 function TJCoreOPFClassMapping.GetGenerator: IJCoreOPFOIDGenerator;
 begin
+  { TODO : Implement multiple generators per class mapping }
   if not Assigned(FGenerator) then
     FGenerator := Mapping.CreateGenerator;
   Result := FGenerator;
@@ -863,13 +863,6 @@ begin
     Result[I] := Map.OIDClass.CreateFromGenerator(AGenerator);
 end;
 
-{$warn 5033 off}
-function TJCoreOPFMapping.CreateCustomGenerator: IJCoreOPFOIDGenerator;
-begin
-  raise EJCoreOPFUnsupportedFeature.Create('custom generator');
-end;
-{$warn 5033 on}
-
 procedure TJCoreOPFMapping.ReadFromDriver(const AMapping: TJCoreOPFADMMapping);
 begin
 end;
@@ -880,6 +873,17 @@ end;
 
 procedure TJCoreOPFMapping.WriteCollectionsToDriver(const AMapping: TJCoreOPFADMMapping);
 begin
+end;
+
+function TJCoreOPFMapping.InternalCreateGenerator: IJCoreOPFOIDGenerator;
+var
+  VGeneratorName: string;
+begin
+  VGeneratorName := Map.GeneratorName;
+  if VGeneratorName <> '' then
+    Result := Driver.CreateGenerator(VGeneratorName)
+  else
+    Result := TJCoreOPFOIDGeneratorGUID.Create;
 end;
 
 function TJCoreOPFMapping.SelectClassFromDriver(const ASubClassArray: array of TClass;
@@ -920,11 +924,7 @@ end;
 
 function TJCoreOPFMapping.CreateGenerator: IJCoreOPFOIDGenerator;
 begin
-  { TODO : Factory }
-  case Map.GeneratorStrategy of
-    jgsGUID: Result := TJCoreOPFOIDGeneratorGUID.Create;
-    else Result := CreateCustomGenerator;
-  end;
+  Result := InternalCreateGenerator;
 end;
 
 function TJCoreOPFMapping.CreateOID(const AGenerator: IJCoreOPFOIDGenerator): TJCoreOPFOID;

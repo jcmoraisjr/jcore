@@ -115,6 +115,7 @@ type
   TJCoreClassArray = array of TClass;
 
   TJCoreClassMap = specialize TFPGMap<String, TClass>;
+  TJCoreInt64List = specialize TFPGList<Int64>;
   TJCoreObjectList = specialize TFPGObjectList<TObject>;
   TJCoreObjectArray = array of TObject;
 

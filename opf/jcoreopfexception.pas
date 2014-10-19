@@ -162,6 +162,13 @@ type
     constructor Create(const AClassName, AAttributeName: string);
   end;
 
+  { EJCoreOPFEmptyOIDList }
+
+  EJCoreOPFEmptyOIDList = class(EJCoreOPF)
+  public
+    constructor Create;
+  end;
+
 implementation
 
 { EJCoreOPFDriver }
@@ -287,6 +294,12 @@ end;
 
 constructor EJCoreOPFCollectionADMExpected.Create(const AClassName,
   AAttributeName: string);
+begin
+end;
+
+{ EJCoreOPFEmptyOIDList }
+
+constructor EJCoreOPFEmptyOIDList.Create;
 begin
 end;
 

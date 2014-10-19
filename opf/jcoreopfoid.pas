@@ -1,5 +1,5 @@
 (*
-  JCore, OPF Object ID Classes
+  JCore, OPF OID Classes
   Copyright (C) 2014 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,

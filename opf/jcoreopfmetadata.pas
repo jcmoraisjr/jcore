@@ -23,8 +23,7 @@ uses
   JCoreEntity,
   JCoreMetadata,
   JCoreOPFDriver,
-  JCoreOPFOID,
-  JCoreOPFOIDGen;
+  JCoreOPFOID;
 
 type
 
@@ -404,7 +403,7 @@ type
   // In the current version these attributes must be of the same class or a
   // parent class.
   private
-    FGeneratorStrategy: TJCoreOPFOIDGeneratorStrategy;
+    FGeneratorName: string;
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDName: TJCoreStringArray;
@@ -414,7 +413,7 @@ type
     FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
-    property GeneratorStrategy: TJCoreOPFOIDGeneratorStrategy read FGeneratorStrategy;
+    property GeneratorName: string read FGeneratorName;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
@@ -428,7 +427,7 @@ type
 
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)
   private
-    FGeneratorStrategy: TJCoreOPFOIDGeneratorStrategy; // model initializes
+    FGeneratorName: string; // model initializes
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass; // model initializes
     FOIDName: TJCoreStringArray; // model initializes
@@ -446,7 +445,7 @@ type
     destructor Destroy; override;
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
-    property GeneratorStrategy: TJCoreOPFOIDGeneratorStrategy read FGeneratorStrategy;
+    property GeneratorName: string read FGeneratorName write FGeneratorName;
     property Maps: TJCoreOPFMaps read GetMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
@@ -461,7 +460,7 @@ type
   { TODO : Model, map and metadata threadsafe }
   private
     FADMClassList: TJCoreOPFADMClassList;
-    FGeneratorStrategy: TJCoreOPFOIDGeneratorStrategy;
+    FGeneratorName: string;
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
@@ -485,7 +484,7 @@ type
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
-    property GeneratorStrategy: TJCoreOPFOIDGeneratorStrategy read FGeneratorStrategy write FGeneratorStrategy;
+    property GeneratorName: string read FGeneratorName write FGeneratorName;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
   end;
 
@@ -1636,7 +1635,7 @@ begin
         FOwnerOIDName[I] := VTableName + '_' + VOIDName[I];
   end else
     SetLength(FOwnerOIDName, 0);
-  FGeneratorStrategy := Metadata.GeneratorStrategy;
+  FGeneratorName := Metadata.GeneratorName;
   FSubMaps := Metadata.SubMaps;
   SetLength(FSubClasses, FSubMaps.Count);
   for I := Low(FSubClasses) to High(FSubClasses) do
@@ -1799,7 +1798,7 @@ begin
   VMetadata.FOIDName := VOIDName; // friend class
   VMetadata.FOIDClass := OIDClass; // friend class
   VMetadata.FTableName := UpperCase(Copy(VMetadata.TheClass.ClassName, 2, MaxInt)); // friend class
-  VMetadata.FGeneratorStrategy := GeneratorStrategy; // friend class
+  VMetadata.GeneratorName := GeneratorName; // friend class
 end;
 
 constructor TJCoreOPFModel.Create;
@@ -1808,7 +1807,6 @@ begin
   inherited Create;
   FMapMap := TJCoreOPFMapMap.Create;
   FOIDClass := TJCoreOPFOIDString;
-  FGeneratorStrategy := jgsGUID;
 end;
 
 function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;

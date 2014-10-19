@@ -20,7 +20,8 @@ uses
   Classes,
   fgl,
   JCoreList,
-  JCoreLogger;
+  JCoreLogger,
+  JCoreOPFOIDGen;
 
 type
 
@@ -92,6 +93,7 @@ type
     constructor Create(const AParams: TStringList); virtual;
     destructor Destroy; override;
     procedure Commit;
+    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; virtual; abstract;
     class function DriverName: string; virtual; abstract;
     function ReadInt32: Integer; virtual; abstract;
     function ReadInt64: Int64; virtual; abstract;
@@ -120,6 +122,20 @@ type
     function ExecSQL(const ASQL: string): Integer;
     procedure ExecSQL(const ASQL: string; const AExpectedSize: Integer);
   end;
+
+  { TJCoreOPFOIDGeneratorSQLDriver }
+
+  TJCoreOPFOIDGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorInt64)
+  private
+    FDriver: TJCoreOPFSQLDriver;
+    FGeneratorName: string;
+  protected
+    property Driver: TJCoreOPFSQLDriver read FDriver;
+    property GeneratorName: string read FGeneratorName;
+  public
+    constructor Create(const ADriver: TJCoreOPFSQLDriver; const AGeneratorName: string);
+  end;
+
 
 implementation
 
@@ -193,6 +209,16 @@ begin
       raise EJCoreOPFEmptyResultSet.Create(AExpectedSize);
     raise EJCoreOPFUnexpectedResultSetSize.Create(AExpectedSize, VSize);
   end;
+end;
+
+{ TJCoreOPFOIDGeneratorSQLDriver }
+
+constructor TJCoreOPFOIDGeneratorSQLDriver.Create(const ADriver: TJCoreOPFSQLDriver;
+  const AGeneratorName: string);
+begin
+  inherited Create;
+  FDriver := ADriver;
+  FGeneratorName := AGeneratorName;
 end;
 
 end.

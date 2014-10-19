@@ -123,15 +123,14 @@ type
     property Session: ITestOPFSession read GetSessionInvoiceAuto;
   end;
 
-  { TTestIntegerGenerator }
+  { TTestOPFGeneratorSQLDriver }
 
-  TTestIntegerGenerator = class(TInterfacedObject, IJCoreOPFOIDGenerator)
+  TTestOPFGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorSQLDriver)
   private
     class var FCurrentOID: Integer;
+  protected
+    procedure InternalGenerateOIDs(const AOIDCount: Integer); override;
   public
-    procedure GenerateOIDs(const AOIDCount: Integer);
-    function ReadInt64: Int64;
-    function ReadString: string;
     class property CurrentOID: Integer read FCurrentOID;
     class procedure ClearOID;
   end;
@@ -150,7 +149,6 @@ type
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
-    function CreateCustomGenerator: IJCoreOPFOIDGenerator; override;
     procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); override;
     procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
@@ -177,6 +175,7 @@ type
     class constructor Create;
     class destructor Destroy;
     class function DriverName: string; override;
+    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
     function ReadInt32: Integer; override;
     function ReadInt64: Int64; override;
     function ReadNull: Boolean; override;
@@ -194,10 +193,7 @@ type
 
   { TTestSQLMapping }
 
-  TTestSQLMapping = class(TJCoreOPFSQLMapping)
-  protected
-    function CreateCustomGenerator: IJCoreOPFOIDGenerator; override;
-  end;
+  TTestSQLMapping = class(TJCoreOPFSQLMapping);
 
 implementation
 
@@ -441,7 +437,7 @@ begin
   Result := TTestOPFConfig.Create;
   Result.DriverClass := TTestSQLDriver;
   Result.Model.OIDClass := TJCoreOPFOIDInt64;
-  Result.Model.GeneratorStrategy := jgsCustom;
+  Result.Model.GeneratorName := 'GEN_APP';
 end;
 
 procedure TTestOPFAbstractTestCase.SetUp;
@@ -452,7 +448,7 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   AssertEquals(0, TTestSQLDriver.Transaction.Count);
-  AssertEquals(0, TTestIntegerGenerator.CurrentOID);
+  AssertEquals(0, TTestOPFGeneratorSQLDriver.CurrentOID);
 end;
 
 procedure TTestOPFAbstractTestCase.TearDown;
@@ -462,7 +458,7 @@ begin
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
   TTestSQLDriver.Transaction.Clear;
-  TTestIntegerGenerator.ClearOID;
+  TTestOPFGeneratorSQLDriver.ClearOID;
   FSessionCircularAuto := nil;
   FSessionInvoiceAuto := nil;
   FSessionInvoiceManual := nil;
@@ -471,25 +467,20 @@ begin
   FSessionProxyContact := nil;
 end;
 
-{ TTestIntegerGenerator }
+{ TTestOPFGeneratorSQLDriver }
 
-procedure TTestIntegerGenerator.GenerateOIDs(const AOIDCount: Integer);
+procedure TTestOPFGeneratorSQLDriver.InternalGenerateOIDs(const AOIDCount: Integer);
+var
+  I: Integer;
 begin
+  for I := 0 to Pred(AOIDCount) do
+  begin
+    Inc(FCurrentOID);
+    OIDList.Add(CurrentOID);
+  end;
 end;
 
-function TTestIntegerGenerator.ReadInt64: Int64;
-begin
-  Inc(FCurrentOID);
-  Result := FCurrentOID;
-end;
-
-function TTestIntegerGenerator.ReadString: string;
-begin
-  Inc(FCurrentOID);
-  Result := IntToStr(FCurrentOID);
-end;
-
-class procedure TTestIntegerGenerator.ClearOID;
+class procedure TTestOPFGeneratorSQLDriver.ClearOID;
 begin
   FCurrentOID := 0;
 end;
@@ -510,11 +501,6 @@ begin
 end;
 
 { TTestEmptyMapping }
-
-function TTestEmptyMapping.CreateCustomGenerator: IJCoreOPFOIDGenerator;
-begin
-  Result := TTestIntegerGenerator.Create;
-end;
 
 procedure TTestEmptyMapping.InternalInsert(const AMapping: TJCoreOPFADMMapping);
 begin
@@ -586,6 +572,11 @@ begin
   Result := 'TestSQLDriver';
 end;
 
+function TTestSQLDriver.CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator;
+begin
+  Result := TTestOPFGeneratorSQLDriver.Create(Self, AGeneratorName);
+end;
+
 function TTestSQLDriver.ReadInt32: Integer;
 begin
   Result := StrToInt(PopData);
@@ -631,13 +622,6 @@ end;
 procedure TTestSQLDriver.WriteNull;
 begin
   AddCommand('WriteNull');
-end;
-
-{ TTestSQLMapping }
-
-function TTestSQLMapping.CreateCustomGenerator: IJCoreOPFOIDGenerator;
-begin
-  Result := TTestIntegerGenerator.Create;
 end;
 
 end.

@@ -16,11 +16,30 @@ unit JCoreOPFOIDGen;
 
 interface
 
+uses
+  JCoreClasses;
+
 type
 
-  TJCoreOPFOIDGeneratorStrategy = (jgsGUID, jgsCustom);
-
   IJCoreOPFOIDGenerator = interface(IInterface)
+    procedure GenerateOIDs(const AOIDCount: Integer);
+    function ReadInt64: Int64;
+    function ReadString: string;
+  end;
+
+  { TJCoreOPFOIDGeneratorInt64 }
+
+  TJCoreOPFOIDGeneratorInt64 = class(TInterfacedObject, IJCoreOPFOIDGenerator)
+  private
+    FCurrent: Int64;
+    FOIDList: TJCoreInt64List;
+  protected
+    procedure InternalGenerateOIDs(const AOIDCount: Integer); virtual; abstract;
+    property Current: Int64 read FCurrent;
+    property OIDList: TJCoreInt64List read FOIDList;
+  public
+    constructor Create;
+    destructor Destroy; override;
     procedure GenerateOIDs(const AOIDCount: Integer);
     function ReadInt64: Int64;
     function ReadString: string;
@@ -40,6 +59,46 @@ implementation
 uses
   sysutils,
   JCoreOPFException;
+
+{ TJCoreOPFOIDGeneratorInt64 }
+
+constructor TJCoreOPFOIDGeneratorInt64.Create;
+begin
+  inherited Create;
+  FOIDList := TJCoreInt64List.Create;
+end;
+
+destructor TJCoreOPFOIDGeneratorInt64.Destroy;
+begin
+  FreeAndNil(FOIDList);
+  inherited Destroy;
+end;
+
+procedure TJCoreOPFOIDGeneratorInt64.GenerateOIDs(const AOIDCount: Integer);
+begin
+  while Current > 0 do
+  begin
+    { TODO : how to improve, truncate? copy list? use an array of int64? }
+    OIDList.Delete(Current - 1);
+    Dec(FCurrent);
+  end;
+  InternalGenerateOIDs(AOIDCount);
+end;
+
+function TJCoreOPFOIDGeneratorInt64.ReadInt64: Int64;
+begin
+  if Current < OIDList.Count then
+  begin
+    Result := OIDList[Current];
+    Inc(FCurrent);
+  end else
+    raise EJCoreOPFEmptyOIDList.Create;
+end;
+
+function TJCoreOPFOIDGeneratorInt64.ReadString: string;
+begin
+  Result := IntToStr(ReadInt64);
+end;
 
 { TJCoreOPFOIDGeneratorGUID }
 
