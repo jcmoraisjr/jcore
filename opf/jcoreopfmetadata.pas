@@ -442,6 +442,7 @@ type
     property Model: TJCoreOPFModel read GetModel;
   public
     { TODO : Generics? }
+    constructor Create(const AModel: TJCoreModel; const AClass: TClass; const AParent: TJCoreClassMetadata); override;
     destructor Destroy; override;
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
@@ -1673,6 +1674,13 @@ begin
   Result := FSubMaps;
 end;
 
+constructor TJCoreOPFClassMetadata.Create(const AModel: TJCoreModel; const AClass: TClass;
+  const AParent: TJCoreClassMetadata);
+begin
+  inherited Create(AModel, AClass, AParent);
+  FTableName := UpperCase(Copy(TheClass.ClassName, 2, MaxInt));
+end;
+
 destructor TJCoreOPFClassMetadata.Destroy;
 begin
   FreeAndNil(FMaps);
@@ -1797,7 +1805,6 @@ begin
   VOIDName[0] := 'ID';
   VMetadata.FOIDName := VOIDName; // friend class
   VMetadata.FOIDClass := OIDClass; // friend class
-  VMetadata.FTableName := UpperCase(Copy(VMetadata.TheClass.ClassName, 2, MaxInt)); // friend class
   VMetadata.GeneratorName := GeneratorName; // friend class
 end;
 
