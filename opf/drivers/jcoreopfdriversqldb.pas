@@ -240,10 +240,14 @@ end;
 
 procedure TJCoreOPFGeneratorSQLdbPostgreSQL.InternalGenerateOIDs(const AOIDCount: Integer);
 var
+  VSQL: string;
   I: Integer;
 begin
-  Driver.ExecSQL(
-   Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [GeneratorName, AOIDCount]), AOIDCount);
+  if AOIDCount > 1 then
+    VSQL := Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [GeneratorName, AOIDCount])
+  else
+    VSQL := Format('SELECT nextval(''%s'')', [GeneratorName]);
+  Driver.ExecSQL(VSQL, AOIDCount);
   for I := 0 to Pred(AOIDCount) do
     OIDList.Add(Driver.ReadInt64);
 end;
