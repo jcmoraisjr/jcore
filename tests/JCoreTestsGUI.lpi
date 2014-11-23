@@ -70,7 +70,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="18">
+    <Exceptions Count="20">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -125,6 +125,12 @@
       <Item18>
         <Name Value="EJCoreOPFEmptyOIDList"/>
       </Item18>
+      <Item19>
+        <Name Value="EJCoreOPFStatementOnQueue"/>
+      </Item19>
+      <Item20>
+        <Name Value="EJCoreOPFDetachedStatement"/>
+      </Item20>
     </Exceptions>
   </Debugging>
 </CONFIG>

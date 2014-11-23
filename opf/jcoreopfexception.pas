@@ -63,11 +63,25 @@ type
     constructor Create(const AClassName: string);
   end;
 
+  { EJCoreOPFDetachedStatement }
+
+  EJCoreOPFDetachedStatement = class(EJCoreOPF)
+  public
+    constructor Create;
+  end;
+
   { EJCoreOPFEmptyResultSet }
 
   EJCoreOPFEmptyResultSet = class(EJCoreOPF)
   public
     constructor Create(const AExpectedSize: Integer);
+  end;
+
+  { EJCoreOPFStatementOnQueue }
+
+  EJCoreOPFStatementOnQueue = class(EJCoreOPF)
+  public
+    constructor Create;
   end;
 
   { EJCoreOPFEmptyOID }
@@ -202,9 +216,21 @@ constructor EJCoreOPFUnsupportedDriver.Create(const AClassName: string);
 begin
 end;
 
+{ EJCoreOPFDetachedStatement }
+
+constructor EJCoreOPFDetachedStatement.Create;
+begin
+end;
+
 { EJCoreOPFEmptyResultSet }
 
 constructor EJCoreOPFEmptyResultSet.Create(const AExpectedSize: Integer);
+begin
+end;
+
+{ EJCoreOPFStatementOnQueue }
+
+constructor EJCoreOPFStatementOnQueue.Create;
 begin
 end;
 
