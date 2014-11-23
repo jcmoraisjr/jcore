@@ -22,21 +22,23 @@ uses
 
 type
 
-  { TJCoreNativeTypeStack }
+  { TJCoreNativeTypeOrderedList }
 
-  TJCoreNativeTypeStack = class(TObject)
+  TJCoreNativeTypeOrderedList = class(TObject)
   private
     FCount: Integer;
     FCurrentType: PTypeInfo;
-    FStack: TStack;
+    FOrderedList: TOrderedList;
     FTypeInfoInt64: PTypeInfo;
     FTypeInfoInteger: PTypeInfo;
     FTypeInfoString: PTypeInfo;
-    procedure ClearStack;
+    procedure ClearOrderedList;
     procedure PopValue(const AType: TTypeKind);
     procedure ValidateType(const AExpectedType: PTypeInfo);
   protected
-    property Stack: TStack read FStack;
+    function CreateOrderedList: TOrderedList; virtual; abstract;
+    procedure PushTypedValue(const AValue: Pointer; const AType: PTypeInfo); virtual; abstract;
+    property OrderedList: TOrderedList read FOrderedList;
   public
     constructor Create;
     destructor Destroy; override;
@@ -51,15 +53,31 @@ type
     procedure PushString(const AValue: string);
   end;
 
+  { TJCoreNativeTypeStack }
+
+  TJCoreNativeTypeStack = class(TJCoreNativeTypeOrderedList)
+  protected
+    function CreateOrderedList: TOrderedList; override;
+    procedure PushTypedValue(const AValue: Pointer; const AType: PTypeInfo); override;
+  end;
+
+  { TJCoreNativeTypeQueue }
+
+  TJCoreNativeTypeQueue = class(TJCoreNativeTypeOrderedList)
+  protected
+    function CreateOrderedList: TOrderedList; override;
+    procedure PushTypedValue(const AValue: Pointer; const AType: PTypeInfo); override;
+  end;
+
 implementation
 
 uses
   sysutils,
   JCoreClasses;
 
-{ TJCoreNativeTypeStack }
+{ TJCoreNativeTypeOrderedList }
 
-procedure TJCoreNativeTypeStack.ClearStack;
+procedure TJCoreNativeTypeOrderedList.ClearOrderedList;
 begin
   if Assigned(FCurrentType) then
     // there is a poptype without a popvalue
@@ -68,7 +86,7 @@ begin
     PopValue(PopType);
 end;
 
-procedure TJCoreNativeTypeStack.PopValue(const AType: TTypeKind);
+procedure TJCoreNativeTypeOrderedList.PopValue(const AType: TTypeKind);
 begin
   case AType of
     tkInteger: PopInt32;
@@ -78,71 +96,71 @@ begin
   end;
 end;
 
-procedure TJCoreNativeTypeStack.ValidateType(const AExpectedType: PTypeInfo);
+procedure TJCoreNativeTypeOrderedList.ValidateType(const AExpectedType: PTypeInfo);
 begin
   if AExpectedType <> FCurrentType then
     raise EJCoreListTypeExpected.Create(FCurrentType);
 end;
 
-constructor TJCoreNativeTypeStack.Create;
+constructor TJCoreNativeTypeOrderedList.Create;
 begin
   inherited Create;
   { TODO : Allocate a buffer (manage one block) instead of use tstack (tlist+several small allocations) }
-  FStack := TStack.Create;
+  FOrderedList := CreateOrderedList;
   FTypeInfoInt64 := PTypeInfo(TypeInfo(Int64));
   FTypeInfoInteger := PTypeInfo(TypeInfo(Integer));
   FTypeInfoString := PTypeInfo(TypeInfo(string));
 end;
 
-destructor TJCoreNativeTypeStack.Destroy;
+destructor TJCoreNativeTypeOrderedList.Destroy;
 begin
-  ClearStack;
-  FreeAndNil(FStack);
+  ClearOrderedList;
+  FreeAndNil(FOrderedList);
   inherited Destroy;
 end;
 
-function TJCoreNativeTypeStack.PopInt32: Integer;
+function TJCoreNativeTypeOrderedList.PopInt32: Integer;
 var
   VValue: PInteger;
 begin
   ValidateType(FTypeInfoInteger);
-  VValue := PInteger(Stack.Pop);
+  VValue := PInteger(OrderedList.Pop);
   Result := VValue^;
   Dec(FCount);
   FCurrentType := nil;
   Dispose(VValue);
 end;
 
-function TJCoreNativeTypeStack.PopInt64: Int64;
+function TJCoreNativeTypeOrderedList.PopInt64: Int64;
 var
   VValue: PInt64;
 begin
   ValidateType(FTypeInfoInt64);
-  VValue := PInt64(Stack.Pop);
+  VValue := PInt64(OrderedList.Pop);
   Result := VValue^;
   Dec(FCount);
   FCurrentType := nil;
   Dispose(VValue);
 end;
 
-function TJCoreNativeTypeStack.PopString: string;
+function TJCoreNativeTypeOrderedList.PopString: string;
 var
   VValue: PAnsiString;
 begin
   ValidateType(FTypeInfoString);
-  VValue := PAnsiString(Stack.Pop);
+  VValue := PAnsiString(OrderedList.Pop);
   Result := VValue^;
   Dec(FCount);
   FCurrentType := nil;
   Dispose(VValue);
 end;
 
-function TJCoreNativeTypeStack.PopType: TTypeKind;
+function TJCoreNativeTypeOrderedList.PopType: TTypeKind;
 begin
   if Count < 1 then
     raise EJCoreListIsEmpty.Create;
   ValidateType(nil);
-  FCurrentType := PTypeInfo(Stack.Pop);
+  FCurrentType := PTypeInfo(OrderedList.Pop);
   if Assigned(FCurrentType) then
     Result := FCurrentType^.Kind
   else
@@ -152,47 +170,70 @@ begin
   end;
 end;
 
-procedure TJCoreNativeTypeStack.PushInt32(const AValue: Integer);
+procedure TJCoreNativeTypeOrderedList.PushInt32(const AValue: Integer);
 var
   VValue: PInteger;
 begin
   ValidateType(nil);
   New(VValue);
   VValue^ := AValue;
-  Stack.Push(VValue);
-  Stack.Push(FTypeInfoInteger);
+  PushTypedValue(VValue, FTypeInfoInteger);
   Inc(FCount);
 end;
 
-procedure TJCoreNativeTypeStack.PushInt64(const AValue: Int64);
+procedure TJCoreNativeTypeOrderedList.PushInt64(const AValue: Int64);
 var
   VValue: PInt64;
 begin
   ValidateType(nil);
   New(VValue);
   VValue^ := AValue;
-  Stack.Push(VValue);
-  Stack.Push(FTypeInfoInt64);
+  PushTypedValue(VValue, FTypeInfoInt64);
   Inc(FCount);
 end;
 
-procedure TJCoreNativeTypeStack.PushNull;
+procedure TJCoreNativeTypeOrderedList.PushNull;
 begin
   ValidateType(nil);
-  Stack.Push(nil);
+  OrderedList.Push(nil);
   Inc(FCount);
 end;
 
-procedure TJCoreNativeTypeStack.PushString(const AValue: string);
+procedure TJCoreNativeTypeOrderedList.PushString(const AValue: string);
 var
   VValue: PAnsiString;
 begin
   ValidateType(nil);
   New(VValue);
   VValue^ := AValue;
-  Stack.Push(VValue);
-  Stack.Push(FTypeInfoString);
+  PushTypedValue(VValue, FTypeInfoString);
   Inc(FCount);
+end;
+
+{ TJCoreNativeTypeStack }
+
+function TJCoreNativeTypeStack.CreateOrderedList: TOrderedList;
+begin
+  Result := TStack.Create;
+end;
+
+procedure TJCoreNativeTypeStack.PushTypedValue(const AValue: Pointer; const AType: PTypeInfo);
+begin
+  OrderedList.Push(AValue);
+  OrderedList.Push(AType);
+end;
+
+{ TJCoreNativeTypeQueue }
+
+function TJCoreNativeTypeQueue.CreateOrderedList: TOrderedList;
+begin
+  Result := TQueue.Create;
+end;
+
+procedure TJCoreNativeTypeQueue.PushTypedValue(const AValue: Pointer; const AType: PTypeInfo);
+begin
+  OrderedList.Push(AType);
+  OrderedList.Push(AValue);
 end;
 
 end.

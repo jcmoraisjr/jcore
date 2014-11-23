@@ -11,23 +11,27 @@ uses
 
 type
 
-  { TNativeTypeStackTest }
+  { TNativeTypeOrderedListTest }
 
-  TNativeTypeStackTest = class(TTestCase)
+  TNativeTypeOrderedListTest = class(TTestCase)
   private
+    FQueue: TJCoreNativeTypeQueue;
     FStack: TJCoreNativeTypeStack;
+    function GetQueue: TJCoreNativeTypeQueue;
+    function GetStack: TJCoreNativeTypeStack;
   protected
     function TypeToName(const AType: TTypeKind): string;
-    procedure SetUp; override;
     procedure TearDown; override;
-    property Stack: TJCoreNativeTypeStack read FStack;
+    property Queue: TJCoreNativeTypeQueue read GetQueue;
+    property Stack: TJCoreNativeTypeStack read GetStack;
   published
     procedure PushPopInt32;
     procedure PushPopInt64;
     procedure PushPopString;
     procedure PushPopNull;
     procedure PushAllCount;
-    procedure PushAllPopAll;
+    procedure PushAllPopAllQueue;
+    procedure PushAllPopAllStack;
     procedure PushLessPopMore;
     procedure PopWrongType;
     procedure PopValueWithoutPopType;
@@ -41,26 +45,35 @@ uses
   testregistry,
   JCoreClasses;
 
-{ TNativeTypeStackTest }
+{ TNativeTypeOrderedListTest }
 
-function TNativeTypeStackTest.TypeToName(const AType: TTypeKind): string;
+function TNativeTypeOrderedListTest.GetQueue: TJCoreNativeTypeQueue;
+begin
+  if not Assigned(FQueue) then
+    FQueue := TJCoreNativeTypeQueue.Create;
+  Result := FQueue;
+end;
+
+function TNativeTypeOrderedListTest.GetStack: TJCoreNativeTypeStack;
+begin
+  if not Assigned(FStack) then
+    FStack := TJCoreNativeTypeStack.Create;
+  Result := FStack;
+end;
+
+function TNativeTypeOrderedListTest.TypeToName(const AType: TTypeKind): string;
 begin
   Result := GetEnumName(TypeInfo(TTypeKind), Ord(AType));
 end;
 
-procedure TNativeTypeStackTest.SetUp;
+procedure TNativeTypeOrderedListTest.TearDown;
 begin
-  inherited SetUp;
-  FStack := TJCoreNativeTypeStack.Create;
-end;
-
-procedure TNativeTypeStackTest.TearDown;
-begin
+  FreeAndNil(FQueue);
   FreeAndNil(FStack);
   inherited TearDown;
 end;
 
-procedure TNativeTypeStackTest.PushPopInt32;
+procedure TNativeTypeOrderedListTest.PushPopInt32;
 var
   VType: TTypeKind;
   VValue: Integer;
@@ -74,7 +87,7 @@ begin
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
-procedure TNativeTypeStackTest.PushPopInt64;
+procedure TNativeTypeOrderedListTest.PushPopInt64;
 var
   VType: TTypeKind;
   VValue: Int64;
@@ -88,7 +101,7 @@ begin
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
-procedure TNativeTypeStackTest.PushPopString;
+procedure TNativeTypeOrderedListTest.PushPopString;
 var
   VType: TTypeKind;
   VValue: string;
@@ -102,7 +115,7 @@ begin
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
-procedure TNativeTypeStackTest.PushPopNull;
+procedure TNativeTypeOrderedListTest.PushPopNull;
 var
   VType: TTypeKind;
 begin
@@ -113,7 +126,7 @@ begin
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
-procedure TNativeTypeStackTest.PushAllCount;
+procedure TNativeTypeOrderedListTest.PushAllCount;
 begin
   Stack.PushInt32(10);
   Stack.PushInt64(18);
@@ -127,7 +140,44 @@ begin
   AssertEquals('stack.count', 8, Stack.Count);
 end;
 
-procedure TNativeTypeStackTest.PushAllPopAll;
+procedure TNativeTypeOrderedListTest.PushAllPopAllQueue;
+var
+  VType: TTypeKind;
+begin
+  Queue.PushInt32(10);
+  Queue.PushInt64(18);
+  Queue.PushString('data');
+  Queue.PushNull;
+  Queue.PushInt32(1010);
+  Queue.PushInt64(1018);
+  Queue.PushString('test data');
+  Queue.PushNull;
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[0]', 'tkInteger', TypeToName(VType));
+  AssertEquals('queue.popvalue[0]', 10, Queue.PopInt32);
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[1]', 'tkInt64', TypeToName(VType));
+  AssertEquals('queue.popvalue[1]', 18, Queue.PopInt64);
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[2]', 'tkAString', TypeToName(VType));
+  AssertEquals('queue.popvalue[2]', 'data', Queue.PopString);
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[3]', 'tkUnknown', TypeToName(VType));
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[4]', 'tkInteger', TypeToName(VType));
+  AssertEquals('queue.popvalue[4]', 1010, Queue.PopInt32);
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[5]', 'tkInt64', TypeToName(VType));
+  AssertEquals('queue.popvalue[5]', 1018, Queue.PopInt64);
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[6]', 'tkAString', TypeToName(VType));
+  AssertEquals('queue.popvalue[6]', 'test data', Queue.PopString);
+  VType := Queue.PopType;
+  AssertEquals('queue.poptype[7]', 'tkUnknown', TypeToName(VType));
+  AssertEquals('queue.count', 0, Queue.Count);
+end;
+
+procedure TNativeTypeOrderedListTest.PushAllPopAllStack;
 var
   VType: TTypeKind;
 begin
@@ -164,7 +214,7 @@ begin
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
-procedure TNativeTypeStackTest.PushLessPopMore;
+procedure TNativeTypeOrderedListTest.PushLessPopMore;
 begin
   Stack.PushInt32(1010);
   Stack.PushString('data');
@@ -181,12 +231,12 @@ begin
   Fail('EJCoreListIsEmpty expected');
 end;
 
-procedure TNativeTypeStackTest.PopWrongType;
+procedure TNativeTypeOrderedListTest.PopWrongType;
 begin
-  Stack.PushString('data');
-  Stack.PopType;
+  Queue.PushString('data');
+  Queue.PopType;
   try
-    Stack.PopInt32;
+    Queue.PopInt32;
   except
     on E: EJCoreListTypeExpected do
     begin
@@ -197,7 +247,7 @@ begin
   Fail('EJCoreListTypeExpected expected');
 end;
 
-procedure TNativeTypeStackTest.PopValueWithoutPopType;
+procedure TNativeTypeOrderedListTest.PopValueWithoutPopType;
 begin
   Stack.PushInt32(18);
   try
@@ -209,12 +259,12 @@ begin
   Fail('EJCoreListTypeExpected expected');
 end;
 
-procedure TNativeTypeStackTest.PopTypePushValue;
+procedure TNativeTypeOrderedListTest.PopTypePushValue;
 begin
-  Stack.PushInt32(10);
-  Stack.PopType;
+  Queue.PushInt32(10);
+  Queue.PopType;
   try
-    Stack.PushString('data');
+    Queue.PushString('data');
   except
     on E: EJCoreListTypeExpected do
       Exit;
@@ -223,7 +273,7 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.core.list', TNativeTypeStackTest);
+  RegisterTest('jcore.core.list', TNativeTypeOrderedListTest);
 
 end.
 
