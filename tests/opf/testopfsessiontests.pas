@@ -101,6 +101,7 @@ begin
       on E: EJCoreOPFUnsupportedAttributeType do;
     end;
     VConfiguration.Model.AddClass([TTestProxyPhone, TTestProxyCity]);
+    VConfiguration.Model.AddGenerics(TTestProxyPhoneList, TTestProxyPhone);
     VSession.Store(VPerson);
   finally
     FreeAndNil(VPerson);
@@ -114,6 +115,7 @@ begin
       on E: EJCoreOPFUnsupportedAttributeType do;
     end;
     VConfiguration.Model.AddClass([TAddress, TClient, TInvoiceItem]);
+    VConfiguration.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
     VSession.Store(VInvoice);
   finally
     FreeAndNil(VInvoice);

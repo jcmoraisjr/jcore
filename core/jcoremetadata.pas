@@ -89,12 +89,14 @@ type
   end;
 
   TJCoreClassMetadataMap = specialize TFPGMap<Pointer, TJCoreClassMetadata>;
+  TJCoreGenericsMap = specialize TFPGMap<Pointer, TClass>;
 
   { TJCoreModel }
 
   TJCoreModel = class(TJCoreManagedObject)
   private
     FClassMap: TJCoreClassMap;
+    FGenericsMap: TJCoreGenericsMap;
     FMetadataMap: TJCoreClassMetadataMap;
   protected
     function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
@@ -107,12 +109,15 @@ type
     function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
     procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); virtual;
     property ClassMap: TJCoreClassMap read FClassMap;
+    property GenericsMap: TJCoreGenericsMap read FGenericsMap;
     property MetadataMap: TJCoreClassMetadataMap read FMetadataMap;
   public
     constructor Create; virtual;
     function AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;
     procedure AddClass(const AClassArray: array of TClass);
+    procedure AddGenerics(const ASpecializedClass, ASpecializationClass: TClass);
     function FindClass(const AClassName: string): TClass;
+    function FindSpecializedClass(const ASpecializationClass: TClass): TClass;
     function IsEntityClass(const AClass: TClass): Boolean;
   end;
 
@@ -295,6 +300,7 @@ var
   I: Integer;
 begin
   FreeAndNil(FClassMap);
+  FreeAndNil(FGenericsMap);
   { TODO : Fix AV on all map.free if an exception raises freeing an item.
            Need to assign nil or remove the item from the map }
   for I := 0 to Pred(FMetadataMap.Count) do
@@ -320,6 +326,7 @@ constructor TJCoreModel.Create;
 begin
   inherited Create;
   FClassMap := TJCoreClassMap.Create;
+  FGenericsMap := TJCoreGenericsMap.Create;
   FMetadataMap := TJCoreClassMetadataMap.Create;
   InitRegistry;
 end;
@@ -354,6 +361,11 @@ begin
     ClassMap.Add(VClass.ClassName, VClass);
 end;
 
+procedure TJCoreModel.AddGenerics(const ASpecializedClass, ASpecializationClass: TClass);
+begin
+  GenericsMap.Add(ASpecializedClass, ASpecializationClass);
+end;
+
 function TJCoreModel.FindClass(const AClassName: string): TClass;
 var
   VIndex: Integer;
@@ -361,6 +373,17 @@ begin
   VIndex := ClassMap.IndexOf(AClassName);
   if VIndex >= 0 then
     Result := ClassMap.Data[VIndex]
+  else
+    Result := nil;
+end;
+
+function TJCoreModel.FindSpecializedClass(const ASpecializationClass: TClass): TClass;
+var
+  VIndex: Integer;
+begin
+  VIndex := GenericsMap.IndexOf(ASpecializationClass);
+  if VIndex >= 0 then
+    Result := GenericsMap.Data[VIndex]
   else
     Result := nil;
 end;

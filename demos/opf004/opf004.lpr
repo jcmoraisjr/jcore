@@ -105,6 +105,7 @@ begin
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   VConfig.Model.AddClass([TInvoice, TInvoiceItem]);
+  VConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
   VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
   VSession := VConfig.CreateSession;
   LOG.Info('1 ----- now retrieving main object');
@@ -120,7 +121,7 @@ begin
   LOG.Info('3 ----- nice, now another object');
   VInvoice := VSession.Retrieve(TInvoice, '1') as TInvoice;
   try
-    LOG.Info('4 ----- iterating it`s list');
+    LOG.Info('4 ----- iterating it''s list');
     for I := 0 to Pred(VInvoice.Items.Count) do
       LOG.Info(Format('Item %d: qty=%d; product=%s', [
        I, VInvoice.Items[I].Qty, VInvoice.Items[I].Product]));

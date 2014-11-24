@@ -95,6 +95,7 @@ begin
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   VConfig.Model.AddClass([TInvoice, TInvoiceItem]);
+  VConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
   VSession := VConfig.CreateSession;
   VInvoice := TInvoice.Create;
   try

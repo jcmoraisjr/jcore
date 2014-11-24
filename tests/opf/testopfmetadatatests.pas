@@ -16,6 +16,7 @@ type
     procedure CreatePIDInheritance;
     procedure CircularReference;
     procedure OwnOwnedMetadata;
+    procedure AddGenericNonEntity;
   end;
 
   { TTestOPFIPIDMetadataTests }
@@ -41,6 +42,7 @@ implementation
 
 uses
   sysutils,
+  fgl,
   testregistry,
   JCoreClasses,
   JCoreEntity,
@@ -97,7 +99,8 @@ var
   VInvoiceItemMetadata: TJCoreOPFClassMetadata;
 begin
   VConfig := TJCoreOPFConfiguration.Create;
-  VConfig.Model.AddClass([TCLient, TPerson, TAddress, TInvoice, TInvoiceItem]);
+  VConfig.Model.AddClass([TClient, TPerson, TAddress, TInvoice, TInvoiceItem]);
+  VConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
   VInvoiceMetadata := VConfig.Model.AcquireMetadata(TInvoice);
   VInvoiceItemMetadata := VConfig.Model.AcquireMetadata(TInvoiceItem);
   AssertEquals('invoice item owned by invoice',
@@ -110,6 +113,35 @@ begin
     on E: EJCoreMetadataAlreadyOwned do
       ;
   end;
+end;
+
+type
+  TPhoneTestNonEntity = class(TObject)
+  private
+    FNumber: string;
+  published
+    property Number: string read FNumber write FNumber;
+  end;
+  TPhoneTestNonEntityList = specialize TFPGObjectList<TPhoneTestNonEntity>;
+  TPersonTestNonEntity = class(TObject)
+  private
+    FName: string;
+    FPhones: TPhoneTestNonEntityList;
+  published
+    property Name: string read FName write FName;
+    property Phones: TPhoneTestNonEntityList read FPhones write FPhones;
+  end;
+
+procedure TTestOPFMetadataTest.AddGenericNonEntity;
+var
+  VConfig: IJCoreOPFConfiguration;
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  VConfig := TJCoreOPFConfiguration.Create;
+  VConfig.Model.AddClass([TPersonTestNonEntity]);
+  VConfig.Model.AddGenerics(TPhoneTestNonEntityList, TPhoneTestNonEntity);
+  VMetadata := VConfig.Model.AcquireMetadata(TPhoneTestNonEntity);
+  AssertEquals(VMetadata.TheClass.ClassName, TPhoneTestNonEntity.ClassName);
 end;
 
 { TTestOPFIPIDMetadataTests }

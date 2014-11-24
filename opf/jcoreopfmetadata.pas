@@ -372,7 +372,7 @@ type
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
     function GetHasExternalLink: Boolean;
     function GetModel: TJCoreOPFModel;
-    function ReadComposition(const AClassName: string): TClass;
+    function ReadComposition(const ATypeInfo: PTypeInfo): TClass;
   protected
     property Model: TJCoreOPFModel read GetModel;
   public
@@ -1021,9 +1021,14 @@ end;
 procedure TJCoreOPFADMCollection.ReleaseOIDCache;
 var
   VOID: TJCoreOPFOID;
+  I: Integer;
 begin
-  for VOID in OIDCache do
-    FreeAndNil(VOID);
+  for I := Low(OIDCache) to High(OIDCache) do
+  begin
+    VOID := OIDCache[I];
+    OIDCache[I] := nil;
+    VOID.Free;
+  end;
 end;
 
 procedure TJCoreOPFADMCollection.SetOIDCache(AValue: TJCoreOPFOIDArray);
@@ -1553,20 +1558,17 @@ begin
   Result := inherited Model as TJCoreOPFModel;
 end;
 
-function TJCoreOPFAttrMetadata.ReadComposition(const AClassName: string): TClass;
+function TJCoreOPFAttrMetadata.ReadComposition(const ATypeInfo: PTypeInfo): TClass;
 var
-  VClassName: string;
-  VPos: Integer;
+  VClass: TClass;
 begin
-  // Sample of generics' ClassName: TFPGList$TListType
-  VPos := Pos('$', AClassName);
-  if VPos > 0 then
-    VClassName := Copy(AClassName, VPos + 1, Length(AClassName)) // generics
+  VClass := GetTypeData(ATypeInfo)^.ClassType;
+  if Model.IsEntityClass(VClass) then
+    Result := VClass
   else
-    VClassName := AClassName;
-  Result := Model.FindClass(VClassName);
+    Result := Model.FindSpecializedClass(VClass);
   if not Assigned(Result) then
-    raise EJCoreOPFUnsupportedAttributeType.Create(VClassName);
+    raise EJCoreOPFUnsupportedAttributeType.Create(ATypeInfo^.Name);
 end;
 
 constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
@@ -1580,7 +1582,7 @@ begin
   FPersistentFieldName := UpperCase(Name);
   if IsClass then
   begin
-    CompositionClass := ReadComposition(APropInfo^.PropType^.Name);
+    CompositionClass := ReadComposition(APropInfo^.PropType);
     VOwner := Owner as TJCoreOPFClassMetadata;
     FExternalLinkTableName := VOwner.TableName + '_' + PersistentFieldName;
     FExternalLinkLeftFieldName := VOwner.TableName;

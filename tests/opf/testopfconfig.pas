@@ -468,6 +468,8 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
+  AConfig.Model.AddGenerics(TTestIPIDPhoneList, TTestIPIDPhone);
+  AConfig.Model.AddGenerics(TTestIPIDLanguageList, TTestIPIDLanguage);
   AConfig.Model.AcquireAttrMetadata(TTestIPIDPerson, 'Languages').CompositionType := jctAggregation;
   AConfig.Model.AcquireAttrMetadata(TTestIPIDPerson, 'City').CompositionType := jctAggregation;
 end;
@@ -475,6 +477,7 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([TCircularPerson]);
+  AConfig.Model.AddGenerics(TCircularPersonList, TCircularPerson);
   AConfig.Model.AcquireAttrMetadata(TCircularPerson, 'Dependent').CompositionType := jctAggregation;
 end;
 
@@ -486,6 +489,7 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([TTestProxyPhone, TTestProxyCity, TTestProxyPerson]);
+  AConfig.Model.AddGenerics(TTestProxyPhoneList, TTestProxyPhone);
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
@@ -500,6 +504,7 @@ procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCore
 begin
   AConfig.Model.AddClass([
    TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
+  AConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
   AConfig.Model.AcquireAttrMetadata(TInvoice, 'Client').CompositionType := jctAggregation;
   AConfig.Model.AcquireAttrMetadata(TInvoiceItemProduct, 'Product').CompositionType := jctAggregation;
 end;

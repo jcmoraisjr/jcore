@@ -109,6 +109,7 @@ begin
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   VConfig.Model.AddClass([TPerson]);
+  VConfig.Model.AddGenerics(TPersonList, TPerson);
   VConfig.Model.AcquireAttrMetadata(TPerson, 'Dependent').CompositionType := jctAggregation;
   VSession := VConfig.CreateSession;
   VPerson := TPerson.Create;
