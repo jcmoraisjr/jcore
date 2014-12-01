@@ -66,7 +66,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="20">
+    <Exceptions Count="22">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -127,6 +127,12 @@
       <Item20>
         <Name Value="EJCoreOPFDetachedStatement"/>
       </Item20>
+      <Item21>
+        <Name Value="EJCoreOPFUnexpectedResultSetSize"/>
+      </Item21>
+      <Item22>
+        <Name Value="EJCoreOPFUnassignedParams"/>
+      </Item22>
     </Exceptions>
   </Debugging>
 </CONFIG>

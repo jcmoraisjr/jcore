@@ -73,9 +73,9 @@ type
     procedure Commit;
     function IsDirty: Boolean;
     procedure Load;
-    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); virtual; abstract;
     procedure UpdateAttrAddr(const AAttrAddrRef: PPPointer);
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); virtual; abstract;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
     property PID: TJCoreOPFPID read FPID;
   end;
@@ -108,8 +108,8 @@ type
     property Value: Longint read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
-    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
   { TJCoreOPFADMType64 }
@@ -128,8 +128,8 @@ type
     property Value: Int64 read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
-    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
   { TJCoreOPFADMFloat }
@@ -164,8 +164,8 @@ type
     property Value: AnsiString read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
-    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
   { TJCoreOPFADMObject }
@@ -201,8 +201,8 @@ type
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
     procedure AssignComposition(const AComposite: TObject);
     class function AttributeType: TJCoreOPFAttributeType; override;
-    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
     property CompositionOID: TJCoreOPFOID read FCompositionOID write SetCompositionOID;
   end;
 
@@ -244,8 +244,8 @@ type
     destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
     class function AttributeType: TJCoreOPFAttributeType; override;
-    procedure ReadFromDriver(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
     property PIDArray: TJCoreOPFPIDArray read GetPIDArray;
@@ -605,14 +605,14 @@ begin
   Result := AAttrTypeInfo^.Kind in [tkInteger, tkChar, tkEnumeration, tkBool];
 end;
 
-procedure TJCoreOPFADMType32.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMType32.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
-  Value := ADriver.ReadInt32;
+  Value := AResultSet.ReadInt32;
 end;
 
-procedure TJCoreOPFADMType32.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMType32.WriteToParams(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteInt32(Value);
+  AParams.WriteInt32(Value);
 end;
 
 { TJCoreOPFADMType64 }
@@ -666,14 +666,14 @@ begin
   Result := AAttrTypeInfo^.Kind in [tkInt64, tkQWord];
 end;
 
-procedure TJCoreOPFADMType64.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMType64.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
-  Value := ADriver.ReadInt64;
+  Value := AResultSet.ReadInt64;
 end;
 
-procedure TJCoreOPFADMType64.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMType64.WriteToParams(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteInt64(Value);
+  AParams.WriteInt64(Value);
 end;
 
 { TJCoreOPFADMFloat }
@@ -771,14 +771,14 @@ begin
   Result := AAttrTypeInfo^.Kind = tkAString;
 end;
 
-procedure TJCoreOPFADMAnsiString.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMAnsiString.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
-  Value := ADriver.ReadString;
+  Value := AResultSet.ReadString;
 end;
 
-procedure TJCoreOPFADMAnsiString.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMAnsiString.WriteToParams(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteString(Value);
+  AParams.WriteString(Value);
 end;
 
 { TJCoreOPFADMObject }
@@ -906,15 +906,15 @@ begin
   Result := jatEntity;
 end;
 
-procedure TJCoreOPFADMEntity.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMEntity.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
-  if not ADriver.ReadNull then
-    CompositionOID := Metadata.CompositionMetadata.OIDClass.CreateFromDriver(ADriver)
+  if not AResultSet.ReadNull then
+    CompositionOID := Metadata.CompositionMetadata.OIDClass.CreateFromResultSet(AResultSet)
   else
     CompositionOID := nil;
 end;
 
-procedure TJCoreOPFADMEntity.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMEntity.WriteToParams(const AParams: IJCoreOPFParams);
 var
   VPID: TJCoreOPFPID;
 begin
@@ -923,9 +923,9 @@ begin
   begin
     if not Assigned(VPID.OID) then
       VPID.PIDManager.StorePID(VPID);
-    VPID.OID.WriteToDriver(ADriver)
+    VPID.OID.WriteToParams(AParams);
   end else
-    Metadata.CompositionMetadata.OIDClass.WriteNull(ADriver);
+    Metadata.CompositionMetadata.OIDClass.WriteNull(AParams);
 end;
 
 { TJCoreOPFADMCollection }
@@ -1180,13 +1180,13 @@ begin
   Result := jatCollection;
 end;
 
-procedure TJCoreOPFADMCollection.ReadFromDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMCollection.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
   if not Metadata.HasLazyload then
     Load;
 end;
 
-procedure TJCoreOPFADMCollection.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFADMCollection.WriteToParams(const AParams: IJCoreOPFParams);
 begin
   // Mapping does the job using OIDRemoved and PIDAdded properties
 end;

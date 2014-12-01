@@ -32,11 +32,11 @@ type
   protected
     function GetAsString: string; virtual; abstract;
   public
-    constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
     constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); virtual; abstract;
+    constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); virtual; abstract;
     constructor CreateFromString(const AStringOID: string); virtual; abstract;
-    class procedure WriteNull(const ADriver: TJCoreOPFDriver); virtual; abstract;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); virtual; abstract;
+    class procedure WriteNull(const AParams: IJCoreOPFParams); virtual; abstract;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); virtual; abstract;
     property AsString: string read GetAsString;
   end;
 
@@ -52,12 +52,12 @@ type
     function GetAsString: string; override;
   public
     constructor Create(const AValue: Int64);
-    constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); override;
+    constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
-    class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    class procedure WriteNull(const AParams: IJCoreOPFParams); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
     property Value: Int64 read FValue;
   end;
 
@@ -70,12 +70,12 @@ type
     function GetAsString: string; override;
   public
     constructor Create(const AValue: string);
-    constructor CreateFromDriver(const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); override;
+    constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
-    class procedure WriteNull(const ADriver: TJCoreOPFDriver); override;
-    procedure WriteToDriver(const ADriver: TJCoreOPFDriver); override;
+    class procedure WriteNull(const AParams: IJCoreOPFParams); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
     property Value: string read FValue;
   end;
 
@@ -97,14 +97,14 @@ begin
   FValue := AValue;
 end;
 
-constructor TJCoreOPFOIDInt64.CreateFromDriver(const ADriver: TJCoreOPFDriver);
-begin
-  Create(ADriver.ReadInt64);
-end;
-
 constructor TJCoreOPFOIDInt64.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator);
 begin
   Create(AGenerator.ReadInt64);
+end;
+
+constructor TJCoreOPFOIDInt64.CreateFromResultSet(const AResultSet: IJCoreOPFResultSet);
+begin
+  Create(AResultSet.ReadInt64);
 end;
 
 constructor TJCoreOPFOIDInt64.CreateFromString(const AStringOID: string);
@@ -117,14 +117,14 @@ begin
   Result := (AOther is TJCoreOPFOIDInt64) and (TJCoreOPFOIDInt64(AOther).Value = Value);
 end;
 
-class procedure TJCoreOPFOIDInt64.WriteNull(const ADriver: TJCoreOPFDriver);
+class procedure TJCoreOPFOIDInt64.WriteNull(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteNull;
+  AParams.WriteNull;
 end;
 
-procedure TJCoreOPFOIDInt64.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFOIDInt64.WriteToParams(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteInt64(Value);
+  AParams.WriteInt64(Value);
 end;
 
 { TJCoreOPFOIDString }
@@ -140,14 +140,14 @@ begin
   FValue := AValue;
 end;
 
-constructor TJCoreOPFOIDString.CreateFromDriver(const ADriver: TJCoreOPFDriver);
-begin
-  Create(ADriver.ReadString);
-end;
-
 constructor TJCoreOPFOIDString.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator);
 begin
   Create(AGenerator.ReadString);
+end;
+
+constructor TJCoreOPFOIDString.CreateFromResultSet(const AResultSet: IJCoreOPFResultSet);
+begin
+  Create(AResultSet.ReadString);
 end;
 
 constructor TJCoreOPFOIDString.CreateFromString(const AStringOID: string);
@@ -160,14 +160,14 @@ begin
   Result := (AOther is TJCoreOPFOIDString) and (TJCoreOPFOIDString(AOther).Value = Value);
 end;
 
-class procedure TJCoreOPFOIDString.WriteNull(const ADriver: TJCoreOPFDriver);
+class procedure TJCoreOPFOIDString.WriteNull(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteNull;
+  AParams.WriteNull;
 end;
 
-procedure TJCoreOPFOIDString.WriteToDriver(const ADriver: TJCoreOPFDriver);
+procedure TJCoreOPFOIDString.WriteToParams(const AParams: IJCoreOPFParams);
 begin
-  ADriver.WriteString(Value);
+  AParams.WriteString(Value);
 end;
 
 end.

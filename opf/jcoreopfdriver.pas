@@ -17,15 +17,81 @@ unit JCoreOPFDriver;
 interface
 
 uses
+  typinfo,
   Classes,
   fgl,
+  JCoreClasses,
   JCoreList,
   JCoreLogger,
   JCoreOPFOIDGen;
 
 type
 
-  TJCoreOPFStatement = class(TObject)
+  { IJCoreOPFParams }
+
+  IJCoreOPFParams = interface(IInterface)
+    function Count: Integer;
+    function ReadInt32: Integer;
+    function ReadInt64: Int64;
+    function ReadString: string;
+    function ReadType: TTypeKind;
+    procedure WriteInt32(const AValue: Integer);
+    procedure WriteInt64(const AValue: Int64);
+    procedure WriteNull;
+    procedure WriteString(const AValue: string);
+  end;
+
+  { IJCoreOPFResultSet }
+
+  IJCoreOPFResultSet = interface(IInterface)
+    function ReadInt32: Integer;
+    function ReadInt64: Int64;
+    function ReadNull: Boolean;
+    function ReadString: string;
+    function Size: Integer;
+    procedure SkipReading;
+  end;
+
+  { IJCoreOPFSQLResultSet }
+
+  IJCoreOPFSQLResultSet = interface(IJCoreOPFResultSet)
+    procedure Close;
+    function IsClosed: Boolean;
+  end;
+
+  { IJCoreOPFSQLStatement }
+
+  IJCoreOPFSQLStatement = interface(IInterface)
+    function ExecImmediate: Integer;
+    procedure ExecImmediate(const AExpectedSize: Integer);
+    procedure ExecSQL;
+    procedure ExecSQL(const AExpectedSize: Integer);
+    function OpenCursor: IJCoreOPFSQLResultSet;
+    function OpenCursor(const AExpectedSize: Integer): IJCoreOPFSQLResultSet;
+    procedure WriteInt32(const AValue: Integer);
+    procedure WriteInt64(const AValue: Int64);
+    procedure WriteNull;
+    procedure WriteString(const AValue: string);
+    function GetParams: IJCoreOPFParams;
+    function GetSQL: string;
+    procedure SetSQL(const AValue: string);
+    property Params: IJCoreOPFParams read GetParams;
+    property SQL: string read GetSQL write SetSQL;
+  end;
+
+  { TJCoreOPFParams }
+
+  TJCoreOPFParams = class(TJCoreNativeTypeQueue, IJCoreOPFParams)
+  public
+    function Count: Integer;
+    function IJCoreOPFParams.ReadInt32 = PopInt32;
+    function IJCoreOPFParams.ReadInt64 = PopInt64;
+    function IJCoreOPFParams.ReadString = PopString;
+    function IJCoreOPFParams.ReadType = PopType;
+    procedure IJCoreOPFParams.WriteInt32 = PushInt32;
+    procedure IJCoreOPFParams.WriteInt64 = PushInt64;
+    procedure IJCoreOPFParams.WriteNull = PushNull;
+    procedure IJCoreOPFParams.WriteString = PushString;
   end;
 
   { TJCoreOPFDriver }
@@ -33,43 +99,18 @@ type
   TJCoreOPFDriver = class(TObject)
   private
     FParams: TStringList;
-    FStack: TJCoreNativeTypeStack;
   protected
-    procedure InternalCommit; virtual; abstract;
+    procedure InternalCommit; virtual;
     property Params: TStringList read FParams;
-    property Stack: TJCoreNativeTypeStack read FStack;
   public
     constructor Create(const AParams: TStringList); virtual;
-    destructor Destroy; override;
     procedure Commit;
     function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; virtual; abstract;
-    function CreateStatement: TJCoreOPFStatement; virtual; abstract;
     class function DriverName: string; virtual; abstract;
-    function ReadInt32: Integer; virtual; abstract;
-    function ReadInt64: Int64; virtual; abstract;
-    function ReadNull: Boolean; virtual; abstract;
-    function ReadNullAndSkip: Boolean; virtual; abstract;
-    function ReadString: string; virtual; abstract;
-    procedure WriteInt32(const AValue: Integer); virtual;
-    procedure WriteInt64(const AValue: Int64); virtual;
-    procedure WriteNull; virtual;
-    procedure WriteString(const AValue: string); virtual;
   end;
 
   TJCoreOPFDriverClass = class of TJCoreOPFDriver;
   TJCoreOPFDriverClassMap = specialize TFPGMap<string, TJCoreOPFDriverClass>;
-
-  { IJCoreOPFResultSet }
-
-  IJCoreOPFSQLResultSet = interface(IInterface)
-    procedure Close;
-    function IsClosed: Boolean;
-    function ReadInt32: Integer;
-    function ReadInt64: Int64;
-    function ReadNull: Boolean;
-    function ReadString: string;
-    function Size: Integer;
-  end;
 
   { IJCoreOPFSQLQuery }
 
@@ -85,7 +126,7 @@ type
   TJCoreOPFSQLStatement = class;
 
   IJCoreOPFSQLStmtManager = interface
-    function AcquireQuery(const ASQL: string; const AParams: TJCoreNativeTypeQueue): IJCoreOPFSQLQuery;
+    function AcquireQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
     procedure DetachStatement(const AStmt: TJCoreOPFSQLStatement);
     procedure Flush;
     procedure QueueStatement(const AStmt: TJCoreOPFSQLStatement);
@@ -94,31 +135,28 @@ type
 
   { TJCoreOPFSQLStatement }
 
-  TJCoreOPFSQLStatement = class(TJCoreOPFStatement)
+  TJCoreOPFSQLStatement = class(TJCoreManagedIObject, IJCoreOPFSQLStatement)
   private
-    FExpectedSize: Integer;
-    FParams: TJCoreNativeTypeQueue;
+    FExpectedSize: TJCoreIntegerList;
+    FParams: IJCoreOPFParams;
     FQuery: IJCoreOPFSQLQuery;
-    FQueued: Boolean;
     FSQL: string;
     FStmtManager: IJCoreOPFSQLStmtManager;
+    class var FLOG: IJCoreLogger;
     function GetQuery: IJCoreOPFSQLQuery;
     function GetStmtManager: IJCoreOPFSQLStmtManager;
     procedure SetSQL(const AValue: string);
   protected
-    procedure CheckQueued;
     procedure EnsureResultSetSize(const ACount, AExpectedSize: Integer);
-    procedure Flush;
+    function ExecQuery: Integer;
+    procedure Finit; override;
     procedure QueueStatement(const AExpectedSize: Integer = -1);
     procedure ReleaseQuery;
-    procedure ReleaseStmtManager;
-    procedure UnqueueStatement;
-    property Params: TJCoreNativeTypeQueue read FParams;
     property Query: IJCoreOPFSQLQuery read GetQuery;
     property StmtManager: IJCoreOPFSQLStmtManager read GetStmtManager;
-  public
-    constructor Create(const AStmtManager: IJCoreOPFSQLStmtManager);
-    destructor Destroy; override;
+    class property LOG: IJCoreLogger read FLOG;
+  protected
+    // IJCoreOPFSQLStatement
     function ExecImmediate: Integer;
     procedure ExecImmediate(const AExpectedSize: Integer);
     procedure ExecSQL;
@@ -129,7 +167,18 @@ type
     procedure WriteInt64(const AValue: Int64);
     procedure WriteNull;
     procedure WriteString(const AValue: string);
+    function IGetParams: IJCoreOPFParams;
+    function IGetSQL: string;
+    function IJCoreOPFSQLStatement.GetParams = IGetParams;
+    function IJCoreOPFSQLStatement.GetSQL = IGetSQL;
+    property Params: IJCoreOPFParams read FParams;
     property SQL: string read FSQL write SetSQL;
+  public
+    constructor Create(const AStmtManager: IJCoreOPFSQLStmtManager; const AParams: IJCoreOPFParams);
+    procedure CheckCommit;
+    procedure CheckQueued;
+    procedure Flush;
+    procedure ReleaseStmtManager;
   end;
 
   TJCoreOPFSQLStatementList = specialize TFPGObjectList<TJCoreOPFSQLStatement>;
@@ -141,25 +190,22 @@ type
     FQueryList: TJCoreOPFSQLQueryList;
     FStmtList: TJCoreOPFSQLStatementList;
     FStmtQueue: TJCoreOPFSQLStatementList;
-    class var FLOGSQL: IJCoreLogger;
-    function AcquireQuery(const ASQL: string; const AParams: TJCoreNativeTypeQueue): IJCoreOPFSQLQuery;
+    function AcquireQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
     procedure DetachStatement(const AStmt: TJCoreOPFSQLStatement);
     procedure QueueStatement(const AStmt: TJCoreOPFSQLStatement);
     procedure ReleaseQuery(const AQuery: IJCoreOPFSQLQuery);
     procedure ReleaseStatements;
   protected
-    function InternalCreateQuery(const ASQL: string; const AParams: TJCoreNativeTypeQueue): IJCoreOPFSQLQuery; virtual; abstract;
-    function InternalExecSQL(const ASQL: string): Integer; virtual; abstract;
-    class property LOGSQL: IJCoreLogger read FLOGSQL;
+    procedure InternalCommit; override;
+    function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; virtual; abstract;
     property QueryList: TJCoreOPFSQLQueryList read FQueryList;
     property StmtList: TJCoreOPFSQLStatementList read FStmtList;
     property StmtQueue: TJCoreOPFSQLStatementList read FStmtQueue;
   public
     constructor Create(const AParams: TStringList); override;
     destructor Destroy; override;
-    function CreateStatement: TJCoreOPFSQLStatement; override;
-    function ExecSQL(const ASQL: string): Integer;
-    procedure ExecSQL(const ASQL: string; const AExpectedSize: Integer);
+    function CreateStatement: IJCoreOPFSQLStatement;
+    function CreateStatement(const AParams: IJCoreOPFParams): IJCoreOPFSQLStatement;
     procedure Flush;
   end;
 
@@ -182,44 +228,28 @@ uses
   sysutils,
   JCoreOPFException;
 
+{ TJCoreOPFParams }
+
+function TJCoreOPFParams.Count: Integer;
+begin
+  Result := inherited Count;
+end;
+
 { TJCoreOPFDriver }
+
+procedure TJCoreOPFDriver.InternalCommit;
+begin
+end;
 
 constructor TJCoreOPFDriver.Create(const AParams: TStringList);
 begin
   inherited Create;
   FParams := AParams;
-  FStack := TJCoreNativeTypeStack.Create;
-end;
-
-destructor TJCoreOPFDriver.Destroy;
-begin
-  FreeAndNil(FStack);
-  inherited Destroy;
 end;
 
 procedure TJCoreOPFDriver.Commit;
 begin
   InternalCommit;
-end;
-
-procedure TJCoreOPFDriver.WriteInt32(const AValue: Integer);
-begin
-  Stack.PushInt32(AValue);
-end;
-
-procedure TJCoreOPFDriver.WriteInt64(const AValue: Int64);
-begin
-  Stack.PushInt64(AValue);
-end;
-
-procedure TJCoreOPFDriver.WriteNull;
-begin
-  Stack.PushNull;
-end;
-
-procedure TJCoreOPFDriver.WriteString(const AValue: string);
-begin
-  Stack.PushString(AValue);
 end;
 
 { TJCoreOPFSQLStatement }
@@ -248,12 +278,6 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLStatement.CheckQueued;
-begin
-  if FQueued or (FExpectedSize >= 0) then
-    raise EJCoreOPFStatementOnQueue.Create;
-end;
-
 procedure TJCoreOPFSQLStatement.EnsureResultSetSize(const ACount, AExpectedSize: Integer);
 begin
   if (AExpectedSize >= 0) and (ACount <> AExpectedSize) then
@@ -264,24 +288,23 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLStatement.Flush;
-var
-  VSize: Integer;
+function TJCoreOPFSQLStatement.ExecQuery: Integer;
 begin
-  if FQueued then
-  begin
-    VSize := Query.ExecSQL;
-    EnsureResultSetSize(VSize, FExpectedSize);
-    UnqueueStatement;
-  end;
+  LOG.Debug(FSQL);
+  Result := Query.ExecSQL;
+end;
+
+procedure TJCoreOPFSQLStatement.Finit;
+begin
+  ReleaseStmtManager;
+  FreeAndNil(FExpectedSize);
+  inherited Finit;
 end;
 
 procedure TJCoreOPFSQLStatement.QueueStatement(const AExpectedSize: Integer = -1);
 begin
-  CheckQueued;
   StmtManager.QueueStatement(Self);
-  FExpectedSize := AExpectedSize;
-  FQueued := True;
+  FExpectedSize.Add(AExpectedSize);
 end;
 
 procedure TJCoreOPFSQLStatement.ReleaseQuery;
@@ -293,45 +316,14 @@ begin
     VQuery := FQuery;
     FQuery := nil;
     StmtManager.ReleaseQuery(VQuery);
-    UnqueueStatement;
+    FExpectedSize.Clear;
   end;
-end;
-
-procedure TJCoreOPFSQLStatement.ReleaseStmtManager;
-begin
-  if Assigned(FStmtManager) then
-  begin
-    ReleaseQuery;
-    FStmtManager.DetachStatement(Self);
-    FStmtManager := nil;
-  end;
-end;
-
-procedure TJCoreOPFSQLStatement.UnqueueStatement;
-begin
-  FExpectedSize := -1;
-  FQueued := False;
-end;
-
-constructor TJCoreOPFSQLStatement.Create(const AStmtManager: IJCoreOPFSQLStmtManager);
-begin
-  inherited Create;
-  FStmtManager := AStmtManager;
-  FParams := TJCoreNativeTypeQueue.Create;
-  UnqueueStatement;
-end;
-
-destructor TJCoreOPFSQLStatement.Destroy;
-begin
-  ReleaseStmtManager;
-  FreeAndNil(FParams);
-  inherited Destroy;
 end;
 
 function TJCoreOPFSQLStatement.ExecImmediate: Integer;
 begin
-  CheckQueued;
-  Result := Query.ExecSQL;
+  StmtManager.Flush;
+  Result := ExecQuery;
 end;
 
 procedure TJCoreOPFSQLStatement.ExecImmediate(const AExpectedSize: Integer);
@@ -353,43 +345,98 @@ function TJCoreOPFSQLStatement.OpenCursor: IJCoreOPFSQLResultSet;
 begin
   CheckQueued;
   StmtManager.Flush;
+  LOG.Debug(FSQL);
   Result := Query.OpenCursor;
 end;
 
 function TJCoreOPFSQLStatement.OpenCursor(const AExpectedSize: Integer): IJCoreOPFSQLResultSet;
 begin
-  Result := OpenCursor();
+  Result := OpenCursor(); // remove the brackets and get a warning! =)
   EnsureResultSetSize(Result.Size, AExpectedSize);
 end;
 
 procedure TJCoreOPFSQLStatement.WriteInt32(const AValue: Integer);
 begin
-  CheckQueued;
-  Params.PushInt32(AValue);
+  Params.WriteInt32(AValue);
 end;
 
 procedure TJCoreOPFSQLStatement.WriteInt64(const AValue: Int64);
 begin
-  CheckQueued;
-  Params.PushInt64(AValue);
+  Params.WriteInt64(AValue);
 end;
 
 procedure TJCoreOPFSQLStatement.WriteNull;
 begin
-  CheckQueued;
-  Params.PushNull;
+  Params.WriteNull;
 end;
 
 procedure TJCoreOPFSQLStatement.WriteString(const AValue: string);
 begin
-  CheckQueued;
-  Params.PushString(AValue);
+  Params.WriteString(AValue);
+end;
+
+function TJCoreOPFSQLStatement.IGetParams: IJCoreOPFParams;
+begin
+  Result := FParams;
+end;
+
+function TJCoreOPFSQLStatement.IGetSQL: string;
+begin
+  Result := FSQL;
+end;
+
+constructor TJCoreOPFSQLStatement.Create(const AStmtManager: IJCoreOPFSQLStmtManager;
+  const AParams: IJCoreOPFParams);
+begin
+  inherited Create;
+  FStmtManager := AStmtManager;
+  if Assigned(AParams) then
+    FParams := AParams
+  else
+    FParams := TJCoreOPFParams.Create;
+  if not Assigned(FLOG) then
+    FLOG := TJCoreLogger.GetLogger('jcore.sql');
+  FExpectedSize := TJCoreIntegerList.Create;
+end;
+
+procedure TJCoreOPFSQLStatement.CheckCommit;
+begin
+  if Params.Count > 0 then
+    raise EJCoreOPFUnassignedParams.Create;
+end;
+
+procedure TJCoreOPFSQLStatement.CheckQueued;
+begin
+  if FExpectedSize.Count > 0 then
+    raise EJCoreOPFStatementOnQueue.Create;
+end;
+
+procedure TJCoreOPFSQLStatement.Flush;
+var
+  I: Integer;
+begin
+  try
+    for I := 0 to Pred(FExpectedSize.Count) do
+      EnsureResultSetSize(ExecQuery, FExpectedSize[I]);
+  finally
+    FExpectedSize.Clear;
+  end;
+end;
+
+procedure TJCoreOPFSQLStatement.ReleaseStmtManager;
+begin
+  if Assigned(FStmtManager) then
+  begin
+    ReleaseQuery;
+    FStmtManager.DetachStatement(Self);
+    FStmtManager := nil;
+  end;
 end;
 
 { TJCoreOPFSQLDriver }
 
 function TJCoreOPFSQLDriver.AcquireQuery(const ASQL: string;
-  const AParams: TJCoreNativeTypeQueue): IJCoreOPFSQLQuery;
+  const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
 begin
   { TODO : Implement Query Pool }
   Result := InternalCreateQuery(ASQL, AParams);
@@ -399,15 +446,13 @@ end;
 procedure TJCoreOPFSQLDriver.DetachStatement(const AStmt: TJCoreOPFSQLStatement);
 begin
   if Assigned(AStmt) then
-  begin
     StmtList.Remove(AStmt);
-    StmtQueue.Remove(AStmt);
-  end;
 end;
 
 procedure TJCoreOPFSQLDriver.QueueStatement(const AStmt: TJCoreOPFSQLStatement);
 begin
   StmtQueue.Add(AStmt);
+  AStmt.AddRef;
 end;
 
 procedure TJCoreOPFSQLDriver.ReleaseQuery(const AQuery: IJCoreOPFSQLQuery);
@@ -421,18 +466,26 @@ procedure TJCoreOPFSQLDriver.ReleaseStatements;
 var
   I: Integer;
 begin
+  for I := Pred(StmtList.Count) downto 0 do
+    StmtList[I].ReleaseStmtManager;
+end;
+
+procedure TJCoreOPFSQLDriver.InternalCommit;
+var
+  I: Integer;
+begin
+  inherited InternalCommit;
+  Flush;
   for I := 0 to Pred(StmtList.Count) do
-    StmtList[I].ReleaseStmtManager; // friend class
+    StmtList[I].CheckCommit;
 end;
 
 constructor TJCoreOPFSQLDriver.Create(const AParams: TStringList);
 begin
   inherited Create(AParams);
-  if not Assigned(FLOGSQL) then
-    FLOGSQL := TJCoreLogger.GetLogger('jcore.opf.driver.sql');
   FQueryList := TJCoreOPFSQLQueryList.Create;
   FStmtList := TJCoreOPFSQLStatementList.Create(False);
-  FStmtQueue := TJCoreOPFSQLStatementList.Create(False);
+  FStmtQueue := TJCoreOPFSQLStatementList.Create(True);
 end;
 
 destructor TJCoreOPFSQLDriver.Destroy;
@@ -444,29 +497,18 @@ begin
   inherited Destroy;
 end;
 
-function TJCoreOPFSQLDriver.CreateStatement: TJCoreOPFSQLStatement;
+function TJCoreOPFSQLDriver.CreateStatement: IJCoreOPFSQLStatement;
 begin
-  Result := TJCoreOPFSQLStatement.Create(Self);
-  StmtList.Add(Result);
+  Result := CreateStatement(nil);
 end;
 
-function TJCoreOPFSQLDriver.ExecSQL(const ASQL: string): Integer;
-begin
-  LOGSQL.Debug(ASQL);
-  Result := InternalExecSQL(ASQL);
-end;
-
-procedure TJCoreOPFSQLDriver.ExecSQL(const ASQL: string; const AExpectedSize: Integer);
+function TJCoreOPFSQLDriver.CreateStatement(const AParams: IJCoreOPFParams): IJCoreOPFSQLStatement;
 var
-  VSize: Integer;
+  VStmt: TJCoreOPFSQLStatement;
 begin
-  VSize := ExecSQL(ASQL);
-  if (VSize <> AExpectedSize) and (AExpectedSize <> -1) then
-  begin
-    if VSize = 0 then
-      raise EJCoreOPFEmptyResultSet.Create(AExpectedSize);
-    raise EJCoreOPFUnexpectedResultSetSize.Create(AExpectedSize, VSize);
-  end;
+  VStmt := TJCoreOPFSQLStatement.Create(Self, AParams);
+  StmtList.Add(VStmt);
+  Result := VStmt;
 end;
 
 procedure TJCoreOPFSQLDriver.Flush;
@@ -474,7 +516,7 @@ var
   I: Integer;
 begin
   for I := 0 to Pred(StmtQueue.Count) do
-    StmtQueue[I].Flush;  // friend class
+    StmtQueue[I].Flush;
   StmtQueue.Clear;
 end;
 

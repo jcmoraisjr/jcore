@@ -158,13 +158,13 @@ begin
     AssertNotNull('address pid', VPerson.Address._PID);
     AssertEquals('address oid', '2', VPerson.Address._PID.OID.AsString);
     AssertSQLDriverCommands([
-     'WriteInt64 1',
-     'WriteString name',
-     'WriteInt32 25',
      'WriteInt64 2',
      'WriteString route 66',
      'WriteString ',
      'ExecSQL INSERT INTO ADDRESS (ID,STREET,ZIPCODE) VALUES (?,?,?)',
+     'WriteInt64 1',
+     'WriteString name',
+     'WriteInt32 25',
      'WriteInt64 2',
      'WriteNull',
      'ExecSQL INSERT INTO PERSON (ID,NAME,AGE,ADDRESS,CITY) VALUES (?,?,?,?,?)']);
@@ -189,13 +189,13 @@ begin
     AssertNotNull('city pid', VPerson.City._PID);
     AssertEquals('city oid', '2', VPerson.City._PID.OID.AsString);
     AssertSQLDriverCommands([
+     'WriteInt64 2',
+     'WriteString CityName',
+     'ExecSQL INSERT INTO CITY (ID,NAME) VALUES (?,?)',
      'WriteInt64 1',
      'WriteString SomeName',
      'WriteInt32 25',
      'WriteNull',
-     'WriteInt64 2',
-     'WriteString CityName',
-     'ExecSQL INSERT INTO CITY (ID,NAME) VALUES (?,?)',
      'WriteInt64 2',
      'ExecSQL INSERT INTO PERSON (ID,NAME,AGE,ADDRESS,CITY) VALUES (?,?,?,?,?)']);
   finally
@@ -413,12 +413,12 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Store(VPerson);
     AssertSQLDriverCommands([
-     'WriteString jack',
-     'WriteInt32 0',
      'WriteString street',
      'WriteString ',
      'WriteInt64 2',
      'ExecSQL UPDATE ADDRESS SET STREET=?, ZIPCODE=? WHERE ID=?',
+     'WriteString jack',
+     'WriteInt32 0',
      'WriteInt64 2',
      'WriteNull',
      'WriteInt64 1',
@@ -1240,7 +1240,6 @@ begin
     VInvoice.Date := '01/01';
     Session.Store(VInvoice);
     AssertSQLDriverCommands([
-     'WriteInt64 1',
      'WriteInt64 2',
      'WriteString aclient',
      'WriteNull',
@@ -1248,6 +1247,7 @@ begin
      'WriteInt64 2',
      'WriteString cli',
      'ExecSQL INSERT INTO PERSON (ID,NICK) VALUES (?,?)',
+     'WriteInt64 1',
      'WriteInt64 2',
      'WriteString 01/01',
      'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);

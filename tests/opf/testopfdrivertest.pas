@@ -15,11 +15,15 @@ type
   published
     procedure CommitAfterCreate;
     procedure ExecImmediate;
-    procedure ExecAndFlush;
+    procedure ExecSQLAndFlush;
+    procedure ExecImmediateBeforeFlush;
+    procedure ExecSQLExpectedSizeReuseStatement;
+    procedure ExecSQLUnexpectedSizeReuseStatement;
     procedure ReuseStatementBeforeFlush;
     procedure ReuseStatementAfterFlush;
     procedure ReuseStatementAfterImmediate;
     procedure ReuseStatementChangeOrder;
+    procedure ReuseQueryBeforeFlush;
     procedure QueueNewStatementsAfterFlush;
     procedure DestroyStatementBeforeFlush;
     procedure OpenCursor;
@@ -27,6 +31,8 @@ type
     procedure FlushOnExecOrder;
     procedure DestroyDriverBeforeFlush;
     procedure WriteReadParams;
+    procedure WriteMoreReadLessParams;
+    procedure WriteLessReadMoreParams;
   end;
 
 implementation
@@ -34,6 +40,7 @@ implementation
 uses
   sysutils,
   Classes,
+  JCoreClasses,
   JCoreOPFException,
   JCoreOPFDriver,
   testregistry,
@@ -56,277 +63,322 @@ end;
 
 procedure TTestOPFSQLDriverTest.ExecImmediate;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt := Driver.CreateStatement;
-  try
-    VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-    VStmt.ExecImmediate;
-    AssertCommands(Driver.Commands, ['INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
-  finally
-    FreeAndNil(VStmt);
-  end;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecImmediate;
+  AssertSQLDriverCommands(['ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
 end;
 
-procedure TTestOPFSQLDriverTest.ExecAndFlush;
+procedure TTestOPFSQLDriverTest.ExecSQLAndFlush;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
+begin
+  Driver.IgnoreParams;
+  VStmt := Driver.CreateStatement;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecSQL;
+  AssertSQLDriverCommands([]);
+  Driver.Commit;
+  AssertSQLDriverCommands(['ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
+end;
+
+procedure TTestOPFSQLDriverTest.ExecImmediateBeforeFlush;
+var
+  VStmt1, VStmt2: IJCoreOPFSQLStatement;
+begin
+  Driver.IgnoreParams;
+  VStmt1 := Driver.CreateStatement;
+  VStmt2 := Driver.CreateStatement;
+  VStmt1.SQL := 'DELETE FROM TABLE WHERE ID=?';
+  VStmt1.ExecSQL;
+  AssertSQLDriverCommands([]);
+  VStmt2.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt2.ExecImmediate;
+  AssertSQLDriverCommands([
+   'ExecSQL DELETE FROM TABLE WHERE ID=?',
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
+end;
+
+procedure TTestOPFSQLDriverTest.ExecSQLExpectedSizeReuseStatement;
+var
+  VStmt: IJCoreOPFSQLStatement;
 begin
   VStmt := Driver.CreateStatement;
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.ExpectedResultsets.Add(4);
+  VStmt.WriteString('joe');
+  VStmt.SQL := 'DELETE FROM TABLE WHERE NAME=?';
+  VStmt.ExecSQL(2);
+  VStmt.WriteString('jack');
+  VStmt.ExecSQL(4);
+  Driver.Commit;
+end;
+
+procedure TTestOPFSQLDriverTest.ExecSQLUnexpectedSizeReuseStatement;
+var
+  VStmt: IJCoreOPFSQLStatement;
+begin
+  VStmt := Driver.CreateStatement;
+  TTestSQLDriver.ExpectedResultsets.Add(2);
+  TTestSQLDriver.ExpectedResultsets.Add(4);
+  VStmt.WriteString('joe');
+  VStmt.SQL := 'DELETE FROM TABLE WHERE NAME=?';
+  VStmt.ExecSQL(2);
+  VStmt.WriteString('jack');
+  VStmt.ExecSQL(3);
   try
-    VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-    VStmt.ExecSQL;
-    AssertCommands(Driver.Commands, []);
-    Driver.Flush;
-    AssertCommands(Driver.Commands, ['INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
-  finally
-    FreeAndNil(VStmt);
+    Driver.Commit;
+    Fail('EJCoreOPFUnexpectedResultSetSize expected');
+  except
+    on E: EJCoreOPFUnexpectedResultSetSize do
+      ;
   end;
 end;
 
 procedure TTestOPFSQLDriverTest.ReuseStatementBeforeFlush;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt := Driver.CreateStatement;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecSQL;
   try
-    VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-    VStmt.ExecSQL;
-    try
-      VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
-      Fail('EJCoreOPFStatementOnQueue expected');
-    except
-      on E: EJCoreOPFStatementOnQueue do
-        ;
-    end;
-  finally
-    FreeAndNil(VStmt);
+    VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
+    Fail('EJCoreOPFStatementOnQueue expected');
+  except
+    on E: EJCoreOPFStatementOnQueue do
+      ;
   end;
 end;
 
 procedure TTestOPFSQLDriverTest.ReuseStatementAfterFlush;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt := Driver.CreateStatement;
-  try
-    VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-    VStmt.ExecSQL;
-    Driver.Flush;
-    VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
-    VStmt.ExecSQL;
-    AssertCommands(Driver.Commands, ['INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
-  finally
-    FreeAndNil(VStmt);
-  end;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecSQL;
+  Driver.Commit;
+  VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
+  VStmt.ExecSQL;
+  AssertSQLDriverCommands(['ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
 end;
 
 procedure TTestOPFSQLDriverTest.ReuseStatementAfterImmediate;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt := Driver.CreateStatement;
-  try
-    VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-    VStmt.ExecImmediate;
-    VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
-    VStmt.ExecImmediate;
-    AssertCommands(Driver.Commands, [
-     'INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
-     'DELETE FROM TABLE WHERE ID=?']);
-  finally
-    FreeAndNil(VStmt);
-  end;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecImmediate;
+  VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
+  VStmt.ExecImmediate;
+  AssertSQLDriverCommands([
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
+   'ExecSQL DELETE FROM TABLE WHERE ID=?']);
 end;
 
 procedure TTestOPFSQLDriverTest.ReuseStatementChangeOrder;
 var
-  VStmt1: TJCoreOPFSQLStatement;
-  VStmt2: TJCoreOPFSQLStatement;
+  VStmt1, VStmt2: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt1 := Driver.CreateStatement;
-  try
-    VStmt2 := Driver.CreateStatement;
-    try
-      VStmt1.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-      VStmt2.SQL := 'DELETE FROM TABLE WHERE ID=?';
-      VStmt1.ExecSQL;
-      VStmt2.ExecSQL;
-      Driver.Flush;
-      AssertCommands(Driver.Commands, [
-       'INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
-       'DELETE FROM TABLE WHERE ID=?']);
-      Driver.Commands.Clear;
-      VStmt2.ExecSQL;
-      VStmt1.ExecSQL;
-      Driver.Flush;
-      AssertCommands(Driver.Commands, [
-       'DELETE FROM TABLE WHERE ID=?',
-       'INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
-    finally
-      FreeAndNil(VStmt2);
-    end;
-  finally
-    FreeAndNil(VStmt1);
-  end;
+  VStmt2 := Driver.CreateStatement;
+  VStmt1.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt2.SQL := 'DELETE FROM TABLE WHERE ID=?';
+  VStmt1.ExecSQL;
+  VStmt2.ExecSQL;
+  Driver.Commit;
+  AssertSQLDriverCommands([
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
+   'ExecSQL DELETE FROM TABLE WHERE ID=?']);
+  Driver.Commands.Clear;
+  VStmt2.ExecSQL;
+  VStmt1.ExecSQL;
+  Driver.Commit;
+  AssertSQLDriverCommands([
+   'ExecSQL DELETE FROM TABLE WHERE ID=?',
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
+end;
+
+procedure TTestOPFSQLDriverTest.ReuseQueryBeforeFlush;
+var
+  VStmt: IJCoreOPFSQLStatement;
+begin
+  Driver.IgnoreParams;
+  VStmt := Driver.CreateStatement;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.WriteInt32(1);
+  VStmt.WriteString('name1');
+  VStmt.WriteInt32(2);
+  VStmt.WriteString('name2');
+  VStmt.ExecSQL;
+  VStmt.ExecSQL;
+  Driver.Commit;
+  AssertSQLDriverCommands([
+   'WriteInt32 1',
+   'WriteString name1',
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
+   'WriteInt32 2',
+   'WriteString name2',
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
 end;
 
 procedure TTestOPFSQLDriverTest.QueueNewStatementsAfterFlush;
 var
-  VStmt1: TJCoreOPFSQLStatement;
-  VStmt2: TJCoreOPFSQLStatement;
+  VStmt1, VStmt2: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt1 := Driver.CreateStatement;
-  try
-    VStmt2 := Driver.CreateStatement;
-    try
-      VStmt1.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-      VStmt2.SQL := 'DELETE FROM TABLE WHERE ID=?';
-      VStmt1.ExecSQL;
-      VStmt2.ExecSQL;
-      Driver.Flush;
-      AssertCommands(Driver.Commands, [
-       'INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
-       'DELETE FROM TABLE WHERE ID=?']);
-      Driver.Commands.Clear;
-      VStmt1.SQL := 'UPDATE TABLE SET NAME=? WHERE ID=?';
-      VStmt2.SQL := 'DELETE FROM TABLE WHERE NAME=?';
-      VStmt1.ExecSQL;
-      VStmt2.ExecSQL;
-      Driver.Flush;
-      AssertCommands(Driver.Commands, [
-       'UPDATE TABLE SET NAME=? WHERE ID=?',
-       'DELETE FROM TABLE WHERE NAME=?']);
-    finally
-      FreeAndNil(VStmt2);
-    end;
-  finally
-    FreeAndNil(VStmt1);
-  end;
+  VStmt2 := Driver.CreateStatement;
+  VStmt1.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt2.SQL := 'DELETE FROM TABLE WHERE ID=?';
+  VStmt1.ExecSQL;
+  VStmt2.ExecSQL;
+  Driver.Commit;
+  AssertSQLDriverCommands([
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
+   'ExecSQL DELETE FROM TABLE WHERE ID=?']);
+  Driver.Commands.Clear;
+  VStmt1.SQL := 'UPDATE TABLE SET NAME=? WHERE ID=?';
+  VStmt2.SQL := 'DELETE FROM TABLE WHERE NAME=?';
+  VStmt1.ExecSQL;
+  VStmt2.ExecSQL;
+  Driver.Commit;
+  AssertSQLDriverCommands([
+   'ExecSQL UPDATE TABLE SET NAME=? WHERE ID=?',
+   'ExecSQL DELETE FROM TABLE WHERE NAME=?']);
 end;
 
 procedure TTestOPFSQLDriverTest.DestroyStatementBeforeFlush;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt := Driver.CreateStatement;
-  try
-    VStmt.SQL := 'UPDATE TABLE SET NAME=? WHERE ID=?';
-    VStmt.ExecSQL;
-    FreeAndNil(VStmt);
-    Driver.Flush;
-    AssertCommands(Driver.Commands, []);
-  finally
-    FreeAndNil(VStmt);
-  end;
+  VStmt.SQL := 'UPDATE TABLE SET NAME=? WHERE ID=?';
+  VStmt.ExecSQL;
+  VStmt := nil;
+  Driver.Commit;
+  AssertSQLDriverCommands(['ExecSQL UPDATE TABLE SET NAME=? WHERE ID=?']);
 end;
 
 procedure TTestOPFSQLDriverTest.OpenCursor;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
   VStmt := Driver.CreateStatement;
-  try
-    VStmt.SQL := 'SELECT ID,NAME FROM TABLE';
-    VStmt.OpenCursor;
-    AssertCommands(Driver.Commands, ['SELECT ID,NAME FROM TABLE']);
-  finally
-    FreeAndNil(VStmt);
-  end;
+  VStmt.SQL := 'SELECT ID,NAME FROM TABLE';
+  VStmt.OpenCursor;
+  AssertSQLDriverCommands(['ExecSQL SELECT ID,NAME FROM TABLE']);
 end;
 
 procedure TTestOPFSQLDriverTest.FlushOnOpenCursor;
 var
-  VStmtInsert: TJCoreOPFSQLStatement;
-  VStmtSelect: TJCoreOPFSQLStatement;
+  VStmtInsert, VStmtSelect: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmtInsert := Driver.CreateStatement;
-  try
-    VStmtSelect := Driver.CreateStatement;
-    try
-      VStmtInsert.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-      VStmtSelect.SQL := 'SELECT ID,NAME FROM TABLE';
-      VStmtInsert.ExecSQL;
-      AssertCommands(Driver.Commands, []);
-      VStmtSelect.OpenCursor;
-      AssertCommands(Driver.Commands, [
-       'INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
-       'SELECT ID,NAME FROM TABLE']);
-    finally
-      FreeAndNil(VStmtSelect);
-    end;
-  finally
-    FreeAndNil(VStmtInsert);
-  end;
+  VStmtSelect := Driver.CreateStatement;
+  VStmtInsert.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmtSelect.SQL := 'SELECT ID,NAME FROM TABLE';
+  VStmtInsert.ExecSQL;
+  AssertSQLDriverCommands([]);
+  VStmtSelect.OpenCursor;
+  AssertSQLDriverCommands([
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
+   'ExecSQL SELECT ID,NAME FROM TABLE']);
 end;
 
 procedure TTestOPFSQLDriverTest.FlushOnExecOrder;
 var
-  VStmt1: TJCoreOPFSQLStatement;
-  VStmt2: TJCoreOPFSQLStatement;
+  VStmt1, VStmt2: IJCoreOPFSQLStatement;
 begin
+  Driver.IgnoreParams;
   VStmt1 := Driver.CreateStatement;
-  try
-    VStmt2 := Driver.CreateStatement;
-    try
-      VStmt1.SQL := 'UPDATE TABLE SET NAME=? WHERE ID=?';
-      VStmt2.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-      VStmt2.ExecSQL;
-      VStmt1.ExecSQL;
-      Driver.Flush;
-      AssertCommands(Driver.Commands, [
-       'INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
-       'UPDATE TABLE SET NAME=? WHERE ID=?']);
-    finally
-      FreeAndNil(VStmt2);
-    end;
-  finally
-    FreeAndNil(VStmt1);
-  end;
+  VStmt2 := Driver.CreateStatement;
+  VStmt1.SQL := 'UPDATE TABLE SET NAME=? WHERE ID=?';
+  VStmt2.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt2.ExecSQL;
+  VStmt1.ExecSQL;
+  Driver.Commit;
+  AssertSQLDriverCommands([
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)',
+   'ExecSQL UPDATE TABLE SET NAME=? WHERE ID=?']);
 end;
 
 procedure TTestOPFSQLDriverTest.DestroyDriverBeforeFlush;
 var
-  VDriver: TTestOPFSQLDriverMock;
-  VStmt: TJCoreOPFSQLStatement;
+  VDriver: TTestSQLDriver;
+  VStmt: IJCoreOPFSQLStatement;
 begin
-  VDriver := TTestOPFSQLDriverMock.Create(nil);
+  VDriver := TTestSQLDriver.Create(nil);
+  VDriver.IgnoreParams;
+  VStmt := VDriver.CreateStatement;
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  FreeAndNil(VDriver);
   try
-    VStmt := VDriver.CreateStatement;
-    try
-      VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
-      FreeAndNil(VDriver);
-      try
-        VStmt.ExecImmediate;
-        Fail('EJCoreOPFDetachedStatement expected');
-      except
-        on E: EJCoreOPFDetachedStatement do
-          ;
-      end;
-    finally
-      FreeAndNil(VStmt);
-    end;
-  finally
-    FreeAndNil(VDriver);
+    VStmt.ExecImmediate;
+    Fail('EJCoreOPFDetachedStatement expected');
+  except
+    on E: EJCoreOPFDetachedStatement do
+      ;
   end;
 end;
 
 procedure TTestOPFSQLDriverTest.WriteReadParams;
 var
-  VStmt: TJCoreOPFSQLStatement;
+  VStmt: IJCoreOPFSQLStatement;
 begin
   VStmt := Driver.CreateStatement;
+  VStmt.WriteInt64(2);
+  VStmt.WriteString('name');
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecImmediate;
+  AssertSQLDriverCommands([
+   'WriteInt64 2',
+   'WriteString name',
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
+end;
+
+procedure TTestOPFSQLDriverTest.WriteMoreReadLessParams;
+var
+  VStmt: IJCoreOPFSQLStatement;
+begin
+  VStmt := Driver.CreateStatement;
+  VStmt.WriteInt32(1);
+  VStmt.WriteString('name1');
+  VStmt.SQL := 'INSERT INTO TABLE (ID) VALUES (?)';
+  VStmt.ExecImmediate;
   try
-    VStmt.WriteInt64(2);
-    VStmt.WriteString('name');
-    VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+    Driver.Commit;
+    Fail('EJCoreOPFUnassignedParams expected');
+  except
+    on E: EJCoreOPFUnassignedParams do
+      ;
+  end;
+end;
+
+procedure TTestOPFSQLDriverTest.WriteLessReadMoreParams;
+var
+  VStmt: IJCoreOPFSQLStatement;
+begin
+  VStmt := Driver.CreateStatement;
+  VStmt.WriteInt32(1);
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  try
     VStmt.ExecImmediate;
-    AssertCommands(Driver.Commands, [
-     'WriteInt64 2',
-     'WriteString name',
-     'INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
-  finally
-    FreeAndNil(VStmt);
+    Fail('EJCoreListIsEmpty expected');
+  except
+    on E: EJCoreListIsEmpty do
+      ;
   end;
 end;
 

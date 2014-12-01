@@ -18,13 +18,16 @@ interface
 
 uses
   typinfo,
-  contnrs;
+  contnrs,
+  fgl;
 
 type
 
+  TJCoreIntegerList = specialize TFPGList<Integer>;
+
   { TJCoreNativeTypeOrderedList }
 
-  TJCoreNativeTypeOrderedList = class(TObject)
+  TJCoreNativeTypeOrderedList = class(TInterfacedObject)
   private
     FCount: Integer;
     FCurrentType: PTypeInfo;

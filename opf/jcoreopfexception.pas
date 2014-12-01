@@ -84,6 +84,13 @@ type
     constructor Create;
   end;
 
+  { EJCoreOPFUnassignedParams }
+
+  EJCoreOPFUnassignedParams = class(EJCoreOPF)
+  public
+    constructor Create;
+  end;
+
   { EJCoreOPFEmptyOID }
 
   EJCoreOPFEmptyOID = class(EJCoreOPF)
@@ -231,6 +238,12 @@ end;
 { EJCoreOPFStatementOnQueue }
 
 constructor EJCoreOPFStatementOnQueue.Create;
+begin
+end;
+
+{ EJCoreOPFUnassignedParams }
+
+constructor EJCoreOPFUnassignedParams.Create;
 begin
 end;
 

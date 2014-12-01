@@ -7,7 +7,6 @@ interface
 uses
   sysutils,
   Classes,
-  fgl,
   fpcunit,
   JCoreLogger,
   JCoreList,
@@ -54,13 +53,13 @@ type
 
   TTestOPFMappingClassArray = array of TJCoreOPFMappingClass;
 
-  TTestOPFSQLDriverMock = class;
+  TTestSQLDriver = class;
 
   { TTestOPFAbstractTestCase }
 
   TTestOPFAbstractTestCase = class(TTestCase)
   private
-    FDriver: TTestOPFSQLDriverMock;
+    FDriver: TTestSQLDriver;
     FSessionCircularAuto: ITestOPFSession;
     FSessionInvoiceAuto: ITestOPFSession;
     FSessionInvoiceManual: ITestOPFSession;
@@ -69,7 +68,7 @@ type
     FSessionProxyContact: ITestOPFSession;
     class var FLOG: IJCoreLogger;
     procedure AssertCommands(const AList: TStringList; const AShortName, ALongName: string; const ACommands: array of string);
-    function GetDriver: TTestOPFSQLDriverMock;
+    function GetDriver: TTestSQLDriver;
     function GetSessionCircularAuto: ITestOPFSession;
     function GetSessionInvoiceAuto: ITestOPFSession;
     function GetSessionInvoiceManual: ITestOPFSession;
@@ -77,7 +76,6 @@ type
     function GetSessionIPIDContactManual: ITestOPFSession;
     function GetSessionProxyContact: ITestOPFSession;
   protected
-    procedure AssertCommands(const AList: TStringList; const ACommands: array of string);
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
     procedure AssertSQLDriverTransaction(const ATransactions: array of string);
@@ -93,7 +91,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
     class property LOG: IJCoreLogger read FLOG;
-    property Driver: TTestOPFSQLDriverMock read GetDriver;
+    property Driver: TTestSQLDriver read GetDriver;
     property SessionCircularAuto: ITestOPFSession read GetSessionCircularAuto;
     property SessionInvoiceAuto: ITestOPFSession read GetSessionInvoiceAuto;
     property SessionInvoiceManual: ITestOPFSession read GetSessionInvoiceManual;
@@ -145,96 +143,36 @@ type
   { TTestEmptyDriver }
 
   TTestEmptyDriver = class(TJCoreOPFSQLDriver)
-  protected
-    procedure InternalCommit; override;
   public
     class function DriverName: string; override;
-    procedure WriteString(const AValue: string); override;
   end;
 
   { TTestEmptyMapping }
 
   TTestEmptyMapping = class(TJCoreOPFSQLMapping)
   protected
-    procedure InternalInsert(const AMapping: TJCoreOPFADMMapping); override;
-    procedure InternalUpdate(const AMapping: TJCoreOPFADMMapping); override;
-    procedure WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping); override;
+    procedure InternalInsert(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
+    procedure InternalUpdate(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteAttributesToParams(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
 
-  TTestIntegerList = specialize TFPGList<Integer>;
+  { TTestSQLQuery }
 
-  { TTestSQLDriver }
-
-  TTestSQLDriver = class(TJCoreOPFSQLDriver)
+  TTestSQLQuery = class(TInterfacedObject, IJCoreOPFSQLQuery, IJCoreOPFSQLResultSet)
   private
+    FDriver: TTestSQLDriver;
+    FParams: IJCoreOPFParams;
+    FSize: Integer;
+    FSQL: string;
     procedure AddCommand(const ACommand: string);
     function PopData(const APopFromQueue: Boolean = True): string;
-    class var FCommands: TStringList;
-    class var FData:  TStringList;
-    class var FExpectedResultsets: TTestIntegerList;
-    class var FTransaction: TStringList;
-  protected
-    procedure InternalCommit; override;
-    function InternalExecSQL(const ASQL: string): Integer; override;
-  public
-    class constructor Create;
-    class destructor Destroy;
-    class function DriverName: string; override;
-    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
-    function ReadInt32: Integer; override;
-    function ReadInt64: Int64; override;
-    function ReadNull: Boolean; override;
-    function ReadNullAndSkip: Boolean; override;
-    function ReadString: string; override;
-    procedure WriteInt32(const AValue: Integer); override;
-    procedure WriteInt64(const AValue: Int64); override;
-    procedure WriteString(const AValue: string); override;
-    procedure WriteNull; override;
-    class property Commands: TStringList read FCommands;
-    class property Data: TStringList read FData;
-    class property ExpectedResultsets: TTestIntegerList read FExpectedResultsets write FExpectedResultsets;
-    class property Transaction: TStringList read FTransaction;
-  end;
-
-  { TTestSQLMapping }
-
-  TTestSQLMapping = class(TJCoreOPFSQLMapping);
-
-  { TTestOPFSQLDriverMock }
-
-  TTestOPFSQLDriverMock = class(TJCoreOPFSQLDriver)
-  private
-    FCommands: TStringList;
-    FParams: TStringList;
-  protected
-    function InternalCreateQuery(const ASQL: string; const AParams: TJCoreNativeTypeQueue): IJCoreOPFSQLQuery; override;
-    procedure InternalCommit; override;
-    function InternalExecSQL(const ASQL: string): Integer; override;
-  public
-    constructor Create(const AParams: TStringList); override;
-    destructor Destroy; override;
-    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
-    class function DriverName: string; override;
-    function ReadInt32: Integer; override;
-    function ReadInt64: Int64; override;
-    function ReadNull: Boolean; override;
-    function ReadNullAndSkip: Boolean; override;
-    function ReadString: string; override;
-    property Commands: TStringList read FCommands;
-    property Params: TStringList read FParams;
-  end;
-
-  { TTestOPFSQLQueryMock }
-
-  TTestOPFSQLQueryMock = class(TInterfacedObject, IJCoreOPFSQLQuery, IJCoreOPFSQLResultSet)
-  private
-    FDriver: TTestOPFSQLDriverMock;
-    FParams: TJCoreNativeTypeQueue;
-    FSQL: string;
     procedure ReadParams;
-  private // interfaces
+  protected
+    property Driver: TTestSQLDriver read FDriver;
+  public
+    constructor Create(const ADriver: TTestSQLDriver; const ASQL: string; AParams: IJCoreOPFParams);
     procedure Close;
     function ExecSQL: Integer;
     function IsClosed: Boolean;
@@ -244,20 +182,43 @@ type
     function ReadNull: Boolean;
     function ReadString: string;
     function Size: Integer;
-  protected
-    property Driver: TTestOPFSQLDriverMock read FDriver;
-    property Params: TJCoreNativeTypeQueue read FParams;
-    property SQL: string read FSQL;
-  public
-    constructor Create(const ADriver: TTestOPFSQLDriverMock; const ASQL: string; const AParams: TJCoreNativeTypeQueue);
+    procedure SkipReading;
   end;
+
+  { TTestSQLDriver }
+
+  TTestSQLDriver = class(TJCoreOPFSQLDriver)
+  private
+    FIgnoreParams: Boolean;
+    class var FCommands: TStringList;
+    class var FData:  TStringList;
+    class var FExpectedResultsets: TJCoreIntegerList;
+    class var FTransaction: TStringList;
+  protected
+    procedure InternalCommit; override;
+    function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; override;
+  public
+    class constructor Create;
+    class destructor Destroy;
+    class function DriverName: string; override;
+    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
+    function HasIgnoreParams: Boolean;
+    procedure IgnoreParams;
+    class property Commands: TStringList read FCommands;
+    class property Data: TStringList read FData;
+    class property ExpectedResultsets: TJCoreIntegerList read FExpectedResultsets write FExpectedResultsets;
+    class property Transaction: TStringList read FTransaction;
+  end;
+
+  { TTestSQLMapping }
+
+  TTestSQLMapping = class(TJCoreOPFSQLMapping);
 
 implementation
 
 uses
   typinfo,
   JCoreMetadata,
-  JCoreOPFException,
   JCoreOPFOID,
   TestOPFModelCircular,
   TestOPFModelContact,
@@ -328,10 +289,10 @@ begin
   AList.Clear;
 end;
 
-function TTestOPFAbstractTestCase.GetDriver: TTestOPFSQLDriverMock;
+function TTestOPFAbstractTestCase.GetDriver: TTestSQLDriver;
 begin
   if not Assigned(FDriver) then
-    FDriver := TTestOPFSQLDriverMock.Create(nil);
+    FDriver := TTestSQLDriver.Create(nil);
   Result := FDriver;
 end;
 
@@ -417,12 +378,6 @@ begin
     FSessionProxyContact := VConfig.CreateSession as ITestOPFSession;
   end;
   Result := FSessionProxyContact;
-end;
-
-procedure TTestOPFAbstractTestCase.AssertCommands(const AList: TStringList;
-  const ACommands: array of string);
-begin
-  AssertCommands(AList, 'cmd', 'commands', ACommands);
 end;
 
 procedure TTestOPFAbstractTestCase.AssertExceptionStore(const ASession: IJCoreOPFSession;
@@ -565,30 +520,25 @@ end;
 
 { TTestEmptyDriver }
 
-procedure TTestEmptyDriver.InternalCommit;
-begin
-end;
-
 class function TTestEmptyDriver.DriverName: string;
 begin
   Result := 'TestEmptyDriver';
 end;
 
-procedure TTestEmptyDriver.WriteString(const AValue: string);
-begin
-end;
-
 { TTestEmptyMapping }
 
-procedure TTestEmptyMapping.InternalInsert(const AMapping: TJCoreOPFADMMapping);
+procedure TTestEmptyMapping.InternalInsert(const AParams: IJCoreOPFParams;
+  const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
-procedure TTestEmptyMapping.InternalUpdate(const AMapping: TJCoreOPFADMMapping);
+procedure TTestEmptyMapping.InternalUpdate(const AParams: IJCoreOPFParams;
+  const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
-procedure TTestEmptyMapping.WriteAttributesToDriver(const AMapping: TJCoreOPFADMMapping);
+procedure TTestEmptyMapping.WriteAttributesToParams(const AParams: IJCoreOPFParams;
+  const AMapping: TJCoreOPFADMMapping);
 begin
 end;
 
@@ -597,43 +547,134 @@ begin
   Result := True;
 end;
 
-{ TTestSQLDriver }
+{ TTestSQLQuery }
 
-procedure TTestSQLDriver.AddCommand(const ACommand: string);
+procedure TTestSQLQuery.AddCommand(const ACommand: string);
 begin
-  FCommands.Add(ACommand);
+  Driver.Commands.Add(ACommand);
 end;
 
-function TTestSQLDriver.PopData(const APopFromQueue: Boolean): string;
+function TTestSQLQuery.PopData(const APopFromQueue: Boolean): string;
 begin
-  if Data.Count = 0 then
+  if Driver.Data.Count = 0 then
     raise Exception.Create('Trying to read an empty data queue');
-  Result := Data[0];
+  Result := Driver.Data[0];
   if APopFromQueue then
-    Data.Delete(0);
+    Driver.Data.Delete(0);
 end;
+
+procedure TTestSQLQuery.ReadParams;
+var
+  VParamCount: Integer;
+  VType: TTypeKind;
+  I: Integer;
+begin
+  VParamCount := 0;
+  for I := 1 to Length(FSQL) do
+    if FSQL[I] = '?' then
+      Inc(VParamCount);
+  if Driver.HasIgnoreParams and (VParamCount > FParams.Count) then
+    VParamCount := FParams.Count;
+  for I := 0 to Pred(VParamCount) do
+  begin
+    VType := FParams.ReadType;
+    case VType of
+      tkUnknown: AddCommand('WriteNull');
+      tkInteger: AddCommand('WriteInt32 ' + IntToStr(FParams.ReadInt32));
+      tkInt64: AddCommand('WriteInt64 ' + IntToStr(FParams.ReadInt64));
+      tkAString: AddCommand('WriteString ' + FParams.ReadString);
+      else raise Exception.CreateFmt('Unsupported type', [GetEnumName(TypeInfo(TTypeKind), Ord(VType))]);
+    end;
+  end;
+end;
+
+constructor TTestSQLQuery.Create(const ADriver: TTestSQLDriver; const ASQL: string; AParams: IJCoreOPFParams);
+begin
+  inherited Create;
+  FDriver := ADriver;
+  FSQL := ASQL;
+  FParams := AParams;
+end;
+
+procedure TTestSQLQuery.Close;
+begin
+  FSize := -1;
+end;
+
+function TTestSQLQuery.ExecSQL: Integer;
+begin
+  ReadParams;
+  Driver.Commands.Add('ExecSQL ' + FSQL);
+  if Driver.ExpectedResultsets.Count > 0 then
+  begin
+    Result := Driver.ExpectedResultsets[0];
+    Driver.ExpectedResultsets.Delete(0);
+  end else
+    Result := 0;
+end;
+
+function TTestSQLQuery.IsClosed: Boolean;
+begin
+  Result := False;
+end;
+
+function TTestSQLQuery.OpenCursor: IJCoreOPFSQLResultSet;
+begin
+  FSize := ExecSQL;
+  Result := Self;
+end;
+
+function TTestSQLQuery.ReadInt32: Integer;
+begin
+  Result := StrToInt(PopData);
+end;
+
+function TTestSQLQuery.ReadInt64: Int64;
+begin
+  Result := StrToInt64(PopData);
+end;
+
+function TTestSQLQuery.ReadNull: Boolean;
+begin
+  Result := PopData(False) = 'null';
+  if Result then
+    PopData;
+end;
+
+function TTestSQLQuery.ReadString: string;
+begin
+  Result := PopData;
+end;
+
+function TTestSQLQuery.Size: Integer;
+begin
+  Result := FSize;
+end;
+
+procedure TTestSQLQuery.SkipReading;
+begin
+  PopData;
+end;
+
+{ TTestSQLDriver }
 
 procedure TTestSQLDriver.InternalCommit;
 begin
+  inherited InternalCommit;
   Transaction.Add('commit');
 end;
 
-function TTestSQLDriver.InternalExecSQL(const ASQL: string): Integer;
+function TTestSQLDriver.InternalCreateQuery(const ASQL: string;
+  const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
 begin
-  FCommands.Add('ExecSQL ' + ASQL);
-  if ExpectedResultsets.Count > 0 then
-  begin
-    Result := ExpectedResultsets[0];
-    ExpectedResultsets.Delete(0);
-  end else
-    Result := 0;
+  Result := TTestSQLQuery.Create(Self, ASQL, AParams);
 end;
 
 class constructor TTestSQLDriver.Create;
 begin
   FCommands := TStringList.Create;
   FData := TStringList.Create;
-  FExpectedResultsets := TTestIntegerList.Create;
+  FExpectedResultsets := TJCoreIntegerList.Create;
   FTransaction := TStringList.Create;
 end;
 
@@ -655,192 +696,14 @@ begin
   Result := TTestOPFGeneratorSQLDriver.Create(Self, AGeneratorName);
 end;
 
-function TTestSQLDriver.ReadInt32: Integer;
+function TTestSQLDriver.HasIgnoreParams: Boolean;
 begin
-  Result := StrToInt(PopData);
+  Result := FIgnoreParams;
 end;
 
-function TTestSQLDriver.ReadInt64: Int64;
+procedure TTestSQLDriver.IgnoreParams;
 begin
-  Result := StrToInt64(PopData);
-end;
-
-function TTestSQLDriver.ReadNull: Boolean;
-begin
-  Result := PopData(False) = 'null';
-  if Result then
-    PopData;
-end;
-
-function TTestSQLDriver.ReadNullAndSkip: Boolean;
-begin
-  Result := PopData = 'null';
-end;
-
-function TTestSQLDriver.ReadString: string;
-begin
-  Result := PopData;
-end;
-
-procedure TTestSQLDriver.WriteInt32(const AValue: Integer);
-begin
-  AddCommand('WriteInt32 ' + IntToStr(AValue));
-end;
-
-procedure TTestSQLDriver.WriteInt64(const AValue: Int64);
-begin
-  AddCommand('WriteInt64 ' + IntToStr(AValue));
-end;
-
-procedure TTestSQLDriver.WriteString(const AValue: string);
-begin
-  AddCommand('WriteString ' + AValue);
-end;
-
-procedure TTestSQLDriver.WriteNull;
-begin
-  AddCommand('WriteNull');
-end;
-
-{ TTestOPFSQLDriverMock }
-
-function TTestOPFSQLDriverMock.InternalCreateQuery(const ASQL: string;
-  const AParams: TJCoreNativeTypeQueue): IJCoreOPFSQLQuery;
-begin
-  Result := TTestOPFSQLQueryMock.Create(Self, ASQL, AParams);
-end;
-
-procedure TTestOPFSQLDriverMock.InternalCommit;
-begin
-end;
-
-function TTestOPFSQLDriverMock.InternalExecSQL(const ASQL: string): Integer;
-begin
-  Result := 0;
-end;
-
-constructor TTestOPFSQLDriverMock.Create(const AParams: TStringList);
-begin
-  inherited Create(AParams);
-  FCommands := TStringList.Create;
-end;
-
-destructor TTestOPFSQLDriverMock.Destroy;
-begin
-  FreeAndNil(FCommands);
-  FreeAndNil(FParams);
-  inherited Destroy;
-end;
-
-function TTestOPFSQLDriverMock.CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator;
-begin
-  Result := nil;
-end;
-
-class function TTestOPFSQLDriverMock.DriverName: string;
-begin
-  Result := '';
-end;
-
-function TTestOPFSQLDriverMock.ReadInt32: Integer;
-begin
-  Result := 0;
-end;
-
-function TTestOPFSQLDriverMock.ReadInt64: Int64;
-begin
-  Result := 0;
-end;
-
-function TTestOPFSQLDriverMock.ReadNull: Boolean;
-begin
-  Result := False;
-end;
-
-function TTestOPFSQLDriverMock.ReadNullAndSkip: Boolean;
-begin
-  Result := False;
-end;
-
-function TTestOPFSQLDriverMock.ReadString: string;
-begin
-  Result := '';
-end;
-
-{ TTestOPFSQLQueryMock }
-
-procedure TTestOPFSQLQueryMock.ReadParams;
-var
-  VType: TTypeKind;
-begin
-  while Params.Count > 0 do
-  begin
-    VType := Params.PopType;
-    case VType of
-      tkUnknown: Driver.Commands.Add('WriteNull');
-      tkAString: Driver.Commands.Add('WriteString ' + Params.PopString);
-      tkInteger: Driver.Commands.Add('WriteInt32 ' + IntToStr(Params.PopInt32));
-      tkInt64: Driver.Commands.Add('WriteInt64 ' + IntToStr(Params.PopInt64));
-      else raise EJCoreOPFDriver.Create('Unsupported type', [GetEnumName(TypeInfo(TTypeKind), Ord(VType))]);
-    end;
-  end;
-end;
-
-procedure TTestOPFSQLQueryMock.Close;
-begin
-end;
-
-function TTestOPFSQLQueryMock.ExecSQL: Integer;
-begin
-  ReadParams;
-  Driver.Commands.Add(SQL);
-  Result := 0;
-end;
-
-function TTestOPFSQLQueryMock.IsClosed: Boolean;
-begin
-  Result := True;
-end;
-
-function TTestOPFSQLQueryMock.OpenCursor: IJCoreOPFSQLResultSet;
-begin
-  ReadParams;
-  Driver.Commands.Add(SQL);
-  Result := Self;
-end;
-
-function TTestOPFSQLQueryMock.ReadInt32: Integer;
-begin
-  Result := 0;
-end;
-
-function TTestOPFSQLQueryMock.ReadInt64: Int64;
-begin
-  Result := 0;
-end;
-
-function TTestOPFSQLQueryMock.ReadNull: Boolean;
-begin
-  Result := False;
-end;
-
-function TTestOPFSQLQueryMock.ReadString: string;
-begin
-  Result := '';
-end;
-
-function TTestOPFSQLQueryMock.Size: Integer;
-begin
-  Result := 0;
-end;
-
-constructor TTestOPFSQLQueryMock.Create(const ADriver: TTestOPFSQLDriverMock; const ASQL: string;
-  const AParams: TJCoreNativeTypeQueue);
-begin
-  inherited Create;
-  FDriver := ADriver;
-  FSQL := ASQL;
-  FParams := AParams;
+  FIgnoreParams := True;
 end;
 
 end.

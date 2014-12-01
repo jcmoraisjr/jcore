@@ -207,11 +207,11 @@ begin
     VInvoice.Client.Name := 'bar sa';
     Session.Store(VInvoice);
     AssertSQLDriverCommands([
-     'WriteInt64 1',
      'WriteInt64 2',
      'WriteString bar sa',
      'WriteNull',
      'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
+     'WriteInt64 1',
      'WriteInt64 2',
      'WriteString ',
      'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)']);
