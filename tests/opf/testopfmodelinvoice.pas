@@ -93,7 +93,7 @@ type
     procedure Finit; override;
   published
     property Qty: Integer read FQty write FQty;
-    property Product: TProduct read GetProduct write SetProduct;
+    property Product: TProduct read GetProduct write SetProduct stored False;
   end;
 
   { TInvoiceItemService }
@@ -119,7 +119,7 @@ type
   protected
     procedure Finit; override;
   published
-    property Client: TClient read GetClient write SetClient;
+    property Client: TClient read GetClient write SetClient stored False;
     property Date: string read FDate write FDate;
     property Items: TInvoiceItemList read GetItems write SetItems;
   end;

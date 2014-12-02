@@ -218,7 +218,6 @@ implementation
 
 uses
   typinfo,
-  JCoreMetadata,
   JCoreOPFOID,
   TestOPFModelCircular,
   TestOPFModelContact,
@@ -422,23 +421,22 @@ end;
 
 procedure TTestOPFAbstractTestCase.ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
 begin
-  AConfig.Model.AddClass([TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
+  AConfig.Model.AddClass([
+   TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
   AConfig.Model.AddGenerics(TTestIPIDPhoneList, TTestIPIDPhone);
   AConfig.Model.AddGenerics(TTestIPIDLanguageList, TTestIPIDLanguage);
-  AConfig.Model.AcquireAttrMetadata(TTestIPIDPerson, 'Languages').CompositionType := jctAggregation;
-  AConfig.Model.AcquireAttrMetadata(TTestIPIDPerson, 'City').CompositionType := jctAggregation;
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([TCircularPerson]);
   AConfig.Model.AddGenerics(TCircularPersonList, TCircularPerson);
-  AConfig.Model.AcquireAttrMetadata(TCircularPerson, 'Dependent').CompositionType := jctAggregation;
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);
 begin
-  AConfig.AddMappingClass([TTestProxyPhoneSQLMapping, TTestProxyCitySQLMapping, TTestProxyPersonSQLMapping]);
+  AConfig.AddMappingClass([
+   TTestProxyPhoneSQLMapping, TTestProxyCitySQLMapping, TTestProxyPersonSQLMapping]);
 end;
 
 procedure TTestOPFAbstractTestCase.ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
@@ -458,10 +456,9 @@ end;
 procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCoreOPFConfiguration);
 begin
   AConfig.Model.AddClass([
-   TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService, TInvoice]);
+   TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService,
+   TInvoice]);
   AConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
-  AConfig.Model.AcquireAttrMetadata(TInvoice, 'Client').CompositionType := jctAggregation;
-  AConfig.Model.AcquireAttrMetadata(TInvoiceItemProduct, 'Product').CompositionType := jctAggregation;
 end;
 
 function TTestOPFAbstractTestCase.CreateConfiguration: IJCoreOPFConfiguration;
@@ -588,7 +585,8 @@ begin
   end;
 end;
 
-constructor TTestSQLQuery.Create(const ADriver: TTestSQLDriver; const ASQL: string; AParams: IJCoreOPFParams);
+constructor TTestSQLQuery.Create(const ADriver: TTestSQLDriver; const ASQL: string;
+  AParams: IJCoreOPFParams);
 begin
   inherited Create;
   FDriver := ADriver;

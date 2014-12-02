@@ -24,7 +24,7 @@ type
     destructor Destroy; override;
   published
     property Name: string read FName write FName;
-    property Dependent: TCircularPersonList read GetDependent write SetDependent;
+    property Dependent: TCircularPersonList read GetDependent write SetDependent stored False;
   end;
 
 implementation

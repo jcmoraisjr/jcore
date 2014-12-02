@@ -17,6 +17,8 @@ type
     procedure CircularReference;
     procedure OwnOwnedMetadata;
     procedure AddGenericNonEntity;
+    procedure PropertyCompositionType;
+    procedure PropertySize;
   end;
 
   { TTestOPFIPIDMetadataTests }
@@ -46,6 +48,7 @@ uses
   testregistry,
   JCoreClasses,
   JCoreEntity,
+  JCoreMetadata,
   JCoreOPFConfig,
   JCoreOPFMetadata,
   TestOPFModelContact,
@@ -142,6 +145,90 @@ begin
   VConfig.Model.AddGenerics(TPhoneTestNonEntityList, TPhoneTestNonEntity);
   VMetadata := VConfig.Model.AcquireMetadata(TPhoneTestNonEntity);
   AssertEquals(VMetadata.TheClass.ClassName, TPhoneTestNonEntity.ClassName);
+end;
+
+type
+
+  { TTestPropertyCompositionType }
+
+  TTestPropertyCompositionType = class(TObject)
+  private
+    FP01: string;
+    FP02: string;
+    FP03: string;
+    FP04: TTestPropertyCompositionType;
+    FP05: TTestPropertyCompositionType;
+    FP06: TTestPropertyCompositionType;
+  published
+    property P01: string read FP01 write FP01;
+    property P02: string read FP02 write FP02 stored False;
+    property P03: string read FP03 write FP03 stored True;
+    property P04: TTestPropertyCompositionType read FP04 write FP04;
+    property P05: TTestPropertyCompositionType read FP05 write FP05 stored False;
+    property P06: TTestPropertyCompositionType read FP06 write FP06 stored True;
+  end;
+
+procedure TTestOPFMetadataTest.PropertyCompositionType;
+var
+  VConfig: IJCoreOPFConfiguration;
+  VP01, VP02, VP03, VP04, VP05, VP06: TJCoreOPFAttrMetadata;
+begin
+  VConfig := TJCoreOPFConfiguration.Create;
+  VConfig.Model.AddClass([TTestPropertyCompositionType]);
+  VP01 := VConfig.Model.AcquireAttrMetadata(TTestPropertyCompositionType, 'P01');
+  VP02 := VConfig.Model.AcquireAttrMetadata(TTestPropertyCompositionType, 'P02');
+  VP03 := VConfig.Model.AcquireAttrMetadata(TTestPropertyCompositionType, 'P03');
+  VP04 := VConfig.Model.AcquireAttrMetadata(TTestPropertyCompositionType, 'P04');
+  VP05 := VConfig.Model.AcquireAttrMetadata(TTestPropertyCompositionType, 'P05');
+  VP06 := VConfig.Model.AcquireAttrMetadata(TTestPropertyCompositionType, 'P06');
+  AssertEquals('P01 composition type', Ord(jctNone), Ord(VP01.CompositionType));
+  AssertEquals('P02 composition type', Ord(jctNone), Ord(VP02.CompositionType));
+  AssertEquals('P03 composition type', Ord(jctNone), Ord(VP03.CompositionType));
+  AssertEquals('P04 composition type', Ord(jctComposition), Ord(VP04.CompositionType));
+  AssertEquals('P05 composition type', Ord(jctAggregation), Ord(VP05.CompositionType));
+  AssertEquals('P06 composition type', Ord(jctComposition), Ord(VP06.CompositionType));
+end;
+
+type
+
+  { TTestPropertySize }
+
+  TTestPropertySize = class(TObject)
+  private
+    FP01: Integer;
+    FP02: Integer;
+    FP03: Integer;
+    FP04: string;
+    FP05: string;
+    FP06: string;
+  published
+    property P01: Integer read FP01 write FP01;
+    property P02: Integer index 25 read FP02 write FP02;
+    property P03: Integer index 100 read FP03 write FP03;
+    property P04: string read FP04 write FP04;
+    property P05: string index 25 read FP05 write FP05;
+    property P06: string index 100 read FP06 write FP06;
+  end;
+
+procedure TTestOPFMetadataTest.PropertySize;
+var
+  VConfig: IJCoreOPFConfiguration;
+  VP01, VP02, VP03, VP04, VP05, VP06: TJCoreOPFAttrMetadata;
+begin
+  VConfig := TJCoreOPFConfiguration.Create;
+  VConfig.Model.AddClass([TTestPropertySize]);
+  VP01 := VConfig.Model.AcquireAttrMetadata(TTestPropertySize, 'P01');
+  VP02 := VConfig.Model.AcquireAttrMetadata(TTestPropertySize, 'P02');
+  VP03 := VConfig.Model.AcquireAttrMetadata(TTestPropertySize, 'P03');
+  VP04 := VConfig.Model.AcquireAttrMetadata(TTestPropertySize, 'P04');
+  VP05 := VConfig.Model.AcquireAttrMetadata(TTestPropertySize, 'P05');
+  VP06 := VConfig.Model.AcquireAttrMetadata(TTestPropertySize, 'P06');
+  AssertEquals('P01 composition type', 0, VP01.Size);
+  AssertEquals('P02 composition type', 0, VP02.Size);
+  AssertEquals('P03 composition type', 0, VP03.Size);
+  AssertEquals('P04 composition type', 0, VP04.Size);
+  AssertEquals('P05 composition type', 25, VP05.Size);
+  AssertEquals('P06 composition type', 100, VP06.Size);
 end;
 
 { TTestOPFIPIDMetadataTests }

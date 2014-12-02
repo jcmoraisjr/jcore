@@ -41,15 +41,18 @@ type
     FName: string;
     FOwner: TJCoreClassMetadata;
     FPropInfo: PPropInfo;
+    FSize: Integer;
     function GetCompositionMetadata: TJCoreClassMetadata;
+    procedure ReadPropertyInfo;
     procedure SetCompositionClass(AValue: TClass);
     procedure SetCompositionType(AValue: TJCoreMetadataCompositionType);
   protected
     procedure Changed;
+    function IsClass: Boolean;
+    function IsString: Boolean;
     property Model: TJCoreModel read FModel;
   public
     constructor Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata; const APropInfo: PPropInfo); virtual;
-    function IsClass: Boolean;
     function IsCollection: Boolean; virtual; abstract;
     property CompositionClass: TClass read FCompositionClass write SetCompositionClass;
     property CompositionMetadata: TJCoreClassMetadata read GetCompositionMetadata;
@@ -57,6 +60,7 @@ type
     property Name: string read FName;
     property Owner: TJCoreClassMetadata read FOwner;
     property PropInfo: PPropInfo read FPropInfo;
+    property Size: Integer read FSize write FSize;
   end;
 
   TJCoreAttrMetadataClass = class of TJCoreAttrMetadata;
@@ -135,6 +139,28 @@ begin
   Result := FCompositionMetadata;
 end;
 
+procedure TJCoreAttrMetadata.ReadPropertyInfo;
+const
+  CCompositionType : array[Boolean] of TJCoreMetadataCompositionType = (jctAggregation, jctComposition);
+var
+  VTypeData: PTypeData;
+  VInstance: TObject;
+begin
+  if IsString then
+  begin
+    FSize := PropInfo^.Index;
+  end else if IsClass then
+  begin
+    VTypeData := GetTypeData(PropInfo^.PropType);
+    VInstance := VTypeData^.ClassType.NewInstance;
+    try
+      FCompositionType := CCompositionType[IsStoredProp(VInstance, PropInfo)];
+    finally
+      VInstance.FreeInstance;
+    end;
+  end;
+end;
+
 procedure TJCoreAttrMetadata.SetCompositionClass(AValue: TClass);
 begin
   if FCompositionClass <> AValue then
@@ -167,6 +193,16 @@ begin
   end;
 end;
 
+function TJCoreAttrMetadata.IsClass: Boolean;
+begin
+  Result := PropInfo^.PropType^.Kind = tkClass;
+end;
+
+function TJCoreAttrMetadata.IsString: Boolean;
+begin
+  Result := PropInfo^.PropType^.Kind in [tkSString, tkAString, tkLString, tkWString, tkUString];
+end;
+
 constructor TJCoreAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
   const APropInfo: PPropInfo);
 begin
@@ -175,15 +211,8 @@ begin
   FOwner := AOwner;
   FPropInfo := APropInfo;
   FName := APropInfo^.Name;
-  if IsClass then
-    FCompositionType := jctComposition
-  else
-    FCompositionType := jctNone;
-end;
-
-function TJCoreAttrMetadata.IsClass: Boolean;
-begin
-  Result := PropInfo^.PropType^.Kind = tkClass;
+  FCompositionType := jctNone;
+  ReadPropertyInfo;
 end;
 
 { TJCoreClassMetadata }

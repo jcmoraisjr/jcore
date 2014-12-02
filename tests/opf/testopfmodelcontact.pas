@@ -98,8 +98,8 @@ type
     property Age: Integer read FAge write FAge;
     property Phones: TTestIPIDPhoneList read GetPhones write SetPhones;
     property Address: TTestIPIDAddress read FAddress write SetAddress;
-    property City: TTestIPIDCity read FCity write SetCity;
-    property Languages: TTestIPIDLanguageList read GetLanguages write SetLanguages;
+    property City: TTestIPIDCity read FCity write SetCity stored False;
+    property Languages: TTestIPIDLanguageList read GetLanguages write SetLanguages stored False;
   end;
 
   { TTestIPIDEmployee }

@@ -33,7 +33,7 @@ type
     destructor Destroy; override;
   published
     property Name: string read FName write FName;
-    property Dependent: TPersonList read GetDependent write SetDependent;
+    property Dependent: TPersonList read GetDependent write SetDependent stored False;
   end;
 
 { TPerson }
@@ -110,7 +110,6 @@ begin
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   VConfig.Model.AddClass([TPerson]);
   VConfig.Model.AddGenerics(TPersonList, TPerson);
-  VConfig.Model.AcquireAttrMetadata(TPerson, 'Dependent').CompositionType := jctAggregation;
   VSession := VConfig.CreateSession;
   VPerson := TPerson.Create;
   try
