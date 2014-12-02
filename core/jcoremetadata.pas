@@ -45,10 +45,10 @@ type
     procedure SetCompositionClass(AValue: TClass);
     procedure SetCompositionType(AValue: TJCoreMetadataCompositionType);
   protected
+    procedure Changed;
     property Model: TJCoreModel read FModel;
   public
     constructor Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata; const APropInfo: PPropInfo); virtual;
-    procedure Changed;
     function IsClass: Boolean;
     function IsCollection: Boolean; virtual; abstract;
     property CompositionClass: TClass read FCompositionClass write SetCompositionClass;
@@ -102,7 +102,7 @@ type
     function AttributeMetadataClass: TJCoreAttrMetadataClass; virtual;
     procedure BuildClassMetadata(const AMetadata: TJCoreClassMetadata);
     function ClassMetadataClass: TJCoreClassMetadataClass; virtual;
-    function CreateAttrMetadata(const AMetadata: TJCoreClassMetadata; const APropInfo: PPropInfo): TJCoreAttrMetadata; virtual;
+    function CreateAttrMetadata(const AMetadata: TJCoreClassMetadata; const APropInfo: PPropInfo): TJCoreAttrMetadata;
     function CreateClassMetadata(const AClass: TClass): TJCoreClassMetadata;
     procedure Finit; override;
     procedure InitRegistry; virtual;
@@ -153,20 +153,6 @@ begin
   end;
 end;
 
-constructor TJCoreAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
-  const APropInfo: PPropInfo);
-begin
-  inherited Create;
-  FModel := AModel;
-  FOwner := AOwner;
-  FPropInfo := APropInfo;
-  FName := APropInfo^.Name;
-  if IsClass then
-    FCompositionType := jctComposition
-  else
-    FCompositionType := jctNone;
-end;
-
 procedure TJCoreAttrMetadata.Changed;
 var
   VCompositionMetadata: TJCoreClassMetadata;
@@ -179,6 +165,20 @@ begin
     else // jctAggregation
       VCompositionMetadata.OwnerMetadata := nil;
   end;
+end;
+
+constructor TJCoreAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
+  const APropInfo: PPropInfo);
+begin
+  inherited Create;
+  FModel := AModel;
+  FOwner := AOwner;
+  FPropInfo := APropInfo;
+  FName := APropInfo^.Name;
+  if IsClass then
+    FCompositionType := jctComposition
+  else
+    FCompositionType := jctNone;
 end;
 
 function TJCoreAttrMetadata.IsClass: Boolean;

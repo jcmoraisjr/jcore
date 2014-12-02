@@ -448,11 +448,11 @@ type
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
     property GeneratorName: string read FGeneratorName write FGeneratorName;
     property Maps: TJCoreOPFMaps read GetMaps;
-    property OIDClass: TJCoreOPFOIDClass read FOIDClass;
-    property OIDName: TJCoreStringArray read FOIDName;
+    property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
+    property OIDName: TJCoreStringArray read FOIDName write FOIDName;
     property Parent: TJCoreOPFClassMetadata read GetParent;
     property SubMaps: TJCoreOPFMaps read GetSubMaps;
-    property TableName: string read FTableName;
+    property TableName: string read FTableName write FTableName;
   end;
 
   { TJCoreOPFModel }
@@ -471,7 +471,6 @@ type
     function AcquireMap(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMap;
     function AttributeMetadataClass: TJCoreAttrMetadataClass; override;
     function ClassMetadataClass: TJCoreClassMetadataClass; override;
-    function CreateAttrMetadata(const AMetadata: TJCoreClassMetadata; const APropInfo: PPropInfo): TJCoreAttrMetadata; override;
     procedure Finit; override;
     procedure InitRegistry; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
@@ -1593,6 +1592,7 @@ begin
   end else
     CompositionClass := nil;
   FHasLazyload := True; // which also means "I dont know yet, try it"
+  Changed;
 end;
 
 function TJCoreOPFAttrMetadata.CreateADM(const APID: TJCoreOPFPID): TJCoreOPFADM;
@@ -1763,16 +1763,6 @@ begin
   Result := TJCoreOPFClassMetadata;
 end;
 
-function TJCoreOPFModel.CreateAttrMetadata(const AMetadata: TJCoreClassMetadata;
-  const APropInfo: PPropInfo): TJCoreAttrMetadata;
-var
-  VAttrMetadata: TJCoreOPFAttrMetadata;
-begin
-  VAttrMetadata := inherited CreateAttrMetadata(AMetadata, APropInfo) as TJCoreOPFAttrMetadata;
-  VAttrMetadata.Changed;
-  Result := VAttrMetadata;
-end;
-
 procedure TJCoreOPFModel.Finit;
 var
   I: Integer;
@@ -1805,9 +1795,9 @@ begin
   VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
   SetLength(VOIDName, 1);
   VOIDName[0] := 'ID';
-  VMetadata.FOIDName := VOIDName; // friend class
-  VMetadata.FOIDClass := OIDClass; // friend class
-  VMetadata.GeneratorName := GeneratorName; // friend class
+  VMetadata.OIDName := VOIDName;
+  VMetadata.OIDClass := OIDClass;
+  VMetadata.GeneratorName := GeneratorName;
 end;
 
 constructor TJCoreOPFModel.Create;
