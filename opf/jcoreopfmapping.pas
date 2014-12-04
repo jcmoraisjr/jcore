@@ -115,7 +115,7 @@ type
     destructor Destroy; override;
     procedure AddPID(const APID: TJCoreOPFPID);
     function CreateOIDArray: TJCoreOPFOIDArray;
-    function PIDByOID(const AOID: TJCoreOPFOID): TJCoreOPFPID;
+    function PIDByOID(const AOID: IJCoreOPFOID): TJCoreOPFPID;
     property TheClass: TClass read FClass;
   end;
 
@@ -152,13 +152,13 @@ type
     FMappingList: TJCoreOPFMappingList;
     FMetadata: TJCoreOPFClassMetadata;
     function AcquireClassMapping(const AClass: TClass): TJCoreOPFClassMapping;
-    function CreateOIDFromResultSet(const AResultSet: IJCoreOPFResultSet): TJCoreOPFOID;
-    function CreateOIDFromString(const AOID: string): TJCoreOPFOID;
-    procedure Dispose(const AOIDArray: array of TJCoreOPFOID);
+    function CreateOIDFromResultSet(const AResultSet: IJCoreOPFResultSet): IJCoreOPFOID;
+    function CreateOIDFromString(const AOID: string): IJCoreOPFOID;
+    procedure Dispose(const AOIDArray: array of IJCoreOPFOID);
     procedure EnsureMappingConsistency(const APID: TJCoreOPFPID);
     function GetGenerator: IJCoreOPFOIDGenerator;
     function MapIndexByMap(const ABaseMap: TJCoreOPFMap): Integer;
-    function Retrieve(const AOIDArray: array of TJCoreOPFOID): TJCoreObjectArray;
+    function Retrieve(const AOIDArray: array of IJCoreOPFOID): TJCoreObjectArray;
     function RetrieveFromResultSet(const AResultSet: IJCoreOPFResultSet): TJCoreObjectArray;
   protected
     property Driver: TJCoreOPFDriver read FDriver;
@@ -220,11 +220,11 @@ type
     function CreateEntityFromResultSet(const AResultSet: IJCoreOPFResultSet): TObject; virtual;
     function CreateParams: IJCoreOPFParams; virtual;
     // abstract facades
-    function InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray; virtual;
-    procedure InternalDispose(const AOIDArray: array of TJCoreOPFOID); virtual; abstract;
+    function InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray;
+    procedure InternalDispose(const AOIDArray: array of IJCoreOPFOID); virtual; abstract;
     procedure InternalInsert(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     function InternalRetrieveCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): IJCoreOPFResultSet; virtual; abstract;
-    function InternalRetrieveEntity(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet; virtual; abstract;
+    function InternalRetrieveEntity(const AOIDArray: array of IJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet; virtual; abstract;
     procedure InternalUpdate(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     // direct field <-> attribute mapping
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet; const AMapping: TJCoreOPFADMMapping); virtual;
@@ -242,10 +242,10 @@ type
     class function Apply(const AMap: TJCoreOPFMap): Boolean; virtual; abstract;
     function CreateEntity(const AResultSet: IJCoreOPFResultSet): TObject;
     function CreateGenerator: IJCoreOPFOIDGenerator;
-    function CreateOID(const AGenerator: IJCoreOPFOIDGenerator): TJCoreOPFOID;
-    procedure Dispose(const AOIDArray: array of TJCoreOPFOID);
+    function CreateOID(const AGenerator: IJCoreOPFOIDGenerator): IJCoreOPFOID;
+    procedure Dispose(const AOIDArray: array of IJCoreOPFOID);
     function RetrieveCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): IJCoreOPFResultSet;
-    function RetrieveEntity(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet;
+    function RetrieveEntity(const AOIDArray: array of IJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet;
     procedure RetrieveMappingFromResultSet(const AResultSet: IJCoreOPFResultSet; const AMapping: TJCoreOPFADMMapping);
     procedure Store(const AMapping: TJCoreOPFADMMapping);
   end;
@@ -421,11 +421,11 @@ begin
     Result[I] := PIDList[I].OID;
 end;
 
-function TJCoreOPFComplementaryClassMapping.PIDByOID(const AOID: TJCoreOPFOID): TJCoreOPFPID;
+function TJCoreOPFComplementaryClassMapping.PIDByOID(const AOID: IJCoreOPFOID): TJCoreOPFPID;
 begin
   { TODO : binary search }
   for Result in PIDList do
-    if Result.OID.Equals(AOID) then
+    if Result.OID.EqualsOID(AOID) then
       Exit;
   raise EJCoreOPFObjectNotFound.Create(AOID.AsString);
 end;
@@ -491,7 +491,7 @@ begin
     Result := Mapper.AcquireClassMapping(AClass);
 end;
 
-function TJCoreOPFClassMapping.CreateOIDFromResultSet(const AResultSet: IJCoreOPFResultSet): TJCoreOPFOID;
+function TJCoreOPFClassMapping.CreateOIDFromResultSet(const AResultSet: IJCoreOPFResultSet): IJCoreOPFOID;
 begin
   if not AResultSet.ReadNull then
     Result := Metadata.OIDClass.CreateFromResultSet(AResultSet)
@@ -499,12 +499,12 @@ begin
     Result := nil;
 end;
 
-function TJCoreOPFClassMapping.CreateOIDFromString(const AOID: string): TJCoreOPFOID;
+function TJCoreOPFClassMapping.CreateOIDFromString(const AOID: string): IJCoreOPFOID;
 begin
   Result := Metadata.OIDClass.CreateFromString(AOID);
 end;
 
-procedure TJCoreOPFClassMapping.Dispose(const AOIDArray: array of TJCoreOPFOID);
+procedure TJCoreOPFClassMapping.Dispose(const AOIDArray: array of IJCoreOPFOID);
 var
   VSubClasses: TJCoreClassArray;
   I: Integer;
@@ -541,7 +541,7 @@ begin
   raise EJCoreOPFMappingNotFound.Create(ABaseMap.Metadata.TheClass.ClassName);
 end;
 
-function TJCoreOPFClassMapping.Retrieve(const AOIDArray: array of TJCoreOPFOID): TJCoreObjectArray;
+function TJCoreOPFClassMapping.Retrieve(const AOIDArray: array of IJCoreOPFOID): TJCoreObjectArray;
 var
   VResultSet: IJCoreOPFResultSet;
 begin
@@ -560,7 +560,7 @@ var
   VPID: TJCoreOPFPID;
   VOIDClass: TJCoreOPFOIDClass;
   VOIDArray: TJCoreOPFOIDArray;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
   I, J: Integer;
 begin
   SetLength(VObjectArray, AResultSet.Size);
@@ -572,13 +572,9 @@ begin
       for I := 0 to Pred(AResultSet.Size) do
       begin
         VOID := VOIDClass.CreateFromResultSet(AResultSet);
-        try
-          VObjectArray[I] := Mapping.CreateEntity(AResultSet);
-          VPID := Mapper.AcquirePID(VObjectArray[I]);
-          VPID.AssignOID(VOID);
-        finally
-          FreeAndNil(VOID);
-        end;
+        VObjectArray[I] := Mapping.CreateEntity(AResultSet);
+        VPID := Mapper.AcquirePID(VObjectArray[I]);
+        VPID.OID := VOID;
         RetrieveMapsInternal(AResultSet, VPID, nil);
         if VPID.ADMMappingCount <> MappingList.Count then
         begin
@@ -605,11 +601,7 @@ begin
             // complementary resultset may be in a different order of the
             // base resultset
             VOID := VOIDClass.CreateFromResultSet(VCompResultSet);
-            try
-              VPID := VCompClass.PIDByOID(VOID);
-            finally
-              FreeAndNil(VOID);
-            end;
+            VPID := VCompClass.PIDByOID(VOID);
             VClassMapping.RetrieveMapsInternal(VCompResultSet, VPID, Mapping.Map);
           end;
         end;
@@ -631,20 +623,15 @@ var
   I, VOIDCount: Integer;
 begin
   SetLength(VOIDArray, AResultSet.Size);
-  try
-    VOIDCount := 0;
-    for I := 0 to Pred(AResultSet.Size) do
-    begin
-      VOIDArray[VOIDCount] := CreateOIDFromResultSet(AResultSet);
-      if Assigned(VOIDArray[VOIDCount]) then
-        Inc(VOIDCount);
-    end;
-    SetLength(VOIDArray, VOIDCount);
-    Dispose(VOIDArray);
-  finally
-    for I := 0 to Pred(VOIDCount) do
-      FreeAndNil(VOIDArray[I]);
+  VOIDCount := 0;
+  for I := 0 to Pred(AResultSet.Size) do
+  begin
+    VOIDArray[VOIDCount] := CreateOIDFromResultSet(AResultSet);
+    if Assigned(VOIDArray[VOIDCount]) then
+      Inc(VOIDCount);
   end;
+  SetLength(VOIDArray, VOIDCount);
+  Dispose(VOIDArray);
 end;
 
 procedure TJCoreOPFClassMapping.DisposeFromOIDInternal(const AOIDArray: TJCoreOPFOIDArray);
@@ -655,17 +642,12 @@ end;
 function TJCoreOPFClassMapping.RetrieveEntityFromResultSetInternal(
   const AResultSet: IJCoreOPFResultSet): TObject;
 var
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   VOID := CreateOIDFromResultSet(AResultSet);
   if Assigned(VOID) then
-  begin
-    try
-      Result := Retrieve([VOID])[0];
-    finally
-      FreeAndNil(VOID);
-    end;
-  end else
+    Result := Retrieve([VOID])[0]
+  else
     Result := nil;
 end;
 
@@ -710,7 +692,7 @@ end;
 procedure TJCoreOPFClassMapping.RetrieveEntityInternal(const AOwnerPID: TJCoreOPFPID;
   const AOwnerADM: TJCoreOPFADMEntity);
 var
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
   VComposite: TObject;
 begin
   VOID := AOwnerADM.CompositionOID;
@@ -785,14 +767,9 @@ var
   I: Integer;
 begin
   SetLength(VOIDArray, Length(AStringOIDArray));
-  try
-    for I := Low(AStringOIDArray) to High(AStringOIDArray) do
-      VOIDArray[I] := CreateOIDFromString(AStringOIDArray[I]);
-    Dispose(VOIDArray);
-  finally
-    for I := Low(VOIDArray) to High(VOIDArray) do
-      FreeAndNil(VOIDArray[I]);
-  end;
+  for I := Low(AStringOIDArray) to High(AStringOIDArray) do
+    VOIDArray[I] := CreateOIDFromString(AStringOIDArray[I]);
+  Dispose(VOIDArray);
 end;
 
 procedure TJCoreOPFClassMapping.DisposePID(const APIDArray: array of TJCoreOPFPID);
@@ -806,27 +783,23 @@ begin
   Dispose(VOIDArray);
   for I := 0 to Pred(Length(APIDArray)) do
   begin
-    APIDArray[I].AssignOID(nil);
+    APIDArray[I].OID := nil;
     Mapper.AddInTransactionPID(APIDArray[I]);
   end;
 end;
 
 function TJCoreOPFClassMapping.RetrieveOID(const AStringOID: string): TObject;
 var
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   if AStringOID <> '' then
   begin
     VOID := CreateOIDFromString(AStringOID);
     try
-      try
-        Result := Retrieve([VOID])[0];
-      except
-        on E: EJCoreOPFEmptyResultSet do
-          raise EJCoreOPFObjectNotFound.Create(AStringOID);
-      end;
-    finally
-      FreeAndNil(VOID);
+      Result := Retrieve([VOID])[0];
+    except
+      on E: EJCoreOPFEmptyResultSet do
+        raise EJCoreOPFObjectNotFound.Create(AStringOID);
     end;
   end else
     Result := nil;
@@ -834,18 +807,14 @@ end;
 
 procedure TJCoreOPFClassMapping.StorePID(const APID: TJCoreOPFPID);
 var
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
   I: Integer;
 begin
   EnsureMappingConsistency(APID);
   if not APID.IsPersistent then
   begin
     VOID := Mapping.CreateOID(Generator);
-    try
-      APID.AssignOID(VOID);
-    finally
-      FreeAndNil(VOID);
-    end;
+    APID.OID := VOID;
   end;
   for I := 0 to Pred(MappingList.Count) do
     MappingList[I].Store(APID[I]);
@@ -942,12 +911,12 @@ begin
   Result := InternalCreateGenerator;
 end;
 
-function TJCoreOPFMapping.CreateOID(const AGenerator: IJCoreOPFOIDGenerator): TJCoreOPFOID;
+function TJCoreOPFMapping.CreateOID(const AGenerator: IJCoreOPFOIDGenerator): IJCoreOPFOID;
 begin
   Result := InternalCreateOIDArray(AGenerator, 1)[0];
 end;
 
-procedure TJCoreOPFMapping.Dispose(const AOIDArray: array of TJCoreOPFOID);
+procedure TJCoreOPFMapping.Dispose(const AOIDArray: array of IJCoreOPFOID);
 begin
   InternalDispose(AOIDArray);
 end;
@@ -958,7 +927,7 @@ begin
   Result := InternalRetrieveCollection(AOwnerPID, AOwnerADM);
 end;
 
-function TJCoreOPFMapping.RetrieveEntity(const AOIDArray: array of TJCoreOPFOID;
+function TJCoreOPFMapping.RetrieveEntity(const AOIDArray: array of IJCoreOPFOID;
   const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet;
 begin
   Result := InternalRetrieveEntity(AOIDArray, ABaseMap);

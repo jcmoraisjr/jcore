@@ -114,18 +114,18 @@ type
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
   protected
     // Support
-    procedure WriteDisposeCollection(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of TJCoreOPFOID);
-    procedure WriteDisposeEntityCompositions(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDArray: array of TJCoreOPFOID);
+    procedure WriteDisposeCollection(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of IJCoreOPFOID);
+    procedure WriteDisposeEntityCompositions(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDArray: array of IJCoreOPFOID);
     procedure WriteDisposeExternalLinks(const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
     procedure WriteInsertExternalLinks(const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
     property SQLGenerator: TJCoreOPFSQLGenerator read FSQLGenerator;
   protected
     // Facade internals
-    procedure InternalDispose(const AOIDArray: array of TJCoreOPFOID); override;
+    procedure InternalDispose(const AOIDArray: array of IJCoreOPFOID); override;
     procedure InternalInsert(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
     function InternalRetrieveCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): IJCoreOPFResultSet; override;
-    function InternalRetrieveEntity(const AOIDArray: array of TJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet; override;
+    function InternalRetrieveEntity(const AOIDArray: array of IJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet; override;
     procedure InternalUpdate(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
     // Direct attribute <-> field mapping
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet; const AMapping: TJCoreOPFADMMapping); override;
@@ -696,11 +696,11 @@ begin
 end;
 
 procedure TJCoreOPFSQLMapping.WriteDisposeCollection(
-  const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of TJCoreOPFOID);
+  const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of IJCoreOPFOID);
 var
   VStmt: IJCoreOPFSQLStatement;
   VResultSet: IJCoreOPFSQLResultSet;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   {
     Collections might be:
@@ -744,11 +744,11 @@ begin
 end;
 
 procedure TJCoreOPFSQLMapping.WriteDisposeEntityCompositions(
-  const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDArray: array of TJCoreOPFOID);
+  const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDArray: array of IJCoreOPFOID);
 var
   VStmt: IJCoreOPFSQLStatement;
   VResultSet: IJCoreOPFSQLResultSet;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   { TODO : Implement reading of more than one entity composition }
   if Length(ACompositionMetadatas) = 1 then
@@ -768,7 +768,7 @@ procedure TJCoreOPFSQLMapping.WriteDisposeExternalLinks(
 var
   VStmt: IJCoreOPFSQLStatement;
   VOIDs: TJCoreOPFOIDArray;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   if AADM.Metadata.HasExternalLink and AOwnerPID.IsPersistent then
   begin
@@ -806,7 +806,7 @@ begin
   end;
 end;
 
-procedure TJCoreOPFSQLMapping.InternalDispose(const AOIDArray: array of TJCoreOPFOID);
+procedure TJCoreOPFSQLMapping.InternalDispose(const AOIDArray: array of IJCoreOPFOID);
 var
   VCompositionMetadatas: TJCoreOPFAttrMetadataArray;
   VAttrMetadata: TJCoreOPFAttrMetadata;
@@ -858,11 +858,11 @@ begin
   Result := VStmt.OpenCursor;
 end;
 
-function TJCoreOPFSQLMapping.InternalRetrieveEntity(const AOIDArray: array of TJCoreOPFOID;
+function TJCoreOPFSQLMapping.InternalRetrieveEntity(const AOIDArray: array of IJCoreOPFOID;
   const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet;
 var
   VStmt: IJCoreOPFSQLStatement;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   VStmt := Driver.CreateStatement;
   for VOID in AOIDArray do

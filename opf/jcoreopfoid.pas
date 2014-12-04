@@ -17,31 +17,36 @@ unit JCoreOPFOID;
 interface
 
 uses
-  JCoreClasses,
   JCoreEntity,
   JCoreOPFDriver,
   JCoreOPFOIDGen;
 
 type
 
+  IJCoreOPFOID = interface(IJCoreOID)
+    function EqualsOID(const AOther: IJCoreOPFOID): Boolean;
+    procedure WriteToParams(const AParams: IJCoreOPFParams);
+  end;
+
   { TJCoreOPFOID }
 
-  TJCoreOPFOID = class(TJCoreManagedObject, IJCoreOID)
+  TJCoreOPFOID = class(TInterfacedObject, IJCoreOPFOID)
   private
-    function IJCoreOID.AsString = GetAsString;
+    function IJCoreOPFOID.AsString = GetAsString;
   protected
     function GetAsString: string; virtual; abstract;
   public
     constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); virtual; abstract;
     constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); virtual; abstract;
     constructor CreateFromString(const AStringOID: string); virtual; abstract;
+    function EqualsOID(const AOther: IJCoreOPFOID): Boolean;
     class procedure WriteNull(const AParams: IJCoreOPFParams); virtual; abstract;
     procedure WriteToParams(const AParams: IJCoreOPFParams); virtual; abstract;
     property AsString: string read GetAsString;
   end;
 
   TJCoreOPFOIDClass = class of TJCoreOPFOID;
-  TJCoreOPFOIDArray = array of TJCoreOPFOID;
+  TJCoreOPFOIDArray = array of IJCoreOPFOID;
 
   { TJCoreOPFOIDInt64 }
 
@@ -83,6 +88,13 @@ implementation
 
 uses
   sysutils;
+
+{ TJCoreOPFOID }
+
+function TJCoreOPFOID.EqualsOID(const AOther: IJCoreOPFOID): Boolean;
+begin
+  Result := Assigned(AOther) and (AOther.AsString = AsString);
+end;
 
 { TJCoreOPFOIDInt64 }
 

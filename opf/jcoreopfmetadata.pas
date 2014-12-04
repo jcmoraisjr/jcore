@@ -186,24 +186,21 @@ type
 
   TJCoreOPFADMEntity = class(TJCoreOPFADMObject)
   private
-    FCompositionOID: TJCoreOPFOID;
-    FOIDCache: TJCoreOPFOID;
-    procedure SetCompositionOID(AValue: TJCoreOPFOID);
-    procedure SetOIDCache(AValue: TJCoreOPFOID);
+    FCompositionOID: IJCoreOPFOID;
+    FOIDCache: IJCoreOPFOID;
   protected
     function AcquirePID: TJCoreOPFPID;
     function InternalIsDirty: Boolean; override;
     procedure InternalLoad; override;
     procedure InternalUpdateCache; override;
-    property OIDCache: TJCoreOPFOID read FOIDCache write SetOIDCache;
+    property OIDCache: IJCoreOPFOID read FOIDCache write FOIDCache;
   public
-    destructor Destroy; override;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
     procedure AssignComposition(const AComposite: TObject);
     class function AttributeType: TJCoreOPFAttributeType; override;
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
     procedure WriteToParams(const AParams: IJCoreOPFParams); override;
-    property CompositionOID: TJCoreOPFOID read FCompositionOID write SetCompositionOID;
+    property CompositionOID: IJCoreOPFOID read FCompositionOID write FCompositionOID;
   end;
 
   { TJCoreOPFADMCollection }
@@ -226,10 +223,8 @@ type
     function GetOIDRemoved: TJCoreOPFOIDArray;
     function GetPIDAdded: TJCoreOPFPIDArray;
     function GetPIDArray: TJCoreOPFPIDArray;
-    function HasOIDInCache(const AOID: TJCoreOPFOID): Boolean;
-    function HasOIDInCollection(const APIDArray: TJCoreOPFPIDArray; const AOID: TJCoreOPFOID): Boolean;
-    procedure ReleaseOIDCache;
-    procedure SetOIDCache(AValue: TJCoreOPFOIDArray);
+    function HasOIDInCache(const AOID: IJCoreOPFOID): Boolean;
+    function HasOIDInCollection(const APIDArray: TJCoreOPFPIDArray; const AOID: IJCoreOPFOID): Boolean;
     procedure UpdateChanges;
   protected
     procedure InternalAssignArray(const AArray: TJCoreObjectArray); virtual; abstract;
@@ -239,9 +234,8 @@ type
     procedure InternalLoad; override;
     procedure InternalUpdateCache; override;
     property ItemsArray: TJCoreObjectArray read GetItemsArray;
-    property OIDCache: TJCoreOPFOIDArray read FOIDCache write SetOIDCache;
+    property OIDCache: TJCoreOPFOIDArray read FOIDCache write FOIDCache;
   public
-    destructor Destroy; override;
     procedure AssignArray(const AArray: TJCoreObjectArray);
     class function AttributeType: TJCoreOPFAttributeType; override;
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
@@ -318,7 +312,7 @@ type
     FIsPersistent: Boolean;
     FPIDManager: IJCoreOPFPIDManager;
     FMetadata: TJCoreOPFClassMetadata;
-    FOID: TJCoreOPFOID;
+    FOID: IJCoreOPFOID;
     FOwner: TJCoreOPFPID;
     FOwnerADM: TJCoreOPFADMCollection;
     function CreateADM(const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreOPFADM;
@@ -332,6 +326,7 @@ type
     function IJCorePID.IsPersistent = IGetIsPersistent;
     function IJCorePID.OID = IGetOID;
     function IJCorePID.Owner = IGetOwner;
+    procedure SetOID(const AValue: IJCoreOPFOID);
   protected
     function AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
     property ADMMap: TJCoreOPFADMMap read FADMMap;
@@ -343,7 +338,6 @@ type
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function ADMByName(const AAttributeName: string): IJCoreADM;
     function ADMMappingCount: Integer;
-    procedure AssignOID(const AOID: TJCoreOPFOID);
     procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
     procedure Commit;
     function IsDirty: Boolean;
@@ -352,7 +346,7 @@ type
     property IsPersistent: Boolean read FIsPersistent;
     property Entity: TObject read FEntity;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
-    property OID: TJCoreOPFOID read FOID;
+    property OID: IJCoreOPFOID read FOID write SetOID;
     property Owner: TJCoreOPFPID read FOwner;
   end;
 
@@ -815,26 +809,6 @@ end;
 
 { TJCoreOPFADMEntity }
 
-procedure TJCoreOPFADMEntity.SetOIDCache(AValue: TJCoreOPFOID);
-begin
-  if FOIDCache <> AValue then
-  begin;
-    FreeAndNil(FOIDCache);
-    FOIDCache := AValue;
-    if Assigned(FOIDCache) then
-      FOIDCache.AddRef;
-  end;
-end;
-
-procedure TJCoreOPFADMEntity.SetCompositionOID(AValue: TJCoreOPFOID);
-begin
-  if FCompositionOID <> AValue then
-  begin
-    FreeAndNil(FCompositionOID);
-    FCompositionOID := AValue;
-  end;
-end;
-
 function TJCoreOPFADMEntity.AcquirePID: TJCoreOPFPID;
 var
   VObject: TObject;
@@ -849,7 +823,7 @@ end;
 function TJCoreOPFADMEntity.InternalIsDirty: Boolean;
 var
   VPID: TJCoreOPFPID;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   VPID := AcquirePID;
   if Assigned(VPID) then
@@ -877,13 +851,6 @@ begin
     OIDCache := VPID.OID
   else
     OIDCache := nil;
-end;
-
-destructor TJCoreOPFADMEntity.Destroy;
-begin
-  FreeAndNil(FCompositionOID);
-  FreeAndNil(FOIDCache);
-  inherited Destroy;
 end;
 
 class function TJCoreOPFADMEntity.Apply(const AModel: TJCoreModel;
@@ -994,9 +961,9 @@ begin
   Result := FPIDArray;
 end;
 
-function TJCoreOPFADMCollection.HasOIDInCache(const AOID: TJCoreOPFOID): Boolean;
+function TJCoreOPFADMCollection.HasOIDInCache(const AOID: IJCoreOPFOID): Boolean;
 var
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
 begin
   Result := True;
   for VOID in OIDCache do
@@ -1006,7 +973,7 @@ begin
 end;
 
 function TJCoreOPFADMCollection.HasOIDInCollection(
-  const APIDArray: TJCoreOPFPIDArray; const AOID: TJCoreOPFOID): Boolean;
+  const APIDArray: TJCoreOPFPIDArray; const AOID: IJCoreOPFOID): Boolean;
 var
   VPID: TJCoreOPFPID;
 begin
@@ -1015,29 +982,6 @@ begin
     if VPID.OID = AOID then
       Exit;
   Result := False;
-end;
-
-procedure TJCoreOPFADMCollection.ReleaseOIDCache;
-var
-  VOID: TJCoreOPFOID;
-  I: Integer;
-begin
-  for I := Low(OIDCache) to High(OIDCache) do
-  begin
-    VOID := OIDCache[I];
-    OIDCache[I] := nil;
-    VOID.Free;
-  end;
-end;
-
-procedure TJCoreOPFADMCollection.SetOIDCache(AValue: TJCoreOPFOIDArray);
-var
-  VOID: TJCoreOPFOID;
-begin
-  ReleaseOIDCache;
-  FOIDCache := AValue;
-  for VOID in FOIDCache do
-    VOID.AddRef;
 end;
 
 procedure TJCoreOPFADMCollection.UpdateChanges;
@@ -1144,7 +1088,7 @@ procedure TJCoreOPFADMCollection.InternalUpdateCache;
 var
   VPIDArray: TJCoreOPFPIDArray;
   VOIDCache: TJCoreOPFOIDArray;
-  VOID: TJCoreOPFOID;
+  VOID: IJCoreOPFOID;
   I, J: Integer;
 begin
   VPIDArray := PIDArray;
@@ -1161,12 +1105,6 @@ begin
   end;
   SetLength(VOIDCache, J);
   OIDCache := VOIDCache;
-end;
-
-destructor TJCoreOPFADMCollection.Destroy;
-begin
-  ReleaseOIDCache;
-  inherited Destroy;
 end;
 
 procedure TJCoreOPFADMCollection.AssignArray(const AArray: TJCoreObjectArray);
@@ -1401,6 +1339,13 @@ begin
   Result := FOwner;
 end;
 
+procedure TJCoreOPFPID.SetOID(const AValue: IJCoreOPFOID);
+begin
+  if IsPersistent and Assigned(AValue) then
+    raise EJCoreOPFCannotAssignOIDPersistent.Create;
+  FOID := AValue;
+end;
+
 function TJCoreOPFPID.AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
 var
   I: Integer;
@@ -1439,7 +1384,6 @@ begin
     FADMMappingMap.Data[I].Free;
   FreeAndNil(FADMMappingMap);
   FreeAndNil(FADMMap);
-  FreeAndNil(FOID);
   inherited Destroy;
 end;
 
@@ -1461,19 +1405,6 @@ end;
 function TJCoreOPFPID.ADMMappingCount: Integer;
 begin
   Result := ADMMappingMap.Count;
-end;
-
-procedure TJCoreOPFPID.AssignOID(const AOID: TJCoreOPFOID);
-begin
-  if IsPersistent and Assigned(AOID) then
-    raise EJCoreOPFCannotAssignOIDPersistent.Create;
-  if FOID <> AOID then
-  begin
-    FreeAndNil(FOID);
-    FOID := AOID;
-    if Assigned(FOID) then
-      FOID.AddRef;
-  end;
 end;
 
 procedure TJCoreOPFPID.AssignOwner(const AOwner: TJCoreOPFPID;

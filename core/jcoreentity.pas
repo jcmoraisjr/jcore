@@ -20,7 +20,7 @@ type
 
   { IJCoreOID }
 
-  IJCoreOID = interface
+  IJCoreOID = interface(IInterface)
   ['{C4DE3860-6FBC-01A0-BA08-1990558E6AF1}']
     function AsString: string;
   end;
