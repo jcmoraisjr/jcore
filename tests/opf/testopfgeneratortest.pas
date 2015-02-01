@@ -26,6 +26,7 @@ uses
   testregistry,
   JCoreOPFException,
   JCoreOPFMetadata,
+  JCoreOPFADM,
   JCoreOPFOIDGen,
   JCoreOPFOID,
   JCoreOPFDriver,
@@ -75,6 +76,7 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestSQLDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
+  VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiString]);
   VConfiguration.Model.OIDClass := TJCoreOPFOIDInt64;
   VConfiguration.Model.GeneratorName := 'GEN_APP';
   VSession := VConfiguration.CreateSession;
@@ -99,6 +101,7 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
+  VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiString]);
   VConfiguration.Model.GeneratorName := '';
   VConfiguration.Model.OIDClass := TJCoreOPFOIDString;
   VSession := VConfiguration.CreateSession;

@@ -83,7 +83,8 @@ implementation
 uses
   sysutils,
   types,
-  JCoreOPFException;
+  JCoreOPFException,
+  JCoreOPFADM;
 
 { TJCoreOPFConfiguration }
 
@@ -155,10 +156,13 @@ end;
 constructor TJCoreOPFConfiguration.Create(
   const AModel: TJCoreOPFModel = nil);
 begin
-  if Assigned(AModel) then
-    FModel := AModel
-  else
+  if not Assigned(AModel) then
+  begin
     FModel := TJCoreOPFModel.Create;
+    FModel.AddADMClass([TJCoreOPFADMType32, TJCoreOPFADMType64, TJCoreOPFADMFloat,
+     TJCoreOPFADMAnsiString, TJCoreOPFADMEntity, TJCoreOPFADMFPSListCollection]);
+  end else
+    FModel := AModel;
   inherited Create;
   FDriverClassMap := TJCoreOPFDriverClassMap.Create;
   FDriverClassMap.Duplicates := dupIgnore;

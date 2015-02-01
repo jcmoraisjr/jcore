@@ -14,14 +14,8 @@
           <DebugInfoType Value="dsDwarf2Set"/>
         </Debugging>
       </Linking>
-      <Other>
-        <CompilerMessages>
-          <MsgFileName Value=""/>
-        </CompilerMessages>
-        <CompilerPath Value="$(CompPath)"/>
-      </Other>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="12">
       <Item1>
         <Filename Value="opf/jcoreopfconsts.pas"/>
         <UnitName Value="JCoreOPFConsts"/>
@@ -47,25 +41,29 @@
         <UnitName Value="JCoreOPFMetadata"/>
       </Item6>
       <Item7>
-        <Filename Value="opf/jcoreopfmapping.pas"/>
-        <UnitName Value="JCoreOPFMapping"/>
+        <Filename Value="opf/jcoreopfadm.pas"/>
+        <UnitName Value="JCoreOPFADM"/>
       </Item7>
       <Item8>
-        <Filename Value="opf/jcoreopfmappingsql.pas"/>
-        <UnitName Value="JCoreOPFMappingSQL"/>
+        <Filename Value="opf/jcoreopfmapping.pas"/>
+        <UnitName Value="JCoreOPFMapping"/>
       </Item8>
       <Item9>
-        <Filename Value="opf/jcoreopfsession.pas"/>
-        <UnitName Value="JCoreOPFSession"/>
+        <Filename Value="opf/jcoreopfmappingsql.pas"/>
+        <UnitName Value="JCoreOPFMappingSQL"/>
       </Item9>
       <Item10>
-        <Filename Value="opf/jcoreopfconfig.pas"/>
-        <UnitName Value="JCoreOPFConfig"/>
+        <Filename Value="opf/jcoreopfsession.pas"/>
+        <UnitName Value="JCoreOPFSession"/>
       </Item10>
       <Item11>
+        <Filename Value="opf/jcoreopfconfig.pas"/>
+        <UnitName Value="JCoreOPFConfig"/>
+      </Item11>
+      <Item12>
         <Filename Value="opf/drivers/jcoreopfdriversqldb.pas"/>
         <UnitName Value="JCoreOPFDriverSQLdb"/>
-      </Item11>
+      </Item12>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
