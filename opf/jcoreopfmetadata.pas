@@ -50,22 +50,20 @@ type
 
   { TJCoreOPFADM }
 
-  TJCoreOPFADM = class(TObject, IJCoreADM)
+  TJCoreOPFADM = class(TJCoreManagedObject, IJCoreADM)
   private
-    FAttrAddr: Pointer;
-    FAttrPropInfo: PPropInfo;
     FCacheUpdated: Boolean;
     FLoaded: Boolean;
     FMetadata: TJCoreOPFAttrMetadata;
     FPID: TJCoreOPFPID;
+    class function IsGUIDEqual(const AGuid1, AGuid2: TGuid): Boolean;
   protected
+    class function Implements(const ATypeInfo: PTypeInfo; const AClass: TClass): Boolean;
+    class function Implements(const ATypeInfo: PTypeInfo; const AGUID: TGuid): Boolean;
     procedure InternalCommit; virtual;
-    procedure InternalGetter; virtual; abstract;
     function InternalIsDirty: Boolean; virtual; abstract;
     procedure InternalLoad; virtual;
     procedure InternalUpdateCache; virtual; abstract;
-    property AttrAddr: Pointer read FAttrAddr;
-    property AttrPropInfo: PPropInfo read FAttrPropInfo;
   public
     constructor Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); virtual;
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; virtual; abstract;
@@ -74,7 +72,6 @@ type
     function IsDirty: Boolean;
     procedure Load;
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); virtual; abstract;
-    procedure UpdateAttrAddr(const AAttrAddrRef: PPPointer);
     procedure WriteToParams(const AParams: IJCoreOPFParams); virtual; abstract;
     property Metadata: TJCoreOPFAttrMetadata read FMetadata;
     property PID: TJCoreOPFPID read FPID;
@@ -85,9 +82,31 @@ type
   TJCoreOPFADMArray = array of TJCoreOPFADM;
   TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
 
+  { TJCoreOPFADMValueType }
+
+  TJCoreOPFADMValueType = class(TJCoreOPFADM)
+  public
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+  end;
+
+  { TJCoreOPFADMNative }
+
+  TJCoreOPFADMNative = class(TJCoreOPFADM)
+  private
+    FAttrAddr: Pointer;
+    FAttrPropInfo: PPropInfo;
+  protected
+    procedure InternalGetter; virtual; abstract;
+    property AttrAddr: Pointer read FAttrAddr;
+    property AttrPropInfo: PPropInfo read FAttrPropInfo;
+  public
+    constructor Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata); override;
+    procedure UpdateAttrAddr(const AAttrAddrRef: PPPointer);
+  end;
+
   { TJCoreOPFADMObject }
 
-  TJCoreOPFADMObject = class(TJCoreOPFADM)
+  TJCoreOPFADMObject = class(TJCoreOPFADMNative)
   private
     function GetValue: TObject;
     procedure SetValue(const AValue: TObject);
@@ -223,6 +242,7 @@ type
     function CreateADM(const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreOPFADM;
     procedure CreateADMs(const AMaps: TJCoreOPFMaps);
     function GetADMMapping(const AIndex: Integer): TJCoreOPFADMMapping;
+    function GetPIDManager: IJCoreOPFPIDManager;
     function IGetEntity: TObject;
     function IGetIsPersistent: Boolean;
     function IGetOID: IJCoreOID;
@@ -236,14 +256,15 @@ type
     function AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
     property ADMMap: TJCoreOPFADMMap read FADMMap;
     property ADMMappingMap: TJCoreOPFADMMappingMap read FADMMappingMap;
-    property PIDManager: IJCoreOPFPIDManager read FPIDManager;
+    property PIDManager: IJCoreOPFPIDManager read GetPIDManager;
   public
-    constructor Create(const APIDManager: IJCoreOPFPIDManager; const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
+    constructor Create(const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
     destructor Destroy; override;
     function AcquireADM(const AAttributeName: string): TJCoreOPFADM;
     function ADMByName(const AAttributeName: string): IJCoreADM;
     function ADMMappingCount: Integer;
     procedure AssignOwner(const AOwner: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
+    procedure AttachManager(const APIDManager: IJCoreOPFPIDManager);
     procedure Commit;
     function IsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
@@ -364,13 +385,17 @@ type
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
+    function AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
+    function AcquirePIDFromProxyField(const AEntity: TObject): TJCoreOPFPID;
     procedure AcquireSubMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
   protected
     function AcquireMap(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMap;
     function AttributeMetadataClass: TJCoreAttrMetadataClass; override;
     function ClassMetadataClass: TJCoreClassMetadataClass; override;
+    function CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy; virtual;
     procedure Finit; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
+    function PIDClass: TJCoreOPFPIDClass; virtual;
     procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); override;
     property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
     property MapMap: TJCoreOPFMapMap read FMapMap;
@@ -379,9 +404,11 @@ type
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
     function AcquireAttrMetadata(const AClass: TClass; const AAttributeName: string): TJCoreOPFAttrMetadata;
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
+    function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     procedure AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
+    procedure InitEntity(const AEntity: TObject); override;
     property GeneratorName: string read FGeneratorName write FGeneratorName;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
   end;
@@ -394,6 +421,24 @@ uses
   JCoreOPFException;
 
 { TJCoreOPFADM }
+
+class function TJCoreOPFADM.IsGUIDEqual(const AGuid1, AGuid2: TGuid): Boolean;
+begin
+  Result := (AGuid1.D1 = AGuid2.D1) and
+   (PDWORD(@AGuid1.D2)^ = PDWORD(@AGuid2.D2)^) and
+   (PDWORD(@AGuid1.D4[0])^ = PDWORD(@AGuid2.D4[0])^) and
+   (PDWORD(@AGuid1.D4[4])^ = PDWORD(@AGuid2.D4[4])^);
+end;
+
+class function TJCoreOPFADM.Implements(const ATypeInfo: PTypeInfo; const AClass: TClass): Boolean;
+begin
+  Result := (ATypeInfo^.Kind = tkClass) and (GetTypeData(ATypeInfo)^.ClassType.InheritsFrom(AClass));
+end;
+
+class function TJCoreOPFADM.Implements(const ATypeInfo: PTypeInfo; const AGUID: TGuid): Boolean;
+begin
+  Result := (ATypeInfo^.Kind = tkInterface) and IsGUIDEqual(GetTypeData(ATypeInfo)^.GUID, AGUID);
+end;
 
 procedure TJCoreOPFADM.InternalCommit;
 begin
@@ -408,7 +453,6 @@ constructor TJCoreOPFADM.Create(const APID: TJCoreOPFPID; const AMetadata: TJCor
 begin
   inherited Create;
   FPID := APID;
-  FAttrPropInfo := AMetadata.PropInfo;
   FCacheUpdated := False;
   FMetadata := AMetadata;
   FLoaded := False;
@@ -436,7 +480,23 @@ begin
   end;
 end;
 
-procedure TJCoreOPFADM.UpdateAttrAddr(const AAttrAddrRef: PPPointer);
+{ TJCoreOPFADMValueType }
+
+class function TJCoreOPFADMValueType.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
+begin
+  Result := Implements(AAttrTypeInfo, Self);
+end;
+
+{ TJCoreOPFADMNative }
+
+constructor TJCoreOPFADMNative.Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
+begin
+  inherited Create(APID, AMetadata);
+  FAttrPropInfo := AMetadata.PropInfo;
+end;
+
+procedure TJCoreOPFADMNative.UpdateAttrAddr(const AAttrAddrRef: PPPointer);
 begin
   // AAttrAddrRef^, which references ADM.AttrAddr address, will be updated
   // with the entity's attribute address by the Lazyload method.
@@ -528,10 +588,7 @@ end;
 class function TJCoreOPFADMEntity.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
-  if AAttrTypeInfo^.Kind = tkClass then
-    Result := AModel.IsEntityClass(GetTypeData(AAttrTypeInfo)^.ClassType)
-  else
-    Result := False;
+  Result := (AAttrTypeInfo^.Kind = tkClass) and AModel.IsEntityClass(GetTypeData(AAttrTypeInfo)^.ClassType);
 end;
 
 procedure TJCoreOPFADMEntity.AssignComposition(const AComposite: TObject);
@@ -903,15 +960,37 @@ end;
 function TJCoreOPFPID.CreateADM(const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreOPFADM;
 var
   VADM: TJCoreOPFADM;
+  VTypeInfo: PTypeInfo;
+  VTypeData: PTypeData;
+  VIntf: IInterface;
 begin
   VADM := AAttrMetadata.CreateADM(Self);
   ADMMap.Add(AAttrMetadata.Name, VADM);
-  if AAttrMetadata.HasLazyload then
+  if AAttrMetadata.HasLazyload and (VADM is TJCoreOPFADMNative) then
   begin
     try
-      VADM.UpdateAttrAddr(@FAttrAddrRef);
+      { TODO : Abstract }
+      TJCoreOPFADMNative(VADM).UpdateAttrAddr(@FAttrAddrRef);
     finally
       FAttrAddrRef := nil;
+    end;
+  end;
+  // Assign ValueType reference
+  if VADM is TJCoreOPFADMValueType then
+  begin
+    VTypeInfo := AAttrMetadata.PropInfo^.PropType;
+    VTypeData := GetTypeData(VTypeInfo);
+    case VTypeInfo^.Kind of
+      tkClass:
+        if VTypeData^.ClassType.InheritsFrom(TJCoreOPFADM) then
+          SetObjectProp(Entity, AAttrMetadata.PropInfo, VADM);
+      tkInterface:
+      begin
+        VIntf := nil;
+        VADM.QueryInterface(VTypeData^.GUID, VIntf);
+        if Assigned(VIntf) then
+          SetInterfaceProp(Entity, AAttrMetadata.PropInfo, VIntf);
+      end;
     end;
   end;
   Result := VADM;
@@ -935,6 +1014,12 @@ end;
 function TJCoreOPFPID.GetADMMapping(const AIndex: Integer): TJCoreOPFADMMapping;
 begin
   Result := ADMMappingMap.Data[AIndex];
+end;
+
+function TJCoreOPFPID.GetPIDManager: IJCoreOPFPIDManager;
+begin
+  { TODO : Fail if nil }
+  Result := FPIDManager;
 end;
 
 function TJCoreOPFPID.IGetEntity: TObject;
@@ -971,19 +1056,18 @@ begin
   for I := 0 to Pred(ADMMap.Count) do
   begin
     Result := ADMMap.Data[I];
-    if Result.AttrAddr = AAttrAddr then
+    { TODO : Abstract }
+    if Result is TJCoreOPFADMNative and (TJCoreOPFADMNative(Result).AttrAddr = AAttrAddr) then
       Exit;
   end;
   raise EJCoreAttributeNotFound.Create(Entity.ClassName, IntToStr(PtrUInt(AAttrAddr)));
 end;
 
-constructor TJCoreOPFPID.Create(const APIDManager: IJCoreOPFPIDManager;
-  const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
+constructor TJCoreOPFPID.Create(const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointerException.Create;
   inherited Create;
-  FPIDManager := APIDManager;
   FEntity := AEntity;
   FMetadata := AMetadata;
   FIsPersistent := False;
@@ -1043,6 +1127,14 @@ begin
       { TODO : Check duplication in the same admcollection }
       raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
   end;
+end;
+
+procedure TJCoreOPFPID.AttachManager(const APIDManager: IJCoreOPFPIDManager);
+begin
+  if not Assigned(FPIDManager) then
+    FPIDManager := APIDManager
+  else if FPIDManager <> APIDManager then
+    { TODO : Fail }
 end;
 
 procedure TJCoreOPFPID.Commit;
@@ -1128,7 +1220,7 @@ begin
   FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
   FAttributeType := ADMClass.AttributeType;
   FPersistentFieldName := UpperCase(Name);
-  if IsClass then
+  if AttributeType in [jatEntity, jatCollection] then
   begin
     CompositionClass := ReadComposition(APropInfo^.PropType);
     VOwner := Owner as TJCoreOPFClassMetadata;
@@ -1257,6 +1349,46 @@ begin
   end;
 end;
 
+function TJCoreOPFModel.AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
+var
+  VPropInfo: PPropInfo;
+begin
+  VPropInfo := GetPropInfo(AEntity, SPID);
+  if Assigned(VPropInfo) and (VPropInfo^.PropType^.Kind = tkInterface) then
+  begin
+    Result := GetInterfaceProp(AEntity, VPropInfo) as TJCoreOPFPID;
+    if not Assigned(Result) then
+    begin
+      Result := PIDClass.Create(AEntity, AcquireMetadata(AEntity.ClassType));
+      SetInterfaceProp(AEntity, VPropInfo, Result as IJCorePID);
+    end;
+  end else
+    Result := nil;
+end;
+
+function TJCoreOPFModel.AcquirePIDFromProxyField(const AEntity: TObject): TJCoreOPFPID;
+var
+  VFieldAddr: Pointer;
+  VProxy: TJCoreEntityProxy;
+  VMetadata: TJCoreOPFClassMetadata;
+begin
+  VFieldAddr := AEntity.FieldAddress(SProxy);
+  if Assigned(VFieldAddr) then
+  begin
+    VProxy := TObject(VFieldAddr^) as TJCoreEntityProxy;
+    if not Assigned(VProxy) then
+    begin
+      VMetadata := AcquireMetadata(AEntity.ClassType);
+      Result := TJCoreOPFPID(PIDClass.NewInstance);
+      VProxy := CreateProxy(Result);
+      TJCoreEntityProxy(VFieldAddr^) := VProxy;
+      Result.Create(AEntity, VMetadata);
+    end else
+      Result := VProxy.PID as TJCoreOPFPID;
+  end else
+    Result := nil;
+end;
+
 procedure TJCoreOPFModel.AcquireSubMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
 var
   VClass: TClass;
@@ -1304,6 +1436,11 @@ begin
   Result := TJCoreOPFClassMetadata;
 end;
 
+function TJCoreOPFModel.CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy;
+begin
+  Result := TJCoreEntityProxy.Create(APID);
+end;
+
 procedure TJCoreOPFModel.Finit;
 var
   I: Integer;
@@ -1318,6 +1455,11 @@ end;
 function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
 begin
   Result := SameText(SPID, AAttrName) or inherited IsReservedAttr(AAttrName);
+end;
+
+function TJCoreOPFModel.PIDClass: TJCoreOPFPIDClass;
+begin
+  Result := TJCoreOPFPID;
 end;
 
 procedure TJCoreOPFModel.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
@@ -1361,6 +1503,17 @@ begin
   Result := inherited AcquireMetadata(AClass) as TJCoreOPFClassMetadata;
 end;
 
+function TJCoreOPFModel.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
+begin
+  if not Assigned(AEntity) then
+    raise EJCoreNilPointerException.Create;
+  Result := AcquirePIDFromIntfProp(AEntity);
+  if not Assigned(Result) then
+    Result := AcquirePIDFromProxyField(AEntity);
+  if not Assigned(Result) then
+    raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
+end;
+
 procedure TJCoreOPFModel.AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
 var
   VADMClass: TJCoreOPFADMClass;
@@ -1389,6 +1542,11 @@ begin
     FreeAndNil(Result);
     raise;
   end;
+end;
+
+procedure TJCoreOPFModel.InitEntity(const AEntity: TObject);
+begin
+  AcquirePID(AEntity);
 end;
 
 end.

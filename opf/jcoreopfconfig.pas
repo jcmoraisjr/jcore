@@ -159,8 +159,10 @@ begin
   if not Assigned(AModel) then
   begin
     FModel := TJCoreOPFModel.Create;
-    FModel.AddADMClass([TJCoreOPFADMType32, TJCoreOPFADMType64, TJCoreOPFADMFloat,
-     TJCoreOPFADMAnsiString, TJCoreOPFADMEntity, TJCoreOPFADMFPSListCollection]);
+    FModel.AddADMClass([
+     TJCoreOPFADMType32, TJCoreOPFADMType64, TJCoreOPFADMFloat,
+     TJCoreOPFADMAnsiString, TJCoreOPFIntegerType,
+     TJCoreOPFADMEntity, TJCoreOPFADMFPSListCollection]);
   end else
     FModel := AModel;
   inherited Create;

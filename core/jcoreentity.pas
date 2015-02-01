@@ -27,9 +27,27 @@ type
 
   { IJCoreADM }
 
-  IJCoreADM = interface
+  IJCoreADM = interface(IInterface)
   ['{BB774071-F57D-AFB8-70BC-3A2B0DD69690}']
     function IsDirty: Boolean;
+  end;
+
+  { IJCoreSimpleType }
+
+  IJCoreSimpleType = interface(IJCoreADM)
+  ['{5529EDF7-C6DE-BD26-D47B-F8604C56B481}']
+    procedure Clear;
+    function IsNull: Boolean;
+  end;
+
+  { IJCoreIntegerType }
+
+  IJCoreIntegerType = interface(IJCoreSimpleType)
+  ['{0B5AEE1C-752F-B7ED-327F-5D483A5C3D01}']
+    function GetValue: Integer;
+    procedure SetValue(const AValue: Integer);
+    function OldValue: Integer;
+    property Value: Integer read GetValue write SetValue;
   end;
 
   { IJCorePID }
@@ -43,6 +61,11 @@ type
     function Lazyload(const AAttrAddr: Pointer): Boolean;
     function OID: IJCoreOID;
     function Owner: IJCorePID;
+  end;
+
+  IJCoreModel = interface(IInterface)
+  ['{864C46EB-53E8-F576-445C-8573FD52E873}']
+    procedure InitEntity(const AEntity: TObject);
   end;
 
   { TJCoreEntityProxy }
@@ -67,6 +90,9 @@ type
     destructor Destroy; override;
   end;
   {$M-}
+
+var
+  JCoreDefaultModel: IJCoreModel;
 
 implementation
 

@@ -100,6 +100,19 @@ type
     property SessionProxyContact: ITestOPFSession read GetSessionProxyContact;
   end;
 
+  { TTestOPFSimpleTestCase }
+
+  TTestOPFSimpleTestCase = class(TTestOPFAbstractTestCase)
+  private
+    FConfig: IJCoreOPFConfiguration;
+    FSession: ITestOPFSession;
+    function GetConfig: IJCoreOPFConfiguration;
+    function GetSession: ITestOPFSession;
+  protected
+    property Config: IJCoreOPFConfiguration read GetConfig;
+    property Session: ITestOPFSession read GetSession;
+  end;
+
   { TTestOPFIPIDContactTestCase }
 
   TTestOPFIPIDContactTestCase = class(TTestOPFAbstractTestCase)
@@ -495,6 +508,26 @@ begin
   FSessionIPIDContactAuto := nil;
   FSessionIPIDContactManual := nil;
   FSessionProxyContact := nil;
+end;
+
+{ TTestOPFSimpleTestCase }
+
+function TTestOPFSimpleTestCase.GetConfig: IJCoreOPFConfiguration;
+begin
+  if not Assigned(FConfig) then
+  begin
+    FConfig := TTestOPFConfig.Create;
+    FConfig.DriverClass := TTestSQLDriver;
+    FConfig.AddMappingClass([TJCoreOPFSQLMapping]);
+  end;
+  Result := FConfig;
+end;
+
+function TTestOPFSimpleTestCase.GetSession: ITestOPFSession;
+begin
+  if not Assigned(FSession) then
+    FSession := Config.CreateSession as ITestOPFSession;
+  Result := FSession;
 end;
 
 { TTestOPFGeneratorSQLDriver }

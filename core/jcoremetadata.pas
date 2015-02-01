@@ -19,7 +19,8 @@ interface
 uses
   typinfo,
   fgl,
-  JCoreClasses;
+  JCoreClasses,
+  JCoreEntity;
 
 type
 
@@ -97,7 +98,7 @@ type
 
   { TJCoreModel }
 
-  TJCoreModel = class(TJCoreManagedObject)
+  TJCoreModel = class(TJCoreManagedObject, IJCoreModel)
   private
     FClassMap: TJCoreClassMap;
     FGenericsMap: TJCoreGenericsMap;
@@ -122,6 +123,7 @@ type
     procedure AddGenerics(const ASpecializedClass, ASpecializationClass: TClass);
     function FindClass(const AClassName: string): TClass;
     function FindSpecializedClass(const ASpecializationClass: TClass): TClass;
+    procedure InitEntity(const AEntity: TObject); virtual; abstract;
     function IsEntityClass(const AClass: TClass): Boolean;
   end;
 
@@ -358,6 +360,8 @@ begin
   FGenericsMap := TJCoreGenericsMap.Create;
   FMetadataMap := TJCoreClassMetadataMap.Create;
   InitRegistry;
+  if not Assigned(JCoreDefaultModel) then
+    JCoreDefaultModel := Self;
 end;
 
 function TJCoreModel.AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;

@@ -20,6 +20,7 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
+  JCoreEntity,
   JCoreMetadata,
   JCoreOPFMetadata,
   JCoreOPFDriver;
@@ -28,7 +29,7 @@ type
 
   { TJCoreOPFADMSimple }
 
-  TJCoreOPFADMSimple = class(TJCoreOPFADM)
+  TJCoreOPFADMSimple = class(TJCoreOPFADMNative)
   public
     class function AttributeType: TJCoreOPFAttributeType; override;
   end;
@@ -119,6 +120,46 @@ type
     function InternalCreateItemsArray: TJCoreObjectArray; override;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+  end;
+
+  { TJCoreOPFSimpleType }
+
+  TJCoreOPFSimpleType = class(TJCoreOPFADMValueType, IJCoreSimpleType)
+  private
+    FIsNull: Boolean;
+  protected
+    function IGetIsNull: Boolean;
+    procedure InternalClear; virtual; abstract;
+    procedure SetNotNull;
+    function IJCoreSimpleType.IsNull = IGetIsNull;
+  public
+    class function AttributeType: TJCoreOPFAttributeType; override;
+    procedure Clear;
+    property IsNull: Boolean read FIsNull;
+  end;
+
+  { TJCoreOPFIntegerType }
+
+  TJCoreOPFIntegerType = class(TJCoreOPFSimpleType, IJCoreIntegerType)
+  private
+    FOldValue: Integer;
+    FValue: Integer;
+    function IGetValue: Integer;
+    function IOldValue: Integer;
+    procedure SetValue(const AValue: Integer);
+    function IJCoreIntegerType.GetValue = IGetValue;
+    function IJCoreIntegerType.IsNull = IGetIsNull;
+    function IJCoreIntegerType.OldValue = IOldValue;
+  protected
+    procedure InternalClear; override;
+    function InternalIsDirty: Boolean; override;
+    procedure InternalUpdateCache; override;
+  public
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
+    property OldValue: Integer read FOldValue;
+    property Value: Integer read FValue write SetValue;
   end;
 
 implementation
@@ -406,10 +447,84 @@ end;
 class function TJCoreOPFADMFPSListCollection.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
-  if AAttrTypeInfo^.Kind = tkClass then
-    Result := GetTypeData(AAttrTypeInfo)^.ClassType.InheritsFrom(TFPSList)
+  Result := Implements(AAttrTypeInfo, TFPSList);
+end;
+
+{ TJCoreOPFSimpleType }
+
+function TJCoreOPFSimpleType.IGetIsNull: Boolean;
+begin
+  Result := FIsNull;
+end;
+
+procedure TJCoreOPFSimpleType.SetNotNull;
+begin
+  FIsNull := False;
+end;
+
+class function TJCoreOPFSimpleType.AttributeType: TJCoreOPFAttributeType;
+begin
+  Result := jatSimple;
+end;
+
+procedure TJCoreOPFSimpleType.Clear;
+begin
+  InternalClear;
+  FIsNull := True;
+end;
+
+{ TJCoreOPFIntegerType }
+
+function TJCoreOPFIntegerType.IGetValue: Integer;
+begin
+  Result := FValue;
+end;
+
+function TJCoreOPFIntegerType.IOldValue: Integer;
+begin
+  Result := FOldValue;
+end;
+
+procedure TJCoreOPFIntegerType.SetValue(const AValue: Integer);
+begin
+  FValue := AValue;
+  SetNotNull;
+end;
+
+procedure TJCoreOPFIntegerType.InternalClear;
+begin
+  FValue := 0;
+end;
+
+function TJCoreOPFIntegerType.InternalIsDirty: Boolean;
+begin
+  Result := FValue <> FOldValue;
+end;
+
+procedure TJCoreOPFIntegerType.InternalUpdateCache;
+begin
+  FOldValue := FValue;
+end;
+
+class function TJCoreOPFIntegerType.Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean;
+begin
+  Result := Implements(AAttrTypeInfo, IJCoreIntegerType) or inherited Apply(AModel, AAttrTypeInfo);
+end;
+
+procedure TJCoreOPFIntegerType.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
+begin
+  if AResultSet.ReadNull then
+    Clear
   else
-    Result := False;
+    Value := AResultSet.ReadInt32;
+end;
+
+procedure TJCoreOPFIntegerType.WriteToParams(const AParams: IJCoreOPFParams);
+begin
+  if IsNull then
+    AParams.WriteNull
+  else
+    AParams.WriteInt32(Value);
 end;
 
 end.

@@ -42,7 +42,6 @@
       <Unit0>
         <Filename Value="JCoreTestsConsole.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="JCoreTestsConsole"/>
       </Unit0>
     </Units>
   </ProjectOptions>
@@ -58,11 +57,7 @@
       </Debugging>
     </Linking>
     <Other>
-      <CompilerMessages>
-        <MsgFileName Value=""/>
-      </CompilerMessages>
       <CustomOptions Value="-vm5023"/>
-      <CompilerPath Value="$(CompPath)"/>
     </Other>
   </CompilerOptions>
   <Debugging>

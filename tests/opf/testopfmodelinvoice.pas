@@ -19,6 +19,13 @@ type
     procedure Finit; override;
   end;
 
+  { TCustomAttrEntity }
+
+  TCustomAttrEntity = class(TCustomEntity)
+  public
+    procedure AfterConstruction; override;
+  end;
+
   { TAddress }
 
   TAddress = class(TCustomEntity)
@@ -128,6 +135,14 @@ implementation
 
 uses
   sysutils;
+
+{ TCustomAttrEntity }
+
+procedure TCustomAttrEntity.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  JCoreDefaultModel.InitEntity(Self);
+end;
 
 { TCustomEntity }
 

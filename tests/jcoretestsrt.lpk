@@ -15,14 +15,10 @@
         </Debugging>
       </Linking>
       <Other>
-        <CompilerMessages>
-          <MsgFileName Value=""/>
-        </CompilerMessages>
         <CustomOptions Value="-vm5024"/>
-        <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="17">
+    <Files Count="18">
       <Item1>
         <Filename Value="core/testlist.pas"/>
         <UnitName Value="TestList"/>
@@ -64,33 +60,37 @@
         <UnitName Value="TestOPFMetadataTests"/>
       </Item10>
       <Item11>
-        <Filename Value="opf/testopfdrivertest.pas"/>
-        <UnitName Value="TestOPFDriverTest"/>
+        <Filename Value="opf/testopfadmtests.pas"/>
+        <UnitName Value="TestOPFADMTests"/>
       </Item11>
       <Item12>
-        <Filename Value="opf/testopfgeneratortest.pas"/>
-        <UnitName Value="TestOPFGeneratorTest"/>
+        <Filename Value="opf/testopfdrivertest.pas"/>
+        <UnitName Value="TestOPFDriverTest"/>
       </Item12>
       <Item13>
-        <Filename Value="opf/testopfmappingcontact.pas"/>
-        <UnitName Value="TestOPFMappingContact"/>
+        <Filename Value="opf/testopfgeneratortest.pas"/>
+        <UnitName Value="TestOPFGeneratorTest"/>
       </Item13>
       <Item14>
-        <Filename Value="opf/testopfmappinginvoice.pas"/>
-        <UnitName Value="TestOPFMappingInvoice"/>
+        <Filename Value="opf/testopfmappingcontact.pas"/>
+        <UnitName Value="TestOPFMappingContact"/>
       </Item14>
       <Item15>
-        <Filename Value="opf/testopfmappingtests.pas"/>
-        <UnitName Value="TestOPFMappingTests"/>
+        <Filename Value="opf/testopfmappinginvoice.pas"/>
+        <UnitName Value="TestOPFMappingInvoice"/>
       </Item15>
       <Item16>
-        <Filename Value="opf/testopfmappingmanualtests.pas"/>
-        <UnitName Value="TestOPFMappingManualTests"/>
+        <Filename Value="opf/testopfmappingtests.pas"/>
+        <UnitName Value="TestOPFMappingTests"/>
       </Item16>
       <Item17>
+        <Filename Value="opf/testopfmappingmanualtests.pas"/>
+        <UnitName Value="TestOPFMappingManualTests"/>
+      </Item17>
+      <Item18>
         <Filename Value="opf/testopfmappingautotests.pas"/>
         <UnitName Value="TestOPFMappingAutoTests"/>
-      </Item17>
+      </Item18>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

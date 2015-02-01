@@ -52,20 +52,16 @@ type
     FMappingMap: TJCoreOPFClassMappingMap;
     FModel: TJCoreOPFModel;
     FSessionManager: IJCoreOPFSessionManager;
-    function AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
-    function AcquirePIDFromProxyField(const AEntity: TObject): TJCoreOPFPID;
     function CreateClassMapping(const AClass: TClass): TJCoreOPFClassMapping;
   protected
     function AcquireClassMapping(const AClass: TClass): TJCoreOPFClassMapping;
     procedure AddInTransactionPID(const APID: TJCoreOPFPID);
     function CreatePIDArray(const AItems: TJCoreObjectArray): TJCoreOPFPIDArray;
-    function CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy; virtual;
     function IGetDriver: TJCoreOPFDriver;
     function IGetModel: TJCoreOPFModel;
     procedure InternalCommit; virtual;
     procedure LoadEntity(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
     procedure LoadCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection);
-    function PIDClass: TJCoreOPFPIDClass; virtual;
     procedure StorePID(const APID: TJCoreOPFPID);
     function IJCoreOPFMapper.Driver = IGetDriver;
     function IJCoreOPFMapper.Model = IGetModel;
@@ -89,51 +85,9 @@ implementation
 
 uses
   sysutils,
-  typinfo,
-  JCoreOPFConsts,
-  JCoreOPFException;
+  typinfo;
 
 { TJCoreOPFSession }
-
-function TJCoreOPFSession.AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
-var
-  VPropInfo: PPropInfo;
-begin
-  VPropInfo := GetPropInfo(AEntity, SPID);
-  if Assigned(VPropInfo) and (VPropInfo^.PropType^.Kind = tkInterface) then
-  begin
-    Result := GetInterfaceProp(AEntity, VPropInfo) as TJCoreOPFPID;
-    if not Assigned(Result) then
-    begin
-      Result := PIDClass.Create(Self, AEntity, Model.AcquireMetadata(AEntity.ClassType));
-      SetInterfaceProp(AEntity, VPropInfo, Result as IJCorePID);
-    end;
-  end else
-    Result := nil;
-end;
-
-function TJCoreOPFSession.AcquirePIDFromProxyField(const AEntity: TObject): TJCoreOPFPID;
-var
-  VFieldAddr: Pointer;
-  VProxy: TJCoreEntityProxy;
-  VMetadata: TJCoreOPFClassMetadata;
-begin
-  VFieldAddr := AEntity.FieldAddress(SProxy);
-  if Assigned(VFieldAddr) then
-  begin
-    VProxy := TObject(VFieldAddr^) as TJCoreEntityProxy;
-    if not Assigned(VProxy) then
-    begin
-      VMetadata := Model.AcquireMetadata(AEntity.ClassType);
-      Result := TJCoreOPFPID(PIDClass.NewInstance);
-      VProxy := CreateProxy(Result);
-      TJCoreEntityProxy(VFieldAddr^) := VProxy;
-      Result.Create(Self, AEntity, VMetadata);
-    end else
-      Result := VProxy.PID as TJCoreOPFPID;
-  end else
-    Result := nil;
-end;
 
 function TJCoreOPFSession.CreateClassMapping(const AClass: TClass): TJCoreOPFClassMapping;
 var
@@ -170,11 +124,6 @@ begin
     Result[I] := AcquirePID(AItems[I]);
 end;
 
-function TJCoreOPFSession.CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy;
-begin
-  Result := TJCoreEntityProxy.Create(APID);
-end;
-
 function TJCoreOPFSession.IGetDriver: TJCoreOPFDriver;
 begin
   Result := FDriver;
@@ -205,11 +154,6 @@ end;
 procedure TJCoreOPFSession.LoadEntity(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMEntity);
 begin
   AcquireClassMapping(AOwnerADM.Metadata.CompositionClass).RetrieveEntityInternal(AOwnerPID, AOwnerADM);
-end;
-
-function TJCoreOPFSession.PIDClass: TJCoreOPFPIDClass;
-begin
-  Result := TJCoreOPFPID;
 end;
 
 procedure TJCoreOPFSession.StorePID(const APID: TJCoreOPFPID);
@@ -249,13 +193,8 @@ end;
 
 function TJCoreOPFSession.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
 begin
-  if not Assigned(AEntity) then
-    raise EJCoreNilPointerException.Create;
-  Result := AcquirePIDFromIntfProp(AEntity);
-  if not Assigned(Result) then
-    Result := AcquirePIDFromProxyField(AEntity);
-  if not Assigned(Result) then
-    raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
+  Result := Model.AcquirePID(AEntity);
+  Result.AttachManager(Self);
 end;
 
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);
