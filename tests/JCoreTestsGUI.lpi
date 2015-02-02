@@ -47,7 +47,6 @@
       <Unit0>
         <Filename Value="JCoreTestsGUI.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="JCoreTestsGUI"/>
       </Unit0>
     </Units>
   </ProjectOptions>
@@ -62,12 +61,6 @@
         <DebugInfoType Value="dsDwarf2Set"/>
       </Debugging>
     </Linking>
-    <Other>
-      <CompilerMessages>
-        <MsgFileName Value=""/>
-      </CompilerMessages>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="22">

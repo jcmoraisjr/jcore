@@ -9,9 +9,9 @@ uses
 
 type
 
-  { TTestOPFMetadataAttributeTest }
+  { TTestOPFMetadataADMValueTypeTest }
 
-  TTestOPFMetadataAttributeTest = class(TTestOPFSimpleTestCase)
+  TTestOPFMetadataADMValueTypeTest = class(TTestOPFSimpleTestCase)
   published
     procedure InsertIntegerClassAttr;
     procedure InsertIntegerIntfAttr;
@@ -50,9 +50,9 @@ type
     property Age: TJCoreOPFIntegerType read FAge write FAge;
   end;
 
-{ TTestOPFMetadataAttributeTest }
+{ TTestOPFMetadataADMValueTypeTest }
 
-procedure TTestOPFMetadataAttributeTest.InsertIntegerClassAttr;
+procedure TTestOPFMetadataADMValueTypeTest.InsertIntegerClassAttr;
 var
   VInteger: TTestIntegerValueTypeClass;
 begin
@@ -71,7 +71,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadataAttributeTest.InsertIntegerIntfAttr;
+procedure TTestOPFMetadataADMValueTypeTest.InsertIntegerIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
@@ -90,7 +90,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadataAttributeTest.SelectIntegerValueIntfAttr;
+procedure TTestOPFMetadataADMValueTypeTest.SelectIntegerValueIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
@@ -110,7 +110,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadataAttributeTest.SelectIntegerNilIntfAttr;
+procedure TTestOPFMetadataADMValueTypeTest.SelectIntegerNilIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
@@ -130,7 +130,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadataAttributeTest.UpdateIntegerValueIntfAttr;
+procedure TTestOPFMetadataADMValueTypeTest.UpdateIntegerValueIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
@@ -151,7 +151,7 @@ begin
   end;
 end;
 
-procedure TTestOPFMetadataAttributeTest.UpdateIntegerNilIntfAttr;
+procedure TTestOPFMetadataADMValueTypeTest.UpdateIntegerNilIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
@@ -173,7 +173,7 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.metadata.attr', TTestOPFMetadataAttributeTest);
+  RegisterTest('jcore.opf.metadata.adm.valuetype', TTestOPFMetadataADMValueTypeTest);
 
 end.
 
