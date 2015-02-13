@@ -85,7 +85,7 @@ begin
   VConfig := TJCoreOPFConfiguration.Create;
   VConfig.Params.Values['connection'] := 'PostgreSQL';
   VConfig.Params.Values['hostname'] := 'localhost';
-  VConfig.Params.Values['database'] := 'jcore';
+  VConfig.Params.Values['database'] := 'jcore_opf005';
   VConfig.Params.Values['username'] := 'jcore';
   VConfig.Params.Values['password'] := 'jcore';
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
