@@ -159,10 +159,16 @@ begin
   if not Assigned(AModel) then
   begin
     FModel := TJCoreOPFModel.Create;
+    // Native types
     FModel.AddADMClass([
-     TJCoreOPFADMType32, TJCoreOPFADMType64, TJCoreOPFADMFloat,
-     TJCoreOPFADMAnsiString, TJCoreOPFIntegerType,
-     TJCoreOPFADMEntity, TJCoreOPFADMFPSListCollection]);
+     TJCoreOPFADMType32NativeCtl, TJCoreOPFADMType64NativeCtl,
+     TJCoreOPFADMFloatNativeCtl, TJCoreOPFADMAnsiStringNativeCtl]);
+    // Object as value types
+    FModel.AddADMClass([TJCoreOPFADMIntegerIntfCtl]);
+    // Value types
+    FModel.AddADMClass([TJCoreOPFIntegerType]);
+    // Entities and collections
+    FModel.AddADMClass([TJCoreOPFADMEntity, TJCoreOPFADMFPSListCollection]);
   end else
     FModel := AModel;
   inherited Create;

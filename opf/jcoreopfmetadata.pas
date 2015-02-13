@@ -89,9 +89,9 @@ type
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFADMNative }
+  { TJCoreOPFADMController }
 
-  TJCoreOPFADMNative = class(TJCoreOPFADM)
+  TJCoreOPFADMController = class(TJCoreOPFADM)
   private
     FAttrAddr: Pointer;
     FAttrPropInfo: PPropInfo;
@@ -106,7 +106,7 @@ type
 
   { TJCoreOPFADMObject }
 
-  TJCoreOPFADMObject = class(TJCoreOPFADMNative)
+  TJCoreOPFADMObject = class(TJCoreOPFADMController)
   private
     function GetValue: TObject;
     procedure SetValue(const AValue: TObject);
@@ -488,15 +488,15 @@ begin
   Result := Implements(AAttrTypeInfo, Self);
 end;
 
-{ TJCoreOPFADMNative }
+{ TJCoreOPFADMController }
 
-constructor TJCoreOPFADMNative.Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
+constructor TJCoreOPFADMController.Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
 begin
   inherited Create(APID, AMetadata);
   FAttrPropInfo := AMetadata.PropInfo;
 end;
 
-procedure TJCoreOPFADMNative.UpdateAttrAddr(const AAttrAddrRef: PPPointer);
+procedure TJCoreOPFADMController.UpdateAttrAddr(const AAttrAddrRef: PPPointer);
 begin
   // AAttrAddrRef^, which references ADM.AttrAddr address, will be updated
   // with the entity's attribute address by the Lazyload method.
@@ -966,11 +966,11 @@ var
 begin
   VADM := AAttrMetadata.CreateADM(Self);
   ADMMap.Add(AAttrMetadata.Name, VADM);
-  if AAttrMetadata.HasLazyload and (VADM is TJCoreOPFADMNative) then
+  if AAttrMetadata.HasLazyload and (VADM is TJCoreOPFADMController) then
   begin
     try
       { TODO : Abstract }
-      TJCoreOPFADMNative(VADM).UpdateAttrAddr(@FAttrAddrRef);
+      TJCoreOPFADMController(VADM).UpdateAttrAddr(@FAttrAddrRef);
     finally
       FAttrAddrRef := nil;
     end;
@@ -1057,7 +1057,7 @@ begin
   begin
     Result := ADMMap.Data[I];
     { TODO : Abstract }
-    if Result is TJCoreOPFADMNative and (TJCoreOPFADMNative(Result).AttrAddr = AAttrAddr) then
+    if Result is TJCoreOPFADMController and (TJCoreOPFADMController(Result).AttrAddr = AAttrAddr) then
       Exit;
   end;
   raise EJCoreAttributeNotFound.Create(Entity.ClassName, IntToStr(PtrUInt(AAttrAddr)));

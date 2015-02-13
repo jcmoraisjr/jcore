@@ -10,6 +10,33 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *)
 
+{
+  TJCoreOPFADM
+  |    Abstract ADM class
+  |
+  +--TJCoreOPFADMController
+  |  |    Controller ADM instances represents all ADMs that doesn't hold the property's value, ie, the
+  |  |    ADM is just a controller, the data itself is referenced by the entity's property. Because of
+  |  |    that there is no need to initialize or instantiate the ADM, the JCore's OPF Session will do
+  |  |    it during the storage or retrieving of the instance.
+  |  |    There are two types of controller ADM:
+  |  |
+  |  +--TJCoreOPFADM<type>NativeCtl
+  |  |       Implements ADM of Pascal's native types. If a property is of type Integer,
+  |  |       JCore will instantiate a JCoreOPFADMInt32NativeCtl as its controller.
+  |  |
+  |  +--TJCoreOPFADM<type>IntfCtl
+  |          Implements ADM of object as value. If a property is of type IJCoreInteger, JCore will
+  |          instantiate a JCoreOPFADMIntegerIntfCtl as its controller.
+  |
+  +--TJCoreOPFADMValueType
+     |    Value types are, at the same time, an internal ADM and the Entity's property. All value type
+     |    ADMs should be created with the instance itself using Model.InitEntity(<entity>);
+     |
+     +--TJCoreOPF<type>Type
+             <type> should be AnsiString, Integer, Float, Date, etc
+}
+
 unit JCoreOPFADM;
 
 {$I jcore.inc}
@@ -20,6 +47,7 @@ uses
   typinfo,
   fgl,
   JCoreClasses,
+  JCoreTypes,
   JCoreEntity,
   JCoreMetadata,
   JCoreOPFMetadata,
@@ -27,16 +55,16 @@ uses
 
 type
 
-  { TJCoreOPFADMSimple }
+  { TJCoreOPFADMSimpleCtl }
 
-  TJCoreOPFADMSimple = class(TJCoreOPFADMNative)
+  TJCoreOPFADMSimpleCtl = class(TJCoreOPFADMController)
   public
     class function AttributeType: TJCoreOPFAttributeType; override;
   end;
 
-  { TJCoreOPFADMType32 }
+  { TJCoreOPFADMType32NativeCtl }
 
-  TJCoreOPFADMType32 = class(TJCoreOPFADMSimple)
+  TJCoreOPFADMType32NativeCtl = class(TJCoreOPFADMSimpleCtl)
   private
     FCache: Longint;
     function GetValue: Longint;
@@ -54,9 +82,9 @@ type
     procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
-  { TJCoreOPFADMType64 }
+  { TJCoreOPFADMType64NativeCtl }
 
-  TJCoreOPFADMType64 = class(TJCoreOPFADMSimple)
+  TJCoreOPFADMType64NativeCtl = class(TJCoreOPFADMSimpleCtl)
   private
     FCache: Int64;
     function GetValue: Int64;
@@ -74,9 +102,9 @@ type
     procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
-  { TJCoreOPFADMFloat }
+  { TJCoreOPFADMFloatNativeCtl }
 
-  TJCoreOPFADMFloat = class(TJCoreOPFADMSimple)
+  TJCoreOPFADMFloatNativeCtl = class(TJCoreOPFADMSimpleCtl)
   private
     FCache: Extended;
     function GetGetter: Extended;
@@ -90,9 +118,9 @@ type
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
   end;
 
-  { TJCoreOPFADMAnsiString }
+  { TJCoreOPFADMAnsiStringNativeCtl }
 
-  TJCoreOPFADMAnsiString = class(TJCoreOPFADMSimple)
+  TJCoreOPFADMAnsiStringNativeCtl = class(TJCoreOPFADMSimpleCtl)
   private
     FCache: AnsiString;
     function GetValue: AnsiString;
@@ -120,6 +148,26 @@ type
     function InternalCreateItemsArray: TJCoreObjectArray; override;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+  end;
+
+  { TJCoreOPFADMIntegerIntfCtl }
+
+  TJCoreOPFADMIntegerIntfCtl = class(TJCoreOPFADMSimpleCtl)
+  private
+    FCache: IJCoreInteger;
+    function GetValue: IJCoreInteger;
+    procedure SetValue(AValue: IJCoreInteger);
+    function UseGetter: IJCoreInteger;
+    procedure UseSetter(const AValue: IJCoreInteger);
+  protected
+    procedure InternalGetter; override;
+    function InternalIsDirty: Boolean; override;
+    procedure InternalUpdateCache; override;
+    property Value: IJCoreInteger read GetValue write SetValue;
+  public
+    class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
   { TJCoreOPFSimpleType }
@@ -167,16 +215,16 @@ implementation
 uses
   JCoreOPFException;
 
-{ TJCoreOPFADMSimple }
+{ TJCoreOPFADMSimpleCtl }
 
-class function TJCoreOPFADMSimple.AttributeType: TJCoreOPFAttributeType;
+class function TJCoreOPFADMSimpleCtl.AttributeType: TJCoreOPFAttributeType;
 begin
   Result := jatSimple;
 end;
 
-{ TJCoreOPFADMType32 }
+{ TJCoreOPFADMType32NativeCtl }
 
-function TJCoreOPFADMType32.GetValue: Longint;
+function TJCoreOPFADMType32NativeCtl.GetValue: Longint;
 begin
   if Assigned(AttrAddr) then
     Result := Longint(AttrAddr^)
@@ -184,7 +232,7 @@ begin
     Result := UseGetter;
 end;
 
-procedure TJCoreOPFADMType32.SetValue(AValue: Longint);
+procedure TJCoreOPFADMType32NativeCtl.SetValue(AValue: Longint);
 begin
   if Assigned(AttrAddr) then
     Longint(AttrAddr^) := AValue
@@ -192,50 +240,50 @@ begin
     UseSetter(AValue);
 end;
 
-function TJCoreOPFADMType32.UseGetter: Longint;
+function TJCoreOPFADMType32NativeCtl.UseGetter: Longint;
 begin
   Result := GetOrdProp(PID.Entity, AttrPropInfo);
 end;
 
-procedure TJCoreOPFADMType32.UseSetter(const AValue: Longint);
+procedure TJCoreOPFADMType32NativeCtl.UseSetter(const AValue: Longint);
 begin
   SetOrdProp(PID.Entity, AttrPropInfo, AValue);
 end;
 
-procedure TJCoreOPFADMType32.InternalGetter;
+procedure TJCoreOPFADMType32NativeCtl.InternalGetter;
 begin
   UseGetter;
 end;
 
-function TJCoreOPFADMType32.InternalIsDirty: Boolean;
+function TJCoreOPFADMType32NativeCtl.InternalIsDirty: Boolean;
 begin
   Result := Value <> FCache;
 end;
 
-procedure TJCoreOPFADMType32.InternalUpdateCache;
+procedure TJCoreOPFADMType32NativeCtl.InternalUpdateCache;
 begin
   FCache := Value;
 end;
 
-class function TJCoreOPFADMType32.Apply(const AModel: TJCoreModel;
+class function TJCoreOPFADMType32NativeCtl.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
-  Result := AAttrTypeInfo^.Kind in [tkInteger, tkChar, tkEnumeration, tkBool];
+  Result := (AAttrTypeInfo^.Kind in [tkInteger, tkChar, tkEnumeration, tkBool]);
 end;
 
-procedure TJCoreOPFADMType32.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
+procedure TJCoreOPFADMType32NativeCtl.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
   Value := AResultSet.ReadInt32;
 end;
 
-procedure TJCoreOPFADMType32.WriteToParams(const AParams: IJCoreOPFParams);
+procedure TJCoreOPFADMType32NativeCtl.WriteToParams(const AParams: IJCoreOPFParams);
 begin
   AParams.WriteInt32(Value);
 end;
 
-{ TJCoreOPFADMType64 }
+{ TJCoreOPFADMType64NativeCtl }
 
-function TJCoreOPFADMType64.GetValue: Int64;
+function TJCoreOPFADMType64NativeCtl.GetValue: Int64;
 begin
   if Assigned(AttrAddr) then
   begin
@@ -248,60 +296,60 @@ begin
     Result := UseGetter;
 end;
 
-procedure TJCoreOPFADMType64.SetValue(const AValue: Int64);
+procedure TJCoreOPFADMType64NativeCtl.SetValue(const AValue: Int64);
 begin
   UseSetter(AValue);
 end;
 
-function TJCoreOPFADMType64.UseGetter: Int64;
+function TJCoreOPFADMType64NativeCtl.UseGetter: Int64;
 begin
   Result := GetInt64Prop(PID.Entity, AttrPropInfo);
 end;
 
-procedure TJCoreOPFADMType64.UseSetter(const AValue: Int64);
+procedure TJCoreOPFADMType64NativeCtl.UseSetter(const AValue: Int64);
 begin
   SetInt64Prop(PID.Entity, AttrPropInfo, AValue);
 end;
 
-procedure TJCoreOPFADMType64.InternalGetter;
+procedure TJCoreOPFADMType64NativeCtl.InternalGetter;
 begin
   UseGetter;
 end;
 
-function TJCoreOPFADMType64.InternalIsDirty: Boolean;
+function TJCoreOPFADMType64NativeCtl.InternalIsDirty: Boolean;
 begin
   Result := Value <> FCache;
 end;
 
-procedure TJCoreOPFADMType64.InternalUpdateCache;
+procedure TJCoreOPFADMType64NativeCtl.InternalUpdateCache;
 begin
   FCache := Value;
 end;
 
-class function TJCoreOPFADMType64.Apply(const AModel: TJCoreModel;
+class function TJCoreOPFADMType64NativeCtl.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind in [tkInt64, tkQWord];
 end;
 
-procedure TJCoreOPFADMType64.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
+procedure TJCoreOPFADMType64NativeCtl.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
   Value := AResultSet.ReadInt64;
 end;
 
-procedure TJCoreOPFADMType64.WriteToParams(const AParams: IJCoreOPFParams);
+procedure TJCoreOPFADMType64NativeCtl.WriteToParams(const AParams: IJCoreOPFParams);
 begin
   AParams.WriteInt64(Value);
 end;
 
-{ TJCoreOPFADMFloat }
+{ TJCoreOPFADMFloatNativeCtl }
 
-function TJCoreOPFADMFloat.GetGetter: Extended;
+function TJCoreOPFADMFloatNativeCtl.GetGetter: Extended;
 begin
   Result := GetFloatProp(PID.Entity, AttrPropInfo);
 end;
 
-function TJCoreOPFADMFloat.GetValue: Extended;
+function TJCoreOPFADMFloatNativeCtl.GetValue: Extended;
 begin
   if Assigned(AttrAddr) then
   begin
@@ -317,30 +365,30 @@ begin
     Result := GetGetter;
 end;
 
-procedure TJCoreOPFADMFloat.InternalGetter;
+procedure TJCoreOPFADMFloatNativeCtl.InternalGetter;
 begin
   GetGetter;
 end;
 
-function TJCoreOPFADMFloat.InternalIsDirty: Boolean;
+function TJCoreOPFADMFloatNativeCtl.InternalIsDirty: Boolean;
 begin
   Result := Value <> FCache;
 end;
 
-procedure TJCoreOPFADMFloat.InternalUpdateCache;
+procedure TJCoreOPFADMFloatNativeCtl.InternalUpdateCache;
 begin
   FCache := Value;
 end;
 
-class function TJCoreOPFADMFloat.Apply(const AModel: TJCoreModel;
+class function TJCoreOPFADMFloatNativeCtl.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkFloat;
 end;
 
-{ TJCoreOPFADMAnsiString }
+{ TJCoreOPFADMAnsiStringNativeCtl }
 
-function TJCoreOPFADMAnsiString.GetValue: AnsiString;
+function TJCoreOPFADMAnsiStringNativeCtl.GetValue: AnsiString;
 begin
   if Assigned(AttrAddr) then
     Result := PAnsiString(AttrAddr)^
@@ -348,7 +396,7 @@ begin
     Result := UseGetter;
 end;
 
-procedure TJCoreOPFADMAnsiString.SetValue(AValue: AnsiString);
+procedure TJCoreOPFADMAnsiStringNativeCtl.SetValue(AValue: AnsiString);
 begin
   if Assigned(AttrAddr) then
     PAnsiString(AttrAddr)^ := AValue
@@ -356,45 +404,45 @@ begin
     UseSetter(AValue);
 end;
 
-function TJCoreOPFADMAnsiString.UseGetter: AnsiString;
+function TJCoreOPFADMAnsiStringNativeCtl.UseGetter: AnsiString;
 begin
   Result := GetStrProp(PID.Entity, AttrPropInfo);
 end;
 
-procedure TJCoreOPFADMAnsiString.UseSetter(const AValue: AnsiString);
+procedure TJCoreOPFADMAnsiStringNativeCtl.UseSetter(const AValue: AnsiString);
 begin
   SetStrProp(PID.Entity, AttrPropInfo, AValue);
 end;
 
-procedure TJCoreOPFADMAnsiString.InternalGetter;
+procedure TJCoreOPFADMAnsiStringNativeCtl.InternalGetter;
 begin
   UseGetter;
 end;
 
-function TJCoreOPFADMAnsiString.InternalIsDirty: Boolean;
+function TJCoreOPFADMAnsiStringNativeCtl.InternalIsDirty: Boolean;
 begin
   { TODO : use hash for long strings }
   Result := Value <> FCache;
 end;
 
-procedure TJCoreOPFADMAnsiString.InternalUpdateCache;
+procedure TJCoreOPFADMAnsiStringNativeCtl.InternalUpdateCache;
 begin
   { TODO : use hash for long strings }
   FCache := Value;
 end;
 
-class function TJCoreOPFADMAnsiString.Apply(const AModel: TJCoreModel;
+class function TJCoreOPFADMAnsiStringNativeCtl.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkAString;
 end;
 
-procedure TJCoreOPFADMAnsiString.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
+procedure TJCoreOPFADMAnsiStringNativeCtl.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
 begin
   Value := AResultSet.ReadString;
 end;
 
-procedure TJCoreOPFADMAnsiString.WriteToParams(const AParams: IJCoreOPFParams);
+procedure TJCoreOPFADMAnsiStringNativeCtl.WriteToParams(const AParams: IJCoreOPFParams);
 begin
   AParams.WriteString(Value);
 end;
@@ -448,6 +496,80 @@ class function TJCoreOPFADMFPSListCollection.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := Implements(AAttrTypeInfo, TFPSList);
+end;
+
+{ TJCoreOPFADMIntegerIntfCtl }
+
+function TJCoreOPFADMIntegerIntfCtl.GetValue: IJCoreInteger;
+begin
+  if Assigned(AttrAddr) then
+    Result := IJCoreInteger(AttrAddr^)
+  else
+    Result := UseGetter;
+end;
+
+procedure TJCoreOPFADMIntegerIntfCtl.SetValue(AValue: IJCoreInteger);
+begin
+  if Assigned(AttrAddr) then
+    IJCoreInteger(AttrAddr^) := AValue
+  else
+    UseSetter(AValue);
+end;
+
+function TJCoreOPFADMIntegerIntfCtl.UseGetter: IJCoreInteger;
+begin
+  Result := GetInterfaceProp(PID.Entity, AttrPropInfo) as IJCoreInteger;
+end;
+
+procedure TJCoreOPFADMIntegerIntfCtl.UseSetter(const AValue: IJCoreInteger);
+begin
+  SetInterfaceProp(PID.Entity, AttrPropInfo, AValue);
+end;
+
+procedure TJCoreOPFADMIntegerIntfCtl.InternalGetter;
+begin
+  UseGetter;
+end;
+
+function TJCoreOPFADMIntegerIntfCtl.InternalIsDirty: Boolean;
+var
+  VValue: IJCoreInteger;
+begin
+  VValue := Value;
+  if Assigned(FCache) then
+    Result := not FCache.EqualsTo(VValue)
+  else
+    Result := Assigned(VValue);
+end;
+
+procedure TJCoreOPFADMIntegerIntfCtl.InternalUpdateCache;
+begin
+  FCache := Value;
+end;
+
+class function TJCoreOPFADMIntegerIntfCtl.Apply(const AModel: TJCoreModel;
+  const AAttrTypeInfo: PTypeInfo): Boolean;
+begin
+  Result := Implements(AAttrTypeInfo, IJCoreInteger);
+end;
+
+procedure TJCoreOPFADMIntegerIntfCtl.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
+begin
+  if AResultSet.ReadNull then
+    Value := nil
+  else
+    Value := TJCoreInteger.ValueOf(AResultSet.ReadInt32);
+end;
+
+procedure TJCoreOPFADMIntegerIntfCtl.WriteToParams(const AParams: IJCoreOPFParams);
+var
+  VValue: IJCoreInteger;
+begin
+  VValue := Value;
+  if Assigned(VValue) then
+    AParams.WriteInt32(Value.AsInteger)
+  else
+    AParams.WriteNull;
 end;
 
 { TJCoreOPFSimpleType }

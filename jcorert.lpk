@@ -14,14 +14,8 @@
           <DebugInfoType Value="dsDwarf2Set"/>
         </Debugging>
       </Linking>
-      <Other>
-        <CompilerMessages>
-          <MsgFileName Value=""/>
-        </CompilerMessages>
-        <CompilerPath Value="$(CompPath)"/>
-      </Other>
     </CompilerOptions>
-    <Files Count="13">
+    <Files Count="14">
       <Item1>
         <Filename Value="core/jcore.inc"/>
         <Type Value="Include"/>
@@ -67,13 +61,17 @@
         <UnitName Value="JCoreExpressionLib"/>
       </Item11>
       <Item12>
-        <Filename Value="core/jcoreentity.pas"/>
-        <UnitName Value="JCoreEntity"/>
+        <Filename Value="core/jcoretypes.pas"/>
+        <UnitName Value="JCoreTypes"/>
       </Item12>
       <Item13>
+        <Filename Value="core/jcoreentity.pas"/>
+        <UnitName Value="JCoreEntity"/>
+      </Item13>
+      <Item14>
         <Filename Value="core/jcoremetadata.pas"/>
         <UnitName Value="JCoreMetadata"/>
-      </Item13>
+      </Item14>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

@@ -69,7 +69,7 @@ var
 begin
   VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestEmptyDriver;
-  VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiString]);
+  VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
   VConfiguration.Model.GeneratorName := '';
   VSession := VConfiguration.CreateSession;
   AssertNotNull(VSession);
