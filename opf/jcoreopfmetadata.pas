@@ -1190,7 +1190,7 @@ end;
 
 function TJCoreOPFAttrMetadata.GetHasExternalLink: Boolean;
 begin
-  Result := CompositionType = jctAggregation;
+  Result := (CompositionType = jctAggregation) and (AttributeType = jatCollection);
 end;
 
 function TJCoreOPFAttrMetadata.GetModel: TJCoreOPFModel;
