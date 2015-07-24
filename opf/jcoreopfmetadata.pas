@@ -1254,7 +1254,7 @@ end;
 
 constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata);
 var
-  VOwner: TJCoreOPFClassMetadata;
+  VOwnerClass: TJCoreOPFClassMetadata;
   VTableName: string;
   VOIDName: TJCoreStringArray;
   I: Integer;
@@ -1265,11 +1265,11 @@ begin
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
   FTableName := Metadata.TableName;
-  VOwner := Metadata.OwnerMetadata as TJCoreOPFClassMetadata;
-  if Assigned(VOwner) then
+  VOwnerClass := Metadata.OwnerClass as TJCoreOPFClassMetadata;
+  if Assigned(VOwnerClass) then
   begin
-    VTableName := VOwner.TableName;
-    VOIDName := VOwner.OIDName;
+    VTableName := VOwnerClass.TableName;
+    VOIDName := VOwnerClass.OIDName;
     SetLength(FOwnerOIDName, Length(VOIDName));
     if Length(VOIDName) = 1 then
       FOwnerOIDName[0] := VTableName

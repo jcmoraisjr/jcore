@@ -57,6 +57,7 @@ resourcestring
   // EJCoreMetadata
   S0501_AttributeNotFound = 'Attribute %s(''%s'') was not found';
   S0502_MetadataAlreadyOwned = 'Metadata already owned';
+  S0503_InvalidOwnerAttr = 'Owner attribute ''%s'' does not have an owner class';
   // EJCoreOPF
   S2101_DriverNotFound = 'Driver ''%s'' was not found';
   S2102_UndefinedDriver = 'Driver was not defined';

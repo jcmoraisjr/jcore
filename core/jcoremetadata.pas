@@ -74,10 +74,11 @@ type
     FAttrList: TJCoreAttrMetadataList;
     FClass: TClass;
     FModel: TJCoreModel;
-    FOwnerMetadata: TJCoreClassMetadata;
+    FOwnerAttr: TJCoreAttrMetadata;
+    FOwnerClass: TJCoreClassMetadata;
     FParent: TJCoreClassMetadata;
     function GetAttributes(const AIndex: Integer): TJCoreAttrMetadata;
-    procedure SetOwnerMetadata(AValue: TJCoreClassMetadata);
+    procedure SetOwnerAttr(AValue: TJCoreAttrMetadata);
   protected
     property AttrList: TJCoreAttrMetadataList read FAttrList;
     property Model: TJCoreModel read FModel;
@@ -88,7 +89,8 @@ type
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
     function AttributeCount: Integer;
     property Attributes[const AIndex: Integer]: TJCoreAttrMetadata read GetAttributes; default;
-    property OwnerMetadata: TJCoreClassMetadata read FOwnerMetadata write SetOwnerMetadata;
+    property OwnerAttr: TJCoreAttrMetadata read FOwnerAttr write SetOwnerAttr;
+    property OwnerClass: TJCoreClassMetadata read FOwnerClass;
     property Parent: TJCoreClassMetadata read FParent;
     property TheClass: TClass read FClass;
   end;
@@ -190,9 +192,9 @@ begin
   if Assigned(VCompositionMetadata) and IsCollection then
   begin
     if CompositionType = jctComposition then
-      VCompositionMetadata.OwnerMetadata := Owner
+      VCompositionMetadata.OwnerAttr := Self
     else // jctAggregation
-      VCompositionMetadata.OwnerMetadata := nil;
+      VCompositionMetadata.OwnerAttr := nil;
   end;
 end;
 
@@ -226,11 +228,19 @@ begin
   Result := AttrList[AIndex];
 end;
 
-procedure TJCoreClassMetadata.SetOwnerMetadata(AValue: TJCoreClassMetadata);
+procedure TJCoreClassMetadata.SetOwnerAttr(AValue: TJCoreAttrMetadata);
 begin
-  if not Assigned(FOwnerMetadata) or not Assigned(AValue) then
-    FOwnerMetadata := AValue
-  else if FOwnerMetadata <> AValue then
+  if not Assigned(FOwnerAttr) or not Assigned(AValue) then
+  begin
+    FOwnerAttr := AValue;
+    if Assigned(FOwnerAttr) then
+    begin
+      if FOwnerAttr.CompositionType <> jctComposition then
+        raise EJCoreMetadata.Create(503, S0503_InvalidOwnerAttr, [FOwnerAttr.Name]);
+      FOwnerClass := FOwnerAttr.Owner;
+    end else
+      FOwnerClass := nil;
+  end else if FOwnerAttr <> AValue then
     raise EJCoreMetadata.Create(502, S0502_MetadataAlreadyOwned, []);
 end;
 

@@ -16,6 +16,7 @@ type
     procedure CreatePIDInheritance;
     procedure CircularReference;
     procedure OwnOwnedMetadata;
+    procedure OwnInvalidMetadata;
     procedure AddGenericNonEntity;
     procedure PropertyCompositionType;
     procedure PropertySize;
@@ -97,9 +98,9 @@ end;
 procedure TTestOPFMetadataTest.OwnOwnedMetadata;
 var
   VConfig: IJCoreOPFConfiguration;
-  VPersonMetadata: TJCoreOPFClassMetadata;
   VInvoiceMetadata: TJCoreOPFClassMetadata;
   VInvoiceItemMetadata: TJCoreOPFClassMetadata;
+  VInvoiceClientMetadata: TJCoreOPFAttrMetadata;
 begin
   VConfig := TJCoreOPFConfiguration.Create;
   VConfig.Model.AddClass([TClient, TPerson, TAddress, TInvoice, TInvoiceItem]);
@@ -107,14 +108,36 @@ begin
   VInvoiceMetadata := VConfig.Model.AcquireMetadata(TInvoice);
   VInvoiceItemMetadata := VConfig.Model.AcquireMetadata(TInvoiceItem);
   AssertEquals('invoice item owned by invoice',
-   VInvoiceMetadata.TheClass, VInvoiceItemMetadata.OwnerMetadata.TheClass);
-  VPersonMetadata := VConfig.Model.AcquireMetadata(TPerson);
+   VInvoiceMetadata.TheClass, VInvoiceItemMetadata.OwnerClass.TheClass);
+  VInvoiceClientMetadata := VConfig.Model.AcquireMetadata(TInvoice).AttributeByName('Client');
   try
-    VInvoiceItemMetadata.OwnerMetadata := VPersonMetadata;
+    VInvoiceItemMetadata.OwnerAttr := VInvoiceClientMetadata;
     Fail('EJCoreMetadata(0502) expected');
   except
     on E: EJCoreMetadata do
       if E.Code <> 502 then
+        raise;
+  end;
+end;
+
+procedure TTestOPFMetadataTest.OwnInvalidMetadata;
+var
+  VConfig: IJCoreOPFConfiguration;
+  VInvoiceItemMetadata: TJCoreOPFClassMetadata;
+  VInvoiceDateMetadata: TJCoreOPFAttrMetadata;
+begin
+  VConfig := TJCoreOPFConfiguration.Create;
+  VConfig.Model.AddClass([TClient, TAddress, TInvoice, TInvoiceItem]);
+  VConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
+  VInvoiceItemMetadata := VConfig.Model.AcquireMetadata(TInvoiceItem);
+  VInvoiceDateMetadata := VConfig.Model.AcquireMetadata(TInvoice).AttributeByName('Date');
+  VInvoiceItemMetadata.OwnerAttr := nil;
+  try
+    VInvoiceItemMetadata.OwnerAttr := VInvoiceDateMetadata;
+    Fail('EJCoreMetadata(0503) expected');
+  except
+    on E: EJCoreMetadata do
+      if E.Code <> 503 then
         raise;
   end;
 end;
