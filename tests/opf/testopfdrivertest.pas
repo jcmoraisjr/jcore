@@ -41,7 +41,6 @@ uses
   sysutils,
   Classes,
   JCoreClasses,
-  JCoreOPFException,
   JCoreOPFDriver,
   testregistry,
   TestOPFModelInvoice;
@@ -131,10 +130,11 @@ begin
   VStmt.ExecSQL(3);
   try
     Driver.Commit;
-    Fail('EJCoreOPFUnexpectedResultSetSize expected');
+    Fail('EJCoreOPF(2113) expected');
   except
-    on E: EJCoreOPFUnexpectedResultSetSize do
-      ;
+    on E: EJCoreOPF do
+      if E.Code <> 2113 then
+        raise;
   end;
 end;
 
@@ -148,10 +148,11 @@ begin
   VStmt.ExecSQL;
   try
     VStmt.SQL := 'DELETE FROM TABLE WHERE ID=?';
-    Fail('EJCoreOPFStatementOnQueue expected');
+    Fail('EJCoreOPF(2112) expected');
   except
-    on E: EJCoreOPFStatementOnQueue do
-      ;
+    on E: EJCoreOPF do
+      if E.Code <> 2112 then
+        raise;
   end;
 end;
 
@@ -326,10 +327,11 @@ begin
   FreeAndNil(VDriver);
   try
     VStmt.ExecImmediate;
-    Fail('EJCoreOPFDetachedStatement expected');
+    Fail('EJCoreOPF(2107) expected');
   except
-    on E: EJCoreOPFDetachedStatement do
-      ;
+    on E: EJCoreOPF do
+      if E.Code <> 2107 then
+        raise;
   end;
 end;
 
@@ -359,10 +361,11 @@ begin
   VStmt.ExecImmediate;
   try
     Driver.Commit;
-    Fail('EJCoreOPFUnassignedParams expected');
+    Fail('EJCoreOPF(2111) expected');
   except
-    on E: EJCoreOPFUnassignedParams do
-      ;
+    on E: EJCoreOPF do
+      if E.Code <> 2111 then
+        raise;
   end;
 end;
 
@@ -375,10 +378,11 @@ begin
   VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
   try
     VStmt.ExecImmediate;
-    Fail('EJCoreListIsEmpty expected');
+    Fail('EJCoreClasses(0203) expected');
   except
-    on E: EJCoreListIsEmpty do
-      ;
+    on E: EJCoreClasses do
+      if E.Code <> 203 then
+        raise;
   end;
 end;
 

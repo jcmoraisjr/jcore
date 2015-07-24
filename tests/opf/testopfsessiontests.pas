@@ -25,7 +25,7 @@ implementation
 uses
   sysutils,
   testregistry,
-  JCoreOPFException,
+  JCoreClasses,
   JCoreOPFMetadata,
   JCoreOPFADM,
   JCoreOPFConfig,
@@ -45,16 +45,20 @@ begin
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   try
     VSession := VConfiguration.CreateSession;
-    Fail(EJCoreOPFUndefinedDriver.ClassName + ' expected');
+    Fail('EJCoreOPF(2102) expected');
   except
-    on E: EJCoreOPFUndefinedDriver do;
+    on E: EJCoreOPF do
+      if E.Code <> 2102 then
+        raise;
   end;
   VConfiguration.AddDriverClass([TTestEmptyDriver]);
   try
     VConfiguration.DriverName := TTestEmptyDriver.DriverName + ' invalid';
-    Fail(EJCoreOPFDriverNotFound.ClassName + ' expected');
+    Fail('EJCoreOPF(2101) expected');
   except
-    on E: EJCoreOPFDriverNotFound do;
+    on E: EJCoreOPF do
+      if E.Code <> 2101 then
+        raise;
   end;
   VConfiguration.DriverName := TTestEmptyDriver.DriverName;
   VSession := VConfiguration.CreateSession;
@@ -75,7 +79,7 @@ begin
   AssertNotNull(VSession);
   VProduct := TProduct.Create;
   try
-    AssertExceptionStore(VSession, VProduct, EJCoreOPFMappingNotFound);
+    AssertExceptionStore(VSession, VProduct, EJCoreOPF, 2116);
     VConfiguration.AddMappingClass([TTestEmptyMapping]);
     VSession.Store(VProduct);
   finally
@@ -98,9 +102,11 @@ begin
   try
     try
       VSession.Store(VPerson);
-      Fail(EJCoreOPFUnsupportedAttributeType.ClassName + ' expected');
+      Fail('EJCoreOPF(2121) expected');
     except
-      on E: EJCoreOPFUnsupportedAttributeType do;
+      on E: EJCoreOPF do
+        if E.Code <> 2121 then
+          raise;
     end;
     VConfiguration.Model.AddClass([TTestProxyPhone, TTestProxyCity]);
     VConfiguration.Model.AddGenerics(TTestProxyPhoneList, TTestProxyPhone);
@@ -112,9 +118,11 @@ begin
   try
     try
       VSession.Store(VInvoice);
-      Fail(EJCoreOPFUnsupportedAttributeType.ClassName + ' expected');
+      Fail('EJCoreOPF(2121) expected');
     except
-      on E: EJCoreOPFUnsupportedAttributeType do;
+      on E: EJCoreOPF do
+        if E.Code <> 2121 then
+          raise;
     end;
     VConfiguration.Model.AddClass([TAddress, TClient, TInvoiceItem]);
     VConfiguration.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);

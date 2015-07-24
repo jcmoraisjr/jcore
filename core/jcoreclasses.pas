@@ -23,87 +23,47 @@ uses
   Classes;
 
 type
+
+  TJCoreExceptionClass = class of EJCoreException;
+
   { EJCoreException }
 
   EJCoreException = class(Exception)
-  public
-    constructor Create(const AMsg: string);
-    constructor CreateFmt(const AMsg: string; const AArgs: array of const);
-  end;
-
-  EJCoreError = class(EJCoreException);
-
-  { EJCoreNilPointerException }
-
-  EJCoreNilPointerException = class(EJCoreException)
-  public
-    constructor Create;
-  end;
-
-  { EJCoreAmbiguousImplementation }
-
-  EJCoreAmbiguousImplementation = class(EJCoreException)
-  public
-    constructor Create(const AClassName1, AClassName2: string);
-  end;
-
-  { EJCoreUnsupportedIntfException }
-
-  EJCoreUnsupportedIntfException = class(EJCoreException)
-  strict private
-    FClass: TClass;
-    FGUID: TGuid;
-  public
-    constructor Create(AClass: TClass; AGUID: TGuid);
-    property TheClass: TClass read FClass;
-    property GUID: TGuid read FGUID;
-  end;
-
-  { EJCoreAttributeNotFound }
-
-  EJCoreAttributeNotFound = class(EJCoreException)
-  public
-    constructor Create(const AClassName, AAttributeName: string);
-  end;
-
-  { EJCoreListTypeExpected }
-
-  EJCoreListTypeExpected = class(EJCoreException)
   private
-    FExpectedType: PTypeInfo;
+    FCode: Integer;
+    FMsg: string;
   public
-    constructor Create(const AExpectedType: PTypeInfo);
-    property ExpectedType: PTypeInfo read FExpectedType;
+    constructor Create(const ACode: Integer; const AMsg: string; const AArgs: array of const);
+    property Code: Integer read FCode;
+    property Msg: string read FMsg;
   end;
 
-  { EJCoreListIsEmpty }
+  { EJCoreNilPointer }
 
-  EJCoreListIsEmpty = class(EJCoreException)
-  public
-    constructor Create;
-  end;
-
-  { EJCoreMetadataAlreadyOwned }
-
-  EJCoreMetadataAlreadyOwned = class(EJCoreException)
+  EJCoreNilPointer = class(EJCoreException)      // 0100
   public
     constructor Create;
   end;
 
-  EJCoreConversionError = class(EJCoreError);
+  EJCoreClasses = class(EJCoreException);        // 0200
+  EJCoreDIC = class(EJCoreException);            // 0300
+  EJCoreParser = class;                          // 0400
+  EJCoreMetadata = class(EJCoreException);       // 0500
+  EJCoreOPF = class(EJCoreException);            // 2100
 
   TJCoreTextPos = record
     Line, Column: Integer;
     Position: Integer;
   end;
 
-  EJCoreReadError = class(EJCoreError)
+  { EJCoreParser }
+
+  EJCoreParser = class(EJCoreException)
   private
     FLine: Integer;
     FColumn: Integer;
   public
-    constructor Create(APosition: TJCoreTextPos; const AMsg: string);
-    constructor CreateFmt(APosition: TJCoreTextPos; const AMsg: string; const AParams: array of const);
+    constructor Create(const APosition: TJCoreTextPos; const ACode: Integer; const AMsg: string; const AArgs: array of const);
     property Line: Integer read FLine;
     property Column: Integer read FColumn;
   end;
@@ -174,8 +134,7 @@ type
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); overload;
     constructor Create(const AString: string); overload;
     procedure ErrorExpected(const AExpectedToken, AToken: string);
-    procedure ErrorFmt(const AMsg: string; const AParams: array of const);
-    procedure ErrorMsg(const AMsg: string);
+    procedure Error(const ACode: Integer; const AMsg: string; const AArgs: array of const);
     function NextChar: Char;
     function ReadChar(GoForward: Boolean = True): Char;
     function ReadChars(ACount: Integer): string;
@@ -201,80 +160,26 @@ uses
 
 { EJCoreException }
 
-constructor EJCoreException.Create(const AMsg: string);
+constructor EJCoreException.Create(const ACode: Integer; const AMsg: string; const AArgs: array of const);
 begin
-  inherited Create(AMsg);
+  FCode := ACode;
+  FMsg := Format(AMsg, AArgs);
+  inherited Create(Format('(%.4d) %s', [Code, Msg]));
 end;
 
-constructor EJCoreException.CreateFmt(const AMsg: string;
+{ EJCoreNilPointer }
+
+constructor EJCoreNilPointer.Create;
+begin
+  inherited Create(101, S0101_NilPointer, []);
+end;
+
+{ EJCoreParser }
+
+constructor EJCoreParser.Create(const APosition: TJCoreTextPos; const ACode: Integer; const AMsg: string;
   const AArgs: array of const);
 begin
-  inherited CreateFmt(AMsg, AArgs);
-end;
-
-{ EJCoreNilPointerException }
-
-constructor EJCoreNilPointerException.Create;
-begin
-  inherited Create(SJCoreNilPointer);
-end;
-
-{ EJCoreAmbiguousImplementation }
-
-constructor EJCoreAmbiguousImplementation.Create(const AClassName1,
-  AClassName2: string);
-begin
-end;
-
-{ EJCoreUnsupportedIntfException }
-
-constructor EJCoreUnsupportedIntfException.Create(AClass: TClass; AGUID: TGuid);
-begin
-  CreateFmt(SJCoreUnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
-  FClass := AClass;
-  FGUID := AGUID;
-end;
-
-{ EJCoreAttributeNotFound }
-
-constructor EJCoreAttributeNotFound.Create(const AClassName,
-  AAttributeName: string);
-begin
-end;
-
-{ EJCoreListTypeExpected }
-
-constructor EJCoreListTypeExpected.Create(const AExpectedType: PTypeInfo);
-begin
-  FExpectedType := AExpectedType;
-end;
-
-{ EJCoreListIsEmpty }
-
-constructor EJCoreListIsEmpty.Create;
-begin
-end;
-
-{ EJCoreMetadataAlreadyOwned }
-
-constructor EJCoreMetadataAlreadyOwned.Create;
-begin
-end;
-
-{ EJCoreReadError }
-
-constructor EJCoreReadError.Create(
-  APosition: TJCoreTextPos; const AMsg: string);
-begin
-  inherited Create(AMsg);
-  FLine := APosition.Line;
-  FColumn := APosition.Column;
-end;
-
-constructor EJCoreReadError.CreateFmt(APosition: TJCoreTextPos;
-  const AMsg: string; const AParams: array of const);
-begin
-  inherited CreateFmt(AMsg, AParams);
+  inherited Create(ACode, AMsg, AArgs);
   FLine := APosition.Line;
   FColumn := APosition.Column;
 end;
@@ -325,7 +230,7 @@ function TJCoreManagedObject.Release: Integer;
 begin
   Result := InterLockedDecrement(FRefCount);
   if FRefCount < 0 then
-    raise EJCoreException.CreateFmt(SJCoreCannotReleaseInstance, [ClassName]);
+    raise EJCoreClasses.Create(204, S0204_CannotReleaseInstance, [ClassName]);
 end;
 
 function TJCoreManagedObject.SupportsIntf(const IID: TGUID): Boolean;
@@ -362,7 +267,7 @@ end;
 function TJCoreFactory.Choose(const AType1, AType2: T): T;
 begin
   if (AType1 = nil) and (AType2 = nil) then
-    raise EJCoreNilPointerException.Create
+    raise EJCoreNilPointer.Create
   else if (AType2 = nil) or AType1.InheritsFrom(AType2) then
     Result := AType1
   else if (AType1 = nil) or AType2.InheritsFrom(AType1) then
@@ -370,7 +275,7 @@ begin
   else
     Result := InternalSelect(AType1, AType2);
   if (Result = nil) then
-    raise EJCoreAmbiguousImplementation.Create(AType1.ClassName, AType2.ClassName);
+    raise EJCoreClasses.Create(201, S0201_AmbiguousImplementation, [AType1.ClassName, AType2.ClassName]);
 end;
 
 function TJCoreFactory.InternalSelect(const AType1, AType2: T): T;
@@ -414,19 +319,12 @@ begin
     VToken := SJCoreEofMsg
   else
     VToken := AToken;
-  raise EJCoreReadError.CreateFmt(TokenPos, SJCoreTokenExpected,
-   [AExpectedToken, VToken]);
+  raise EJCoreParser.Create(TokenPos, 402, S0402_TokenExpected, [AExpectedToken, VToken]);
 end;
 
-procedure TJCoreTextReader.ErrorFmt(
-  const AMsg: string; const AParams: array of const);
+procedure TJCoreTextReader.Error(const ACode: Integer; const AMsg: string; const AArgs: array of const);
 begin
-  raise EJCoreReadError.CreateFmt(TokenPos, AMsg, AParams);
-end;
-
-procedure TJCoreTextReader.ErrorMsg(const AMsg: string);
-begin
-  ErrorFmt(AMsg, []);
+  raise EJCoreParser.Create(TokenPos, ACode, AMsg, AArgs);
 end;
 
 function TJCoreTextReader.GetEof: Boolean;
@@ -446,7 +344,7 @@ end;
 function TJCoreTextReader.ReadChar(GoForward: Boolean): Char;
 begin
   if Eof then
-    ErrorMsg(SJCoreUnexpectedEof);
+    Error(404, S0404_UnexpectedEof, []);
   Result := FBuffer[FCurrentPos.Position];
   if GoForward then
   begin

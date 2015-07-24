@@ -24,7 +24,7 @@ implementation
 uses
   sysutils,
   testregistry,
-  JCoreOPFException,
+  JCoreClasses,
   JCoreOPFMetadata,
   JCoreOPFADM,
   JCoreOPFOIDGen,
@@ -127,10 +127,11 @@ begin
   VGenerator.ReadInt64;
   try
     VGenerator.ReadInt64;
-    Fail('EJCoreOPFEmptyOIDList expected');
+    Fail('EJCoreOPF(2124) expected');
   except
-    on E: EJCoreOPFEmptyOIDList do
-      ;
+    on E: EJCoreOPF do
+      if E.Code <> 2124 then
+        raise;
   end;
 end;
 

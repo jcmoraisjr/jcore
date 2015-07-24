@@ -93,7 +93,8 @@ implementation
 uses
   typinfo,
   sysutils,
-  JCoreOPFException;
+  JCoreConsts,
+  JCoreClasses;
 
 { TJCoreOPFQuerySQLdb }
 
@@ -123,7 +124,7 @@ end;
 procedure TJCoreOPFQuerySQLdb.NextField;
 begin
   if FFieldCount = 0 then
-    raise EJCoreOPFDriver.Create('Closed dataset', []);
+    raise EJCoreOPF.Create(2103, S2103_ClosedDataset, []);
   Inc(FCurrentField);
   if FCurrentField = FFieldCount then
   begin
@@ -149,7 +150,8 @@ begin
       tkAString: VParam.AsString := Params.ReadString;
       tkInteger: VParam.AsInteger := Params.ReadInt32;
       tkInt64: VParam.AsLargeInt := Params.ReadInt64;
-      else raise EJCoreOPFDriver.Create('Unsupported type', [GetEnumName(TypeInfo(TTypeKind), Ord(VType))]);
+      else
+        raise EJCoreOPF.Create(2104, S2104_UnsupportedType, [GetEnumName(TypeInfo(TTypeKind), Ord(VType))]);
     end;
   end;
 end;
@@ -243,7 +245,7 @@ var
 begin
   VConnectionDef := GetConnectionDef(ConnectionName);
   if not Assigned(VConnectionDef) then
-    raise EJCoreOPFDriver.Create('Connection not found: %s', [ConnectionName]);
+    raise EJCoreOPF.Create(2105, S2105_ConnectionNotFound, [ConnectionName]);
   FConnection := VConnectionDef.ConnectionClass.Create(nil);
   FTransaction := TSQLTransaction.Create(nil);
   FConnection.Transaction := FTransaction;
@@ -288,7 +290,7 @@ begin
   if SameText(ConnectionName, 'postgresql') then
     VSQLdbGeneratorClass := TJCoreOPFGeneratorSQLdbPostgreSQL
   else
-    raise EJCoreOPFDriver.Create('Unsupported connection: %s', [ConnectionName]);
+    raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
   Result := VSQLdbGeneratorClass.Create(Self, AGeneratorName)
 end;
 

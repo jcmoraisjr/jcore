@@ -7,18 +7,19 @@ interface
 uses
   sysutils,
   fpcunit,
+  JCoreClasses,
   JCoreExpression;
 
 type
 
-  ETestExpressionError = class(Exception);
+  ETestExpressionError = class(EJCoreException);
 
   { TTestExpression }
 
   TTestExpression = class(TTestCase)
   private
     FExpression: TJCoreExpression;
-    procedure AssertExpressionException(const AExpression: string; AException: ExceptClass; ACalcExpression: Boolean = True);
+    procedure AssertExpressionException(const AExpression: string; const AException: TJCoreExceptionClass; const ACode: Integer; const ACalcExpression: Boolean = True);
     procedure AssertExpressionNumber(const AExpression: string; AExpected: Double);
   protected
     procedure SetUp; override;
@@ -120,7 +121,6 @@ implementation
 uses
   testregistry,
   Math,
-  JCoreClasses,
   JCoreExpressionLib;
 
 { TTestError }
@@ -142,16 +142,16 @@ end;
 
 procedure TTestError.VarCalc;
 begin
-  raise ETestExpressionError.Create('I am the TTestError class!');
+  raise ETestExpressionError.Create(0, 'I am the TTestError class!', []);
 end;
 
 { TTestExpression }
 
-procedure TTestExpression.AssertExpressionException(
-  const AExpression: string; AException: ExceptClass;
-  ACalcExpression: Boolean = True);
+procedure TTestExpression.AssertExpressionException(const AExpression: string;
+  const AException: TJCoreExceptionClass; const ACode: Integer; const ACalcExpression: Boolean);
 var
   VExceptionName: string;
+  VExceptionClass: string;
 begin
   try
     FExpression.ParseExpression(AExpression);
@@ -160,14 +160,16 @@ begin
   except
     on E: Exception do
     begin
-      if E.ClassType = AException then
+      if (E.ClassType = AException) and (EJCoreException(E).Code = ACode) then
         Exit;
       if Assigned(AException) then
-        VExceptionName := AException.ClassName
+        VExceptionName := Format('%s(%d)', [AException.ClassName, ACode])
       else
         VExceptionName := 'No exception';
-      Fail(VExceptionName + ' was expected but ' + E.ClassName +
-       ' was raised.');
+      VExceptionClass := E.ClassName;
+      if E is EJCoreException then
+        VExceptionClass := Format('%s(%.4d)', [VExceptionClass, EJCoreException(E).Code]);
+      Fail(VExceptionName + ' was expected but ' + VExceptionClass + ' was raised.');
     end;
   end;
   if Assigned(AException) then
@@ -223,17 +225,17 @@ end;
 
 procedure TTestExpression.ExpressionWithInvalidNumber;
 begin
-  AssertExpressionException('10.5+10.25.5', EJCoreReadError);
+  AssertExpressionException('10.5+10.25.5', EJCoreParser, 402);
 end;
 
 procedure TTestExpression.ExpressionWithoutCloseParenthese;
 begin
-  AssertExpressionException('(15+9)*(4^3', EJCoreReadError);
+  AssertExpressionException('(15+9)*(4^3', EJCoreParser, 402);
 end;
 
 procedure TTestExpression.ExpressionWithoutOpenParenthese;
 begin
-  AssertExpressionException('-3)^2', EJCoreReadError);
+  AssertExpressionException('-3)^2', EJCoreParser, 402);
 end;
 
 procedure TTestExpression.FunctionOneParam;
@@ -248,7 +250,7 @@ end;
 
 procedure TTestExpression.FunctionWrongParamCount;
 begin
-  AssertExpressionException('min(1,2,3)', EJCoreReadError);
+  AssertExpressionException('min(1,2,3)', EJCoreParser, 402);
 end;
 
 procedure TTestExpression.FunctionOptionalParams;
@@ -259,10 +261,10 @@ begin
     AssertExpressionNumber('optional(2,1,2)', 3);
     AssertExpressionNumber('optional(3,1,2,3)', 6);
     //AssertExpressionNumber('optional(3,1,2,3,4)', 0);
-    AssertExpressionException('optional(3,1,2,3,4)', ETestExpressionError);
+    AssertExpressionException('optional(3,1,2,3,4)', ETestExpressionError, 0);
   finally
     JCoreExpressionLibrary.UnregisterFunctions([TTestOptionalFunction]);
-    AssertExpressionException('optional(2,1,2)', EJCoreReadError);
+    AssertExpressionException('optional(2,1,2)', EJCoreParser, 402);
   end;
 end;
 
@@ -330,9 +332,9 @@ begin
   finally
     JCoreExpressionLibrary.UnregisterFunctions([TTestSinFunction,
      TTestCosFunction, TTestTanFunction]);
-    AssertExpressionException('tan(0.7854)', EJCoreReadError);
-    AssertExpressionException('sin(0.7854)', EJCoreReadError);
-    AssertExpressionException('cos(0.7854)', EJCoreReadError);
+    AssertExpressionException('tan(0.7854)', EJCoreParser, 402);
+    AssertExpressionException('sin(0.7854)', EJCoreParser, 402);
+    AssertExpressionException('cos(0.7854)', EJCoreParser, 402);
   end;
 end;
 
@@ -343,7 +345,7 @@ begin
     AssertExpressionNumber('10 mod 3', 1);
   finally
     JCoreExpressionLibrary.UnregisterOperations([TTestModOperation]);
-    AssertExpressionException('10 mod 3', EJCoreReadError);
+    AssertExpressionException('10 mod 3', EJCoreParser, 402);
   end;
 end;
 
@@ -363,13 +365,15 @@ begin
     try
       VExpression := TJCoreExpression.Create('errorinexistent()');
       FreeAndNil(VExpression);
-      Fail('EJCoreReadError expected');
+      Fail('EJCoreParser(0402) expected');
     except
-      on E: EJCoreReadError do;
+      on E: EJCoreParser do
+        if E.Code <> 402 then
+          raise;
     end;
   finally
     JCoreExpressionLibrary.UnregisterFunctions([TTestError]);
-    AssertExpressionException('error()', EJCoreReadError, False);
+    AssertExpressionException('error()', EJCoreParser, 402, False);
   end;
 end;
 
@@ -377,12 +381,12 @@ procedure TTestExpression.ParsingExecuting;
 begin
   JCoreExpressionLibrary.RegisterFunctions([TTestError]);
   try
-    AssertExpressionException('errorinexistent()', EJCoreReadError, False);
-    AssertExpressionException('error()', nil, False);
-    AssertExpressionException('error()', ETestExpressionError, True);
+    AssertExpressionException('errorinexistent()', EJCoreParser, 402, False);
+    AssertExpressionException('error()', nil, 0, False);
+    AssertExpressionException('error()', ETestExpressionError, 0, True);
   finally
     JCoreExpressionLibrary.UnregisterFunctions([TTestError]);
-    AssertExpressionException('error()', EJCoreReadError, False);
+    AssertExpressionException('error()', EJCoreParser, 402, False);
   end;
 end;
 
@@ -409,7 +413,7 @@ var
 begin
   // First param is the number of params declared beyond the first one
   if Length(Params) <> (Params[0]^ + 1) then
-    raise ETestExpressionError.Create('Wrong number of params');
+    raise ETestExpressionError.Create(0, 'Wrong number of params', []);
   Res^ := 0;
   for I := 1 to Pred(Length(Params)) do
     Res^ := Res^ + Params[I]^;

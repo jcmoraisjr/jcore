@@ -226,7 +226,7 @@ implementation
 
 uses
   sysutils,
-  JCoreOPFException;
+  JCoreConsts;
 
 { TJCoreOPFParams }
 
@@ -264,7 +264,7 @@ end;
 function TJCoreOPFSQLStatement.GetStmtManager: IJCoreOPFSQLStmtManager;
 begin
   if not Assigned(FStmtManager) then
-    raise EJCoreOPFDetachedStatement.Create;
+    raise EJCoreOPF.Create(2107, S2107_DetachedStatement, []);
   Result := FStmtManager;
 end;
 
@@ -283,8 +283,8 @@ begin
   if (AExpectedSize >= 0) and (ACount <> AExpectedSize) then
   begin
     if ACount = 0 then
-      raise EJCoreOPFEmptyResultSet.Create(AExpectedSize);
-    raise EJCoreOPFUnexpectedResultSetSize.Create(AExpectedSize, ACount);
+      raise EJCoreOPF.Create(2110, S2110_EmptyResultSet, [AExpectedSize]);
+    raise EJCoreOPF.Create(2113, S2113_UnexpectedResultSetSize, [AExpectedSize, ACount]);
   end;
 end;
 
@@ -402,13 +402,13 @@ end;
 procedure TJCoreOPFSQLStatement.CheckCommit;
 begin
   if Params.Count > 0 then
-    raise EJCoreOPFUnassignedParams.Create;
+    raise EJCoreOPF.Create(2111, S2111_UnassignedParams, []);
 end;
 
 procedure TJCoreOPFSQLStatement.CheckQueued;
 begin
   if FExpectedSize.Count > 0 then
-    raise EJCoreOPFStatementOnQueue.Create;
+    raise EJCoreOPF.Create(2112, S2112_StatementOnQueue, []);
 end;
 
 procedure TJCoreOPFSQLStatement.Flush;

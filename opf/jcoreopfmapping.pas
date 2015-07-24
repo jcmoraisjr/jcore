@@ -254,8 +254,8 @@ implementation
 
 uses
   sysutils,
-  JCoreMetadata,
-  JCoreOPFException;
+  JCoreConsts,
+  JCoreMetadata;
 
 { TJCoreOPFMappingClassRef }
 
@@ -279,7 +279,7 @@ begin
     if VMappingClass.Apply(AMap) then
       VActualMappingClass := Choose(VActualMappingClass, VMappingClass);
   if not Assigned(VActualMappingClass) then
-    raise EJCoreOPFMappingNotFound.Create(AMap.Metadata.TheClass.ClassName);
+    raise EJCoreOPF.Create(2116, S2116_MappingNotFound, [AMap.Metadata.TheClass.ClassName]);
   Result := TJCoreOPFMappingClassRef.Create(VActualMappingClass, AMap);
 end;
 
@@ -427,7 +427,7 @@ begin
   for Result in PIDList do
     if Result.OID.EqualsOID(AOID) then
       Exit;
-  raise EJCoreOPFObjectNotFound.Create(AOID.AsString);
+  raise EJCoreOPF.Create(2114, S2114_ObjectNotFound, [AOID.AsString]);
 end;
 
 { TJCoreOPFComplementaryMappingManager }
@@ -522,7 +522,7 @@ end;
 procedure TJCoreOPFClassMapping.EnsureMappingConsistency(const APID: TJCoreOPFPID);
 begin
   if MappingList.Count <> APID.ADMMappingCount then
-    raise EJCoreOPFInconsistentMappingSizes.Create(MappingList.Count, APID.ADMMappingCount);
+    raise EJCoreOPF.Create(2117, S2117_InconsistentMappingSizes, [Metadata.TheClass.ClassName]);
 end;
 
 function TJCoreOPFClassMapping.GetGenerator: IJCoreOPFOIDGenerator;
@@ -538,7 +538,7 @@ begin
   for Result := 0 to Pred(MappingList.Count) do
     if MappingList[Result].Map = ABaseMap then
       Exit;
-  raise EJCoreOPFMappingNotFound.Create(ABaseMap.Metadata.TheClass.ClassName);
+  raise EJCoreOPF.Create(2116, S2116_MappingNotFound, [ABaseMap.Metadata.TheClass.ClassName]);
 end;
 
 function TJCoreOPFClassMapping.Retrieve(const AOIDArray: array of IJCoreOPFOID): TJCoreObjectArray;
@@ -697,7 +697,7 @@ var
 begin
   VOID := AOwnerADM.CompositionOID;
   if not Assigned(VOID) then
-    raise EJCoreOPFEmptyOID.Create;
+    raise EJCoreOPF.Create(2115, S2115_EmptyOID, []);
   VComposite := Retrieve([VOID])[0];
   AOwnerADM.AssignComposition(VComposite);
 end;
@@ -798,8 +798,11 @@ begin
     try
       Result := Retrieve([VOID])[0];
     except
-      on E: EJCoreOPFEmptyResultSet do
-        raise EJCoreOPFObjectNotFound.Create(AStringOID);
+      on E: EJCoreOPF do
+        if E.Code = 2110 then
+          raise EJCoreOPF.Create(2114, S2114_ObjectNotFound, [AStringOID])
+        else
+          raise;
     end;
   end else
     Result := nil;
@@ -883,7 +886,8 @@ begin
       if not Assigned(Result) then
         Result := VSubClass
       else
-        raise EJCoreOPFAmbiguousInstanceClass.Create(Result, VSubClass);
+        raise EJCoreOPF.Create(201, S0201_AmbiguousImplementation, [Result.ClassName,
+         VSubClass.ClassName]);
     end;
   end;
   if not Assigned(Result) then

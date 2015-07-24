@@ -76,6 +76,7 @@ implementation
 
 uses
   sysutils,
+  JCoreConsts,
   JCoreClasses;
 
 { TJCoreNativeTypeOrderedList }
@@ -100,9 +101,17 @@ begin
 end;
 
 procedure TJCoreNativeTypeOrderedList.ValidateType(const AExpectedType: PTypeInfo);
+var
+  VCurrentType: string;
 begin
   if AExpectedType <> FCurrentType then
-    raise EJCoreListTypeExpected.Create(FCurrentType);
+  begin
+    if Assigned(FCurrentType) then
+      VCurrentType := FCurrentType^.Name
+    else
+      VCurrentType := 'Nil';
+    raise EJCoreClasses.Create(202, S0202_ListTypeExpected, [VCurrentType]);
+  end;
 end;
 
 constructor TJCoreNativeTypeOrderedList.Create;
@@ -161,7 +170,7 @@ end;
 function TJCoreNativeTypeOrderedList.PopType: TTypeKind;
 begin
   if Count < 1 then
-    raise EJCoreListIsEmpty.Create;
+    raise EJCoreClasses.Create(203, S0203_ListIsEmpty, []);
   ValidateType(nil);
   FCurrentType := PTypeInfo(OrderedList.Pop);
   if Assigned(FCurrentType) then

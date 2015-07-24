@@ -213,7 +213,7 @@ type
 implementation
 
 uses
-  JCoreOPFException;
+  JCoreConsts;
 
 { TJCoreOPFADMSimpleCtl }
 
@@ -290,7 +290,7 @@ begin
     case AttrPropInfo^.PropType^.Kind of
       tkInt64: Result := PInt64(AttrAddr)^;
       tkQWord: Result := PQWord(AttrAddr)^;
-      else raise EJCoreOPFUnsupportedAttributeType.Create(AttrPropInfo^.PropType);
+      else raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [AttrPropInfo^.PropType^.Name]);
     end;
   end else
     Result := UseGetter;
@@ -359,7 +359,7 @@ begin
       ftExtended: Result := PExtended(AttrAddr)^;
       ftComp: Result := PComp(AttrAddr)^;
       ftCurr: Result := PCurrency(AttrAddr)^;
-      else raise EJCoreOPFUnsupportedAttributeType.Create(AttrPropInfo^.PropType);
+      else raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [AttrPropInfo^.PropType^.Name]);
     end;
   end else
     Result := GetGetter;

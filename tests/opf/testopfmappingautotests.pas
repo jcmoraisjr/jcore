@@ -74,7 +74,7 @@ implementation
 uses
   testregistry,
   sysutils,
-  JCoreOPFException,
+  JCoreClasses,
   TestOPFModelContact,
   TestOPFModelInvoice,
   TestOPFModelCircular;
@@ -360,10 +360,11 @@ begin
   try
     try
       VCompany := Session.Retrieve(TCompany, '1');
-      Fail('EJCoreOPFObjectNotFound expected');
+      Fail('EJCoreOPF(2114) expected');
     except
-      on E: EJCoreOPFObjectNotFound do
-        ;
+      on E: EJCoreOPF do
+        if E.Code <> 2114 then
+          raise;
     end;
   finally
     FreeAndNil(VCompany);

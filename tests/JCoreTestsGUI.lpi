@@ -56,14 +56,9 @@
       <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="bin"/>
     </SearchPaths>
-    <Linking>
-      <Debugging>
-        <DebugInfoType Value="dsDwarf2Set"/>
-      </Debugging>
-    </Linking>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="22">
+    <Exceptions Count="10">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -77,59 +72,23 @@
         <Name Value="ETestExpressionError"/>
       </Item4>
       <Item5>
-        <Name Value="EJCoreReadError"/>
+        <Name Value="EAssertionFailedError"/>
       </Item5>
       <Item6>
-        <Name Value="EAssertionFailedError"/>
+        <Name Value="EJCoreClasses"/>
       </Item6>
       <Item7>
-        <Name Value="EJCoreListIsEmpty"/>
+        <Name Value="EJCoreDIC"/>
       </Item7>
       <Item8>
-        <Name Value="EJCoreListTypeExpected"/>
+        <Name Value="EJCoreMetadata"/>
       </Item8>
       <Item9>
-        <Name Value="EJCoreDICImplNotFoundException"/>
+        <Name Value="EJCoreOPF"/>
       </Item9>
       <Item10>
-        <Name Value="EJCoreDICAmbiguousImplementationException"/>
+        <Name Value="EJCoreParser"/>
       </Item10>
-      <Item11>
-        <Name Value="EJCoreOPFUndefinedDriver"/>
-      </Item11>
-      <Item12>
-        <Name Value="EJCoreOPFDriverNotFound"/>
-      </Item12>
-      <Item13>
-        <Name Value="EJCoreOPFUnsupportedAttributeType"/>
-      </Item13>
-      <Item14>
-        <Name Value="EJCoreOPFMappingNotFound"/>
-      </Item14>
-      <Item15>
-        <Name Value="EJCoreOPFEmptyResultSet"/>
-      </Item15>
-      <Item16>
-        <Name Value="EJCoreOPFObjectNotFound"/>
-      </Item16>
-      <Item17>
-        <Name Value="EJCoreMetadataAlreadyOwned"/>
-      </Item17>
-      <Item18>
-        <Name Value="EJCoreOPFEmptyOIDList"/>
-      </Item18>
-      <Item19>
-        <Name Value="EJCoreOPFStatementOnQueue"/>
-      </Item19>
-      <Item20>
-        <Name Value="EJCoreOPFDetachedStatement"/>
-      </Item20>
-      <Item21>
-        <Name Value="EJCoreOPFUnexpectedResultSetSize"/>
-      </Item21>
-      <Item22>
-        <Name Value="EJCoreOPFUnassignedParams"/>
-      </Item22>
     </Exceptions>
   </Debugging>
 </CONFIG>

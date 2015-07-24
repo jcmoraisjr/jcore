@@ -58,7 +58,7 @@ implementation
 
 uses
   sysutils,
-  JCoreOPFException;
+  JCoreConsts;
 
 { TJCoreOPFOIDGeneratorInt64 }
 
@@ -92,7 +92,7 @@ begin
     Result := OIDList[Current];
     Inc(FCurrent);
   end else
-    raise EJCoreOPFEmptyOIDList.Create;
+    raise EJCoreOPF.Create(2124, S2124_EmptyOIDList, []);
 end;
 
 function TJCoreOPFOIDGeneratorInt64.ReadString: string;
@@ -109,7 +109,7 @@ end;
 {$warn 5033 off}
 function TJCoreOPFOIDGeneratorGUID.ReadInt64: Int64;
 begin
-  raise EJCoreOPFUnsupportedAttributeType.Create(TypeInfo(Int64));
+  raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [SJCoreInt64ValueMsg]);
 end;
 {$warn 5033 on}
 

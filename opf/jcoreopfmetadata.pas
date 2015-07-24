@@ -417,8 +417,7 @@ implementation
 
 uses
   sysutils,
-  JCoreOPFConsts,
-  JCoreOPFException;
+  JCoreConsts;
 
 { TJCoreOPFADM }
 
@@ -446,7 +445,7 @@ end;
 
 procedure TJCoreOPFADM.InternalLoad;
 begin
-  raise EJCoreOPFUnsupportedLoadOperation.Create(Metadata.PropInfo^.PropType^.Name);
+  raise EJCoreOPF.Create(2122, S2122_UnsupportedLoadOperation, [Metadata.PropInfo^.PropType^.Name]);
 end;
 
 constructor TJCoreOPFADM.Create(const APID: TJCoreOPFPID; const AMetadata: TJCoreOPFAttrMetadata);
@@ -897,7 +896,7 @@ var
 begin
   VIndex := IndexOf(AAttributeName);
   if VIndex = -1 then
-    raise EJCoreAttributeNotFound.Create(PID.Entity.ClassName, AAttributeName);
+    raise EJCoreMetadata.Create(501, S0501_AttributeNotFound, [PID.Entity.ClassName, AAttributeName]);
   Result := Data[VIndex];
 end;
 
@@ -1045,7 +1044,7 @@ end;
 procedure TJCoreOPFPID.SetOID(const AValue: IJCoreOPFOID);
 begin
   if IsPersistent and Assigned(AValue) then
-    raise EJCoreOPFCannotAssignOIDPersistent.Create;
+    raise EJCoreOPF.Create(2119, S2119_CannotAssignOIDPersistent, []);
   FOID := AValue;
 end;
 
@@ -1060,13 +1059,13 @@ begin
     if Result is TJCoreOPFADMController and (TJCoreOPFADMController(Result).AttrAddr = AAttrAddr) then
       Exit;
   end;
-  raise EJCoreAttributeNotFound.Create(Entity.ClassName, IntToStr(PtrUInt(AAttrAddr)));
+  raise EJCoreMetadata.Create(501, S0501_AttributeNotFound, [Entity.ClassName, HexStr(AAttrAddr)]);
 end;
 
 constructor TJCoreOPFPID.Create(const AEntity: TObject; const AMetadata: TJCoreOPFClassMetadata);
 begin
   if not Assigned(AEntity) then
-    raise EJCoreNilPointerException.Create;
+    raise EJCoreNilPointer.Create;
   inherited Create;
   FEntity := AEntity;
   FMetadata := AMetadata;
@@ -1095,7 +1094,7 @@ var
 begin
   VIndex := ADMMap.IndexOf(AAttributeName);
   if VIndex = -1 then
-    raise EJCoreAttributeNotFound.Create(Entity.ClassName, AAttributeName);
+    raise EJCoreMetadata.Create(501, S0501_AttributeNotFound, [Entity.ClassName, AAttributeName]);
   Result := ADMMap.Data[VIndex];
 end;
 
@@ -1125,7 +1124,7 @@ begin
       FOwnerADM := AOwnerADM;
     end else if (AOwner <> FOwner) or (AOwnerADM <> FOwnerADM) then
       { TODO : Check duplication in the same admcollection }
-      raise EJCoreOPFObjectAlreadyOwned.Create(Entity.ClassName, FOwner.Entity.ClassName);
+      raise EJCoreOPF.Create(2120, S2120_ObjectAlreadyOwned, [FOwner.Entity.ClassName, Entity.ClassName]);
   end;
 end;
 
@@ -1208,7 +1207,7 @@ begin
   else
     Result := Model.FindSpecializedClass(VClass);
   if not Assigned(Result) then
-    raise EJCoreOPFUnsupportedAttributeType.Create(ATypeInfo^.Name);
+    raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [ATypeInfo^.Name]);
 end;
 
 constructor TJCoreOPFAttrMetadata.Create(const AModel: TJCoreModel; const AOwner: TJCoreClassMetadata;
@@ -1353,7 +1352,7 @@ function TJCoreOPFModel.AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOP
 var
   VPropInfo: PPropInfo;
 begin
-  VPropInfo := GetPropInfo(AEntity, SPID);
+  VPropInfo := GetPropInfo(AEntity, SJCorePID);
   if Assigned(VPropInfo) and (VPropInfo^.PropType^.Kind = tkInterface) then
   begin
     Result := GetInterfaceProp(AEntity, VPropInfo) as TJCoreOPFPID;
@@ -1372,7 +1371,7 @@ var
   VProxy: TJCoreEntityProxy;
   VMetadata: TJCoreOPFClassMetadata;
 begin
-  VFieldAddr := AEntity.FieldAddress(SProxy);
+  VFieldAddr := AEntity.FieldAddress(SJCoreProxy);
   if Assigned(VFieldAddr) then
   begin
     VProxy := TObject(VFieldAddr^) as TJCoreEntityProxy;
@@ -1454,7 +1453,7 @@ end;
 
 function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
 begin
-  Result := SameText(SPID, AAttrName) or inherited IsReservedAttr(AAttrName);
+  Result := SameText(SJCorePID, AAttrName) or inherited IsReservedAttr(AAttrName);
 end;
 
 function TJCoreOPFModel.PIDClass: TJCoreOPFPIDClass;
@@ -1489,7 +1488,7 @@ begin
   for Result in ADMClassList do
     if Result.Apply(Self, AAttrTypeInfo) then
       Exit;
-  raise EJCoreOPFUnsupportedAttributeType.Create(AAttrTypeInfo);
+  raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [AAttrTypeInfo^.Name]);
 end;
 
 function TJCoreOPFModel.AcquireAttrMetadata(const AClass: TClass;
@@ -1506,12 +1505,12 @@ end;
 function TJCoreOPFModel.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
 begin
   if not Assigned(AEntity) then
-    raise EJCoreNilPointerException.Create;
+    raise EJCoreNilPointer.Create;
   Result := AcquirePIDFromIntfProp(AEntity);
   if not Assigned(Result) then
     Result := AcquirePIDFromProxyField(AEntity);
   if not Assigned(Result) then
-    raise EJCoreOPFPersistentIDNotFound.Create(AEntity.ClassName);
+    raise EJCoreOPF.Create(2108, S2108_PersistentIDNotFound, [AEntity.ClassName]);
 end;
 
 procedure TJCoreOPFModel.AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);

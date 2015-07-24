@@ -111,10 +111,11 @@ begin
   VPersonMetadata := VConfig.Model.AcquireMetadata(TPerson);
   try
     VInvoiceItemMetadata.OwnerMetadata := VPersonMetadata;
-    Fail('EJCoreMetadataAlreadyOwned expected');
+    Fail('EJCoreMetadata(0502) expected');
   except
-    on E: EJCoreMetadataAlreadyOwned do
-      ;
+    on E: EJCoreMetadata do
+      if E.Code <> 502 then
+        raise;
   end;
 end;
 

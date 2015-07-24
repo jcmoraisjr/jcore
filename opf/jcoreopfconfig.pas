@@ -83,7 +83,8 @@ implementation
 uses
   sysutils,
   types,
-  JCoreOPFException,
+  JCoreConsts,
+  JCoreClasses,
   JCoreOPFADM;
 
 { TJCoreOPFConfiguration }
@@ -134,7 +135,7 @@ begin
     { TODO : thread safe }
     VIndex := DriverClassMap.IndexOf(AValue);
     if VIndex = -1 then
-      raise EJCoreOPFDriverNotFound.Create(AValue);
+      raise EJCoreOPF.Create(2101, S2101_DriverNotFound, [AValue]);
     DriverClass := DriverClassMap.Data[VIndex];
   end;
 end;
@@ -143,7 +144,7 @@ function TJCoreOPFConfiguration.CreateDriver: TJCoreOPFDriver;
 begin
   { TODO : thread safe }
   if not Assigned(FDriverClass) then
-    raise EJCoreOPFUndefinedDriver.Create;
+    raise EJCoreOPF.Create(2102, S2102_UndefinedDriver, []);
   Result := FDriverClass.Create(Params);
 end;
 

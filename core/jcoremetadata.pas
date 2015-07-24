@@ -130,7 +130,8 @@ type
 implementation
 
 uses
-  sysutils;
+  sysutils,
+  JCoreConsts;
 
 { TJCoreAttrMetadata }
 
@@ -230,7 +231,7 @@ begin
   if not Assigned(FOwnerMetadata) or not Assigned(AValue) then
     FOwnerMetadata := AValue
   else if FOwnerMetadata <> AValue then
-    raise EJCoreMetadataAlreadyOwned.Create;
+    raise EJCoreMetadata.Create(502, S0502_MetadataAlreadyOwned, []);
 end;
 
 constructor TJCoreClassMetadata.Create(const AModel: TJCoreModel; const AClass: TClass;
@@ -260,7 +261,7 @@ begin
   for Result in AttrList do
     if SameText(AAttributeName, Result.Name) then
       Exit;
-  raise EJCoreAttributeNotFound.Create(TheClass.ClassName, AAttributeName);
+  raise EJCoreMetadata.Create(501, S0501_AttributeNotFound, [TheClass.ClassName, AAttributeName]);
 end;
 
 function TJCoreClassMetadata.AttributeCount: Integer;

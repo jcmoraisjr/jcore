@@ -23,30 +23,6 @@ uses
 
 type
 
-  EJCoreDICException = class(EJCoreException);
-
-  { EJCoreDICImplNotFoundException }
-
-  EJCoreDICImplNotFoundException = class(EJCoreDICException)
-  strict private
-    FGUID: TGuid;
-  public
-    constructor Create(const AGUID: TGuid; const AQualifier: string);
-    property GUID: TGuid read FGUID;
-  end;
-
-  { EJCoreDICAmbiguousImplementationException }
-
-  EJCoreDICAmbiguousImplementationException = class(EJCoreDICException)
-  strict private
-    FClass1: TClass;
-    FClass2: TClass;
-  public
-    constructor Create(AGUID: TGUID; AClass1, AClass2: TClass);
-    property Class1: TClass read FClass1;
-    property Class2: TClass read FClass2;
-  end;
-
   TJCoreDICClassClass = class of TJCoreDICClass;
 
   { TJCoreDICClass }
@@ -148,31 +124,12 @@ uses
   sysutils,
   JCoreConsts;
 
-{ EJCoreDICImplNotFoundException }
-
-constructor EJCoreDICImplNotFoundException.Create(const AGUID: TGuid; const AQualifier: string);
-begin
-  CreateFmt(SJCoreImplementationNotFound, [GUIDToString(AGUID), AQualifier]);
-  FGUID := AGUID;
-end;
-
-{ EJCoreDICAmbiguousImplementationException }
-
-constructor EJCoreDICAmbiguousImplementationException.Create(AGUID: TGUID;
-  AClass1, AClass2: TClass);
-begin
-  CreateFmt(SJCoreAmbiguousImplementation, [
-   GUIDToString(AGUID), AClass1.ClassName, AClass2.ClassName]);
-  FClass1 := AClass1;
-  FClass2 := AClass2;
-end;
-
 { TJCoreDICClass }
 
 constructor TJCoreDICClass.Create(AClass, AOverrides: TClass; AIsLazy: Boolean);
 begin
   if not Assigned(AClass) then
-    raise EJCoreNilPointerException.Create;
+    raise EJCoreNilPointer.Create;
   inherited Create;
   FClass := AClass;
   FOverrides := AOverrides;
@@ -220,20 +177,20 @@ function TJCoreDICClassFactory.ChooseClass(
   AClass1, AClass2: TJCoreDICClass): TJCoreDICClass;
 begin
   if not Assigned(AClass1) and not Assigned(AClass2) then
-    raise EJCoreNilPointerException.Create
+    raise EJCoreNilPointer.Create
   else if Assigned(AClass1) and AClass1.Overrides(AClass2) then
     Result := AClass1
   else if Assigned(AClass2) and AClass2.Overrides(AClass1) then
     Result := AClass2
   else
-    raise EJCoreDICAmbiguousImplementationException.Create(FGUID,
-     AClass1.TheClass, AClass2.TheClass);
+    raise EJCoreDIC.Create(302, S0302_AmbiguousImplementation, [
+     GUIDToString(FGUID), AClass1.ClassName, AClass2.ClassName]);
 end;
 
 function TJCoreDICClassFactory.GetCurrentClass: TJCoreDICClass;
 begin
   if not Assigned(FCurrentClass) then
-    raise EJCoreDICImplNotFoundException.Create(GUID, Qualifier);
+    raise EJCoreDIC.Create(303, S0303_ImplementationNotFound, [GUIDToString(GUID), Qualifier]);
   Result := FCurrentClass;
 end;
 
@@ -384,9 +341,9 @@ var
   VDICClass: TJCoreDICClass;
 begin
   if not Assigned(AClass) then
-    raise EJCoreNilPointerException.Create;
+    raise EJCoreNilPointer.Create;
   if (AClass.GetInterfaceEntry(AGUID) = nil) then
-    raise EJCoreUnsupportedIntfException.Create(AClass, AGUID);
+    raise EJCoreDIC.Create(301, S0301_UnsupportedInterface, [AClass.ClassName, GUIDToString(AGUID)]);
   { TODO : Factory }
   case AScope of
     jdsApplication: VDICClassClass := TJCoreDICSingletonClass;
@@ -425,10 +382,10 @@ var
 begin
   VIndex := Container.IndexOf(AGUID, AQualifier);
   if VIndex = -1 then
-    raise EJCoreDICImplNotFoundException.Create(AGUID, AQualifier);
+    raise EJCoreDIC.Create(303, S0303_ImplementationNotFound, [GUIDToString(AGUID), AQualifier]);
   VInstance := Container.Data[VIndex].CurrentClass.Instance;
   if not VInstance.GetInterface(AGUID, IUnknown(AIntf)) then
-    raise EJCoreUnsupportedIntfException.Create(VInstance.ClassType, AGUID);
+    raise EJCoreDIC.Create(301, S0301_UnsupportedInterface, [VInstance.ClassName, GUIDToString(AGUID)]);
 end;
 
 class procedure TJCoreDIC.Register(const AGUID: TGuid; AClass: TClass;

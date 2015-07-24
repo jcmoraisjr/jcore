@@ -224,11 +224,12 @@ begin
   Stack.PopInt32;
   try
     Stack.PopType;
+    Fail('EJCoreClasses(0203) expected');
   except
-    on E: EJCoreListIsEmpty do
-      Exit;
+    on E: EJCoreClasses do
+      if E.Code <> 203 then
+        raise;
   end;
-  Fail('EJCoreListIsEmpty expected');
 end;
 
 procedure TNativeTypeOrderedListTest.PopWrongType;
@@ -237,14 +238,12 @@ begin
   Queue.PopType;
   try
     Queue.PopInt32;
+    Fail('EJCoreClasses(0202) expected');
   except
-    on E: EJCoreListTypeExpected do
-    begin
-      AssertEquals('expected type', 'tkAString', TypeToName(E.ExpectedType^.Kind));
-      Exit;
-    end;
+    on E: EJCoreClasses do
+      if E.Code <> 202 then
+        raise;
   end;
-  Fail('EJCoreListTypeExpected expected');
 end;
 
 procedure TNativeTypeOrderedListTest.PopValueWithoutPopType;
@@ -252,11 +251,12 @@ begin
   Stack.PushInt32(18);
   try
     Stack.PopInt32;
+    Fail('EJCoreClasses(0202) expected');
   except
-    on E: EJCoreListTypeExpected do
-      Exit;
+    on E: EJCoreClasses do
+      if E.Code <> 202 then
+        raise;
   end;
-  Fail('EJCoreListTypeExpected expected');
 end;
 
 procedure TNativeTypeOrderedListTest.PopTypePushValue;
@@ -265,11 +265,12 @@ begin
   Queue.PopType;
   try
     Queue.PushString('data');
+    Fail('EJCoreClasses(0202) expected');
   except
-    on E: EJCoreListTypeExpected do
-      Exit;
+    on E: EJCoreClasses do
+      if E.Code <> 202 then
+        raise;
   end;
-  Fail('EJCoreListTypeExpected expected');
 end;
 
 initialization

@@ -154,8 +154,8 @@ implementation
 uses
   sysutils,
   Classes,
-  JCoreMetadata,
-  JCoreOPFException;
+  JCoreConsts,
+  JCoreMetadata;
 
 { TJCoreOPFSQLGenerator }
 
@@ -281,7 +281,7 @@ begin
   for Result := 0 to Pred(Maps.Count) do
     if Maps[Result] = AMap then
       Exit;
-  raise EJCoreOPFMappingNotFound.Create(AMap.Metadata.TheClass.ClassName);
+  raise EJCoreOPF.Create(2116, S2116_MappingNotFound, [AMap.Metadata.TheClass.ClassName]);
 end;
 
 function TJCoreOPFSQLGenerator.BuildDeleteCondition(const AOIDCount: Integer): string;
@@ -940,14 +940,15 @@ end;
 function TJCoreOPFSQLMapping.EnsureCollectionAttribute(const AADM: TJCoreOPFADM): TJCoreOPFADMCollection;
 begin
   if not (AADM is TJCoreOPFADMCollection) then
-    raise EJCoreOPFCollectionADMExpected.Create(AADM.PID.Entity.ClassName, AADM.Metadata.Name);
+    raise EJCoreOPF.Create(2125, S2125_CollectionADMExpected, [
+     AADM.PID.Entity.ClassName, AADM.Metadata.Name]);
   Result := TJCoreOPFADMCollection(AADM);
 end;
 
 function TJCoreOPFSQLMapping.EnsureEntityAttribute(const AADM: TJCoreOPFADM): TJCoreOPFADMEntity;
 begin
   if not (AADM is TJCoreOPFADMEntity) then
-    raise EJCoreOPFEntityADMExpected.Create(AADM.PID.Entity.ClassName, AADM.Metadata.Name);
+    raise EJCoreOPF.Create(2123, S2123_EntityADMExpected, [AADM.PID.Entity.ClassName, AADM.Metadata.Name]);
   Result := TJCoreOPFADMEntity(AADM);
 end;
 
@@ -1036,7 +1037,7 @@ var
 begin
   VDriver := AMapper.Driver;
   if not (VDriver is TJCoreOPFSQLDriver) then
-    raise EJCoreOPFUnsupportedDriver.Create(VDriver.ClassName);
+    raise EJCoreOPF.Create(2109, S2109_UnsupportedDriver, [VDriver.ClassName]);
   inherited Create(AMapper, AMap);
   FSQLDriver := TJCoreOPFSQLDriver(VDriver);
   { TODO : Use cache of SQL Generator }

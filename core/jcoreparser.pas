@@ -123,7 +123,7 @@ begin
   repeat
     Inc(VLen);
     if VLen = Pred(High(VLen)) then
-      ErrorMsg(SJCoreTokenLengthOutOfBounds);
+      Error(403, S0403_TokenLengthOutOfBounds, []);
     VIdent[VLen] := Ch;
     if Eof then
     begin
@@ -150,7 +150,7 @@ begin
   repeat
     Inc(VLen);
     if VLen = Pred(High(VLen)) then
-      ErrorMsg(SJCoreTokenLengthOutOfBounds);
+      Error(403, S0403_TokenLengthOutOfBounds, []);
     VNumStr[VLen] := Ch;
     if Eof then
     begin
@@ -171,7 +171,7 @@ function TJCoreParserReader.InternalReadString: string;
   begin
     Inc(AVar);
     if AVar = Pred(High(AVar)) then
-      ErrorMsg(SJCoreStringLengthOutOfBounds);
+      Error(401, S0401_StringLengthOutOfBounds, []);
   end;
 
 var
@@ -331,7 +331,7 @@ begin
     if Token = '' then
     begin
       Position := VOldPos;
-      ErrorFmt(SJCoreUnexpectedEof, []);
+      Error(404, S0404_UnexpectedEof, []);
     end;
   until MatchToken(Token);
   if not AInclude then

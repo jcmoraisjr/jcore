@@ -8,6 +8,7 @@ uses
   sysutils,
   Classes,
   fpcunit,
+  JCoreClasses,
   JCoreLogger,
   JCoreList,
   JCoreEntity,
@@ -76,7 +77,7 @@ type
     function GetSessionIPIDContactManual: ITestOPFSession;
     function GetSessionProxyContact: ITestOPFSession;
   protected
-    procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: ExceptClass);
+    procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: TJCoreExceptionClass; const ACode: Integer);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
     procedure AssertSQLDriverTransaction(const ATransactions: array of string);
     procedure ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
@@ -393,7 +394,7 @@ begin
 end;
 
 procedure TTestOPFAbstractTestCase.AssertExceptionStore(const ASession: IJCoreOPFSession;
-  const AEntity: TObject; const AException: ExceptClass);
+  const AEntity: TObject; const AException: TJCoreExceptionClass; const ACode: Integer);
 begin
   try
     ASession.Store(AEntity);
@@ -404,7 +405,8 @@ begin
     on E: Exception do
     begin
       LOG.Debug('', E);
-      AssertEquals(AException.ClassType, E.ClassType);
+      AssertEquals('Exception class', AException.ClassType, E.ClassType);
+      AssertEquals('Exception code', ACode, EJCoreException(E).Code);
     end;
   end;
 end;

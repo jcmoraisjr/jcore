@@ -13,9 +13,6 @@ type
   { TTestDIC }
 
   TTestDIC = class(TTestCase)
-  private
-    procedure InterfaceNotFoundError;
-    procedure AmbiguousImplementationException;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -107,21 +104,10 @@ type
 implementation
 
 uses
-  testregistry;
+  testregistry,
+  JCoreClasses;
 
 { TTestDIC }
-
-procedure TTestDIC.InterfaceNotFoundError;
-var
-  VFacade: IHotColorFacade;
-begin
-  TJCoreDIC.Locate(IHotColorFacade, VFacade);
-end;
-
-procedure TTestDIC.AmbiguousImplementationException;
-begin
-  TJCoreDIC.Register(IColdColorFacade, TGreenFacade, jdsApplication);
-end;
 
 procedure TTestDIC.SetUp;
 begin
@@ -216,8 +202,17 @@ begin
 end;
 
 procedure TTestDIC.InterfaceNotFoundCheck;
+var
+  VFacade: IHotColorFacade;
 begin
-  AssertException(EJCoreDICImplNotFoundException, @InterfaceNotFoundError);
+  try
+    TJCoreDIC.Locate(IHotColorFacade, VFacade);
+    Fail('EJCoreDIC(0303) expected')
+  except
+    on E: EJCoreDIC do
+      if E.Code <> 303 then
+        raise;
+  end;
 end;
 
 procedure TTestDIC.AmbiguousImplementationCheck;
@@ -225,7 +220,14 @@ begin
   TJCoreDIC.Register(IColdColorFacade, TNavyBlueFacade, jdsApplication);
   try
     try
-      AssertException(EJCoreDICAmbiguousImplementationException, @AmbiguousImplementationException);
+      try
+        TJCoreDIC.Register(IColdColorFacade, TGreenFacade, jdsApplication);
+        Fail('EJCoreDIC(0302) expected');
+      except
+        on E: EJCoreDIC do
+          if E.Code <> 302 then
+            raise;
+      end;
     finally
       AssertFalse(TJCoreDIC.Unregister(IColdColorFacade, TGreenFacade));
     end;
