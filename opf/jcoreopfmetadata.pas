@@ -153,15 +153,19 @@ type
     FPIDAdded: TJCoreOPFPIDArray;
     FPIDArray: TJCoreOPFPIDArray;
     FPIDArrayUpdated: Boolean;
-    function ArrayContentIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
-    function ArrayOrderIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
-    function ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
+    FPIDReorder: TJCoreOPFPIDArray;
+    function ArrayContentIsDirty: Boolean;
+    function ArrayLinkIsDirty: Boolean;
+    function ArrayOrderIsDirty: Boolean;
+    function ArraySizeIsDirty: Boolean;
     function GetItemsArray: TJCoreObjectArray;
     function GetOIDRemoved: TJCoreOPFOIDArray;
     function GetPIDAdded: TJCoreOPFPIDArray;
     function GetPIDArray: TJCoreOPFPIDArray;
+    function GetPIDReorder: TJCoreOPFPIDArray;
     function HasOIDInCache(const AOID: IJCoreOPFOID): Boolean;
     function HasOIDInCollection(const APIDArray: TJCoreOPFPIDArray; const AOID: IJCoreOPFOID): Boolean;
+    function HasOrderField: Boolean;
     procedure UpdateChanges;
   protected
     procedure InternalAssignArray(const AArray: TJCoreObjectArray); virtual; abstract;
@@ -175,11 +179,13 @@ type
   public
     procedure AssignArray(const AArray: TJCoreObjectArray);
     class function AttributeType: TJCoreOPFAttributeType; override;
+    function OrderIsDirty: Boolean;
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
     procedure WriteToParams(const AParams: IJCoreOPFParams); override;
     property OIDRemoved: TJCoreOPFOIDArray read GetOIDRemoved;
     property PIDAdded: TJCoreOPFPIDArray read GetPIDAdded;
     property PIDArray: TJCoreOPFPIDArray read GetPIDArray;
+    property PIDReorder: TJCoreOPFPIDArray read GetPIDReorder;
   end;
 
   { TJCoreOPFADMMapping }
@@ -240,6 +246,8 @@ type
     FOID: IJCoreOPFOID;
     FOwner: TJCoreOPFPID;
     FOwnerADM: TJCoreOPFADMCollection;
+    FSequence: Integer;
+    FSequenceCache: Integer;
     function CreateADM(const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreOPFADM;
     procedure CreateADMs(const AMaps: TJCoreOPFMaps);
     function GetADMMapping(const AIndex: Integer): TJCoreOPFADMMapping;
@@ -269,12 +277,16 @@ type
     procedure Commit;
     function IsDirty: Boolean;
     function Lazyload(const AAttrAddr: Pointer): Boolean;
+    procedure ReadSequenceField(const AResultSet: IJCoreOPFResultSet);
+    procedure WriteSequenceField(const AParams: IJCoreOPFParams);
     property ADMMapping[const AIndex: Integer]: TJCoreOPFADMMapping read GetADMMapping; default;
     property IsPersistent: Boolean read FIsPersistent;
     property Entity: TObject read FEntity;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OID: IJCoreOPFOID read FOID write SetOID;
     property Owner: TJCoreOPFPID read FOwner;
+    property Sequence: Integer read FSequence write FSequence;
+    property SequenceCache: Integer read FSequenceCache;
   end;
 
   TJCoreOPFModel = class;
@@ -286,6 +298,7 @@ type
     FADMClass: TJCoreOPFADMClass;
     FAttributeType: TJCoreOPFAttributeType;
     FExternalLinkLeftFieldName: string;
+    FExternalLinkOrderFieldName: string;
     FExternalLinkRightFieldName: string;
     FExternalLinkTableName: string;
     FHasLazyload: Boolean;
@@ -305,6 +318,7 @@ type
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata;
     property ExternalLinkLeftFieldName: string read FExternalLinkLeftFieldName write FExternalLinkLeftFieldName;
+    property ExternalLinkOrderFieldName: string read FExternalLinkOrderFieldName write FExternalLinkOrderFieldName;
     property ExternalLinkRightFieldName: string read FExternalLinkRightFieldName write FExternalLinkRightFieldName;
     property ExternalLinkTableName: string read FExternalLinkTableName write FExternalLinkTableName;
     property HasExternalLink: Boolean read GetHasExternalLink;
@@ -328,16 +342,20 @@ type
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDName: TJCoreStringArray;
+    FOrderFieldName: string;
     FOwnerOIDName: TJCoreStringArray;
     FSubClasses: TJCoreClassArray;
     FSubMaps: TJCoreOPFMaps;
     FTableName: string;
   public
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
+    function HasOrderField: Boolean;
+    function HasOwnerOID: Boolean;
     property GeneratorName: string read FGeneratorName;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDName: TJCoreStringArray read FOIDName;
+    property OrderFieldName: string read FOrderFieldName;
     property OwnerOIDName: TJCoreStringArray read FOwnerOIDName;
     property SubClasses: TJCoreClassArray read FSubClasses;
     property SubMaps: TJCoreOPFMaps read FSubMaps;
@@ -625,35 +643,43 @@ end;
 
 { TJCoreOPFADMCollection }
 
-function TJCoreOPFADMCollection.ArrayContentIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
+function TJCoreOPFADMCollection.ArrayContentIsDirty: Boolean;
 var
+  VPIDArray: TJCoreOPFPIDArray;
   VPID: TJCoreOPFPID;
 begin
   if Metadata.CompositionType = jctComposition then
   begin
     Result := True;
-    for VPID in APIDArray do
+    VPIDArray := PIDArray;
+    for VPID in VPIDArray do
       if VPID.IsDirty then
         Exit;
   end;
   Result := False;
 end;
 
-function TJCoreOPFADMCollection.ArrayOrderIsDirty(const APIDArray: TJCoreOPFPIDArray): Boolean;
+function TJCoreOPFADMCollection.ArrayLinkIsDirty: Boolean;
+begin
+  Result := (Length(PIDAdded) > 0) or (Length(OIDRemoved) > 0);
+end;
+
+function TJCoreOPFADMCollection.ArrayOrderIsDirty: Boolean;
 var
+  VPIDReorder: TJCoreOPFPIDArray;
   I: Integer;
 begin
-  // SizeIsDirty checks that APIDArray and FOIDCache has the same size
+  VPIDReorder := PIDReorder;
   Result := True;
-  for I := Low(APIDArray) to High(APIDArray) do
-    if APIDArray[I].OID <> OIDCache[I] then
+  for I := Low(VPIDReorder) to High(VPIDReorder) do
+    if VPIDReorder[I].IsPersistent then
       Exit;
   Result := False;
 end;
 
-function TJCoreOPFADMCollection.ArraySizeIsDirty(const AItems: TJCoreObjectArray): Boolean;
+function TJCoreOPFADMCollection.ArraySizeIsDirty: Boolean;
 begin
-  Result := Length(OIDCache) <> Length(AItems);
+  Result := Length(OIDCache) <> Length(ItemsArray);
 end;
 
 function TJCoreOPFADMCollection.GetItemsArray: TJCoreObjectArray;
@@ -661,7 +687,7 @@ begin
   if not FItemsArrayUpdated then
   begin
     FItemsArray := InternalCreateItemsArray;
-    { TODO : Fix cache outside transaction control }
+    { TODO : Update FItemsArrayUpdated flag within a complete (start/commit/rollback) transaction control }
     //FItemsArrayUpdated := True;
   end;
   Result := FItemsArray;
@@ -684,10 +710,16 @@ begin
   if not FPIDArrayUpdated then
   begin
     FPIDArray := PID.PIDManager.CreatePIDArray(ItemsArray);
-    { TODO : Fix cache outside transaction control }
+    { TODO : Update FPIDArrayUpdated flag within a complete (start/commit/rollback) transaction control }
     //FPIDArrayUpdated := True;
   end;
   Result := FPIDArray;
+end;
+
+function TJCoreOPFADMCollection.GetPIDReorder: TJCoreOPFPIDArray;
+begin
+  UpdateChanges;
+  Result := FPIDReorder;
 end;
 
 function TJCoreOPFADMCollection.HasOIDInCache(const AOID: IJCoreOPFOID): Boolean;
@@ -713,13 +745,19 @@ begin
   Result := False;
 end;
 
+function TJCoreOPFADMCollection.HasOrderField: Boolean;
+begin
+  Result := Metadata.ExternalLinkOrderFieldName <> '';
+end;
+
 procedure TJCoreOPFADMCollection.UpdateChanges;
 var
   VPIDArray: TJCoreOPFPIDArray;
   VPIDAddedArray: TJCoreOPFPIDArray;
   VOIDRemovedArray: TJCoreOPFOIDArray;
+  VPID: TJCoreOPFPID;
   I, VMinSize, VMaxSize, VTmpSize, VPIDSize, VOIDSize: Integer;
-  VAddedCount, VRemovedCount: Integer;
+  VAddedCount, VRemovedCount, VSequenceCount, VMaxSequence: Integer;
 begin
   { TODO : Reduce npath }
   if FChangesUpdated then
@@ -783,6 +821,29 @@ begin
   end;
   SetLength(FPIDAdded, VAddedCount);
   SetLength(FOIDRemoved, VRemovedCount);
+
+  // populating array of PIDs out of order
+  if HasOrderField then
+  begin
+    SetLength(FPIDReorder, Length(VPIDArray));
+    VMaxSequence := 0;
+    VSequenceCount := 0;
+    for I := Low(VPIDArray) to High(VPIDArray) do
+    begin
+      VPID := VPIDArray[I];
+      if VPID.SequenceCache <= VMaxSequence then
+      begin
+        Inc(VMaxSequence);
+        VPID.Sequence := VMaxSequence;
+        FPIDReorder[VSequenceCount] := VPID;
+        Inc(VSequenceCount);
+      end else
+        VMaxSequence := VPID.Sequence;
+    end;
+    SetLength(FPIDReorder, VSequenceCount);
+  end else
+    SetLength(FPIDReorder, 0);
+
   FChangesUpdated := True;
 end;
 
@@ -795,17 +856,13 @@ begin
 end;
 
 function TJCoreOPFADMCollection.InternalIsDirty: Boolean;
-var
-  VItems: TJCoreObjectArray;
-  VPIDArray: TJCoreOPFPIDArray;
 begin
-  VItems := ItemsArray;
-  Result := ArraySizeIsDirty(VItems);
-  if not Result then
-  begin
-    VPIDArray := PIDArray;
-    Result := ArrayOrderIsDirty(VPIDArray) or ArrayContentIsDirty(VPIDArray);
-  end;
+  Result := ArraySizeIsDirty or ArrayLinkIsDirty or ArrayOrderIsDirty or ArrayContentIsDirty;
+  // Need to control FChangesUpdated flag on every single public boundary
+  // because the ADM doesn't control changes made in the list.
+  // This assignment is just a workaround.
+  { TODO : Update FChangesUpdated flag within a complete (start/commit/rollback) transaction control }
+  FChangesUpdated := False;
 end;
 
 procedure TJCoreOPFADMCollection.InternalLoad;
@@ -844,6 +901,11 @@ end;
 class function TJCoreOPFADMCollection.AttributeType: TJCoreOPFAttributeType;
 begin
   Result := jatCollection;
+end;
+
+function TJCoreOPFADMCollection.OrderIsDirty: Boolean;
+begin
+  Result := ArrayOrderIsDirty;
 end;
 
 procedure TJCoreOPFADMCollection.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet);
@@ -1142,6 +1204,7 @@ var
   I: Integer;
 begin
   FIsPersistent := Assigned(FOID);
+  FSequenceCache := FSequence;
   for I := 0 to Pred(ADMMap.Count) do
     ADMMap.Data[I].Commit;
   for I := 0 to Pred(ADMMappingMap.Count) do
@@ -1179,6 +1242,17 @@ begin
     FAttrAddrRef^ := AAttrAddr;
     Result := True;
   end;
+end;
+
+procedure TJCoreOPFPID.ReadSequenceField(const AResultSet: IJCoreOPFResultSet);
+begin
+  FSequence := AResultSet.ReadInt32;
+  FSequenceCache := FSequence;
+end;
+
+procedure TJCoreOPFPID.WriteSequenceField(const AParams: IJCoreOPFParams);
+begin
+  AParams.WriteInt32(FSequence);
 end;
 
 { TJCoreOPFAttrMetadata }
@@ -1224,7 +1298,11 @@ begin
   begin
     CompositionClass := ReadComposition(APropInfo^.PropType);
     VOwner := Owner as TJCoreOPFClassMetadata;
-    FExternalLinkTableName := VOwner.TableName + '_' + PersistentFieldName;
+    if HasExternalLink then
+      FExternalLinkTableName := VOwner.TableName + '_' + PersistentFieldName
+    else
+      FExternalLinkTableName := CompositionMetadata.TableName;
+    FExternalLinkOrderFieldName := 'ORDER';
     FExternalLinkLeftFieldName := VOwner.TableName;
     if VOwner <> CompositionMetadata then
       FExternalLinkRightFieldName := CompositionMetadata.TableName
@@ -1255,6 +1333,7 @@ end;
 
 constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata);
 var
+  VOwnerAttr: TJCoreOPFAttrMetadata;
   VOwnerClass: TJCoreOPFClassMetadata;
   VTableName: string;
   VOIDName: TJCoreStringArray;
@@ -1266,8 +1345,9 @@ begin
   FOIDClass := Metadata.OIDClass;
   FOIDName := Metadata.OIDName;
   FTableName := Metadata.TableName;
+  VOwnerAttr := Metadata.OwnerAttr as TJCoreOPFAttrMetadata;
   VOwnerClass := Metadata.OwnerClass as TJCoreOPFClassMetadata;
-  if Assigned(VOwnerClass) then
+  if Assigned(VOwnerAttr) and Assigned(VOwnerClass) then
   begin
     VTableName := VOwnerClass.TableName;
     VOIDName := VOwnerClass.OIDName;
@@ -1277,6 +1357,7 @@ begin
     else
       for I := 0 to Pred(Length(VOIDName)) do
         FOwnerOIDName[I] := VTableName + '_' + VOIDName[I];
+    FOrderFieldName := VOwnerAttr.ExternalLinkOrderFieldName;
   end else
     SetLength(FOwnerOIDName, 0);
   FGeneratorName := Metadata.GeneratorName;
@@ -1284,6 +1365,16 @@ begin
   SetLength(FSubClasses, FSubMaps.Count);
   for I := Low(FSubClasses) to High(FSubClasses) do
     FSubClasses[I] := FSubMaps[I].Metadata.TheClass;
+end;
+
+function TJCoreOPFMap.HasOrderField: Boolean;
+begin
+  Result := FOrderFieldName <> '';
+end;
+
+function TJCoreOPFMap.HasOwnerOID: Boolean;
+begin
+  Result := Length(FOwnerOIDName) > 0;
 end;
 
 { TJCoreOPFClassMetadata }

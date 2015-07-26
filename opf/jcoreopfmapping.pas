@@ -194,6 +194,7 @@ type
   TJCoreOPFMapping = class(TObject)
   private
     FDriver: TJCoreOPFDriver;
+    FIsBaseMapping: Boolean;
     FMap: TJCoreOPFMap;
     FMapper: IJCoreOPFMapper;
     FModel: TJCoreOPFModel;
@@ -235,11 +236,12 @@ type
     function InternalCreateGenerator: IJCoreOPFOIDGenerator; virtual;
     function SelectClassFromResultSet(const AResultSet: IJCoreOPFResultSet; const ASubClassArray: array of TClass; const ADefaultClass: TClass): TClass;
     property Driver: TJCoreOPFDriver read FDriver;
+    property IsBaseMapping: Boolean read FIsBaseMapping;
     property Map: TJCoreOPFMap read FMap;
     property Mapper: IJCoreOPFMapper read FMapper;
     property Model: TJCoreOPFModel read FModel;
   public
-    constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap); virtual;
+    constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap; const AIsBaseMapping: Boolean); virtual;
     class function Apply(const AMap: TJCoreOPFMap): Boolean; virtual; abstract;
     function CreateEntity(const AResultSet: IJCoreOPFResultSet): TObject;
     function CreateGenerator: IJCoreOPFOIDGenerator;
@@ -350,12 +352,16 @@ var
   VMappingClassRefList: TJCoreOPFMappingClassRefList;
   VMappingList: TJCoreOPFMappingList;
   VMappingClassRef: TJCoreOPFMappingClassRef;
+  I: Integer;
 begin
   VMappingClassRefList := MappingClassFactory.AcquireMappingClassRefList(AClass);
   VMappingList := TJCoreOPFMappingList.Create(True);
   try
-    for VMappingClassRef in VMappingClassRefList do
-      VMappingList.Add(VMappingClassRef.MappingClass.Create(Mapper, VMappingClassRef.Map));
+    for I := 0 to Pred(VMappingClassRefList.Count) do
+    begin
+      VMappingClassRef := VMappingClassRefList[I];
+      VMappingList.Add(VMappingClassRef.MappingClass.Create(Mapper, VMappingClassRef.Map, I = 0));
+    end;
   except
     FreeAndNil(VMappingList);
     raise;
@@ -895,13 +901,15 @@ begin
     Result := ADefaultClass;
 end;
 
-constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap);
+constructor TJCoreOPFMapping.Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap;
+  const AIsBaseMapping: Boolean);
 begin
   inherited Create;
   FMapper := AMapper;
   FMap := AMap;
   FModel := Mapper.Model;
   FDriver := Mapper.Driver;
+  FIsBaseMapping := AIsBaseMapping;
 end;
 
 function TJCoreOPFMapping.CreateEntity(const AResultSet: IJCoreOPFResultSet): TObject;

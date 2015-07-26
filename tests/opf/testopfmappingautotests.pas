@@ -53,6 +53,7 @@ type
     procedure CompositionAdd;
     procedure CompositionRemove;
     procedure CompositionAddRemove;
+    procedure CompositionChangeOrder;
   end;
 
   { TTestOPFDeleteAutoMappingTests }
@@ -249,17 +250,19 @@ begin
      'WriteString ',
      'ExecSQL INSERT INTO INVOICE (ID,CLIENT,DATE) VALUES (?,?,?)',
      'WriteInt64 3',
+     'WriteInt32 1',
      'WriteInt64 2',
      'WriteInt32 50',
-     'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,ORDER,INVOICE,TOTAL) VALUES (?,?,?,?)',
      'WriteInt64 3',
      'WriteInt32 5',
      'WriteInt64 1',
      'ExecSQL INSERT INTO INVOICEITEMPRODUCT (ID,QTY,PRODUCT) VALUES (?,?,?)',
      'WriteInt64 4',
+     'WriteInt32 2',
      'WriteInt64 2',
      'WriteInt32 20',
-     'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,ORDER,INVOICE,TOTAL) VALUES (?,?,?,?)',
      'WriteInt64 4',
      'WriteString transport',
      'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)'
@@ -333,10 +336,12 @@ begin
   TTestSQLDriver.Data.Add('3');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('1');
   TTestSQLDriver.Data.Add('50');
   TTestSQLDriver.Data.Add('4');
   TTestSQLDriver.Data.Add('null');
   TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('2');
   TTestSQLDriver.Data.Add('75');
   VInvoice := Session.Retrieve(TInvoice, '2') as TInvoice;
   try
@@ -484,7 +489,7 @@ begin
      'WriteInt64 1',
      {1}'ExecSQL SELECT ID,NAME,AGE,ADDRESS,CITY FROM TESTIPIDPERSON WHERE ID=?',
      'WriteInt64 1',
-     {2}'ExecSQL SELECT ID,NUMBER FROM TESTIPIDPHONE WHERE TESTIPIDPERSON=?',
+     {2}'ExecSQL SELECT ID,ORDER,NUMBER FROM TESTIPIDPHONE WHERE TESTIPIDPERSON=?',
      'WriteInt64 1',
      {3}'ExecSQL SELECT T_0.ID,T_0.NAME FROM TESTIPIDLANGUAGE T_0 INNER JOIN TESTIPIDPERSON_LANGUAGES TL_0 ON T_0.ID=TL_0.TESTIPIDLANGUAGE WHERE TL_0.TESTIPIDPERSON=?']);
   finally
@@ -567,6 +572,7 @@ begin
     TTestSQLDriver.Data.Add('7');
     TTestSQLDriver.Data.Add('7');
     TTestSQLDriver.Data.Add('null');
+    TTestSQLDriver.Data.Add('1');
     TTestSQLDriver.Data.Add('199');
     {3}TTestSQLDriver.ExpectedResultsets.Add(1);
     TTestSQLDriver.Data.Add('7');
@@ -576,7 +582,7 @@ begin
     VItems := VInvoice.Items;
     AssertSQLDriverCommands([
      'WriteInt64 6',
-     {2}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.TOTAL FROM INVOICEITEM T_0 LEFT OUTER JOIN INVOICEITEMPRODUCT TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN INVOICEITEMSERVICE TS_1 ON T_0.ID=TS_1.ID WHERE T_0.INVOICE=?',
+     {2}'ExecSQL SELECT T_0.ID,TS_0.ID,TS_1.ID,T_0.ORDER,T_0.TOTAL FROM INVOICEITEM T_0 LEFT OUTER JOIN INVOICEITEMPRODUCT TS_0 ON T_0.ID=TS_0.ID LEFT OUTER JOIN INVOICEITEMSERVICE TS_1 ON T_0.ID=TS_1.ID WHERE T_0.INVOICE=?',
      'WriteInt64 7',
      {3}'ExecSQL SELECT ID,QTY,PRODUCT FROM INVOICEITEMPRODUCT WHERE ID=?']);
     AssertEquals('invoice.items count', 1, VItems.Count);
@@ -771,13 +777,14 @@ begin
     TTestSQLDriver.Commands.Clear;
     Session.Store(VInvoice);
     AssertSQLDriverCommands([
-    'WriteInt64 3',
-    'WriteInt64 1',
-    'WriteInt32 5',
-    'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
-    'WriteInt64 3',
-    'WriteString fix',
-    'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
+     'WriteInt64 3',
+     'WriteInt32 2',
+     'WriteInt64 1',
+     'WriteInt32 5',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,ORDER,INVOICE,TOTAL) VALUES (?,?,?,?)',
+     'WriteInt64 3',
+     'WriteString fix',
+     'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
   finally
     FreeAndNil(VInvoice);
   end;
@@ -859,12 +866,49 @@ begin
      'WriteInt64 3',
      'ExecSQL DELETE FROM INVOICEITEMSERVICE WHERE ID=?',
      'WriteInt64 5',
+     'WriteInt32 4',
      'WriteInt64 1',
      'WriteInt32 40',
-     'ExecSQL INSERT INTO INVOICEITEM (ID,INVOICE,TOTAL) VALUES (?,?,?)',
+     'ExecSQL INSERT INTO INVOICEITEM (ID,ORDER,INVOICE,TOTAL) VALUES (?,?,?,?)',
      'WriteInt64 5',
      'WriteString fix',
      'ExecSQL INSERT INTO INVOICEITEMSERVICE (ID,DESCRIPTION) VALUES (?,?)']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.CompositionChangeOrder;
+var
+  VInvoice: TInvoice;
+  VItemService: TInvoiceItemService;
+  VItemProduct: TInvoiceItemProduct;
+begin
+  VInvoice := TInvoice.Create;
+  try
+    VItemService := TInvoiceItemService.Create; // 2
+    VInvoice.Items.Add(VItemService);
+    VItemService.Description := 'calc';
+    VItemService.Total := 100;
+    VItemProduct := TInvoiceItemProduct.Create; // 3
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 2;
+    VItemProduct.Total := 15;
+    VItemProduct := TInvoiceItemProduct.Create; // 4
+    VInvoice.Items.Add(VItemProduct);
+    VItemProduct.Qty := 1;
+    VItemProduct.Total := 50;
+    Session.Store(VInvoice);
+    TTestSQLDriver.Commands.Clear;
+    VInvoice.Items.Exchange(0, 2);
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt32 4',
+     'WriteInt64 3',
+     'ExecSQL UPDATE INVOICEITEM SET ORDER=? WHERE ID=?',
+     'WriteInt32 5',
+     'WriteInt64 2',
+     'ExecSQL UPDATE INVOICEITEM SET ORDER=? WHERE ID=?']);
   finally
     FreeAndNil(VInvoice);
   end;

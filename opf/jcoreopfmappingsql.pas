@@ -38,6 +38,7 @@ type
     FSubMaps: TJCoreOPFMaps;
   protected
     // Internal Support
+    function BuildFieldName(const AFieldName: string; const AMapIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex, AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildFieldNames(const ABaseMapIdx: Integer; const AUseTablePrefix: Boolean): string;
     function BuildInsertFields(const AMapping: TJCoreOPFADMMapping): TJCoreStringArray; virtual;
@@ -62,6 +63,8 @@ type
     function BuildSelectFieldNames(const AAttributes: TJCoreOPFAttrMetadataArray): string;
     function BuildSelectJoinCondition(const ALeftMaps: TJCoreOPFMaps; const ALeftIndex: Integer; const ALeftTablePrefixType: TJCoreOPFTablePrefixType; const ARightMaps: TJCoreOPFMaps; const ARightIndex: Integer; const ARightTablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
     function BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string; virtual;
+    function BuildUpdateOrderField(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
+    function BuildUpdateOrderCondition(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     function BuildUpdateNames(const AMapping: TJCoreOPFADMMapping): string; virtual;
     property Map: TJCoreOPFMap read FMap;
     property MapIndex: Integer read FMapIndex;
@@ -81,6 +84,7 @@ type
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
+    function GenerateUpdateOrderFieldStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
     // Support
     function BuildFieldParams(const AFieldCount: Integer): string; virtual;
     function BuildOIDCondition(const AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string; virtual;
@@ -113,12 +117,14 @@ type
     function GenerateSelectCollectionStatement(const AOwnerClass: TJCoreOPFClassMetadata; const AOwnerAttr: TJCoreOPFAttrMetadata): string; virtual;
     function GenerateSelectCompositionsForDeleteStatement(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDCount: Integer): string; virtual;
     function GenerateSelectForDeleteStatement(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string; virtual;
+    function GenerateUpdateOrderFieldStatement(const AAttrMetadata: TJCoreOPFAttrMetadata): string; virtual;
   protected
     // Support
     procedure WriteDisposeCollection(const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of IJCoreOPFOID);
     procedure WriteDisposeEntityCompositions(const ACompositionMetadatas: TJCoreOPFAttrMetadataArray; const AOIDArray: array of IJCoreOPFOID);
     procedure WriteDisposeExternalLinks(const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
     procedure WriteInsertExternalLinks(const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
+    procedure WriteOrder(const AOwnerPID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection);
     property Driver: TJCoreOPFSQLDriver read FSQLDriver;
     property SQLGenerator: TJCoreOPFSQLGenerator read FSQLGenerator;
   protected
@@ -145,7 +151,7 @@ type
     procedure WriteEntity(const AParams: IJCoreOPFParams; const AADM: TJCoreOPFADM);
     procedure WriteOwnerOID(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping);
   public
-    constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap); override;
+    constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap; const AIsBaseMapping: Boolean); override;
     destructor Destroy; override;
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -166,16 +172,19 @@ const
   CMainMapPrefix: array[Boolean] of TJCoreOPFTablePrefixType = (jtptNone, jtptMainMap);
   CSubMapPrefix: array[Boolean] of TJCoreOPFTablePrefixType = (jtptNone, jtptSubMap);
 
+function TJCoreOPFSQLGenerator.BuildFieldName(const AFieldName: string; const AMapIndex: Integer;
+  const ATablePrefixType: TJCoreOPFTablePrefixType): string;
+begin
+  if ATablePrefixType <> jtptNone then
+    Result := Format('%s%d.%s', [CTablePrefix[ATablePrefixType], AMapIndex, AFieldName])
+  else
+    Result := AFieldName;
+end;
+
 function TJCoreOPFSQLGenerator.BuildFieldName(const AMaps: TJCoreOPFMaps; const AMapIndex,
   AFieldIndex: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
-var
-  VFieldName: string;
 begin
-  VFieldName := AMaps[AMapIndex][AFieldIndex].PersistentFieldName;
-  if ATablePrefixType <> jtptNone then
-    Result := Format('%s%d.%s', [CTablePrefix[ATablePrefixType], AMapIndex, VFieldName])
-  else
-    Result := VFieldName;
+  Result := BuildFieldName(AMaps[AMapIndex][AFieldIndex].PersistentFieldName, AMapIndex, ATablePrefixType);
 end;
 
 function TJCoreOPFSQLGenerator.BuildFieldNames(const ABaseMapIdx: Integer;
@@ -199,16 +208,24 @@ var
   VOIDName: TJCoreStringArray;
   VOwnerOIDName: TJCoreStringArray;
   VADMChanged: TJCoreOPFADMArray;
-  VIndex, I: Integer;
+  VLength, VIndex, I: Integer;
 begin
   VOIDName := Map.OIDName;
   VOwnerOIDName := Map.OwnerOIDName;
   VADMChanged := AMapping.ADMAttributeChanged;
-  SetLength(Result, Length(VOIDName) + Length(VOwnerOIDName) + Length(VADMChanged));
+  VLength := Length(VOIDName) + Length(VOwnerOIDName) + Length(VADMChanged);
+  if Map.HasOrderField then
+    Inc(VLength);
+  SetLength(Result, VLength);
   VIndex := 0;
   for I := Low(VOIDName) to High(VOIDName) do
   begin
     Result[VIndex] := VOIDName[I];
+    Inc(VIndex);
+  end;
+  if Map.HasOrderField then
+  begin
+    Result[VIndex] := Map.OrderFieldName;
     Inc(VIndex);
   end;
   for I := Low(VOwnerOIDName) to High(VOwnerOIDName) do
@@ -310,6 +327,8 @@ begin
   Result := BuildOIDNames(Maps, 0, CMainMapPrefix[AUseTablePrefix]) + ',';
   for I := 0 to Pred(SubMaps.Count) do
     Result := Result + BuildOIDName(SubMaps, I, 0, CSubMapPrefix[AUseTablePrefix]) + ',';
+  if Map.HasOrderField then
+    Result := Result + BuildFieldName(Map.OrderFieldName, 0, CMainMapPrefix[AUseTablePrefix]) + ',';
   Result := Result + BuildFieldNames(0, AUseTablePrefix);
   SetLength(Result, Length(Result) - 1);
 end;
@@ -405,6 +424,16 @@ begin
 end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateCondition(const AMapping: TJCoreOPFADMMapping): string;
+begin
+  Result := BuildOIDCondition(1, jtptNone);
+end;
+
+function TJCoreOPFSQLGenerator.BuildUpdateOrderField(const AAttrMetadata: TJCoreOPFAttrMetadata): string;
+begin
+  Result := AAttrMetadata.ExternalLinkOrderFieldName + '=?';
+end;
+
+function TJCoreOPFSQLGenerator.BuildUpdateOrderCondition(const AAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
   Result := BuildOIDCondition(1, jtptNone);
 end;
@@ -541,6 +570,15 @@ begin
    BuildOIDNames(VMaps, 0, jtptNone),
    VMaps[0].TableName,
    BuildOIDCondition(VMaps[0].OwnerOIDName, 0, 1, jtptNone)]);
+end;
+
+function TJCoreOPFSQLGenerator.GenerateUpdateOrderFieldStatement(
+  const AAttrMetadata: TJCoreOPFAttrMetadata): string;
+begin
+  Result := Format('UPDATE %s SET %s WHERE %s', [
+   AAttrMetadata.ExternalLinkTableName,
+   BuildUpdateOrderField(AAttrMetadata),
+   BuildUpdateOrderCondition(AAttrMetadata)]);
 end;
 
 function TJCoreOPFSQLGenerator.BuildFieldParams(const AFieldCount: Integer): string;
@@ -696,6 +734,12 @@ begin
   Result := SQLGenerator.GenerateSelectForDeleteStatement(AAttrMetadata, AOIDCount);
 end;
 
+function TJCoreOPFSQLMapping.GenerateUpdateOrderFieldStatement(
+  const AAttrMetadata: TJCoreOPFAttrMetadata): string;
+begin
+  Result := SQLGenerator.GenerateUpdateOrderFieldStatement(AAttrMetadata);
+end;
+
 procedure TJCoreOPFSQLMapping.WriteDisposeCollection(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDArray: array of IJCoreOPFOID);
 var
@@ -807,6 +851,27 @@ begin
   end;
 end;
 
+procedure TJCoreOPFSQLMapping.WriteOrder(const AOwnerPID: TJCoreOPFPID;
+  const AADM: TJCoreOPFADMCollection);
+var
+  VStmt: IJCoreOPFSQLStatement;
+  VPIDReorder: TJCoreOPFPIDArray;
+  I: Integer;
+begin
+  if AOwnerPID.IsPersistent and AADM.OrderIsDirty then
+  begin
+    VStmt := Driver.CreateStatement;
+    VStmt.SQL := GenerateUpdateOrderFieldStatement(AADM.Metadata);
+    VPIDReorder := AADM.PIDReorder;
+    for I := Low(VPIDReorder) to High(VPIDReorder) do
+    begin
+      VPIDReorder[I].WriteSequenceField(VStmt.Params);
+      VPIDReorder[I].OID.WriteToParams(VStmt.Params);
+      VStmt.ExecSQL;
+    end;
+  end;
+end;
+
 procedure TJCoreOPFSQLMapping.InternalDispose(const AOIDArray: array of IJCoreOPFOID);
 var
   VCompositionMetadatas: TJCoreOPFAttrMetadataArray;
@@ -890,6 +955,8 @@ procedure TJCoreOPFSQLMapping.ReadFromResultSet(const AResultSet: IJCoreOPFResul
 var
   I: Integer;
 begin
+  if IsBaseMapping and Map.HasOrderField then
+    AMapping.PID.ReadSequenceField(AResultSet);
   for I := 0 to Pred(AMapping.Count) do
     AMapping.ADM[I].ReadFromResultSet(AResultSet);
 end;
@@ -902,12 +969,17 @@ var
   I: Integer;
 begin
   VPID := AMapping.PID;
-  if (Length(Map.OwnerOIDName) > 0) and not AMapping.PID.IsPersistent then
+  if not AMapping.PID.IsPersistent then
   begin
-    if Assigned(VPID.Owner) then
-      VPID.Owner.OID.WriteToParams(AParams)
-    else
-      Map.Metadata.OIDClass.WriteNull(AParams);
+    if Map.HasOrderField then
+      VPID.WriteSequenceField(AParams);
+    if Map.HasOwnerOID then
+    begin
+      if Assigned(VPID.Owner) then
+        VPID.Owner.OID.WriteToParams(AParams)
+      else
+        Map.Metadata.OIDClass.WriteNull(AParams);
+    end;
   end;
   VADMChanged := AMapping.ADMAttributeChanged;
   for I := Low(VADMChanged) to High(VADMChanged) do
@@ -929,6 +1001,7 @@ begin
     WriteDisposeExternalLinks(VPID, VADM);
     Mapper.AcquireClassMapping(VADM.Metadata.CompositionClass).StoreCollectionInternal(VPID, VADM);
     WriteInsertExternalLinks(VPID, VADM);
+    WriteOrder(VPID, VADM);
   end;
 end;
 
@@ -1032,14 +1105,15 @@ begin
   AMapping.PID.Owner.OID.WriteToParams(AParams);
 end;
 
-constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap);
+constructor TJCoreOPFSQLMapping.Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap;
+  const AIsBaseMapping: Boolean);
 var
   VDriver: TJCoreOPFDriver;
 begin
   VDriver := AMapper.Driver;
   if not (VDriver is TJCoreOPFSQLDriver) then
     raise EJCoreOPF.Create(2109, S2109_UnsupportedDriver, [VDriver.ClassName]);
-  inherited Create(AMapper, AMap);
+  inherited Create(AMapper, AMap, AIsBaseMapping);
   FSQLDriver := TJCoreOPFSQLDriver(VDriver);
   { TODO : Use cache of SQL Generator }
   FSQLGenerator := SQLGeneratorClass.Create(Map);
