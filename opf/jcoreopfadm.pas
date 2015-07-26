@@ -40,6 +40,7 @@
 unit JCoreOPFADM;
 
 {$I jcore.inc}
+{$WARN 5024 OFF} // hint 'parameter not used'
 
 interface
 
