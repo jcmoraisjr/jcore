@@ -264,7 +264,7 @@ function TJCoreOPFSQLGenerator.BuildInsertLinkFields(
 var
   VHasOrderField: Boolean;
 begin
-  VHasOrderField := AAttrMetadata.ExternalLinkOrderFieldName <> '';
+  VHasOrderField := AAttrMetadata.OrderFieldName <> '';
   if VHasOrderField then
     SetLength(Result, 3)
   else
@@ -272,7 +272,7 @@ begin
   Result[0] := AAttrMetadata.ExternalLinkLeftFieldName;
   Result[1] := AAttrMetadata.ExternalLinkRightFieldName;
   if VHasOrderField then
-    Result[2] := AAttrMetadata.ExternalLinkOrderFieldName;
+    Result[2] := AAttrMetadata.OrderFieldName;
 end;
 
 function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDCount: Integer;
@@ -493,7 +493,7 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateOrderField(const AAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
-  Result := AAttrMetadata.ExternalLinkOrderFieldName + '=?';
+  Result := AAttrMetadata.OrderFieldName + '=?';
 end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateOrderCondition(const AAttrMetadata: TJCoreOPFAttrMetadata): string;
@@ -949,7 +949,7 @@ procedure TJCoreOPFSQLMapping.WriteLinkAttributesToParams(const AOwnerPID, APID:
 begin
   AOwnerPID.OID.WriteToParams(AParams);
   APID.OID.WriteToParams(AParams);
-  if AADM.Metadata.ExternalLinkOrderFieldName <> '' then
+  if AADM.Metadata.OrderFieldName <> '' then
     APID.WriteSequenceField(AParams);
 end;
 

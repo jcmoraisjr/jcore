@@ -165,7 +165,6 @@ type
     function GetPIDReorder: TJCoreOPFPIDArray;
     function HasOIDInCache(const AOID: IJCoreOPFOID): Boolean;
     function HasOIDInCollection(const APIDArray: TJCoreOPFPIDArray; const AOID: IJCoreOPFOID): Boolean;
-    function HasOrderField: Boolean;
     procedure UpdateChanges;
   protected
     procedure InternalAssignArray(const AArray: TJCoreObjectArray); virtual; abstract;
@@ -298,10 +297,10 @@ type
     FADMClass: TJCoreOPFADMClass;
     FAttributeType: TJCoreOPFAttributeType;
     FExternalLinkLeftFieldName: string;
-    FExternalLinkOrderFieldName: string;
     FExternalLinkRightFieldName: string;
     FExternalLinkTableName: string;
     FHasLazyload: Boolean;
+    FOrderFieldName: string;
     FPersistentFieldName: string;
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
     function GetHasExternalLink: Boolean;
@@ -318,11 +317,11 @@ type
     property AttributeType: TJCoreOPFAttributeType read FAttributeType;
     property CompositionMetadata: TJCoreOPFClassMetadata read GetCompositionMetadata;
     property ExternalLinkLeftFieldName: string read FExternalLinkLeftFieldName write FExternalLinkLeftFieldName;
-    property ExternalLinkOrderFieldName: string read FExternalLinkOrderFieldName write FExternalLinkOrderFieldName;
     property ExternalLinkRightFieldName: string read FExternalLinkRightFieldName write FExternalLinkRightFieldName;
     property ExternalLinkTableName: string read FExternalLinkTableName write FExternalLinkTableName;
     property HasExternalLink: Boolean read GetHasExternalLink;
     property HasLazyload: Boolean read FHasLazyload;
+    property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
     property PersistentFieldName: string read FPersistentFieldName;
   end;
 
@@ -403,6 +402,7 @@ type
     FGeneratorName: string;
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
+    FOrderFieldName: string;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
     function AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
     function AcquirePIDFromProxyField(const AEntity: TObject): TJCoreOPFPID;
@@ -429,6 +429,7 @@ type
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     procedure InitEntity(const AEntity: TObject); override;
     property GeneratorName: string read FGeneratorName write FGeneratorName;
+    property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
   end;
 
@@ -737,11 +738,6 @@ begin
   Result := False;
 end;
 
-function TJCoreOPFADMCollection.HasOrderField: Boolean;
-begin
-  Result := Metadata.ExternalLinkOrderFieldName <> '';
-end;
-
 procedure TJCoreOPFADMCollection.UpdateChanges;
 var
   VPIDArray: TJCoreOPFPIDArray;
@@ -815,7 +811,7 @@ begin
   SetLength(FOIDRemoved, VRemovedCount);
 
   // populating array of PIDs out of order
-  if HasOrderField then
+  if Metadata.OrderFieldName <> '' then
   begin
     SetLength(FPIDReorder, VPIDSize);
     VMaxSequence := 0;
@@ -1310,12 +1306,12 @@ begin
       FExternalLinkTableName := VOwner.TableName + '_' + PersistentFieldName
     else
       FExternalLinkTableName := CompositionMetadata.TableName;
-    FExternalLinkOrderFieldName := 'ORDER';
     FExternalLinkLeftFieldName := VOwner.TableName;
     if VOwner <> CompositionMetadata then
       FExternalLinkRightFieldName := CompositionMetadata.TableName
     else
       FExternalLinkRightFieldName := ExternalLinkTableName;
+    FOrderFieldName := Model.OrderFieldName;
   end else
     CompositionClass := nil;
   FHasLazyload := True; // which also means "I dont know yet, try it"
@@ -1365,7 +1361,7 @@ begin
     else
       for I := 0 to Pred(Length(VOIDName)) do
         FOwnerOIDName[I] := VTableName + '_' + VOIDName[I];
-    FOrderFieldName := VOwnerAttr.ExternalLinkOrderFieldName;
+    FOrderFieldName := VOwnerAttr.OrderFieldName;
   end else
     SetLength(FOwnerOIDName, 0);
   FGeneratorName := Metadata.GeneratorName;

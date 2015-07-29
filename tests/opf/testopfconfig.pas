@@ -482,6 +482,7 @@ begin
   Result.DriverClass := TTestSQLDriver;
   Result.Model.OIDClass := TJCoreOPFOIDInt64;
   Result.Model.GeneratorName := 'GEN_APP';
+  Result.Model.OrderFieldName := 'SEQ';
 end;
 
 procedure TTestOPFAbstractTestCase.SetUp;
