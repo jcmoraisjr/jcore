@@ -37,6 +37,7 @@ type
     procedure AggregationRemoved;
     procedure AggregationRemovedAdded;
     procedure AggregationChangedOrder;
+    procedure AggregationReorder;
   end;
 
   { TTestOPFPersistentStateTests }
@@ -482,6 +483,25 @@ begin
     VPerson.Languages.Add(VLang2);
     VPerson.Languages.Add(VLang1);
     AssertTrue('person dirty2', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttributeTests.AggregationReorder;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 2
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish')); // 3
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 4
+    SessionIPIDContactAuto.Store(VPerson);
+    VPerson.Languages.Exchange(0, 2);
+    AssertTrue('lang dirty', VPerson._PID.IsDirty);
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertFalse('lang clean', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;

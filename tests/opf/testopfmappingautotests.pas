@@ -54,6 +54,11 @@ type
     procedure CompositionRemove;
     procedure CompositionAddRemove;
     procedure CompositionChangeOrder;
+    procedure AggregationAdd;
+    procedure AggregationRemove;
+    procedure AggregationAddRemove;
+    procedure AggregationAddRemove2;
+    procedure AggregationChangeOrder;
   end;
 
   { TTestOPFDeleteAutoMappingTests }
@@ -148,10 +153,12 @@ begin
      'ExecSQL INSERT INTO CIRCULARPERSON (ID,NAME) VALUES (?,?)',
      'WriteInt64 1',
      'WriteInt64 2',
-     'ExecSQL INSERT INTO CIRCULARPERSON_DEPENDENT (CIRCULARPERSON,CIRCULARPERSON_DEPENDENT) VALUES (?,?)',
+     'WriteInt32 1',
+     'ExecSQL INSERT INTO CIRCULARPERSON_DEPENDENT (CIRCULARPERSON,CIRCULARPERSON_DEPENDENT,ORDER) VALUES (?,?,?)',
      'WriteInt64 1',
      'WriteInt64 3',
-     'ExecSQL INSERT INTO CIRCULARPERSON_DEPENDENT (CIRCULARPERSON,CIRCULARPERSON_DEPENDENT) VALUES (?,?)']);
+     'WriteInt32 2',
+     'ExecSQL INSERT INTO CIRCULARPERSON_DEPENDENT (CIRCULARPERSON,CIRCULARPERSON_DEPENDENT,ORDER) VALUES (?,?,?)']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -294,7 +301,8 @@ begin
      'ExecSQL INSERT INTO TESTIPIDLANGUAGE (ID,NAME) VALUES (?,?)',
      'WriteInt64 1',
      'WriteInt64 2',
-     'ExecSQL INSERT INTO TESTIPIDPERSON_LANGUAGES (TESTIPIDPERSON,TESTIPIDLANGUAGE) VALUES (?,?)']);
+     'WriteInt32 1',
+     'ExecSQL INSERT INTO TESTIPIDPERSON_LANGUAGES (TESTIPIDPERSON,TESTIPIDLANGUAGE,ORDER) VALUES (?,?,?)']);
   finally
     FreeAndNil(VPerson);
   end;
@@ -911,6 +919,140 @@ begin
      'ExecSQL UPDATE INVOICEITEM SET ORDER=? WHERE ID=?']);
   finally
     FreeAndNil(VInvoice);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.AggregationAdd;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('english'));
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish'));
+    SessionIPIDContactAuto.Store(VPerson);
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese'));
+    TTestSQLDriver.Commands.Clear;
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 4',
+     'WriteString portuguese',
+     'ExecSQL INSERT INTO TESTIPIDLANGUAGE (ID,NAME) VALUES (?,?)',
+     'WriteInt64 1',
+     'WriteInt64 4',
+     'WriteInt32 3',
+     'ExecSQL INSERT INTO TESTIPIDPERSON_LANGUAGES (TESTIPIDPERSON,TESTIPIDLANGUAGE,ORDER) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.AggregationRemove;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 2
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 3
+    SessionIPIDContactAuto.Store(VPerson);
+    VPerson.Languages.Delete(0);
+    TTestSQLDriver.Commands.Clear;
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'ExecSQL DELETE FROM TESTIPIDPERSON_LANGUAGES WHERE TESTIPIDPERSON=? AND TESTIPIDLANGUAGE=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.AggregationAddRemove;
+var
+  VPerson: TTestIPIDPerson;
+  VSpanish: TTestIPIDLanguage;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 2
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 3
+    VSpanish := TTestIPIDLanguage.Create('spanish'); // 4
+    SessionIPIDContactAuto.Store(VPerson);
+    SessionIPIDContactAuto.Store(VSpanish);
+    VPerson.Languages.Delete(0);
+    VPerson.Languages.Add(VSpanish); // 4
+    TTestSQLDriver.Commands.Clear;
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'ExecSQL DELETE FROM TESTIPIDPERSON_LANGUAGES WHERE TESTIPIDPERSON=? AND TESTIPIDLANGUAGE=?',
+     'WriteInt64 1',
+     'WriteInt64 4',
+     'WriteInt32 3',
+     'ExecSQL INSERT INTO TESTIPIDPERSON_LANGUAGES (TESTIPIDPERSON,TESTIPIDLANGUAGE,ORDER) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.AggregationAddRemove2;
+var
+  VPerson: TTestIPIDPerson;
+  VSpanish: TTestIPIDLanguage;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('german')); // 2
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 3
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('french')); // 4
+    VSpanish := TTestIPIDLanguage.Create('spanish'); // 5
+    SessionIPIDContactAuto.Store(VPerson);
+    SessionIPIDContactAuto.Store(VSpanish);
+    VPerson.Languages.Delete(2);
+    VPerson.Languages.Delete(0);
+    VPerson.Languages.Add(VSpanish); // 4
+    TTestSQLDriver.Commands.Clear;
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'WriteInt64 4',
+     'ExecSQL DELETE FROM TESTIPIDPERSON_LANGUAGES WHERE TESTIPIDPERSON=? AND TESTIPIDLANGUAGE IN (?,?)',
+     'WriteInt64 1',
+     'WriteInt64 5',
+     'WriteInt32 3',
+     'ExecSQL INSERT INTO TESTIPIDPERSON_LANGUAGES (TESTIPIDPERSON,TESTIPIDLANGUAGE,ORDER) VALUES (?,?,?)']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.AggregationChangeOrder;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 2
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish')); // 3
+    VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 4
+    SessionIPIDContactAuto.Store(VPerson);
+    VPerson.Languages.Exchange(0, 2);
+    TTestSQLDriver.Commands.Clear;
+    SessionIPIDContactAuto.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteInt32 4',
+     'WriteInt64 1',
+     'WriteInt64 3',
+     'ExecSQL UPDATE TESTIPIDPERSON_LANGUAGES SET ORDER=? WHERE TESTIPIDPERSON=? AND TESTIPIDLANGUAGE=?',
+     'WriteInt32 5',
+     'WriteInt64 1',
+     'WriteInt64 2',
+     'ExecSQL UPDATE TESTIPIDPERSON_LANGUAGES SET ORDER=? WHERE TESTIPIDPERSON=? AND TESTIPIDLANGUAGE=?']);
+  finally
+    FreeAndNil(VPerson);
   end;
 end;
 

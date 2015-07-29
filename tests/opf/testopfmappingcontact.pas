@@ -34,6 +34,7 @@ type
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet; const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteAttributesToParams(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteCollections(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteLinkAttributesToParams(const AOwnerPID, APID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection; const AParams: IJCoreOPFParams); override;
   public
     class function Apply(const AMap: TJCoreOPFMap): Boolean; override;
   end;
@@ -240,6 +241,13 @@ procedure TTestIPIDPersonSQLMapping.WriteCollections(const AMapping: TJCoreOPFAD
 begin
   WriteCollection(AMapping['Phones']);
   WriteCollection(AMapping['Languages']);
+end;
+
+procedure TTestIPIDPersonSQLMapping.WriteLinkAttributesToParams(const AOwnerPID, APID: TJCoreOPFPID;
+  const AADM: TJCoreOPFADMCollection; const AParams: IJCoreOPFParams);
+begin
+  AOwnerPID.OID.WriteToParams(AParams);
+  APID.OID.WriteToParams(AParams);
 end;
 
 class function TTestIPIDPersonSQLMapping.Apply(const AMap: TJCoreOPFMap): Boolean;

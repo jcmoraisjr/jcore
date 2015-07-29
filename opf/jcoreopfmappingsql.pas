@@ -128,6 +128,7 @@ type
     procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet; const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteAttributesToParams(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
     procedure WriteCollections(const AMapping: TJCoreOPFADMMapping); override;
+    procedure WriteLinkAttributesToParams(const AOwnerPID, APID: TJCoreOPFPID; const AADM: TJCoreOPFADMCollection; const AParams: IJCoreOPFParams); virtual;
   protected
     // Manual mapping helpers
     function BuildOIDCondition(const AOIDNameArray: array of string; const AOIDCount: Integer): string;
@@ -260,10 +261,18 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildInsertLinkFields(
   const AAttrMetadata: TJCoreOPFAttrMetadata): TJCoreStringArray;
+var
+  VHasOrderField: Boolean;
 begin
-  SetLength(Result, 2);
+  VHasOrderField := AAttrMetadata.ExternalLinkOrderFieldName <> '';
+  if VHasOrderField then
+    SetLength(Result, 3)
+  else
+    SetLength(Result, 2);
   Result[0] := AAttrMetadata.ExternalLinkLeftFieldName;
   Result[1] := AAttrMetadata.ExternalLinkRightFieldName;
+  if VHasOrderField then
+    Result[2] := AAttrMetadata.ExternalLinkOrderFieldName;
 end;
 
 function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDCount: Integer;
@@ -287,34 +296,27 @@ end;
 function TJCoreOPFSQLGenerator.BuildOIDCondition(const AOIDNameArray: array of string; const AMapIndex,
   AOIDCount: Integer; const ATablePrefixType: TJCoreOPFTablePrefixType): string;
 var
-  VOIDClause: string;
   I: Integer;
 begin
   { TODO : allocate once, at the start }
-  if Length(AOIDNameArray) = 1 then
+  if Length(AOIDNameArray) in [1,2] then
   begin
     if AOIDCount > 1 then
     begin
-      Result := BuildOIDName(AOIDNameArray, AMapIndex, 0, ATablePrefixType) + ' IN (?';
+      Result := BuildOIDName(AOIDNameArray[High(AOIDNameArray)], AMapIndex, 0, ATablePrefixType) + ' IN (?';
       for I := 2 to AOIDCount do
         Result := Result + ',?';
       Result := Result + ')';
     end else if AOIDCount = 1 then
-      Result := BuildOIDName(AOIDNameArray, AMapIndex, 0, ATablePrefixType) + '=?'
+      Result := BuildOIDName(AOIDNameArray[High(AOIDNameArray)], AMapIndex, 0, ATablePrefixType) + '=?'
     else
       Result := '';
-  end else
-  begin
-    VOIDClause := '(';
-    for I := Low(AOIDNameArray) to High(AOIDNameArray) do
-      VOIDClause := BuildOIDName(AOIDNameArray, AMapIndex, I, ATablePrefixType) + '=? AND ';
-    SetLength(VOIDClause, Length(VOIDClause) - 4);
-    VOIDClause[Length(VOIDClause)] := ')';
-    Result := '';
-    for I := 0 to Pred(AOIDCount) do
-      Result := Result + VOIDClause + ' OR ';
-    SetLength(Result, Length(Result) - 4);
-  end;
+    if (AOIDCount > 0) and (Length(AOIDNameArray) = 2) then
+      Result := BuildOIDName(AOIDNameArray[0], AMapIndex, 0, ATablePrefixType) + '=? AND ' + Result;
+  end else if Length(AOIDNameArray) = 0 then
+    Result := ''
+  else
+    raise EJCoreOPF.Create(2126, S2126_UnsupportedOIDArray, []);
 end;
 
 function TJCoreOPFSQLGenerator.BuildOIDName(const AMaps: TJCoreOPFMaps; const AMapIndex,
@@ -496,7 +498,11 @@ end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateOrderCondition(const AAttrMetadata: TJCoreOPFAttrMetadata): string;
 begin
-  Result := BuildOIDCondition(1, jtptNone);
+  if AAttrMetadata.HasExternalLink then
+    Result := BuildOIDCondition([
+     AAttrMetadata.ExternalLinkLeftFieldName, AAttrMetadata.ExternalLinkRightFieldName], 1)
+  else
+    Result := BuildOIDCondition(AAttrMetadata.CompositionMetadata.OIDName, 1);
 end;
 
 function TJCoreOPFSQLGenerator.BuildUpdateNames(const AMapping: TJCoreOPFADMMapping): string;
@@ -589,15 +595,20 @@ end;
 function TJCoreOPFSQLMapping.GenerateDeleteExternalLinkIDsStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
-  { TODO : Implement }
-  Result := 'DELETE';
+  Result := Format('DELETE FROM %s WHERE %s', [
+   AAttrMetadata.ExternalLinkTableName,
+   BuildOIDCondition([
+    AAttrMetadata.ExternalLinkLeftFieldName,
+    AAttrMetadata.ExternalLinkRightFieldName],
+   AOIDCount)]);
 end;
 
 function TJCoreOPFSQLMapping.GenerateDeleteExternalLinksStatement(
   const AAttrMetadata: TJCoreOPFAttrMetadata; const AOIDCount: Integer): string;
 begin
-  { TODO : Implement }
-  Result := 'DELETE';
+  Result := Format('DELETE FROM %s WHERE %s', [
+   AAttrMetadata.ExternalLinkTableName,
+   BuildOIDCondition([AAttrMetadata.ExternalLinkRightFieldName], AOIDCount)]);
 end;
 
 function TJCoreOPFSQLMapping.GenerateInsertExternalLinksStatement(
@@ -769,8 +780,7 @@ begin
     VPIDs := AADM.PIDAdded;
     for VPID in VPIDs do
     begin
-      AOwnerPID.OID.WriteToParams(VStmt.Params);
-      VPID.OID.WriteToParams(VStmt.Params);
+      WriteLinkAttributesToParams(AOwnerPID, VPID, AADM, VStmt.Params);
       VStmt.ExecSQL;
     end;
   end;
@@ -781,16 +791,20 @@ procedure TJCoreOPFSQLMapping.WriteOrder(const AOwnerPID: TJCoreOPFPID;
 var
   VStmt: IJCoreOPFSQLStatement;
   VPIDReorder: TJCoreOPFPIDArray;
+  VHasExternalLink: Boolean;
   I: Integer;
 begin
   if AOwnerPID.IsPersistent and AADM.OrderIsDirty then
   begin
+    VHasExternalLink := AADM.Metadata.HasExternalLink;
     VStmt := Driver.CreateStatement;
     VStmt.SQL := GenerateUpdateOrderFieldStatement(AADM.Metadata);
     VPIDReorder := AADM.PIDReorder;
     for I := Low(VPIDReorder) to High(VPIDReorder) do
     begin
       VPIDReorder[I].WriteSequenceField(VStmt.Params);
+      if VHasExternalLink then
+        AOwnerPID.OID.WriteToParams(VStmt.Params);
       VPIDReorder[I].OID.WriteToParams(VStmt.Params);
       VStmt.ExecSQL;
     end;
@@ -928,6 +942,15 @@ begin
     WriteInsertExternalLinks(VPID, VADM);
     WriteOrder(VPID, VADM);
   end;
+end;
+
+procedure TJCoreOPFSQLMapping.WriteLinkAttributesToParams(const AOwnerPID, APID: TJCoreOPFPID;
+  const AADM: TJCoreOPFADMCollection; const AParams: IJCoreOPFParams);
+begin
+  AOwnerPID.OID.WriteToParams(AParams);
+  APID.OID.WriteToParams(AParams);
+  if AADM.Metadata.ExternalLinkOrderFieldName <> '' then
+    APID.WriteSequenceField(AParams);
 end;
 
 function TJCoreOPFSQLMapping.BuildOIDCondition(const AOIDNameArray: array of string;

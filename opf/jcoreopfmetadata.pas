@@ -665,16 +665,8 @@ begin
 end;
 
 function TJCoreOPFADMCollection.ArrayOrderIsDirty: Boolean;
-var
-  VPIDReorder: TJCoreOPFPIDArray;
-  I: Integer;
 begin
-  VPIDReorder := PIDReorder;
-  Result := True;
-  for I := Low(VPIDReorder) to High(VPIDReorder) do
-    if VPIDReorder[I].IsPersistent then
-      Exit;
-  Result := False;
+  Result := Length(PIDReorder) > 0;
 end;
 
 function TJCoreOPFADMCollection.ArraySizeIsDirty: Boolean;
@@ -825,7 +817,7 @@ begin
   // populating array of PIDs out of order
   if HasOrderField then
   begin
-    SetLength(FPIDReorder, Length(VPIDArray));
+    SetLength(FPIDReorder, VPIDSize);
     VMaxSequence := 0;
     VSequenceCount := 0;
     for I := Low(VPIDArray) to High(VPIDArray) do
@@ -833,10 +825,14 @@ begin
       VPID := VPIDArray[I];
       if VPID.SequenceCache <= VMaxSequence then
       begin
+        { TODO : Implement subtract former when possible }
         Inc(VMaxSequence);
         VPID.Sequence := VMaxSequence;
-        FPIDReorder[VSequenceCount] := VPID;
-        Inc(VSequenceCount);
+        if HasOIDInCache(VPID.OID) then
+        begin
+          FPIDReorder[VSequenceCount] := VPID;
+          Inc(VSequenceCount);
+        end;
       end else
         VMaxSequence := VPID.Sequence;
     end;
@@ -848,8 +844,21 @@ begin
 end;
 
 procedure TJCoreOPFADMCollection.InternalCommit;
+var
+  VPIDArray: TJCoreOPFPIDArray;
+  VPID: TJCoreOPFPID;
 begin
   inherited;
+  VPIDArray := PIDArray;
+  // Current approach of the sequence storage is assign it to the PID
+  // Advantage: *very* simpler interface when managing it's values as well as identifying PIDs
+  //   out of order.
+  // Disadvantages: 1. should avoid share the same PID with more than one collection (aggregation
+  //   collections) on very concurrent environments because of the shared Sequence(Cache) field; and
+  //   2. the scope violation below
+  { TODO : proper storage of the collection sequence }
+  for VPID in VPIDArray do
+    VPID.FSequenceCache := VPID.FSequence; // friend class
   FChangesUpdated := False;
   FItemsArrayUpdated := False;
   FPIDArrayUpdated := False;
@@ -1204,7 +1213,6 @@ var
   I: Integer;
 begin
   FIsPersistent := Assigned(FOID);
-  FSequenceCache := FSequence;
   for I := 0 to Pred(ADMMap.Count) do
     ADMMap.Data[I].Commit;
   for I := 0 to Pred(ADMMappingMap.Count) do

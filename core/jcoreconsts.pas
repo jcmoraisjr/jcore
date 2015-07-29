@@ -83,6 +83,7 @@ resourcestring
   S2123_EntityADMExpected = '''%s(%s)'' was expected to be an entity attribute';
   S2124_EmptyOIDList = 'Object ID list is empty';
   S2125_CollectionADMExpected = '''%s(%s)'' was expected to be a collection attribute';
+  S2126_UnsupportedOIDArray = 'Only arrays of one or two OIDs are supported';
 
 implementation
 
