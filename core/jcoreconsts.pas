@@ -16,12 +16,15 @@ unit JCoreConsts;
 
 interface
 
-resourcestring
+const
   SJCoreTrueString = 'True';
   SJCoreFalseString = 'False';
   SJCorePID = '_pid';
   SJCoreProxy = '_proxy';
+  SJCoreController = 'JCoreController';
+  SJCoreMethod = 'JCoreMethod';
 
+resourcestring
   SJCoreBooleanValueMsg = 'Boolean value';
   SJCoreDefaultQualifier = '[Default]';
   SJCoreEofMsg = 'End of file';
@@ -84,6 +87,16 @@ resourcestring
   S2124_EmptyOIDList = 'Object ID list is empty';
   S2125_CollectionADMExpected = '''%s(%s)'' was expected to be a collection attribute';
   S2126_UnsupportedOIDArray = 'Only arrays of one or two OIDs are supported';
+  // EJCoreWS
+  S3101_UnsupportedMethod = 'Method ''%s.%s'' does not have a supported invoker';
+  S3102_TypeinfoIsNotMethod = 'Typeinfo ''%s.%s'' is not a tkMethod';
+  S3103_TypeinfoIsNotMethod = 'Typeinfo is not a tkMethod';
+  S3104_AmbiguousMethodInvokers = 'Ambiguous method invoker implementation: ''%s'' and ''%s''';
+  // EJCoreWS responses
+  S3201_InternalServerError500 = 'Internal server error';
+  S3202_UnknownStatus = 'Unknown status ''%d''';
+  S3203_URLNotFound = 'The requested URL ''%s'' was not found';
+  S3204_URLNotAllowed = 'The requested URL ''%s'' does not allow method ''%s''';
 
 implementation
 

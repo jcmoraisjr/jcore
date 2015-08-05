@@ -58,7 +58,7 @@
     </SearchPaths>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="10">
+    <Exceptions Count="11">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -89,6 +89,9 @@
       <Item10>
         <Name Value="EJCoreParser"/>
       </Item10>
+      <Item11>
+        <Name Value="EJCoreWS"/>
+      </Item11>
     </Exceptions>
   </Debugging>
 </CONFIG>

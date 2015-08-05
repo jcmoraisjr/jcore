@@ -16,6 +16,7 @@ unit JCoreUtils;
 
 interface
 
+function JCoreFormatMessage(const ACode: Integer; const AMsg: string): string;
 function JCoreDumpStackTrace: string;
 function JCoreDumpExceptionStackTrace: string;
 
@@ -23,6 +24,11 @@ implementation
 
 uses
   sysutils;
+
+function JCoreFormatMessage(const ACode: Integer; const AMsg: string): string;
+begin
+  Result := Format('(%.4d) %s', [ACode, AMsg]);
+end;
 
 // From: http://wiki.freepascal.org/Logging_exceptions#Dump_current_call_stack
 function JCoreDumpStackTrace: string;

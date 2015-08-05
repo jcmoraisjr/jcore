@@ -6,7 +6,7 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <OtherUnitFiles Value="core;opf"/>
+        <OtherUnitFiles Value="core;opf;ws"/>
         <UnitOutputDirectory Value="../lib/tests/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Linking>
@@ -18,7 +18,7 @@
         <CustomOptions Value="-vm5024"/>
       </Other>
     </CompilerOptions>
-    <Files Count="18">
+    <Files Count="21">
       <Item1>
         <Filename Value="core/testlist.pas"/>
         <UnitName Value="TestList"/>
@@ -91,17 +91,32 @@
         <Filename Value="opf/testopfmappingautotests.pas"/>
         <UnitName Value="TestOPFMappingAutoTests"/>
       </Item18>
+      <Item19>
+        <Filename Value="ws/testwsinvokers.pas"/>
+        <UnitName Value="TestWSInvokers"/>
+      </Item19>
+      <Item20>
+        <Filename Value="ws/testwscontroller.pas"/>
+        <UnitName Value="TestWSController"/>
+      </Item20>
+      <Item21>
+        <Filename Value="ws/testwsrequest.pas"/>
+        <UnitName Value="TestWSRequest"/>
+      </Item21>
     </Files>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="4">
       <Item1>
-        <PackageName Value="JCoreOPFRT"/>
+        <PackageName Value="JCoreWSRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="JCoreRT"/>
+        <PackageName Value="JCoreOPFRT"/>
       </Item2>
       <Item3>
-        <PackageName Value="FCL"/>
+        <PackageName Value="JCoreRT"/>
       </Item3>
+      <Item4>
+        <PackageName Value="FCL"/>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

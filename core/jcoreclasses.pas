@@ -50,6 +50,7 @@ type
   EJCoreParser = class;                          // 0400
   EJCoreMetadata = class(EJCoreException);       // 0500
   EJCoreOPF = class(EJCoreException);            // 2100
+  EJCoreWS = class(EJCoreException);             // 3100
 
   TJCoreTextPos = record
     Line, Column: Integer;
@@ -156,6 +157,7 @@ implementation
 
 uses
   Math,
+  JCoreUtils,
   JCoreConsts;
 
 { EJCoreException }
@@ -164,7 +166,7 @@ constructor EJCoreException.Create(const ACode: Integer; const AMsg: string; con
 begin
   FCode := ACode;
   FMsg := Format(AMsg, AArgs);
-  inherited Create(Format('(%.4d) %s', [Code, Msg]));
+  inherited Create(JCoreFormatMessage(FCode, FMsg));
 end;
 
 { EJCoreNilPointer }
