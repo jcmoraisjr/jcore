@@ -43,10 +43,13 @@ type
     FMethodKind: TMethodKind;
     FParams: TJCoreWSMethodParamArray;
     FResultType: PTypeInfo;
+    procedure ReadTypeInfo(const ATypeInfo: PTypeInfo);
   public
     constructor Create(const ATypeInfo: PTypeInfo);
-    function IsFunctionAsObject: Boolean;
-    function IsProcedureConstObject: Boolean;
+    function MatchFunction(const AParams: array of const; const AResult: TTypeKind): Boolean;
+    function MatchFunction(const AParams: array of const; const AResult: TClass): Boolean;
+    function MatchParams(const AParams: array of const): Boolean;
+    function MatchProcedure(const AParams: array of const): Boolean;
     property CConv: TCallConv read FCConv;
     property MethodKind: TMethodKind read FMethodKind;
     property Params: TJCoreWSMethodParamArray read FParams;
@@ -90,7 +93,7 @@ uses
 
 { TJCoreWSMethodData }
 
-constructor TJCoreWSMethodData.Create(const ATypeInfo: PTypeInfo);
+procedure TJCoreWSMethodData.ReadTypeInfo(const ATypeInfo: PTypeInfo);
 {
   Lay out of ParamList from FPC 3.0
   ParamCount: Byte;
@@ -109,9 +112,6 @@ var
   VParamItem: PByte;
   I: Integer;
 begin
-  if ATypeInfo^.Kind <> tkMethod then
-    raise EJCoreWS.Create(3103, S3103_TypeinfoIsNotMethod, []);
-  inherited Create;
   VTypeData := GetTypeData(ATypeInfo);
   FMethodKind := VTypeData^.MethodKind;
   VParamItem := PByte(@VTypeData^.ParamList[0]);
@@ -141,25 +141,61 @@ begin
   end;
 end;
 
-function TJCoreWSMethodData.IsFunctionAsObject: Boolean;
+constructor TJCoreWSMethodData.Create(const ATypeInfo: PTypeInfo);
 begin
-  Result :=
-   (MethodKind = mkFunction) and (Length(Params) = 0) and (ResultType^.Kind = tkClass) and (CConv = ccReg);
+  if ATypeInfo^.Kind <> tkMethod then
+    raise EJCoreWS.Create(3103, S3103_TypeinfoIsNotMethod, []);
+  inherited Create;
+  ReadTypeInfo(ATypeInfo);
 end;
 
-function TJCoreWSMethodData.IsProcedureConstObject: Boolean;
+function TJCoreWSMethodData.MatchFunction(const AParams: array of const; const AResult: TTypeKind): Boolean;
 begin
   Result :=
-   (MethodKind = mkProcedure) and (Length(Params) = 1) and
-   (pfConst in Params[0].Flags) and (Params[0].ParamTypeInfo^.Kind = tkClass) and
-   (CConv = ccReg);
+   (MethodKind = mkFunction) and (ResultType^.Kind = AResult) and (CConv = ccReg) and MatchParams(AParams);
+end;
+
+function TJCoreWSMethodData.MatchFunction(const AParams: array of const; const AResult: TClass): Boolean;
+begin
+  Result := (MethodKind = mkFunction) and (ResultType^.Kind = tkClass) and (CConv = ccReg)
+   and (GetTypeData(ResultType)^.ClassType.InheritsFrom(AResult)) and MatchParams(AParams);
+end;
+
+function TJCoreWSMethodData.MatchParams(const AParams: array of const): Boolean;
+var
+  VKind: TTypeKind;
+  I: Integer;
+begin
+  Result := Length(AParams) = Length(Params);
+  if Result then
+    for I := Low(AParams) to High(AParams) do
+    begin
+      Result := pfConst in Params[I].Flags;
+      if Result then
+      begin
+        VKind := Params[I].ParamTypeInfo^.Kind;
+        case AParams[I].VType of
+          vtInteger{TTypeKind}: Result := VKind = TTypeKind(AParams[I].VInteger);
+          vtClass: Result := (VKind = tkClass)
+           and (GetTypeData(Params[I].ParamTypeInfo)^.ClassType.InheritsFrom(AParams[I].VClass));
+          else Result := False;
+        end;
+      end;
+      if not Result then
+        Exit;
+    end;
+end;
+
+function TJCoreWSMethodData.MatchProcedure(const AParams: array of const): Boolean;
+begin
+  Result := (MethodKind = mkProcedure) and (CConv = ccReg) and MatchParams(AParams);
 end;
 
 { TJCoreWSProcObjectInvoker }
 
 function TJCoreWSProcObjectInvoker.Match(const AMethodData: TJCoreWSMethodData): Boolean;
 begin
-  Result := AMethodData.IsProcedureConstObject;
+  Result := AMethodData.MatchProcedure([TObject]);
 end;
 
 procedure TJCoreWSProcObjectInvoker.Invoke(const AMethodData: TJCoreWSMethodData; const ARequest: TRequest;
@@ -167,23 +203,23 @@ procedure TJCoreWSProcObjectInvoker.Invoke(const AMethodData: TJCoreWSMethodData
 type
   TInvokeMethod = procedure(const AObj: TObject) of object;
 var
-  VDestreamer: TJCoreWSJSONUnserializer;
+  VUnserializer: TJCoreWSJSONUnserializer;
   VContent: string;
   VObj: TObject;
 begin
   VObj := nil;
   try
-    VDestreamer := TJCoreWSJSONUnserializer.Create(nil);
+    VUnserializer := TJCoreWSJSONUnserializer.Create(nil);
     try
       VContent := ARequest.Content;
       if VContent <> '' then
       begin
         VObj := GetTypeData(AMethodData.Params[0].ParamTypeInfo)^.ClassType.Create;
-        VDestreamer.JSONToObject(VContent, VObj);
+        VUnserializer.JSONToObject(VContent, VObj);
       end;
       TInvokeMethod(AMethod)(VObj);
     finally
-      FreeAndNil(VDestreamer);
+      FreeAndNil(VUnserializer);
     end;
   finally
     FreeAndNil(VObj);
@@ -194,7 +230,7 @@ end;
 
 function TJCoreWSFncObjectInvoker.Match(const AMethodData: TJCoreWSMethodData): Boolean;
 begin
-  Result := AMethodData.IsFunctionAsObject;
+  Result := AMethodData.MatchFunction([], TObject);
 end;
 
 procedure TJCoreWSFncObjectInvoker.Invoke(const AMethodData: TJCoreWSMethodData; const ARequest: TRequest;
@@ -203,18 +239,18 @@ type
   TInvokeMethod = function: TObject of object;
 var
   VObj: TObject;
-  VStreamer: TJCoreWSJSONSerializer;
+  VSerializer: TJCoreWSJSONSerializer;
 begin
   AResponse.ContentType := 'application/json';
   VObj := TInvokeMethod(AMethod)();
   if Assigned(VObj) then
   begin
     try
-      VStreamer := TJCoreWSJSONSerializer.Create(nil);
+      VSerializer := TJCoreWSJSONSerializer.Create(nil);
       try
-        AResponse.Content := VStreamer.ObjectToJSONString(VObj);
+        AResponse.Content := VSerializer.ObjectToJSONString(VObj);
       finally
-        FreeAndNil(VStreamer);
+        FreeAndNil(VSerializer);
       end;
     finally
       FreeAndNil(VObj);

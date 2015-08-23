@@ -476,7 +476,7 @@ end;
 
 function TTestInvokerProc.Match(const AMethodData: TJCoreWSMethodData): Boolean;
 begin
-  Result := AMethodData.IsProcedureConstObject;
+  Result := AMethodData.MatchProcedure([TObject]);
 end;
 
 procedure TTestInvokerProc.Invoke(const AMethodData: TJCoreWSMethodData; const ARequest: TRequest;
@@ -488,7 +488,7 @@ end;
 
 function TTestInvokerProcAmbiguous.Match(const AMethodData: TJCoreWSMethodData): Boolean;
 begin
-  Result := AMethodData.IsProcedureConstObject;
+  Result := AMethodData.MatchProcedure([TObject]);
 end;
 
 procedure TTestInvokerProcAmbiguous.Invoke(const AMethodData: TJCoreWSMethodData; const ARequest: TRequest;
@@ -500,7 +500,7 @@ end;
 
 function TTestInvokerProcInherited.Match(const AMethodData: TJCoreWSMethodData): Boolean;
 begin
-  Result := AMethodData.IsProcedureConstObject;
+  Result := AMethodData.MatchProcedure([TObject]);
 end;
 
 procedure TTestInvokerProcInherited.Invoke(const AMethodData: TJCoreWSMethodData; const ARequest: TRequest;
@@ -512,7 +512,7 @@ end;
 
 function TTestInvokerFnc.Match(const AMethodData: TJCoreWSMethodData): Boolean;
 begin
-  Result := AMethodData.IsFunctionAsObject;
+  Result := AMethodData.MatchFunction([], TObject);
 end;
 
 procedure TTestInvokerFnc.Invoke(const AMethodData: TJCoreWSMethodData; const ARequest: TRequest;

@@ -6,6 +6,7 @@ interface
 
 uses
   typinfo,
+  Classes,
   fpcunit,
   JCoreWSInvokers;
 
@@ -23,6 +24,7 @@ type
     procedure P05(const AObject: TInterfacedObject);
     procedure P06(const AObject: TObject; const AMsg: string);
     procedure P07(const AObject: TObject); cdecl;
+    procedure P08(const APersistent: TPersistent; const AList: TList; const AString: string);
     function F01: TObject;
     function F02: TInterfacedObject;
     function F03: string;
@@ -30,6 +32,7 @@ type
     function F05(const AMsg: string): TObject;
     function F06(const AMsg1, AMsg2: string): TObject;
     function F07(const AMsg: string): TObject; cdecl;
+    function F08(const APersistent: TPersistent; const AList: TList; const AString: string): Boolean;
   protected
     procedure TearDown; override;
     function CreateMethodData(const AMethodTypeInfo: PTypeInfo): TJCoreWSMethodData;
@@ -41,6 +44,7 @@ type
     procedure ValidP05;
     procedure ValidP06;
     procedure ValidP07;
+    procedure ValidP08;
     procedure ValidF01;
     procedure ValidF02;
     procedure ValidF03;
@@ -48,9 +52,12 @@ type
     procedure ValidF05;
     procedure ValidF06;
     procedure ValidF07;
+    procedure ValidF08;
     procedure InvalidTypeInfo;
     procedure IsProcedureConstObject;
     procedure IsFunctionAsObject;
+    procedure IsProcedureThreeParams;
+    procedure IsFunctionThreeParamsAsBoolean;
   end;
 
 implementation
@@ -90,6 +97,10 @@ procedure TTestWSMethodData.P07(const AObject: TObject); cdecl;
 begin
 end;
 
+procedure TTestWSMethodData.P08(const APersistent: TPersistent; const AList: TList; const AString: string);
+begin
+end;
+
 function TTestWSMethodData.F01: TObject;
 begin
   Result := nil;
@@ -123,6 +134,12 @@ end;
 function TTestWSMethodData.F07(const AMsg: string): TObject; cdecl;
 begin
   Result := nil;
+end;
+
+function TTestWSMethodData.F08(const APersistent: TPersistent; const AList: TList;
+  const AString: string): Boolean;
+begin
+  Result := False;
 end;
 
 procedure TTestWSMethodData.TearDown;
@@ -233,6 +250,25 @@ begin
   AssertEquals('call conv', Ord(ccCdecl), Ord(VMethod.CConv));
 end;
 
+procedure TTestWSMethodData.ValidP08;
+var
+  VMethod: TJCoreWSMethodData;
+begin
+  //procedure P08(const APersistent: TPersistent; const AList: TList; const AString: string);
+  VMethod := CreateMethodData(TypeInfo(@P08));
+  AssertEquals('type', Ord(mkProcedure), Ord(VMethod.MethodKind));
+  AssertEquals('param count', 3, Length(VMethod.Params));
+  AssertTrue('param[0] flag const', pfConst in VMethod.Params[0].Flags);
+  AssertEquals('param[0] kind', Ord(tkClass), Ord(VMethod.Params[0].ParamTypeInfo^.Kind));
+  AssertEquals('param[0] type', TPersistent, GetTypeData(VMethod.Params[0].ParamTypeInfo)^.ClassType);
+  AssertTrue('param[1] flag const', pfConst in VMethod.Params[1].Flags);
+  AssertEquals('param[1] kind', Ord(tkClass), Ord(VMethod.Params[1].ParamTypeInfo^.Kind));
+  AssertEquals('param[1] type', TList, GetTypeData(VMethod.Params[1].ParamTypeInfo)^.ClassType);
+  AssertTrue('param[2] flag const', pfConst in VMethod.Params[2].Flags);
+  AssertEquals('param[2] kind', Ord(tkAString), Ord(VMethod.Params[2].ParamTypeInfo^.Kind));
+  AssertEquals('call conv', Ord(ccReg), Ord(VMethod.CConv));
+end;
+
 procedure TTestWSMethodData.ValidF01;
 var
   VMethod: TJCoreWSMethodData;
@@ -332,6 +368,26 @@ begin
   AssertEquals('call conv', Ord(ccCdecl), Ord(VMethod.CConv));
 end;
 
+procedure TTestWSMethodData.ValidF08;
+var
+  VMethod: TJCoreWSMethodData;
+begin
+  //function F08(const APersistent: TPersistent; const AList: TList; const AString: string): Boolean;
+  VMethod := CreateMethodData(TypeInfo(@F08));
+  AssertEquals('type', Ord(mkFunction), Ord(VMethod.MethodKind));
+  AssertEquals('param count', 3, Length(VMethod.Params));
+  AssertTrue('param[0] flag const', pfConst in VMethod.Params[0].Flags);
+  AssertEquals('param[0] kind', Ord(tkClass), Ord(VMethod.Params[0].ParamTypeInfo^.Kind));
+  AssertEquals('param[0] type', TPersistent, GetTypeData(VMethod.Params[0].ParamTypeInfo)^.ClassType);
+  AssertTrue('param[1] flag const', pfConst in VMethod.Params[1].Flags);
+  AssertEquals('param[1] kind', Ord(tkClass), Ord(VMethod.Params[1].ParamTypeInfo^.Kind));
+  AssertEquals('param[1] type', TList, GetTypeData(VMethod.Params[1].ParamTypeInfo)^.ClassType);
+  AssertTrue('param[2] flag const', pfConst in VMethod.Params[2].Flags);
+  AssertEquals('param[2] kind', Ord(tkAString), Ord(VMethod.Params[2].ParamTypeInfo^.Kind));
+  AssertEquals('result kind', Ord(tkBool), Ord(VMethod.ResultType^.Kind));
+  AssertEquals('call conv', Ord(ccReg), Ord(VMethod.CConv));
+end;
+
 procedure TTestWSMethodData.InvalidTypeInfo;
 begin
   try
@@ -350,7 +406,7 @@ var
 begin
   //procedure P04(const AObject: TObject);
   VMethod := CreateMethodData(TypeInfo(@P04));
-  AssertTrue('is procedure with object', VMethod.IsProcedureConstObject);
+  AssertTrue(VMethod.MatchProcedure([TObject]));
 end;
 
 procedure TTestWSMethodData.IsFunctionAsObject;
@@ -359,7 +415,25 @@ var
 begin
   //function F01: TObject;
   VMethod := CreateMethodData(TypeInfo(@F01));
-  AssertTrue('is function as object', VMethod.IsFunctionAsObject);
+  AssertTrue(VMethod.MatchFunction([], TObject));
+end;
+
+procedure TTestWSMethodData.IsProcedureThreeParams;
+var
+  VMethod: TJCoreWSMethodData;
+begin
+  //procedure P08(const APersistent: TPersistent; const AList: TList; const AString: string);
+  VMethod := CreateMethodData(TypeInfo(@P08));
+  AssertTrue(VMethod.MatchProcedure([TPersistent, TList, tkAString]));
+end;
+
+procedure TTestWSMethodData.IsFunctionThreeParamsAsBoolean;
+var
+  VMethod: TJCoreWSMethodData;
+begin
+  //function F08(const APersistent: TPersistent; const AList: TList; const AString: string): Boolean;
+  VMethod := CreateMethodData(TypeInfo(@F08));
+  AssertTrue(VMethod.MatchFunction([TPersistent, TList, tkAString], tkBool));
 end;
 
 initialization
