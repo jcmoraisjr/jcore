@@ -22,7 +22,8 @@ uses
   JCoreEntity,
   JCoreOPFDriver,
   JCoreOPFMetadata,
-  JCoreOPFMapping;
+  JCoreOPFMapping,
+  JCoreOPFCriteria;
 
 type
 
@@ -36,6 +37,7 @@ type
   { IJCoreOPFSession }
 
   IJCoreOPFSession = interface(IInterface)
+    function CreateCriteria(const AClass: TClass): IJCoreOPFSQLCriteria;
     procedure Dispose(const AEntity: TObject);
     procedure Dispose(const AClass: TClass; const AOIDArray: array of string);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
@@ -75,6 +77,7 @@ type
     constructor Create(const ASessionManager: IJCoreOPFSessionManager; const ADriver: TJCoreOPFDriver);
     destructor Destroy; override;
     function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
+    function CreateCriteria(const AClass: TClass): IJCoreOPFSQLCriteria;
     procedure Dispose(const AClass: TClass; const AStringOIDArray: array of string);
     procedure Dispose(const AEntity: TObject);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
@@ -195,6 +198,11 @@ function TJCoreOPFSession.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
 begin
   Result := Model.AcquirePID(AEntity);
   Result.AttachManager(Self);
+end;
+
+function TJCoreOPFSession.CreateCriteria(const AClass: TClass): IJCoreOPFSQLCriteria;
+begin
+  Result := AcquireClassMapping(AClass).CreateCriteria;
 end;
 
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);

@@ -18,7 +18,7 @@
         <CustomOptions Value="-vm5024"/>
       </Other>
     </CompilerOptions>
-    <Files Count="21">
+    <Files Count="22">
       <Item1>
         <Filename Value="core/testlist.pas"/>
         <UnitName Value="TestList"/>
@@ -72,37 +72,41 @@
         <UnitName Value="TestOPFGeneratorTest"/>
       </Item13>
       <Item14>
-        <Filename Value="opf/testopfmappingcontact.pas"/>
-        <UnitName Value="TestOPFMappingContact"/>
+        <Filename Value="opf/testopfcriteriatests.pas"/>
+        <UnitName Value="TestOPFCriteriaTests"/>
       </Item14>
       <Item15>
-        <Filename Value="opf/testopfmappinginvoice.pas"/>
-        <UnitName Value="TestOPFMappingInvoice"/>
+        <Filename Value="opf/testopfmappingcontact.pas"/>
+        <UnitName Value="TestOPFMappingContact"/>
       </Item15>
       <Item16>
-        <Filename Value="opf/testopfmappingtests.pas"/>
-        <UnitName Value="TestOPFMappingTests"/>
+        <Filename Value="opf/testopfmappinginvoice.pas"/>
+        <UnitName Value="TestOPFMappingInvoice"/>
       </Item16>
       <Item17>
-        <Filename Value="opf/testopfmappingmanualtests.pas"/>
-        <UnitName Value="TestOPFMappingManualTests"/>
+        <Filename Value="opf/testopfmappingtests.pas"/>
+        <UnitName Value="TestOPFMappingTests"/>
       </Item17>
       <Item18>
-        <Filename Value="opf/testopfmappingautotests.pas"/>
-        <UnitName Value="TestOPFMappingAutoTests"/>
+        <Filename Value="opf/testopfmappingmanualtests.pas"/>
+        <UnitName Value="TestOPFMappingManualTests"/>
       </Item18>
       <Item19>
-        <Filename Value="ws/testwsinvokers.pas"/>
-        <UnitName Value="TestWSInvokers"/>
+        <Filename Value="opf/testopfmappingautotests.pas"/>
+        <UnitName Value="TestOPFMappingAutoTests"/>
       </Item19>
       <Item20>
-        <Filename Value="ws/testwscontroller.pas"/>
-        <UnitName Value="TestWSController"/>
+        <Filename Value="ws/testwsinvokers.pas"/>
+        <UnitName Value="TestWSInvokers"/>
       </Item20>
       <Item21>
+        <Filename Value="ws/testwscontroller.pas"/>
+        <UnitName Value="TestWSController"/>
+      </Item21>
+      <Item22>
         <Filename Value="ws/testwsrequest.pas"/>
         <UnitName Value="TestWSRequest"/>
-      </Item21>
+      </Item22>
     </Files>
     <RequiredPkgs Count="4">
       <Item1>

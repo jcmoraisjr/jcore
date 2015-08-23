@@ -383,6 +383,7 @@ type
     constructor Create(const AModel: TJCoreModel; const AClass: TClass; const AParent: TJCoreClassMetadata); override;
     destructor Destroy; override;
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
+    function FindAttribute(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
     property GeneratorName: string read FGeneratorName write FGeneratorName;
     property Maps: TJCoreOPFMaps read GetMaps;
@@ -1430,6 +1431,11 @@ function TJCoreOPFClassMetadata.AttributeByName(
   const AAttributeName: string): TJCoreOPFAttrMetadata;
 begin
   Result := inherited AttributeByName(AAttributeName) as TJCoreOPFAttrMetadata;
+end;
+
+function TJCoreOPFClassMetadata.FindAttribute(const AAttributeName: string): TJCoreOPFAttrMetadata;
+begin
+  Result := inherited FindAttribute(AAttributeName) as TJCoreOPFAttrMetadata;
 end;
 
 { TJCoreOPFModel }

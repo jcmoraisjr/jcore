@@ -39,6 +39,7 @@ type
     procedure WriteInt64(const AValue: Int64);
     procedure WriteNull;
     procedure WriteString(const AValue: string);
+    procedure WriteVariant(const AValue: Variant);
   end;
 
   { IJCoreOPFResultSet }
@@ -92,6 +93,7 @@ type
     procedure IJCoreOPFParams.WriteInt64 = PushInt64;
     procedure IJCoreOPFParams.WriteNull = PushNull;
     procedure IJCoreOPFParams.WriteString = PushString;
+    procedure IJCoreOPFParams.WriteVariant = PushVariant;
   end;
 
   { TJCoreOPFDriver }

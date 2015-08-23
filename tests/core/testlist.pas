@@ -28,6 +28,9 @@ type
     procedure PushPopInt32;
     procedure PushPopInt64;
     procedure PushPopString;
+    procedure PushPopVariantString;
+    procedure PushPopVariantInteger;
+    procedure PushPopVariantNull;
     procedure PushPopNull;
     procedure PushAllCount;
     procedure PushAllPopAllQueue;
@@ -97,7 +100,7 @@ begin
   VType := Stack.PopType;
   AssertEquals('stack.poptype', 'tkInt64', TypeToName(VType));
   VValue := Stack.PopInt64;
-  AssertEquals('stack.popint32', 18, VValue);
+  AssertEquals('stack.popint64', 18, VValue);
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
@@ -111,7 +114,46 @@ begin
   VType := Stack.PopType;
   AssertEquals('stack.poptype', 'tkAString', TypeToName(VType));
   VValue := Stack.PopString;
-  AssertEquals('stack.popint32', 'data', VValue);
+  AssertEquals('stack.popstring', 'data', VValue);
+  AssertEquals('stack.count', 0, Stack.Count);
+end;
+
+procedure TNativeTypeOrderedListTest.PushPopVariantString;
+var
+  VType: TTypeKind;
+  VValue: string;
+begin
+  Stack.PushVariant('data');
+  AssertEquals('stack.count', 1, Stack.Count);
+  VType := Stack.PopType;
+  AssertEquals('stack.poptype', 'tkAString', TypeToName(VType));
+  VValue := Stack.PopString;
+  AssertEquals('stack.popstring', 'data', VValue);
+  AssertEquals('stack.count', 0, Stack.Count);
+end;
+
+procedure TNativeTypeOrderedListTest.PushPopVariantInteger;
+var
+  VType: TTypeKind;
+  VValue: Integer;
+begin
+  Stack.PushVariant(10);
+  AssertEquals('stack.count', 1, Stack.Count);
+  VType := Stack.PopType;
+  AssertEquals('stack.poptype', 'tkInteger', TypeToName(VType));
+  VValue := Stack.PopInt32;
+  AssertEquals('stack.popint32', 10, VValue);
+  AssertEquals('stack.count', 0, Stack.Count);
+end;
+
+procedure TNativeTypeOrderedListTest.PushPopVariantNull;
+var
+  VType: TTypeKind;
+begin
+  Stack.PushVariant(Null);
+  AssertEquals('stack.count', 1, Stack.Count);
+  VType := Stack.PopType;
+  AssertEquals('stack.poptype', 'tkUnknown', TypeToName(VType));
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 

@@ -20,7 +20,8 @@ uses
   fgl,
   SysUtils,
   typinfo,
-  Classes;
+  Classes,
+  variants;
 
 type
 
@@ -74,6 +75,7 @@ type
   //TChars = set of Char;
   TJCoreStringArray = array of string;
   TJCoreClassArray = array of TClass;
+  TJCoreVariantArray = array of Variant;
 
   TJCoreClassMap = specialize TFPGMap<String, TClass>;
   TJCoreInt64List = specialize TFPGList<Int64>;

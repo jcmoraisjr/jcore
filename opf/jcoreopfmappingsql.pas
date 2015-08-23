@@ -22,6 +22,8 @@ uses
   JCoreOPFDriver,
   JCoreOPFOID,
   JCoreOPFMetadata,
+  JCoreOPFCriteria,
+  JCoreOPFCriteriaSQL,
   JCoreOPFMapping;
 
 type
@@ -119,6 +121,7 @@ type
     property SQLGen: TJCoreOPFSQLGenerator read FSQLGen;
   protected
     // Facade internals
+    function InternalCreateCriteria(const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria; override;
     procedure InternalDispose(const AOIDArray: array of IJCoreOPFOID); override;
     procedure InternalInsert(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); override;
     function InternalRetrieveCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): IJCoreOPFResultSet; override;
@@ -809,6 +812,12 @@ begin
       VStmt.ExecSQL;
     end;
   end;
+end;
+
+function TJCoreOPFSQLMapping.InternalCreateCriteria(
+  const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria;
+begin
+  Result := TJCoreOPFSQLCriteria.Create(Map.Metadata, Driver, ARetriever);
 end;
 
 procedure TJCoreOPFSQLMapping.InternalDispose(const AOIDArray: array of IJCoreOPFOID);

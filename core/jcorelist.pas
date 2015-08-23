@@ -18,6 +18,7 @@ interface
 
 uses
   typinfo,
+  variants,
   contnrs,
   fgl;
 
@@ -54,6 +55,7 @@ type
     procedure PushInt64(const AValue: Int64);
     procedure PushNull;
     procedure PushString(const AValue: string);
+    procedure PushVariant(const AValue: Variant);
   end;
 
   { TJCoreNativeTypeStack }
@@ -220,6 +222,20 @@ begin
   VValue^ := AValue;
   PushTypedValue(VValue, FTypeInfoString);
   Inc(FCount);
+end;
+
+procedure TJCoreNativeTypeOrderedList.PushVariant(const AValue: Variant);
+var
+  VType: TVarType;
+begin
+  VType := TVarData(AValue).VType and varTypeMask;
+  case VType of
+    varEmpty, varNull: PushNull;
+    varByte, varSmallint, varShortint, varInteger, varWord: PushInt32(AValue);
+    varLongWord, varQWord, varInt64: PushInt64(AValue);
+    varString: PushString(AValue);
+    else raise EJCoreClasses.Create(206, S0206_UnsupportedTypeOrderedList, [VType]);
+  end;
 end;
 
 { TJCoreNativeTypeStack }

@@ -24,7 +24,8 @@ uses
   JCoreOPFDriver,
   JCoreOPFOID,
   JCoreOPFOIDGen,
-  JCoreOPFMetadata;
+  JCoreOPFMetadata,
+  JCoreOPFCriteria;
 
 type
 
@@ -142,7 +143,7 @@ type
 
   { TJCoreOPFClassMapping }
 
-  TJCoreOPFClassMapping = class(TObject)
+  TJCoreOPFClassMapping = class(TObject, IJCoreOPFCriteriaRetriever)
   // Class mappings of a single class metadata, without parents.
   // Based on TJCoreOPFMaps and synchronized with TJCoreOPFADMMapping ADMs.
   private
@@ -160,6 +161,7 @@ type
     function GetGenerator: IJCoreOPFOIDGenerator;
     function MapIndexByMap(const ABaseMap: TJCoreOPFMap): Integer;
     function Retrieve(const AOIDArray: array of IJCoreOPFOID): TJCoreObjectArray;
+    function RetrieveResultSet(const AClass: TClass; const AResultSet: IJCoreOPFResultSet): TJCoreObjectArray;
     function RetrieveFromResultSet(const AResultSet: IJCoreOPFResultSet): TJCoreObjectArray;
   protected
     property Driver: TJCoreOPFDriver read FDriver;
@@ -179,6 +181,7 @@ type
   public
     // Public facades, mapped from session facades
     constructor Create(const AMapper: IJCoreOPFMapper; const AMetadata: TJCoreOPFClassMetadata; AMappingList: TJCoreOPFMappingList);
+    function CreateCriteria: IJCoreOPFSQLCriteria;
     procedure DisposeOID(const AStringOIDArray: array of string);
     procedure DisposePID(const APIDArray: array of TJCoreOPFPID);
     function RetrieveOID(const AStringOID: string): TObject;
@@ -222,6 +225,7 @@ type
     function CreateEntityFromResultSet(const AResultSet: IJCoreOPFResultSet): TObject; virtual;
     function CreateParams: IJCoreOPFParams; virtual;
     // abstract facades
+    function InternalCreateCriteria(const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria; virtual; abstract;
     function InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray;
     procedure InternalDispose(const AOIDArray: array of IJCoreOPFOID); virtual; abstract;
     procedure InternalInsert(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); virtual; abstract;
@@ -243,6 +247,7 @@ type
   public
     constructor Create(const AMapper: IJCoreOPFMapper; const AMap: TJCoreOPFMap; const AIsBaseMapping: Boolean); virtual;
     class function Apply(const AMap: TJCoreOPFMap): Boolean; virtual; abstract;
+    function CreateCriteria(const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria;
     function CreateEntity(const AResultSet: IJCoreOPFResultSet): TObject;
     function CreateGenerator: IJCoreOPFOIDGenerator;
     function CreateOID(const AGenerator: IJCoreOPFOIDGenerator): IJCoreOPFOID;
@@ -556,6 +561,12 @@ begin
   Result := RetrieveFromResultSet(VResultSet);
 end;
 
+function TJCoreOPFClassMapping.RetrieveResultSet(const AClass: TClass;
+  const AResultSet: IJCoreOPFResultSet): TJCoreObjectArray;
+begin
+  Result := AcquireClassMapping(AClass).RetrieveFromResultSet(AResultSet);
+end;
+
 function TJCoreOPFClassMapping.RetrieveFromResultSet(
   const AResultSet: IJCoreOPFResultSet): TJCoreObjectArray;
 var
@@ -768,6 +779,11 @@ begin
   FMapping := FMappingList.Last;
 end;
 
+function TJCoreOPFClassMapping.CreateCriteria: IJCoreOPFSQLCriteria;
+begin
+  Result := Mapping.CreateCriteria(Self);
+end;
+
 procedure TJCoreOPFClassMapping.DisposeOID(const AStringOIDArray: array of string);
 var
   VOIDArray: TJCoreOPFOIDArray;
@@ -910,6 +926,11 @@ begin
   FModel := Mapper.Model;
   FDriver := Mapper.Driver;
   FIsBaseMapping := AIsBaseMapping;
+end;
+
+function TJCoreOPFMapping.CreateCriteria(const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria;
+begin
+  Result := InternalCreateCriteria(ARetriever);
 end;
 
 function TJCoreOPFMapping.CreateEntity(const AResultSet: IJCoreOPFResultSet): TObject;

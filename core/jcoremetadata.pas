@@ -89,6 +89,7 @@ type
     procedure AddAttribute(const AAttribute: TJCoreAttrMetadata);
     function AttributeByName(const AAttributeName: string): TJCoreAttrMetadata;
     function AttributeCount: Integer;
+    function FindAttribute(const AAttributeName: string): TJCoreAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreAttrMetadata read GetAttributes; default;
     property OwnerAttr: TJCoreAttrMetadata read FOwnerAttr write SetOwnerAttr;
     property OwnerClass: TJCoreClassMetadata read FOwnerClass;
@@ -269,15 +270,22 @@ end;
 function TJCoreClassMetadata.AttributeByName(
   const AAttributeName: string): TJCoreAttrMetadata;
 begin
-  for Result in AttrList do
-    if SameText(AAttributeName, Result.Name) then
-      Exit;
-  raise EJCoreMetadata.Create(501, S0501_AttributeNotFound, [TheClass.ClassName, AAttributeName]);
+  Result := FindAttribute(AAttributeName);
+  if not Assigned(Result) then
+    raise EJCoreMetadata.Create(501, S0501_AttributeNotFound, [TheClass.ClassName, AAttributeName]);
 end;
 
 function TJCoreClassMetadata.AttributeCount: Integer;
 begin
   Result := AttrList.Count;
+end;
+
+function TJCoreClassMetadata.FindAttribute(const AAttributeName: string): TJCoreAttrMetadata;
+begin
+  for Result in AttrList do
+    if SameText(AAttributeName, Result.Name) then
+      Exit;
+  Result := nil;
 end;
 
 { TJCoreModel }

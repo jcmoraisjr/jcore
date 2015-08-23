@@ -15,7 +15,7 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Files Count="10">
+    <Files Count="12">
       <Item1>
         <Filename Value="opf/jcoreopfoidgen.pas"/>
         <UnitName Value="JCoreOPFOIDGen"/>
@@ -37,25 +37,33 @@
         <UnitName Value="JCoreOPFADM"/>
       </Item5>
       <Item6>
-        <Filename Value="opf/jcoreopfmapping.pas"/>
-        <UnitName Value="JCoreOPFMapping"/>
+        <Filename Value="opf/jcoreopfcriteria.pas"/>
+        <UnitName Value="JCoreOPFCriteria"/>
       </Item6>
       <Item7>
-        <Filename Value="opf/jcoreopfmappingsql.pas"/>
-        <UnitName Value="JCoreOPFMappingSQL"/>
+        <Filename Value="opf/jcoreopfcriteriasql.pas"/>
+        <UnitName Value="JCoreOPFCriteriaSQL"/>
       </Item7>
       <Item8>
-        <Filename Value="opf/jcoreopfsession.pas"/>
-        <UnitName Value="JCoreOPFSession"/>
+        <Filename Value="opf/jcoreopfmapping.pas"/>
+        <UnitName Value="JCoreOPFMapping"/>
       </Item8>
       <Item9>
-        <Filename Value="opf/jcoreopfconfig.pas"/>
-        <UnitName Value="JCoreOPFConfig"/>
+        <Filename Value="opf/jcoreopfmappingsql.pas"/>
+        <UnitName Value="JCoreOPFMappingSQL"/>
       </Item9>
       <Item10>
+        <Filename Value="opf/jcoreopfsession.pas"/>
+        <UnitName Value="JCoreOPFSession"/>
+      </Item10>
+      <Item11>
+        <Filename Value="opf/jcoreopfconfig.pas"/>
+        <UnitName Value="JCoreOPFConfig"/>
+      </Item11>
+      <Item12>
         <Filename Value="opf/drivers/jcoreopfdriversqldb.pas"/>
         <UnitName Value="JCoreOPFDriverSQLdb"/>
-      </Item10>
+      </Item12>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

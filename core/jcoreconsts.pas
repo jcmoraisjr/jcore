@@ -48,6 +48,7 @@ resourcestring
   S0203_ListIsEmpty = 'List is empty';
   S0204_CannotReleaseInstance = 'Cannot release instance ''%s''';
   S0205_InvalidIdentifier = 'Invalid identifier ''%s''';
+  S0206_UnsupportedTypeOrderedList = 'Ordered list does not support type ''%d''';
   // EJCoreDIC
   S0301_UnsupportedInterface = 'Class ''%s'' does not support interface ''%s''';
   S0302_AmbiguousImplementation = 'Ambiguous Implementation for Interface ''%s'': ''%s'' and ''%s''';
@@ -87,6 +88,9 @@ resourcestring
   S2124_EmptyOIDList = 'Object ID list is empty';
   S2125_CollectionADMExpected = '''%s(%s)'' was expected to be a collection attribute';
   S2126_UnsupportedOIDArray = 'Only arrays of one or two OIDs are supported';
+  S2127_AttributeNotFound = 'Attribute %s(''%s'') was not found';
+  S2128_UndefinedJoinAlias = 'Cannot join ''%s'': join alias was not defined';
+  S2129_IncompatibleJoinOID = 'Cannot join ''%s'': incompatible OID';
   // EJCoreWS
   S3101_UnsupportedMethod = 'Method ''%s.%s'' does not have a supported invoker';
   S3102_TypeinfoIsNotMethod = 'Typeinfo ''%s.%s'' is not a tkMethod';
