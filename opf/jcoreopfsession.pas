@@ -38,6 +38,7 @@ type
 
   IJCoreOPFSession = interface(IInterface)
     function CreateCriteria(const AClass: TClass): IJCoreOPFSQLCriteria;
+    function CreateStatement: IJCoreOPFSQLStatement;
     procedure Dispose(const AEntity: TObject);
     procedure Dispose(const AClass: TClass; const AOIDArray: array of string);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
@@ -78,6 +79,7 @@ type
     destructor Destroy; override;
     function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     function CreateCriteria(const AClass: TClass): IJCoreOPFSQLCriteria;
+    function CreateStatement: IJCoreOPFSQLStatement;
     procedure Dispose(const AClass: TClass; const AStringOIDArray: array of string);
     procedure Dispose(const AEntity: TObject);
     function Retrieve(const AClass: TClass; const AOID: string): TObject;
@@ -203,6 +205,12 @@ end;
 function TJCoreOPFSession.CreateCriteria(const AClass: TClass): IJCoreOPFSQLCriteria;
 begin
   Result := AcquireClassMapping(AClass).CreateCriteria;
+end;
+
+function TJCoreOPFSession.CreateStatement: IJCoreOPFSQLStatement;
+begin
+  { TODO : Proper abstraction }
+  Result := (Driver as TJCoreOPFSQLDriver).CreateStatement;
 end;
 
 procedure TJCoreOPFSession.Dispose(const AClass: TClass; const AStringOIDArray: array of string);

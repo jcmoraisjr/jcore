@@ -33,6 +33,8 @@ type
     procedure WriteReadParams;
     procedure WriteMoreReadLessParams;
     procedure WriteLessReadMoreParams;
+    procedure SessionFacadeStatement;
+    procedure SessionFacadeCursor;
   end;
 
 implementation
@@ -384,6 +386,41 @@ begin
       if E.Code <> 203 then
         raise;
   end;
+end;
+
+procedure TTestOPFSQLDriverTest.SessionFacadeStatement;
+var
+  VStmt: IJCoreOPFSQLStatement;
+begin
+  VStmt := Session.CreateStatement;
+  VStmt.WriteInt32(1);
+  VStmt.WriteString('jack');
+  VStmt.SQL := 'INSERT INTO TABLE (ID,NAME) VALUES (?,?)';
+  VStmt.ExecImmediate;
+  AssertSQLDriverCommands([
+   'WriteInt32 1',
+   'WriteString jack',
+   'ExecSQL INSERT INTO TABLE (ID,NAME) VALUES (?,?)']);
+end;
+
+procedure TTestOPFSQLDriverTest.SessionFacadeCursor;
+var
+  VStmt: IJCoreOPFSQLStatement;
+  VCursor: IJCoreOPFSQLResultSet;
+begin
+  TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('1');
+  TTestSQLDriver.Data.Add('jane');
+  VStmt := Session.CreateStatement;
+  VStmt.WriteString('jane');
+  VStmt.SQL := 'SELECT ID,NAME FROM TABLE WHERE NAME = ?';
+  VCursor := VStmt.OpenCursor;
+  AssertSQLDriverCommands([
+   'WriteString jane',
+   'ExecSQL SELECT ID,NAME FROM TABLE WHERE NAME = ?']);
+  AssertEquals('cursor.size', 1, VCursor.Size);
+  AssertEquals('cursor.id', 1, VCursor.ReadInt32);
+  AssertEquals('cursor.name', 'jane', VCursor.ReadString);
 end;
 
 initialization
