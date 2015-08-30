@@ -37,8 +37,6 @@ type
     function Params: IJCoreOPFParams;
   end;
 
-  IJCoreOPFSQLCriteria = interface;
-
   { IJCoreOPFSQLCriterion }
 
   IJCoreOPFSQLCriterion = interface(IInterface)
