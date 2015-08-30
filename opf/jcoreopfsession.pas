@@ -19,7 +19,6 @@ interface
 uses
   Classes,
   JCoreClasses,
-  JCoreEntity,
   JCoreOPFDriver,
   JCoreOPFMetadata,
   JCoreOPFMapping,

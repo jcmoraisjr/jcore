@@ -110,6 +110,7 @@ type
     function GetConfig: IJCoreOPFConfiguration;
     function GetSession: ITestOPFSession;
   protected
+    procedure TearDown; override;
     property Config: IJCoreOPFConfiguration read GetConfig;
     property Session: ITestOPFSession read GetSession;
   end;
@@ -479,6 +480,7 @@ end;
 function TTestOPFAbstractTestCase.CreateConfiguration: IJCoreOPFConfiguration;
 begin
   Result := TTestOPFConfig.Create;
+  TestDefaultModel := Result.Model;
   Result.DriverClass := TTestSQLDriver;
   Result.Model.OIDClass := TJCoreOPFOIDInt64;
   Result.Model.GeneratorName := 'GEN_APP';
@@ -499,6 +501,7 @@ end;
 procedure TTestOPFAbstractTestCase.TearDown;
 begin
   inherited TearDown;
+  TestDefaultModel := nil;
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
@@ -520,6 +523,7 @@ begin
   if not Assigned(FConfig) then
   begin
     FConfig := TTestOPFConfig.Create;
+    TestDefaultModel := FConfig.Model;
     FConfig.DriverClass := TTestSQLDriver;
     FConfig.AddMappingClass([TJCoreOPFSQLMapping]);
   end;
@@ -531,6 +535,12 @@ begin
   if not Assigned(FSession) then
     FSession := Config.CreateSession as ITestOPFSession;
   Result := FSession;
+end;
+
+procedure TTestOPFSimpleTestCase.TearDown;
+begin
+  inherited TearDown;
+  TestDefaultModel := nil;
 end;
 
 { TTestOPFGeneratorSQLDriver }

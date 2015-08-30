@@ -131,6 +131,11 @@ type
     property Items: TInvoiceItemList read GetItems write SetItems;
   end;
 
+ var
+   // Initialized by TTestOPFAbstractTestCase.CreateConfiguration and TTestOPFSimpleTestCase.GetConfig
+   // Finalized by TTestOPFAbstractTestCase.TearDown and TTestOPFSimpleTestCase.TearDown
+   TestDefaultModel: IJCoreModel;
+
 implementation
 
 uses
@@ -141,7 +146,7 @@ uses
 procedure TCustomAttrEntity.AfterConstruction;
 begin
   inherited AfterConstruction;
-  JCoreDefaultModel.InitEntity(Self);
+  TestDefaultModel.InitEntity(Self);
 end;
 
 { TCustomEntity }

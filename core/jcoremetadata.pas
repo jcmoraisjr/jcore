@@ -380,8 +380,6 @@ begin
   FGenericsMap := TJCoreGenericsMap.Create;
   FMetadataMap := TJCoreClassMetadataMap.Create;
   InitRegistry;
-  if not Assigned(JCoreDefaultModel) then
-    JCoreDefaultModel := Self;
 end;
 
 function TJCoreModel.AcquireMetadata(const AClass: TClass): TJCoreClassMetadata;

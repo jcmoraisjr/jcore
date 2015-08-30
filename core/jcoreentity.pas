@@ -91,9 +91,6 @@ type
   end;
   {$M-}
 
-var
-  JCoreDefaultModel: IJCoreModel;
-
 implementation
 
 { TJCoreEntityProxy }
