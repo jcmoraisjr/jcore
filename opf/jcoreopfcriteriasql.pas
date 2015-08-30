@@ -143,9 +143,9 @@ type
     constructor Create(const AQuery: string; AParams: TJCoreVariantArray);
   end;
 
-  { TCRestriction }
+  { TJCoreOPFCriteriaRestriction }
 
-  TCRestriction = class(TObject)
+  TJCoreOPFCriteriaRestriction = class(TObject)
   public
     class function Diff(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
     class function Eq(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
@@ -551,44 +551,44 @@ begin
   FParams := AParams;
 end;
 
-{ TCRestriction }
+{ TJCoreOPFCriteriaRestriction }
 
-class function TCRestriction.Diff(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Diff(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, '<>');
 end;
 
-class function TCRestriction.Eq(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Eq(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, '=');
 end;
 
-class function TCRestriction.Ge(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Ge(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, '>=');
 end;
 
-class function TCRestriction.Gt(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Gt(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, '>');
 end;
 
-class function TCRestriction.Le(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Le(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, '<=');
 end;
 
-class function TCRestriction.Like(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Like(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, 'LIKE');
 end;
 
-class function TCRestriction.Lt(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.Lt(const AAttributeName, AValue: Variant): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionValueExpression.Create(AAttributeName, AValue, '<');
 end;
 
-class function TCRestriction.SQL(const AQuery: string; const AParams: TJCoreVariantArray): IJCoreOPFSQLCriterion;
+class function TJCoreOPFCriteriaRestriction.SQL(const AQuery: string; const AParams: TJCoreVariantArray): IJCoreOPFSQLCriterion;
 begin
   Result := TJCoreOPFCriterionSQLExpression.Create(AQuery, AParams);
 end;

@@ -83,7 +83,7 @@ var
   VList: TObjectList;
 begin
   VList := Session.CreateCriteria(TProduct)
-    .Add(TCRestriction.Eq('name', 'pencil'))
+    .Add(TJCoreOPFCriteriaRestriction.Eq('name', 'pencil'))
     .RetrieveList;
   try
     AssertSQLDriverCommands([
@@ -99,7 +99,7 @@ var
   VList: TObjectList;
 begin
   VList := Session.CreateCriteria(TClient)
-    .Add(TCRestriction.Eq('name', 'joe'))
+    .Add(TJCoreOPFCriteriaRestriction.Eq('name', 'joe'))
     .RetrieveList;
   try
     AssertSQLDriverCommands([
@@ -115,7 +115,7 @@ var
   VList: TObjectList;
 begin
   VList := Session.CreateCriteria(TPerson)
-    .Add(TCRestriction.Eq('nick', 'jack'))
+    .Add(TJCoreOPFCriteriaRestriction.Eq('nick', 'jack'))
     .RetrieveList;
   try
     AssertSQLDriverCommands([
@@ -134,7 +134,7 @@ begin
   try
     try
       VList := Session.CreateCriteria(TPerson)
-        .Add(TCRestriction.Eq('doesnotexist', 'jack'))
+        .Add(TJCoreOPFCriteriaRestriction.Eq('doesnotexist', 'jack'))
         .RetrieveList;
       Fail('EJCoreOPF(2127) expected');
     except
@@ -152,7 +152,7 @@ var
   VList: TObjectList;
 begin
   VList := Session.CreateCriteria(TInvoiceItem)
-    .Add(TCRestriction.Eq('total', 10))
+    .Add(TJCoreOPFCriteriaRestriction.Eq('total', 10))
     .RetrieveList;
   try
     AssertSQLDriverCommands([
@@ -171,7 +171,7 @@ begin
   TTestSQLDriver.Data.Add('1');
   TTestSQLDriver.Data.Add('book');
   VList := Session.CreateCriteria(TProduct)
-    .Add(TCRestriction.Eq('name', 'book'))
+    .Add(TJCoreOPFCriteriaRestriction.Eq('name', 'book'))
     .RetrieveList;
   try
     AssertSQLDriverCommands([
@@ -194,7 +194,7 @@ begin
   TTestSQLDriver.Data.Add('2');
   TTestSQLDriver.Data.Add('pencil');
   VList := Session.CreateCriteria(TProduct)
-    .Add(TCRestriction.Like('name', 'pen%'))
+    .Add(TJCoreOPFCriteriaRestriction.Like('name', 'pen%'))
     .RetrieveList;
   try
     AssertSQLDriverCommands([
@@ -216,7 +216,7 @@ begin
   TTestSQLDriver.Data.Add('1');
   TTestSQLDriver.Data.Add('pen');
   VProduct := Session.CreateCriteria(TProduct)
-    .Add(TCRestriction.Eq('name', 'pen'))
+    .Add(TJCoreOPFCriteriaRestriction.Eq('name', 'pen'))
     .RetrieveUnique as TProduct;
   try
     AssertSQLDriverCommands([
@@ -242,7 +242,7 @@ begin
   try
     try
       VProduct := Session.CreateCriteria(TProduct)
-        .Add(TCRestriction.Eq('name', 'pen'))
+        .Add(TJCoreOPFCriteriaRestriction.Eq('name', 'pen'))
         .RetrieveUnique as TProduct;
       Fail('EJCoreOPF(2113) expected');
     except
