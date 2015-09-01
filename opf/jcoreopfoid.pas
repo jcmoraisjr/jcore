@@ -1,5 +1,5 @@
 (*
-  JCore, OPF OID Classes
+  JCore, OPF OID Storage and Generator Classes
   Copyright (C) 2014 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
@@ -13,19 +13,26 @@
 unit JCoreOPFOID;
 
 {$I jcore.inc}
+{$WARN 5024 OFF} // hint 'parameter not used'
 
 interface
 
 uses
   JCoreEntity,
-  JCoreOPFDriver,
-  JCoreOPFOIDGen;
+  JCoreOPFDriver;
 
 type
 
   IJCoreOPFOID = interface(IJCoreOID)
     function EqualsOID(const AOther: IJCoreOPFOID): Boolean;
     procedure WriteToParams(const AParams: IJCoreOPFParams);
+  end;
+
+  { IJCoreOPFOIDGenerator }
+
+  IJCoreOPFOIDGenerator = interface(IInterface)
+    function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+    function ReadString(const ADriver: TJCoreOPFDriver): string;
   end;
 
   { TJCoreOPFOID }
@@ -36,7 +43,7 @@ type
   protected
     function GetAsString: string; virtual; abstract;
   public
-    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); virtual; abstract;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator; const ADriver: TJCoreOPFDriver); virtual; abstract;
     constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); virtual; abstract;
     constructor CreateFromString(const AStringOID: string); virtual; abstract;
     function EqualsOID(const AOther: IJCoreOPFOID): Boolean;
@@ -57,7 +64,7 @@ type
     function GetAsString: string; override;
   public
     constructor Create(const AValue: Int64);
-    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); override;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator; const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
@@ -75,7 +82,7 @@ type
     function GetAsString: string; override;
   public
     constructor Create(const AValue: string);
-    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator); override;
+    constructor CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator; const ADriver: TJCoreOPFDriver); override;
     constructor CreateFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
     constructor CreateFromString(const AStringOID: string); override;
     function Equals(AOther: TObject): Boolean; override;
@@ -84,10 +91,33 @@ type
     property Value: string read FValue;
   end;
 
+  { TJCoreOPFOIDGeneratorSequence }
+
+  TJCoreOPFOIDGeneratorSequence = class(TInterfacedObject, IJCoreOPFOIDGenerator)
+  private
+    FSequenceName: string;
+  protected
+    property SequenceName: string read FSequenceName;
+  public
+    constructor Create(const ASequenceName: string);
+    function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+    function ReadString(const ADriver: TJCoreOPFDriver): string;
+  end;
+
+  { TJCoreOPFOIDGeneratorGUID }
+
+  TJCoreOPFOIDGeneratorGUID = class(TInterfacedObject, IJCoreOPFOIDGenerator)
+  public
+    function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+    function ReadString(const ADriver: TJCoreOPFDriver): string;
+  end;
+
 implementation
 
 uses
-  sysutils;
+  sysutils,
+  JCoreConsts,
+  JCoreClasses;
 
 { TJCoreOPFOID }
 
@@ -109,9 +139,10 @@ begin
   FValue := AValue;
 end;
 
-constructor TJCoreOPFOIDInt64.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator);
+constructor TJCoreOPFOIDInt64.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator;
+  const ADriver: TJCoreOPFDriver);
 begin
-  Create(AGenerator.ReadInt64);
+  Create(AGenerator.ReadInt64(ADriver));
 end;
 
 constructor TJCoreOPFOIDInt64.CreateFromResultSet(const AResultSet: IJCoreOPFResultSet);
@@ -152,9 +183,10 @@ begin
   FValue := AValue;
 end;
 
-constructor TJCoreOPFOIDString.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator);
+constructor TJCoreOPFOIDString.CreateFromGenerator(const AGenerator: IJCoreOPFOIDGenerator;
+  const ADriver: TJCoreOPFDriver);
 begin
-  Create(AGenerator.ReadString);
+  Create(AGenerator.ReadString(ADriver));
 end;
 
 constructor TJCoreOPFOIDString.CreateFromResultSet(const AResultSet: IJCoreOPFResultSet);
@@ -180,6 +212,50 @@ end;
 procedure TJCoreOPFOIDString.WriteToParams(const AParams: IJCoreOPFParams);
 begin
   AParams.WriteString(Value);
+end;
+
+{ TJCoreOPFOIDGeneratorSequence }
+
+constructor TJCoreOPFOIDGeneratorSequence.Create(const ASequenceName: string);
+begin
+  inherited Create;
+  FSequenceName := ASequenceName;
+end;
+
+function TJCoreOPFOIDGeneratorSequence.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+var
+  VResultSet: IJCoreOPFSQLResultSet;
+begin
+  if not (ADriver is TJCoreOPFSQLDriver) then
+    raise EJCoreOPF.Create(2109, S2109_DriverIsNotSQL, [ADriver.DriverName]);
+  VResultSet := TJCoreOPFSQLDriver(ADriver).SequenceResultSet(SequenceName, 1);
+  Result := VResultSet.ReadInt64;
+end;
+
+function TJCoreOPFOIDGeneratorSequence.ReadString(const ADriver: TJCoreOPFDriver): string;
+begin
+  Result := IntToStr(ReadInt64(ADriver));
+end;
+
+{ TJCoreOPFOIDGeneratorGUID }
+
+{$warn 5033 off}
+function TJCoreOPFOIDGeneratorGUID.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+begin
+  raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [SJCoreInt64ValueMsg]);
+end;
+{$warn 5033 on}
+
+function TJCoreOPFOIDGeneratorGUID.ReadString(const ADriver: TJCoreOPFDriver): string;
+var
+  VGUID: array[0..15] of Byte;
+  I: Integer;
+begin
+  { TODO : Check CreateGUID result }
+  CreateGUID(TGUID(VGUID));
+  SetLength(Result, 32);
+  for I := 0 to 15 do
+    Move(IntToHex(VGUID[I], 2)[1], Result[2*I+1], 2);
 end;
 
 end.

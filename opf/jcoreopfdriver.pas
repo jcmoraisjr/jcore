@@ -22,8 +22,7 @@ uses
   fgl,
   JCoreClasses,
   JCoreList,
-  JCoreLogger,
-  JCoreOPFOIDGen;
+  JCoreLogger;
 
 type
 
@@ -107,7 +106,6 @@ type
   public
     constructor Create(const AParams: TStringList); virtual;
     procedure Commit;
-    function CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator; virtual; abstract;
     class function DriverName: string; virtual; abstract;
   end;
 
@@ -200,6 +198,7 @@ type
   protected
     procedure InternalCommit; override;
     function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; virtual; abstract;
+    function InternalSequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; virtual; abstract;
     property QueryList: TJCoreOPFSQLQueryList read FQueryList;
     property StmtList: TJCoreOPFSQLStatementList read FStmtList;
     property StmtQueue: TJCoreOPFSQLStatementList read FStmtQueue;
@@ -209,19 +208,7 @@ type
     function CreateStatement: IJCoreOPFSQLStatement;
     function CreateStatement(const AParams: IJCoreOPFParams): IJCoreOPFSQLStatement;
     procedure Flush;
-  end;
-
-  { TJCoreOPFOIDGeneratorSQLDriver }
-
-  TJCoreOPFOIDGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorSequence)
-  private
-    FDriver: TJCoreOPFSQLDriver;
-    FSequenceName: string;
-  protected
-    property Driver: TJCoreOPFSQLDriver read FDriver;
-    property SequenceName: string read FSequenceName;
-  public
-    constructor Create(const ADriver: TJCoreOPFSQLDriver; const ASequenceName: string);
+    function SequenceResultSet(const ASequenceName: string; const AOIDCount: Integer): IJCoreOPFSQLResultSet;
   end;
 
 implementation
@@ -522,14 +509,14 @@ begin
   StmtQueue.Clear;
 end;
 
-{ TJCoreOPFOIDGeneratorSQLDriver }
-
-constructor TJCoreOPFOIDGeneratorSQLDriver.Create(const ADriver: TJCoreOPFSQLDriver;
-  const ASequenceName: string);
+function TJCoreOPFSQLDriver.SequenceResultSet(const ASequenceName: string;
+  const AOIDCount: Integer): IJCoreOPFSQLResultSet;
+var
+  VStmt: IJCoreOPFSQLStatement;
 begin
-  inherited Create;
-  FDriver := ADriver;
-  FSequenceName := ASequenceName;
+  VStmt := CreateStatement;
+  VStmt.SQL := InternalSequenceSQL(ASequenceName, AOIDCount);
+  Result := VStmt.OpenCursor(AOIDCount);
 end;
 
 end.

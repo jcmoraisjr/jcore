@@ -13,7 +13,7 @@ type
 
   TTestOPFOIDGeneratorTest = class(TTestOPFInvoiceManualMappingTestCase)
   published
-    procedure Int64Generator;
+    procedure SequenceGenerator;
     procedure GUIDGenerator;
   end;
 
@@ -32,7 +32,7 @@ uses
 
 { TTestOPFOIDGeneratorTest }
 
-procedure TTestOPFOIDGeneratorTest.Int64Generator;
+procedure TTestOPFOIDGeneratorTest.SequenceGenerator;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -44,13 +44,15 @@ begin
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
   VConfiguration.Model.OIDClass := TJCoreOPFOIDInt64;
-  VConfiguration.Model.SequenceName := 'GEN_APP';
+  VConfiguration.Model.OIDGenerator := TJCoreOPFOIDGeneratorSequence.Create('GEN_APP');
   VSession := VConfiguration.CreateSession;
   VProduct := TProduct.Create;
   try
+    TTestSQLDriver.Data.Add('28');
+    TTestSQLDriver.ExpectedResultsets.Add(1);
     VSession.Store(VProduct);
     VID := VProduct._proxy.OID.AsString;
-    AssertEquals('id', '1', VID);
+    AssertEquals('id', '28', VID);
   finally
     FreeAndNil(VProduct);
   end;
@@ -68,7 +70,7 @@ begin
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
-  VConfiguration.Model.SequenceName := '';
+  VConfiguration.Model.OIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
   VConfiguration.Model.OIDClass := TJCoreOPFOIDString;
   VSession := VConfiguration.CreateSession;
   VProduct := TProduct.Create;

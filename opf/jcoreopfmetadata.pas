@@ -337,9 +337,9 @@ type
   // In the current version these attributes must be of the same class or a
   // parent class.
   private
-    FSequenceName: string;
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
+    FOIDGenerator: IJCoreOPFOIDGenerator;
     FOIDName: TJCoreStringArray;
     FOrderFieldName: string;
     FOwnerOIDName: TJCoreStringArray;
@@ -350,9 +350,9 @@ type
     constructor Create(const AMetadata: TJCoreOPFClassMetadata);
     function HasOrderField: Boolean;
     function HasOwnerOID: Boolean;
-    property SequenceName: string read FSequenceName;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
+    property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator;
     property OIDName: TJCoreStringArray read FOIDName;
     property OrderFieldName: string read FOrderFieldName;
     property OwnerOIDName: TJCoreStringArray read FOwnerOIDName;
@@ -365,9 +365,9 @@ type
 
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)
   private
-    FSequenceName: string; // model initializes
     FMaps: TJCoreOPFMaps;
     FOIDClass: TJCoreOPFOIDClass; // model initializes
+    FOIDGenerator: IJCoreOPFOIDGenerator; // model initializes
     FOIDName: TJCoreStringArray; // model initializes
     FSubMaps: TJCoreOPFMaps;
     FTableName: string; // model initializes
@@ -385,9 +385,9 @@ type
     function AttributeByName(const AAttributeName: string): TJCoreOPFAttrMetadata;
     function FindAttribute(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
-    property SequenceName: string read FSequenceName write FSequenceName;
     property Maps: TJCoreOPFMaps read GetMaps;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
+    property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator write FOIDGenerator;
     property OIDName: TJCoreStringArray read FOIDName write FOIDName;
     property Parent: TJCoreOPFClassMetadata read GetParent;
     property SubMaps: TJCoreOPFMaps read GetSubMaps;
@@ -400,9 +400,9 @@ type
   { TODO : Model, map and metadata threadsafe }
   private
     FADMClassList: TJCoreOPFADMClassList;
-    FSequenceName: string;
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
+    FOIDGenerator: IJCoreOPFOIDGenerator;
     FOrderFieldName: string;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
     function AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
@@ -429,9 +429,9 @@ type
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     procedure InitEntity(const AEntity: TObject); override;
-    property SequenceName: string read FSequenceName write FSequenceName;
-    property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
+    property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator write FOIDGenerator;
+    property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
   end;
 
 implementation
@@ -1348,6 +1348,7 @@ begin
   inherited Create(False);
   FMetadata := AMetadata;
   FOIDClass := Metadata.OIDClass;
+  FOIDGenerator := Metadata.OIDGenerator;
   FOIDName := Metadata.OIDName;
   FTableName := Metadata.TableName;
   VOwnerAttr := Metadata.OwnerAttr as TJCoreOPFAttrMetadata;
@@ -1365,7 +1366,6 @@ begin
     FOrderFieldName := VOwnerAttr.OrderFieldName;
   end else
     SetLength(FOwnerOIDName, 0);
-  FSequenceName := Metadata.SequenceName;
   FSubMaps := Metadata.SubMaps;
   SetLength(FSubClasses, FSubMaps.Count);
   for I := Low(FSubClasses) to High(FSubClasses) do
@@ -1574,7 +1574,10 @@ begin
   VOIDName[0] := 'ID';
   VMetadata.OIDName := VOIDName;
   VMetadata.OIDClass := OIDClass;
-  VMetadata.SequenceName := SequenceName;
+  if Assigned(OIDGenerator) then
+    VMetadata.OIDGenerator := OIDGenerator
+  else
+    VMetadata.OIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
 end;
 
 constructor TJCoreOPFModel.Create;

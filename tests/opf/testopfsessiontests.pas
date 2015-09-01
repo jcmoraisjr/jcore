@@ -26,6 +26,7 @@ uses
   sysutils,
   testregistry,
   JCoreClasses,
+  JCoreOPFOID,
   JCoreOPFMetadata,
   JCoreOPFADM,
   JCoreOPFConfig,
@@ -74,7 +75,7 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
-  VConfiguration.Model.SequenceName := '';
+  VConfiguration.Model.OIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
   VSession := VConfiguration.CreateSession;
   AssertNotNull(VSession);
   VProduct := TProduct.Create;

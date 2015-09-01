@@ -20,7 +20,6 @@ uses
   Classes,
   db,
   sqldb,
-  JCoreOPFOIDGen,
   JCoreOPFDriver;
 
 type
@@ -71,21 +70,14 @@ type
   protected
     procedure InternalCommit; override;
     function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; override;
+    function InternalSequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; override;
   public
     constructor Create(const AParams: TStringList); override;
     destructor Destroy; override;
-    function CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator; override;
     class function DriverName: string; override;
     property Connection: TSQLConnection read FConnection;
     property ConnectionName: string read FConnectionName;
     property Transaction: TSQLTransaction read FTransaction;
-  end;
-
-  { TJCoreOPFOIDGeneratorSQLdbPostgreSQL }
-
-  TJCoreOPFOIDGeneratorSQLdbPostgreSQL = class(TJCoreOPFOIDGeneratorSQLDriver)
-  protected
-    procedure InternalGenerateOIDs(const AOIDCount: Integer); override;
   end;
 
 implementation
@@ -267,6 +259,19 @@ begin
   Result := TJCoreOPFQuerySQLdb.Create(Self, ASQL, AParams);
 end;
 
+function TJCoreOPFDriverSQLdb.InternalSequenceSQL(const ASequenceName: string;
+  const AOIDCount: Integer): string;
+begin
+  if SameText(ConnectionName, 'postgresql') then
+  begin
+    if AOIDCount = 1 then
+      Result := Format('SELECT nextval(''%s'')', [ASequenceName])
+    else
+      Result := Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [ASequenceName, AOIDCount]);
+  end else
+    raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
+end;
+
 constructor TJCoreOPFDriverSQLdb.Create(const AParams: TStringList);
 begin
   inherited Create(AParams);
@@ -281,41 +286,9 @@ begin
   inherited Destroy;
 end;
 
-function TJCoreOPFDriverSQLdb.CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator;
-type
-  TSQLdbGeneratorClass = class of TJCoreOPFOIDGeneratorSQLDriver;
-var
-  VSQLdbGeneratorClass: TSQLdbGeneratorClass;
-begin
-  if SameText(ConnectionName, 'postgresql') then
-    VSQLdbGeneratorClass := TJCoreOPFOIDGeneratorSQLdbPostgreSQL
-  else
-    raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
-  Result := VSQLdbGeneratorClass.Create(Self, ASequenceName)
-end;
-
 class function TJCoreOPFDriverSQLdb.DriverName: string;
 begin
   Result := 'SQLdb';
-end;
-
-{ TJCoreOPFOIDGeneratorSQLdbPostgreSQL }
-
-procedure TJCoreOPFOIDGeneratorSQLdbPostgreSQL.InternalGenerateOIDs(const AOIDCount: Integer);
-var
-  VStmt: IJCoreOPFSQLStatement;
-  VResultSet: IJCoreOPFSQLResultSet;
-  I: Integer;
-begin
-  VStmt := Driver.CreateStatement;
-  if AOIDCount > 1 then
-    VStmt.SQL := Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [SequenceName, AOIDCount])
-  else
-    VStmt.SQL := Format('SELECT nextval(''%s'')', [SequenceName]);
-  VResultSet := VStmt.OpenCursor(AOIDCount);
-  for I := 0 to Pred(VResultSet.Size) do
-    OIDList.Add(VResultSet.ReadInt64);
-  VResultSet.Close;
 end;
 
 end.

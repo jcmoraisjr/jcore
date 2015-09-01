@@ -1069,7 +1069,7 @@ var
 begin
   VDriver := AMapper.Driver;
   if not (VDriver is TJCoreOPFSQLDriver) then
-    raise EJCoreOPF.Create(2109, S2109_UnsupportedDriver, [VDriver.ClassName]);
+    raise EJCoreOPF.Create(2109, S2109_DriverIsNotSQL, [VDriver.ClassName]);
   inherited Create(AMapper, AMap, AIsBaseMapping);
   FMaps := Map.Metadata.Maps;
   FMapIndex := MapIndexByMap(Map);

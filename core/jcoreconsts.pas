@@ -71,7 +71,7 @@ resourcestring
   S2106_UnsupportedConnection = 'Unsupported connection: %s';
   S2107_DetachedStatement = 'Detached statement';
   S2108_PersistentIDNotFound = 'PersistentID field not found';
-  S2109_UnsupportedDriver = 'Unsupported driver ''%s''';
+  S2109_DriverIsNotSQL = 'Only SQL drivers are supported. Driver: ''%s''';
   S2110_EmptyResultSet = 'Resultset is empty. Expected resultset size is ''%d''';
   S2111_UnassignedParams = 'Unassigned params';
   S2112_StatementOnQueue = 'There are statement(s) on the queue';
