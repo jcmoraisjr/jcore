@@ -226,7 +226,6 @@ type
     function CreateParams: IJCoreOPFParams; virtual;
     // abstract facades
     function InternalCreateCriteria(const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria; virtual; abstract;
-    function InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator; const AOIDCount: Integer): TJCoreOPFOIDArray;
     procedure InternalDispose(const AOIDArray: array of IJCoreOPFOID); virtual; abstract;
     procedure InternalInsert(const AParams: IJCoreOPFParams; const AMapping: TJCoreOPFADMMapping); virtual; abstract;
     function InternalRetrieveCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): IJCoreOPFResultSet; virtual; abstract;
@@ -250,7 +249,6 @@ type
     function CreateCriteria(const ARetriever: IJCoreOPFCriteriaRetriever): IJCoreOPFSQLCriteria;
     function CreateEntity(const AResultSet: IJCoreOPFResultSet): TObject;
     function CreateGenerator: IJCoreOPFOIDGenerator;
-    function CreateOID(const AGenerator: IJCoreOPFOIDGenerator): IJCoreOPFOID;
     procedure Dispose(const AOIDArray: array of IJCoreOPFOID);
     function RetrieveCollection(const AOwnerPID: TJCoreOPFPID; const AOwnerADM: TJCoreOPFADMCollection): IJCoreOPFResultSet;
     function RetrieveEntity(const AOIDArray: array of IJCoreOPFOID; const ABaseMap: TJCoreOPFMap): IJCoreOPFResultSet;
@@ -839,7 +837,7 @@ begin
   EnsureMappingConsistency(APID);
   if not APID.IsPersistent then
   begin
-    VOID := Mapping.CreateOID(Generator);
+    VOID := Metadata.OIDClass.CreateFromGenerator(Generator);
     APID.OID := VOID;
   end;
   for I := 0 to Pred(MappingList.Count) do
@@ -857,17 +855,6 @@ end;
 function TJCoreOPFMapping.CreateParams: IJCoreOPFParams;
 begin
   Result := TJCoreOPFParams.Create;
-end;
-
-function TJCoreOPFMapping.InternalCreateOIDArray(const AGenerator: IJCoreOPFOIDGenerator;
-  const AOIDCount: Integer): TJCoreOPFOIDArray;
-var
-  I: Integer;
-begin
-  AGenerator.GenerateOIDs(AOIDCount);
-  SetLength(Result, AOIDCount);
-  for I := Low(Result) to High(Result) do
-    Result[I] := Map.OIDClass.CreateFromGenerator(AGenerator);
 end;
 
 procedure TJCoreOPFMapping.ReadFromResultSet(const AResultSet: IJCoreOPFResultSet;
@@ -943,11 +930,6 @@ end;
 function TJCoreOPFMapping.CreateGenerator: IJCoreOPFOIDGenerator;
 begin
   Result := InternalCreateGenerator;
-end;
-
-function TJCoreOPFMapping.CreateOID(const AGenerator: IJCoreOPFOIDGenerator): IJCoreOPFOID;
-begin
-  Result := InternalCreateOIDArray(AGenerator, 1)[0];
 end;
 
 procedure TJCoreOPFMapping.Dispose(const AOIDArray: array of IJCoreOPFOID);

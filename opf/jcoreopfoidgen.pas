@@ -23,7 +23,6 @@ uses
 type
 
   IJCoreOPFOIDGenerator = interface(IInterface)
-    procedure GenerateOIDs(const AOIDCount: Integer);
     function ReadInt64: Int64;
     function ReadString: string;
   end;
@@ -41,7 +40,6 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure GenerateOIDs(const AOIDCount: Integer);
     function ReadInt64: Int64;
     function ReadString: string;
   end;
@@ -50,7 +48,6 @@ type
 
   TJCoreOPFOIDGeneratorGUID = class(TInterfacedObject, IJCoreOPFOIDGenerator)
   public
-    procedure GenerateOIDs(const AOIDCount: Integer);
     function ReadInt64: Int64;
     function ReadString: string;
   end;
@@ -75,25 +72,11 @@ begin
   inherited Destroy;
 end;
 
-procedure TJCoreOPFOIDGeneratorSequence.GenerateOIDs(const AOIDCount: Integer);
-begin
-  while Current > 0 do
-  begin
-    { TODO : how to improve, truncate? copy list? use an array of int64? }
-    OIDList.Delete(Current - 1);
-    Dec(FCurrent);
-  end;
-  InternalGenerateOIDs(AOIDCount);
-end;
-
 function TJCoreOPFOIDGeneratorSequence.ReadInt64: Int64;
 begin
-  if Current < OIDList.Count then
-  begin
-    Result := OIDList[Current];
-    Inc(FCurrent);
-  end else
-    raise EJCoreOPF.Create(2124, S2124_EmptyOIDList, []);
+  InternalGenerateOIDs(1);
+  Result := OIDList[0];
+  OIDList.Delete(0);
 end;
 
 function TJCoreOPFOIDGeneratorSequence.ReadString: string;
@@ -102,10 +85,6 @@ begin
 end;
 
 { TJCoreOPFOIDGeneratorGUID }
-
-procedure TJCoreOPFOIDGeneratorGUID.GenerateOIDs(const AOIDCount: Integer);
-begin
-end;
 
 {$warn 5033 off}
 function TJCoreOPFOIDGeneratorGUID.ReadInt64: Int64;

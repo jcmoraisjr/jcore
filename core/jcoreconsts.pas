@@ -85,7 +85,7 @@ resourcestring
   S2121_UnsupportedAttributeType = 'Unsupported attribute type ''%s''';
   S2122_UnsupportedLoadOperation = '''%'' does not support load operation';
   S2123_EntityADMExpected = '''%s(%s)'' was expected to be an entity attribute';
-  S2124_EmptyOIDList = 'Object ID list is empty';
+  //S2124_EmptyOIDList
   S2125_CollectionADMExpected = '''%s(%s)'' was expected to be a collection attribute';
   S2126_UnsupportedOIDArray = 'Only arrays of one or two OIDs are supported';
   S2127_AttributeNotFound = 'Attribute %s(''%s'') was not found';

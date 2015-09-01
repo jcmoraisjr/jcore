@@ -15,8 +15,6 @@ type
   published
     procedure Int64Generator;
     procedure GUIDGenerator;
-    procedure RetrieveEmptyOIDList;
-    procedure RepopulateOIDList;
   end;
 
 implementation
@@ -24,45 +22,13 @@ implementation
 uses
   sysutils,
   testregistry,
-  JCoreClasses,
   JCoreOPFMetadata,
   JCoreOPFADM,
-  JCoreOPFOIDGen,
   JCoreOPFOID,
   JCoreOPFDriver,
   JCoreOPFConfig,
   JCoreOPFSession,
   TestOPFModelInvoice;
-
-type
-
-  { TTestOPFGenerator }
-
-  TTestOPFGenerator = class(TJCoreOPFOIDGeneratorSQLDriver)
-  private
-    FLast: Integer;
-  protected
-    procedure InternalGenerateOIDs(const AOIDCount: Integer); override;
-    property Last: Integer read FLast;
-  public
-    function OIDCount: Integer;
-  end;
-
-procedure TTestOPFGenerator.InternalGenerateOIDs(const AOIDCount: Integer);
-var
-  I: Integer;
-begin
-  for I := 0 to Pred(AOIDCount) do
-  begin
-    Inc(FLast);
-    OIDList.Add(Last);
-  end;
-end;
-
-function TTestOPFGenerator.OIDCount: Integer;
-begin
-  Result := OIDList.Count;
-end;
 
 { TTestOPFOIDGeneratorTest }
 
@@ -114,55 +80,6 @@ begin
       AssertTrue('id[' + IntToStr(I) + '] invalid (' + VID + ')', VID[I] in ['0'..'9','A'..'F']);
   finally
     FreeAndNil(VProduct);
-  end;
-end;
-
-procedure TTestOPFOIDGeneratorTest.RetrieveEmptyOIDList;
-var
-  VGenerator: IJCoreOPFOIDGenerator;
-begin
-  VGenerator := TTestOPFGenerator.Create(nil, '');
-  VGenerator.GenerateOIDs(2);
-  VGenerator.ReadInt64;
-  VGenerator.ReadInt64;
-  try
-    VGenerator.ReadInt64;
-    Fail('EJCoreOPF(2124) expected');
-  except
-    on E: EJCoreOPF do
-      if E.Code <> 2124 then
-        raise;
-  end;
-end;
-
-procedure TTestOPFOIDGeneratorTest.RepopulateOIDList;
-var
-  VGenerator: TTestOPFGenerator;
-  VOID: Int64;
-begin
-  VGenerator := TTestOPFGenerator.Create(nil, '');
-  try
-    VGenerator.GenerateOIDs(1);
-    AssertEquals('oidlist count 1', 1, VGenerator.OIDCount);
-    VOID := VGenerator.ReadInt64;
-    AssertEquals('oid value 1', 1, VOID);
-    VGenerator.GenerateOIDs(3);
-    AssertEquals('oidlist count 3', 3, VGenerator.OIDCount);
-    VOID := VGenerator.ReadInt64;
-    AssertEquals('oid value 2', 2, VOID);
-    VOID := VGenerator.ReadInt64;
-    AssertEquals('oid value 3', 3, VOID);
-    VGenerator.GenerateOIDs(3);
-    AssertEquals('oidlist count 4', 4, VGenerator.OIDCount);
-    VOID := VGenerator.ReadInt64;
-    AssertEquals('oid value 4', 4, VOID);
-    VOID := VGenerator.ReadInt64;
-    AssertEquals('oid value 5', 5, VOID);
-    VOID := VGenerator.ReadInt64;
-    AssertEquals('oid value 6', 6, VOID);
-    AssertEquals('oidlist count 5', 4, VGenerator.OIDCount);
-  finally
-    FreeAndNil(VGenerator);
   end;
 end;
 
