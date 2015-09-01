@@ -107,7 +107,7 @@ type
   public
     constructor Create(const AParams: TStringList); virtual;
     procedure Commit;
-    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; virtual; abstract;
+    function CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator; virtual; abstract;
     class function DriverName: string; virtual; abstract;
   end;
 
@@ -213,15 +213,15 @@ type
 
   { TJCoreOPFOIDGeneratorSQLDriver }
 
-  TJCoreOPFOIDGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorInt64)
+  TJCoreOPFOIDGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorSequence)
   private
     FDriver: TJCoreOPFSQLDriver;
-    FGeneratorName: string;
+    FSequenceName: string;
   protected
     property Driver: TJCoreOPFSQLDriver read FDriver;
-    property GeneratorName: string read FGeneratorName;
+    property SequenceName: string read FSequenceName;
   public
-    constructor Create(const ADriver: TJCoreOPFSQLDriver; const AGeneratorName: string);
+    constructor Create(const ADriver: TJCoreOPFSQLDriver; const ASequenceName: string);
   end;
 
 implementation
@@ -525,11 +525,11 @@ end;
 { TJCoreOPFOIDGeneratorSQLDriver }
 
 constructor TJCoreOPFOIDGeneratorSQLDriver.Create(const ADriver: TJCoreOPFSQLDriver;
-  const AGeneratorName: string);
+  const ASequenceName: string);
 begin
   inherited Create;
   FDriver := ADriver;
-  FGeneratorName := AGeneratorName;
+  FSequenceName := ASequenceName;
 end;
 
 end.

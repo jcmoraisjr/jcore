@@ -74,16 +74,16 @@ type
   public
     constructor Create(const AParams: TStringList); override;
     destructor Destroy; override;
-    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
+    function CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator; override;
     class function DriverName: string; override;
     property Connection: TSQLConnection read FConnection;
     property ConnectionName: string read FConnectionName;
     property Transaction: TSQLTransaction read FTransaction;
   end;
 
-  { TJCoreOPFGeneratorSQLdbPostgreSQL }
+  { TJCoreOPFOIDGeneratorSQLdbPostgreSQL }
 
-  TJCoreOPFGeneratorSQLdbPostgreSQL = class(TJCoreOPFOIDGeneratorSQLDriver)
+  TJCoreOPFOIDGeneratorSQLdbPostgreSQL = class(TJCoreOPFOIDGeneratorSQLDriver)
   protected
     procedure InternalGenerateOIDs(const AOIDCount: Integer); override;
   end;
@@ -281,17 +281,17 @@ begin
   inherited Destroy;
 end;
 
-function TJCoreOPFDriverSQLdb.CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator;
+function TJCoreOPFDriverSQLdb.CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator;
 type
   TSQLdbGeneratorClass = class of TJCoreOPFOIDGeneratorSQLDriver;
 var
   VSQLdbGeneratorClass: TSQLdbGeneratorClass;
 begin
   if SameText(ConnectionName, 'postgresql') then
-    VSQLdbGeneratorClass := TJCoreOPFGeneratorSQLdbPostgreSQL
+    VSQLdbGeneratorClass := TJCoreOPFOIDGeneratorSQLdbPostgreSQL
   else
     raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
-  Result := VSQLdbGeneratorClass.Create(Self, AGeneratorName)
+  Result := VSQLdbGeneratorClass.Create(Self, ASequenceName)
 end;
 
 class function TJCoreOPFDriverSQLdb.DriverName: string;
@@ -299,9 +299,9 @@ begin
   Result := 'SQLdb';
 end;
 
-{ TJCoreOPFGeneratorSQLdbPostgreSQL }
+{ TJCoreOPFOIDGeneratorSQLdbPostgreSQL }
 
-procedure TJCoreOPFGeneratorSQLdbPostgreSQL.InternalGenerateOIDs(const AOIDCount: Integer);
+procedure TJCoreOPFOIDGeneratorSQLdbPostgreSQL.InternalGenerateOIDs(const AOIDCount: Integer);
 var
   VStmt: IJCoreOPFSQLStatement;
   VResultSet: IJCoreOPFSQLResultSet;
@@ -309,9 +309,9 @@ var
 begin
   VStmt := Driver.CreateStatement;
   if AOIDCount > 1 then
-    VStmt.SQL := Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [GeneratorName, AOIDCount])
+    VStmt.SQL := Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [SequenceName, AOIDCount])
   else
-    VStmt.SQL := Format('SELECT nextval(''%s'')', [GeneratorName]);
+    VStmt.SQL := Format('SELECT nextval(''%s'')', [SequenceName]);
   VResultSet := VStmt.OpenCursor(AOIDCount);
   for I := 0 to Pred(VResultSet.Size) do
     OIDList.Add(VResultSet.ReadInt64);

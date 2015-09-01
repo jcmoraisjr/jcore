@@ -9,9 +9,9 @@ uses
 
 type
 
-  { TTestOPFGeneratorTest }
+  { TTestOPFOIDGeneratorTest }
 
-  TTestOPFGeneratorTest = class(TTestOPFInvoiceManualMappingTestCase)
+  TTestOPFOIDGeneratorTest = class(TTestOPFInvoiceManualMappingTestCase)
   published
     procedure Int64Generator;
     procedure GUIDGenerator;
@@ -64,9 +64,9 @@ begin
   Result := OIDList.Count;
 end;
 
-{ TTestOPFGeneratorTest }
+{ TTestOPFOIDGeneratorTest }
 
-procedure TTestOPFGeneratorTest.Int64Generator;
+procedure TTestOPFOIDGeneratorTest.Int64Generator;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -78,7 +78,7 @@ begin
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
   VConfiguration.Model.OIDClass := TJCoreOPFOIDInt64;
-  VConfiguration.Model.GeneratorName := 'GEN_APP';
+  VConfiguration.Model.SequenceName := 'GEN_APP';
   VSession := VConfiguration.CreateSession;
   VProduct := TProduct.Create;
   try
@@ -90,7 +90,7 @@ begin
   end;
 end;
 
-procedure TTestOPFGeneratorTest.GUIDGenerator;
+procedure TTestOPFOIDGeneratorTest.GUIDGenerator;
 var
   VConfiguration: IJCoreOPFConfiguration;
   VSession: IJCoreOPFSession;
@@ -102,7 +102,7 @@ begin
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.AddMappingClass([TTestEmptyMapping]);
   VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
-  VConfiguration.Model.GeneratorName := '';
+  VConfiguration.Model.SequenceName := '';
   VConfiguration.Model.OIDClass := TJCoreOPFOIDString;
   VSession := VConfiguration.CreateSession;
   VProduct := TProduct.Create;
@@ -117,7 +117,7 @@ begin
   end;
 end;
 
-procedure TTestOPFGeneratorTest.RetrieveEmptyOIDList;
+procedure TTestOPFOIDGeneratorTest.RetrieveEmptyOIDList;
 var
   VGenerator: IJCoreOPFOIDGenerator;
 begin
@@ -135,7 +135,7 @@ begin
   end;
 end;
 
-procedure TTestOPFGeneratorTest.RepopulateOIDList;
+procedure TTestOPFOIDGeneratorTest.RepopulateOIDList;
 var
   VGenerator: TTestOPFGenerator;
   VOID: Int64;
@@ -167,7 +167,7 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.generator', TTestOPFGeneratorTest);
+  RegisterTest('jcore.opf.oidgenerator', TTestOPFOIDGeneratorTest);
 
 end.
 

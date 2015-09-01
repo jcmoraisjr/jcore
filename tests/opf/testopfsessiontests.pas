@@ -74,7 +74,7 @@ begin
   VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
   VConfiguration.DriverClass := TTestEmptyDriver;
   VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
-  VConfiguration.Model.GeneratorName := '';
+  VConfiguration.Model.SequenceName := '';
   VSession := VConfiguration.CreateSession;
   AssertNotNull(VSession);
   VProduct := TProduct.Create;

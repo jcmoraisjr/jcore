@@ -51,7 +51,7 @@ begin
   VConfig.Params.Values['password'] := 'jcore';
   VConfig.DriverClass := TJCoreOPFDriverSQLdb;
   VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
-  VConfig.Model.GeneratorName := 'seq_person';
+  VConfig.Model.SequenceName := 'seq_person';
   VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
   VSession := VConfig.CreateSession;
   VPerson := TPerson.Create;

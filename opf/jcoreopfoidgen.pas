@@ -28,9 +28,9 @@ type
     function ReadString: string;
   end;
 
-  { TJCoreOPFOIDGeneratorInt64 }
+  { TJCoreOPFOIDGeneratorSequence }
 
-  TJCoreOPFOIDGeneratorInt64 = class(TInterfacedObject, IJCoreOPFOIDGenerator)
+  TJCoreOPFOIDGeneratorSequence = class(TInterfacedObject, IJCoreOPFOIDGenerator)
   private
     FCurrent: Int64;
     FOIDList: TJCoreInt64List;
@@ -61,21 +61,21 @@ uses
   sysutils,
   JCoreConsts;
 
-{ TJCoreOPFOIDGeneratorInt64 }
+{ TJCoreOPFOIDGeneratorSequence }
 
-constructor TJCoreOPFOIDGeneratorInt64.Create;
+constructor TJCoreOPFOIDGeneratorSequence.Create;
 begin
   inherited Create;
   FOIDList := TJCoreInt64List.Create;
 end;
 
-destructor TJCoreOPFOIDGeneratorInt64.Destroy;
+destructor TJCoreOPFOIDGeneratorSequence.Destroy;
 begin
   FreeAndNil(FOIDList);
   inherited Destroy;
 end;
 
-procedure TJCoreOPFOIDGeneratorInt64.GenerateOIDs(const AOIDCount: Integer);
+procedure TJCoreOPFOIDGeneratorSequence.GenerateOIDs(const AOIDCount: Integer);
 begin
   while Current > 0 do
   begin
@@ -86,7 +86,7 @@ begin
   InternalGenerateOIDs(AOIDCount);
 end;
 
-function TJCoreOPFOIDGeneratorInt64.ReadInt64: Int64;
+function TJCoreOPFOIDGeneratorSequence.ReadInt64: Int64;
 begin
   if Current < OIDList.Count then
   begin
@@ -96,7 +96,7 @@ begin
     raise EJCoreOPF.Create(2124, S2124_EmptyOIDList, []);
 end;
 
-function TJCoreOPFOIDGeneratorInt64.ReadString: string;
+function TJCoreOPFOIDGeneratorSequence.ReadString: string;
 begin
   Result := IntToStr(ReadInt64);
 end;

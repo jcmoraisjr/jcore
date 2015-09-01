@@ -143,9 +143,9 @@ type
     property Session: ITestOPFSession read GetSessionInvoiceAuto;
   end;
 
-  { TTestOPFGeneratorSQLDriver }
+  { TTestOPFOIDGeneratorSQLDriver }
 
-  TTestOPFGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorSQLDriver)
+  TTestOPFOIDGeneratorSQLDriver = class(TJCoreOPFOIDGeneratorSQLDriver)
   private
     class var FCurrentOID: Integer;
   protected
@@ -216,7 +216,7 @@ type
     class constructor Create;
     class destructor Destroy;
     class function DriverName: string; override;
-    function CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator; override;
+    function CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator; override;
     function HasIgnoreParams: Boolean;
     procedure IgnoreParams;
     class property Commands: TStringList read FCommands;
@@ -483,7 +483,7 @@ begin
   TestDefaultModel := Result.Model;
   Result.DriverClass := TTestSQLDriver;
   Result.Model.OIDClass := TJCoreOPFOIDInt64;
-  Result.Model.GeneratorName := 'GEN_APP';
+  Result.Model.SequenceName := 'GEN_APP';
   Result.Model.OrderFieldName := 'SEQ';
 end;
 
@@ -495,7 +495,7 @@ begin
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   AssertEquals(0, TTestSQLDriver.Transaction.Count);
-  AssertEquals(0, TTestOPFGeneratorSQLDriver.CurrentOID);
+  AssertEquals(0, TTestOPFOIDGeneratorSQLDriver.CurrentOID);
 end;
 
 procedure TTestOPFAbstractTestCase.TearDown;
@@ -506,7 +506,7 @@ begin
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
   TTestSQLDriver.Transaction.Clear;
-  TTestOPFGeneratorSQLDriver.ClearOID;
+  TTestOPFOIDGeneratorSQLDriver.ClearOID;
   FreeAndNil(FDriver);
   FSessionCircularAuto := nil;
   FSessionInvoiceAuto := nil;
@@ -543,9 +543,9 @@ begin
   TestDefaultModel := nil;
 end;
 
-{ TTestOPFGeneratorSQLDriver }
+{ TTestOPFOIDGeneratorSQLDriver }
 
-procedure TTestOPFGeneratorSQLDriver.InternalGenerateOIDs(const AOIDCount: Integer);
+procedure TTestOPFOIDGeneratorSQLDriver.InternalGenerateOIDs(const AOIDCount: Integer);
 var
   I: Integer;
 begin
@@ -556,7 +556,7 @@ begin
   end;
 end;
 
-class procedure TTestOPFGeneratorSQLDriver.ClearOID;
+class procedure TTestOPFOIDGeneratorSQLDriver.ClearOID;
 begin
   FCurrentOID := 0;
 end;
@@ -735,9 +735,9 @@ begin
   Result := 'TestSQLDriver';
 end;
 
-function TTestSQLDriver.CreateGenerator(const AGeneratorName: string): IJCoreOPFOIDGenerator;
+function TTestSQLDriver.CreateGenerator(const ASequenceName: string): IJCoreOPFOIDGenerator;
 begin
-  Result := TTestOPFGeneratorSQLDriver.Create(Self, AGeneratorName);
+  Result := TTestOPFOIDGeneratorSQLDriver.Create(Self, ASequenceName);
 end;
 
 function TTestSQLDriver.HasIgnoreParams: Boolean;

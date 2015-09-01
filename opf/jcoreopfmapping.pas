@@ -886,11 +886,11 @@ end;
 
 function TJCoreOPFMapping.InternalCreateGenerator: IJCoreOPFOIDGenerator;
 var
-  VGeneratorName: string;
+  VSequenceName: string;
 begin
-  VGeneratorName := Map.GeneratorName;
-  if VGeneratorName <> '' then
-    Result := Driver.CreateGenerator(VGeneratorName)
+  VSequenceName := Map.SequenceName;
+  if VSequenceName <> '' then
+    Result := Driver.CreateGenerator(VSequenceName)
   else
     Result := TJCoreOPFOIDGeneratorGUID.Create;
 end;
