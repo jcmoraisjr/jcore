@@ -977,8 +977,8 @@ begin
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 3
-    VSpanish := TTestIPIDLanguage.Create('spanish'); // 4
     SessionIPIDContactAuto.Store(VPerson);
+    VSpanish := TTestIPIDLanguage.Create('spanish'); // 4
     SessionIPIDContactAuto.Store(VSpanish);
     VPerson.Languages.Delete(0);
     VPerson.Languages.Add(VSpanish); // 4
@@ -1007,8 +1007,8 @@ begin
     VPerson.Languages.Add(TTestIPIDLanguage.Create('german')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 3
     VPerson.Languages.Add(TTestIPIDLanguage.Create('french')); // 4
-    VSpanish := TTestIPIDLanguage.Create('spanish'); // 5
     SessionIPIDContactAuto.Store(VPerson);
+    VSpanish := TTestIPIDLanguage.Create('spanish'); // 5
     SessionIPIDContactAuto.Store(VSpanish);
     VPerson.Languages.Delete(2);
     VPerson.Languages.Delete(0);
