@@ -60,6 +60,7 @@ type
 
   TTestOPFAbstractTestCase = class(TTestCase)
   private
+    FConfig: IJCoreOPFConfiguration;
     FDriver: TTestSQLDriver;
     FSessionCircularAuto: ITestOPFSession;
     FSessionInvoiceAuto: ITestOPFSession;
@@ -69,6 +70,7 @@ type
     FSessionProxyContact: ITestOPFSession;
     class var FLOG: IJCoreLogger;
     procedure AssertCommands(const AList: TStringList; const AShortName, ALongName: string; const ACommands: array of string);
+    procedure AssertSessionsNull;
     function GetDriver: TTestSQLDriver;
     function GetSessionCircularAuto: ITestOPFSession;
     function GetSessionInvoiceAuto: ITestOPFSession;
@@ -80,18 +82,19 @@ type
     procedure AssertExceptionStore(const ASession: IJCoreOPFSession; const AEntity: TObject; const AException: TJCoreExceptionClass; const ACode: Integer);
     procedure AssertSQLDriverCommands(const ACommands: array of string);
     procedure AssertSQLDriverTransaction(const ATransactions: array of string);
-    procedure ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigIPIDContactMapping(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
-    procedure ConfigProxyInvoiceModel(const AConfig: IJCoreOPFConfiguration);
-    function CreateConfiguration: IJCoreOPFConfiguration;
+    procedure ConfigAutoMapping;
+    procedure ConfigIPIDContactMapping;
+    procedure ConfigIPIDContactModel;
+    procedure ConfigProxyCircularModel;
+    procedure ConfigProxyContactMapping;
+    procedure ConfigProxyContactModel;
+    procedure ConfigProxyInvoiceMapping;
+    procedure ConfigProxyInvoiceModel;
+    procedure CreateConfiguration;
     procedure SetUp; override;
     procedure TearDown; override;
     class property LOG: IJCoreLogger read FLOG;
+    property Config: IJCoreOPFConfiguration read FConfig;
     property Driver: TTestSQLDriver read GetDriver;
     property SessionCircularAuto: ITestOPFSession read GetSessionCircularAuto;
     property SessionInvoiceAuto: ITestOPFSession read GetSessionInvoiceAuto;
@@ -99,20 +102,6 @@ type
     property SessionIPIDContactAuto: ITestOPFSession read GetSessionIPIDContactAuto;
     property SessionIPIDContactManual: ITestOPFSession read GetSessionIPIDContactManual;
     property SessionProxyContact: ITestOPFSession read GetSessionProxyContact;
-  end;
-
-  { TTestOPFSimpleTestCase }
-
-  TTestOPFSimpleTestCase = class(TTestOPFAbstractTestCase)
-  private
-    FConfig: IJCoreOPFConfiguration;
-    FSession: ITestOPFSession;
-    function GetConfig: IJCoreOPFConfiguration;
-    function GetSession: ITestOPFSession;
-  protected
-    procedure TearDown; override;
-    property Config: IJCoreOPFConfiguration read GetConfig;
-    property Session: ITestOPFSession read GetSession;
   end;
 
   { TTestOPFIPIDContactTestCase }
@@ -302,6 +291,16 @@ begin
   AList.Clear;
 end;
 
+procedure TTestOPFAbstractTestCase.AssertSessionsNull;
+begin
+  AssertNull(FSessionCircularAuto);
+  AssertNull(FSessionInvoiceAuto);
+  AssertNull(FSessionInvoiceManual);
+  AssertNull(FSessionIPIDContactAuto);
+  AssertNull(FSessionIPIDContactManual);
+  AssertNull(FSessionProxyContact);
+end;
+
 function TTestOPFAbstractTestCase.GetDriver: TTestSQLDriver;
 begin
   if not Assigned(FDriver) then
@@ -310,85 +309,73 @@ begin
 end;
 
 function TTestOPFAbstractTestCase.GetSessionCircularAuto: ITestOPFSession;
-var
-  VConfig: IJCoreOPFConfiguration;
 begin
   if not Assigned(FSessionCircularAuto) then
   begin
-    VConfig := CreateConfiguration;
-    ConfigAutoMapping(VConfig);
-    ConfigProxyCircularModel(VConfig);
-    FSessionCircularAuto := VConfig.CreateSession as ITestOPFSession;
+    AssertSessionsNull;
+    ConfigAutoMapping;
+    ConfigProxyCircularModel;
+    FSessionCircularAuto := Config.CreateSession as ITestOPFSession;
   end;
   Result := FSessionCircularAuto;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionInvoiceAuto: ITestOPFSession;
-var
-  VConfig: IJCoreOPFConfiguration;
 begin
   if not Assigned(FSessionInvoiceAuto) then
   begin
-    VConfig := CreateConfiguration;
-    ConfigAutoMapping(VConfig);
-    ConfigProxyInvoiceModel(VConfig);
-    FSessionInvoiceAuto := VConfig.CreateSession as ITestOPFSession;
+    AssertSessionsNull;
+    ConfigAutoMapping;
+    ConfigProxyInvoiceModel;
+    FSessionInvoiceAuto := Config.CreateSession as ITestOPFSession;
   end;
   Result := FSessionInvoiceAuto;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionInvoiceManual: ITestOPFSession;
-var
-  VConfig: IJCoreOPFConfiguration;
 begin
   if not Assigned(FSessionInvoiceManual) then
   begin
-    VConfig := CreateConfiguration;
-    ConfigProxyInvoiceMapping(VConfig);
-    ConfigProxyInvoiceModel(VConfig);
-    FSessionInvoiceManual := VConfig.CreateSession as ITestOPFSession;
+    AssertSessionsNull;
+    ConfigProxyInvoiceMapping;
+    ConfigProxyInvoiceModel;
+    FSessionInvoiceManual := Config.CreateSession as ITestOPFSession;
   end;
   Result := FSessionInvoiceManual;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionIPIDContactAuto: ITestOPFSession;
-var
-  VConfig: IJCoreOPFConfiguration;
 begin
   if not Assigned(FSessionIPIDContactAuto) then
   begin
-    VConfig := CreateConfiguration;
-    ConfigAutoMapping(VConfig);
-    ConfigIPIDContactModel(VConfig);
-    FSessionIPIDContactAuto := VConfig.CreateSession as ITestOPFSession;
+    AssertSessionsNull;
+    ConfigAutoMapping;
+    ConfigIPIDContactModel;
+    FSessionIPIDContactAuto := Config.CreateSession as ITestOPFSession;
   end;
   Result := FSessionIPIDContactAuto;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionIPIDContactManual: ITestOPFSession;
-var
-  VConfig: IJCoreOPFConfiguration;
 begin
   if not Assigned(FSessionIPIDContactManual) then
   begin
-    VConfig := CreateConfiguration;
-    ConfigIPIDContactMapping(VConfig);
-    ConfigIPIDContactModel(VConfig);
-    FSessionIPIDContactManual := VConfig.CreateSession as ITestOPFSession;
+    AssertSessionsNull;
+    ConfigIPIDContactMapping;
+    ConfigIPIDContactModel;
+    FSessionIPIDContactManual := Config.CreateSession as ITestOPFSession;
   end;
   Result := FSessionIPIDContactManual;
 end;
 
 function TTestOPFAbstractTestCase.GetSessionProxyContact: ITestOPFSession;
-var
-  VConfig: IJCoreOPFConfiguration;
 begin
   if not Assigned(FSessionProxyContact) then
   begin
-    VConfig := CreateConfiguration;
-    ConfigProxyContactMapping(VConfig);
-    ConfigProxyContactModel(VConfig);
-    FSessionProxyContact := VConfig.CreateSession as ITestOPFSession;
+    AssertSessionsNull;
+    ConfigProxyContactMapping;
+    ConfigProxyContactModel;
+    FSessionProxyContact := Config.CreateSession as ITestOPFSession;
   end;
   Result := FSessionProxyContact;
 end;
@@ -421,69 +408,69 @@ begin
   AssertCommands(TTestSQLDriver.Transaction, 'tr', 'transactions', ATransactions);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigAutoMapping(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigAutoMapping;
 begin
-  AConfig.AddMappingClass([TTestSQLMapping]);
+  Config.AddMappingClass([TTestSQLMapping]);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigIPIDContactMapping(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigIPIDContactMapping;
 begin
-  AConfig.AddMappingClass([
+  Config.AddMappingClass([
    TTestIPIDSimpleSQLMapping, TTestIPIDPersonSQLMapping, TTestIPIDEmployeeSQLMapping,
    TTestIPIDAddressSQLMapping, TTestIPIDCitySQLMapping, TTestIPIDPhoneSQLMapping,
    TTestIPIDLanguageSQLMapping]);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigIPIDContactModel(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigIPIDContactModel;
 begin
-  AConfig.Model.AddClass([
+  Config.Model.AddClass([
    TTestIPIDPerson, TTestIPIDPhone, TTestIPIDLanguage, TTestIPIDAddress, TTestIPIDCity]);
-  AConfig.Model.AddGenerics(TTestIPIDPhoneList, TTestIPIDPhone);
-  AConfig.Model.AddGenerics(TTestIPIDLanguageList, TTestIPIDLanguage);
+  Config.Model.AddGenerics(TTestIPIDPhoneList, TTestIPIDPhone);
+  Config.Model.AddGenerics(TTestIPIDLanguageList, TTestIPIDLanguage);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigProxyCircularModel;
 begin
-  AConfig.Model.AddClass([TCircularPerson]);
-  AConfig.Model.AddGenerics(TCircularPersonList, TCircularPerson);
+  Config.Model.AddClass([TCircularPerson]);
+  Config.Model.AddGenerics(TCircularPersonList, TCircularPerson);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigProxyContactMapping(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigProxyContactMapping;
 begin
-  AConfig.AddMappingClass([
+  Config.AddMappingClass([
    TTestProxyPhoneSQLMapping, TTestProxyCitySQLMapping, TTestProxyPersonSQLMapping]);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigProxyContactModel(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigProxyContactModel;
 begin
-  AConfig.Model.AddClass([TTestProxyPhone, TTestProxyCity, TTestProxyPerson]);
-  AConfig.Model.AddGenerics(TTestProxyPhoneList, TTestProxyPhone);
+  Config.Model.AddClass([TTestProxyPhone, TTestProxyCity, TTestProxyPerson]);
+  Config.Model.AddGenerics(TTestProxyPhoneList, TTestProxyPhone);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceMapping(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceMapping;
 begin
-  AConfig.AddMappingClass([
+  Config.AddMappingClass([
    TAddressSQLMapping, TClientSQLMapping, TPersonSQLMapping, TCompanySQLMapping, TProductSQLMapping,
    TInvoiceSQLMapping, TInvoiceItemSQLMapping, TInvoiceItemProductSQLMapping,
    TInvoiceItemServiceSQLMapping]);
 end;
 
-procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel(const AConfig: IJCoreOPFConfiguration);
+procedure TTestOPFAbstractTestCase.ConfigProxyInvoiceModel;
 begin
-  AConfig.Model.AddClass([
+  Config.Model.AddClass([
    TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService,
    TInvoice]);
-  AConfig.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
+  Config.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
 end;
 
-function TTestOPFAbstractTestCase.CreateConfiguration: IJCoreOPFConfiguration;
+procedure TTestOPFAbstractTestCase.CreateConfiguration;
 begin
-  Result := TTestOPFConfig.Create;
-  TestDefaultModel := Result.Model;
-  Result.DriverClass := TTestSQLDriver;
-  Result.Model.OIDClass := TJCoreOPFOIDInt64;
-  Result.Model.OIDGenerator := TTestOPFOIDGenerator.Create;
-  Result.Model.OrderFieldName := 'SEQ';
+  FConfig := TTestOPFConfig.Create;
+  TestDefaultModel := FConfig.Model;
+  FConfig.DriverClass := TTestSQLDriver;
+  FConfig.Model.OIDClass := TJCoreOPFOIDInt64;
+  FConfig.Model.OIDGenerator := TTestOPFOIDGenerator.Create;
+  FConfig.Model.OrderFieldName := 'SEQ';
 end;
 
 procedure TTestOPFAbstractTestCase.SetUp;
@@ -491,10 +478,13 @@ begin
   inherited SetUp;
   if not Assigned(FLOG) then
     FLOG := TJCoreLogger.GetLogger('jcore.test.opf');
+  AssertNull(FConfig);
+  AssertSessionsNull;
   AssertEquals(0, TTestSQLDriver.Commands.Count);
   AssertEquals(0, TTestSQLDriver.Data.Count);
   AssertEquals(0, TTestSQLDriver.Transaction.Count);
   AssertEquals(0, TTestOPFOIDGenerator.CurrentOID);
+  CreateConfiguration;
 end;
 
 procedure TTestOPFAbstractTestCase.TearDown;
@@ -513,33 +503,7 @@ begin
   FSessionIPIDContactAuto := nil;
   FSessionIPIDContactManual := nil;
   FSessionProxyContact := nil;
-end;
-
-{ TTestOPFSimpleTestCase }
-
-function TTestOPFSimpleTestCase.GetConfig: IJCoreOPFConfiguration;
-begin
-  if not Assigned(FConfig) then
-  begin
-    FConfig := TTestOPFConfig.Create;
-    TestDefaultModel := FConfig.Model;
-    FConfig.DriverClass := TTestSQLDriver;
-    FConfig.AddMappingClass([TJCoreOPFSQLMapping]);
-  end;
-  Result := FConfig;
-end;
-
-function TTestOPFSimpleTestCase.GetSession: ITestOPFSession;
-begin
-  if not Assigned(FSession) then
-    FSession := Config.CreateSession as ITestOPFSession;
-  Result := FSession;
-end;
-
-procedure TTestOPFSimpleTestCase.TearDown;
-begin
-  inherited TearDown;
-  TestDefaultModel := nil;
+  FConfig := nil;
 end;
 
 { TTestOPFOIDGenerator }

@@ -11,7 +11,7 @@ type
 
   { TTestOPFMetadataADMControllerTest }
 
-  TTestOPFMetadataADMControllerTest = class(TTestOPFSimpleTestCase)
+  TTestOPFMetadataADMControllerTest = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure InsertIntegerIntfAttr;
     procedure SelectIntegerValueIntfAttr;
@@ -23,7 +23,7 @@ type
 
   { TTestOPFMetadataADMValueTypeTest }
 
-  TTestOPFMetadataADMValueTypeTest = class(TTestOPFSimpleTestCase)
+  TTestOPFMetadataADMValueTypeTest = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure InsertIntegerClassAttr;
     procedure InsertIntegerIntfAttr;
@@ -78,13 +78,12 @@ procedure TTestOPFMetadataADMControllerTest.InsertIntegerIntfAttr;
 var
   VInteger: TTestIntegerIntfCtl;
 begin
-  Config.Model.AddClass([TTestIntegerIntfCtl]);
   VInteger := TTestIntegerIntfCtl.Create;
   try
     VInteger.Age := TJCoreInteger.ValueOf(16);
     Session.Store(VInteger);
     AssertSQLDriverCommands([
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'WriteInt32 0',
      'WriteInt32 16',
      'ExecSQL INSERT INTO TESTINTEGERINTFCTL (ID,AGENATIVE,AGE) VALUES (?,?,?)']);
@@ -97,7 +96,6 @@ procedure TTestOPFMetadataADMControllerTest.SelectIntegerValueIntfAttr;
 var
   VInteger: TTestIntegerIntfCtl;
 begin
-  Config.Model.AddClass([TTestIntegerIntfCtl]);
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('3');
   TTestSQLDriver.Data.Add('0');
@@ -105,7 +103,7 @@ begin
   VInteger := Session.Retrieve(TTestIntegerIntfCtl, '3') as TTestIntegerIntfCtl;
   try
     AssertSQLDriverCommands([
-     'WriteString 3',
+     'WriteInt64 3',
      'ExecSQL SELECT ID,AGENATIVE,AGE FROM TESTINTEGERINTFCTL WHERE ID=?']);
     AssertEquals('age', 16, VInteger.Age.AsInteger);
   finally
@@ -117,7 +115,6 @@ procedure TTestOPFMetadataADMControllerTest.SelectIntegerNilIntfAttr;
 var
   VInteger: TTestIntegerIntfCtl;
 begin
-  Config.Model.AddClass([TTestIntegerIntfCtl]);
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('3');
   TTestSQLDriver.Data.Add('0');
@@ -125,7 +122,7 @@ begin
   VInteger := Session.Retrieve(TTestIntegerIntfCtl, '3') as TTestIntegerIntfCtl;
   try
     AssertSQLDriverCommands([
-     'WriteString 3',
+     'WriteInt64 3',
      'ExecSQL SELECT ID,AGENATIVE,AGE FROM TESTINTEGERINTFCTL WHERE ID=?']);
     AssertNull('age', VInteger.Age);
   finally
@@ -137,7 +134,6 @@ procedure TTestOPFMetadataADMControllerTest.UpdateIntegerFromValueToValueIntfAtt
 var
   VInteger: TTestIntegerIntfCtl;
 begin
-  Config.Model.AddClass([TTestIntegerIntfCtl]);
   VInteger := TTestIntegerIntfCtl.Create;
   try
     VInteger.Age := TJCoreInteger.ValueOf(14);
@@ -147,7 +143,7 @@ begin
     Session.Store(VInteger);
     AssertSQLDriverCommands([
      'WriteInt32 18',
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'ExecSQL UPDATE TESTINTEGERINTFCTL SET AGE=? WHERE ID=?']);
   finally
     FreeAndNil(VInteger);
@@ -158,7 +154,6 @@ procedure TTestOPFMetadataADMControllerTest.UpdateIntegerFromValueToNullIntfAttr
 var
   VInteger: TTestIntegerIntfCtl;
 begin
-  Config.Model.AddClass([TTestIntegerIntfCtl]);
   VInteger := TTestIntegerIntfCtl.Create;
   try
     VInteger.Age := TJCoreInteger.ValueOf(14);
@@ -168,7 +163,7 @@ begin
     Session.Store(VInteger);
     AssertSQLDriverCommands([
      'WriteNull',
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'ExecSQL UPDATE TESTINTEGERINTFCTL SET AGE=? WHERE ID=?']);
   finally
     FreeAndNil(VInteger);
@@ -179,7 +174,6 @@ procedure TTestOPFMetadataADMControllerTest.UpdateIntegerFromNullToValueIntfAttr
 var
   VInteger: TTestIntegerIntfCtl;
 begin
-  Config.Model.AddClass([TTestIntegerIntfCtl]);
   VInteger := TTestIntegerIntfCtl.Create;
   try
     VInteger.Age := nil;
@@ -189,7 +183,7 @@ begin
     Session.Store(VInteger);
     AssertSQLDriverCommands([
      'WriteInt32 21',
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'ExecSQL UPDATE TESTINTEGERINTFCTL SET AGE=? WHERE ID=?']);
   finally
     FreeAndNil(VInteger);
@@ -202,13 +196,12 @@ procedure TTestOPFMetadataADMValueTypeTest.InsertIntegerClassAttr;
 var
   VInteger: TTestIntegerValueTypeClass;
 begin
-  Config.Model.AddClass([TTestIntegerValueTypeClass]);
   VInteger := TTestIntegerValueTypeClass.Create;
   try
     VInteger.Age.Value := 10;
     Session.Store(VInteger);
     AssertSQLDriverCommands([
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'WriteInt32 0',
      'WriteInt32 10',
      'ExecSQL INSERT INTO TESTINTEGERVALUETYPECLASS (ID,AGENATIVE,AGE) VALUES (?,?,?)']);
@@ -221,13 +214,12 @@ procedure TTestOPFMetadataADMValueTypeTest.InsertIntegerIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
-  Config.Model.AddClass([TTestIntegerValueTypeIntf]);
   VInteger := TTestIntegerValueTypeIntf.Create;
   try
     VInteger.Age.Value := 10;
     Session.Store(VInteger);
     AssertSQLDriverCommands([
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'WriteInt32 0',
      'WriteInt32 10',
      'ExecSQL INSERT INTO TESTINTEGERVALUETYPEINTF (ID,AGENATIVE,AGE) VALUES (?,?,?)']);
@@ -240,7 +232,6 @@ procedure TTestOPFMetadataADMValueTypeTest.SelectIntegerValueIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
-  Config.Model.AddClass([TTestIntegerValueTypeIntf]);
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('18');
   TTestSQLDriver.Data.Add('0');
@@ -248,7 +239,7 @@ begin
   VInteger := Session.Retrieve(TTestIntegerValueTypeIntf, '18') as TTestIntegerValueTypeIntf;
   try
     AssertSQLDriverCommands([
-     'WriteString 18',
+     'WriteInt64 18',
      'ExecSQL SELECT ID,AGENATIVE,AGE FROM TESTINTEGERVALUETYPEINTF WHERE ID=?']);
     AssertEquals('age', 15, VInteger.Age.Value);
   finally
@@ -260,7 +251,6 @@ procedure TTestOPFMetadataADMValueTypeTest.SelectIntegerNilIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
-  Config.Model.AddClass([TTestIntegerValueTypeIntf]);
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('28');
   TTestSQLDriver.Data.Add('0');
@@ -268,7 +258,7 @@ begin
   VInteger := Session.Retrieve(TTestIntegerValueTypeIntf, '28') as TTestIntegerValueTypeIntf;
   try
     AssertSQLDriverCommands([
-     'WriteString 28',
+     'WriteInt64 28',
      'ExecSQL SELECT ID,AGENATIVE,AGE FROM TESTINTEGERVALUETYPEINTF WHERE ID=?']);
     AssertTrue('age', VInteger.Age.IsNull);
   finally
@@ -280,7 +270,6 @@ procedure TTestOPFMetadataADMValueTypeTest.UpdateIntegerValueIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
-  Config.Model.AddClass([TTestIntegerValueTypeIntf]);
   VInteger := TTestIntegerValueTypeIntf.Create;
   try
     VInteger.Age.Value := 10;
@@ -290,7 +279,7 @@ begin
     Session.Store(VInteger);
     AssertSQLDriverCommands([
      'WriteInt32 20',
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'ExecSQL UPDATE TESTINTEGERVALUETYPEINTF SET AGE=? WHERE ID=?']);
   finally
     FreeAndNil(VInteger);
@@ -301,7 +290,6 @@ procedure TTestOPFMetadataADMValueTypeTest.UpdateIntegerNilIntfAttr;
 var
   VInteger: TTestIntegerValueTypeIntf;
 begin
-  Config.Model.AddClass([TTestIntegerValueTypeIntf]);
   VInteger := TTestIntegerValueTypeIntf.Create;
   try
     VInteger.Age.Value := 15;
@@ -311,7 +299,7 @@ begin
     Session.Store(VInteger);
     AssertSQLDriverCommands([
      'WriteNull',
-     'WriteString ' + VInteger._proxy.OID.AsString,
+     'WriteInt64 1',
      'ExecSQL UPDATE TESTINTEGERVALUETYPEINTF SET AGE=? WHERE ID=?']);
   finally
     FreeAndNil(VInteger);
