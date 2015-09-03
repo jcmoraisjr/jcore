@@ -448,7 +448,7 @@ function TJCoreOPFSQLDatabase.SequenceSQL(const ASequenceName: string; const AOI
 begin
   raise EJCoreOPF.Create(2130, S2130_DbSequenceUnsupported, [DatabaseName]);
 end;
-{$warn 5033 off}
+{$warn 5033 on}
 
 { TJCoreOPFSQLDriver }
 

@@ -302,13 +302,12 @@ end;
 
 { TJCoreOPFOIDGeneratorGUID }
 
-{$warn 5033 off}
-
 function TJCoreOPFOIDGeneratorGUID.IsPostInsertGenerator: Boolean;
 begin
   Result := False;
 end;
 
+{$warn 5033 off}
 function TJCoreOPFOIDGeneratorGUID.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
 begin
   raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [SJCoreInt64ValueMsg]);
