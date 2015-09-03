@@ -15,7 +15,7 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="12">
       <Item1>
         <Filename Value="opf/jcoreopfdriver.pas"/>
         <UnitName Value="JCoreOPFDriver"/>
@@ -60,6 +60,10 @@
         <Filename Value="opf/drivers/jcoreopfdriversqldb.pas"/>
         <UnitName Value="JCoreOPFDriverSQLdb"/>
       </Item11>
+      <Item12>
+        <Filename Value="opf/drivers/jcoreopfpostgresql.pas"/>
+        <UnitName Value="JCoreOPFPostgreSQL"/>
+      </Item12>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

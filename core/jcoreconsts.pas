@@ -91,6 +91,7 @@ resourcestring
   S2127_AttributeNotFound = 'Attribute %s(''%s'') was not found';
   S2128_UndefinedJoinAlias = 'Cannot join ''%s'': join alias was not defined';
   S2129_IncompatibleJoinOID = 'Cannot join ''%s'': incompatible OID';
+  S2130_DbSequenceUnsupported = 'Database ''%s'' does not support sequences';
   // EJCoreWS
   S3101_UnsupportedMethod = 'Method ''%s.%s'' does not have a supported invoker';
   S3102_TypeinfoIsNotMethod = 'Typeinfo ''%s.%s'' is not a tkMethod';

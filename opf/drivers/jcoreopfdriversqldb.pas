@@ -69,8 +69,8 @@ type
     procedure CreateConnection;
   protected
     procedure InternalCommit; override;
+    function InternalDatabaseClass: TJCoreOPFSQLDatabaseClass; override;
     function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; override;
-    function InternalSequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; override;
   public
     constructor Create(const AParams: TStringList); override;
     destructor Destroy; override;
@@ -86,7 +86,8 @@ uses
   typinfo,
   sysutils,
   JCoreConsts,
-  JCoreClasses;
+  JCoreClasses,
+  JCoreOPFPostgreSQL;
 
 { TJCoreOPFQuerySQLdb }
 
@@ -253,23 +254,18 @@ begin
   Transaction.Commit;
 end;
 
+function TJCoreOPFDriverSQLdb.InternalDatabaseClass: TJCoreOPFSQLDatabaseClass;
+begin
+  if SameText(ConnectionName, 'postgresql') then
+    Result := TJCoreOPFPostgreSQLDatabase
+  else
+    raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
+end;
+
 function TJCoreOPFDriverSQLdb.InternalCreateQuery(const ASQL: string;
   const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
 begin
   Result := TJCoreOPFQuerySQLdb.Create(Self, ASQL, AParams);
-end;
-
-function TJCoreOPFDriverSQLdb.InternalSequenceSQL(const ASequenceName: string;
-  const AOIDCount: Integer): string;
-begin
-  if SameText(ConnectionName, 'postgresql') then
-  begin
-    if AOIDCount = 1 then
-      Result := Format('SELECT nextval(''%s'')', [ASequenceName])
-    else
-      Result := Format('SELECT nextval(''%s'') FROM generate_series(1,%d)', [ASequenceName, AOIDCount]);
-  end else
-    raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
 end;
 
 constructor TJCoreOPFDriverSQLdb.Create(const AParams: TStringList);

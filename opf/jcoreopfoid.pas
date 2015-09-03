@@ -224,11 +224,16 @@ end;
 
 function TJCoreOPFOIDGeneratorSequence.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
 var
+  VDriver: TJCoreOPFSQLDriver;
+  VStmt: IJCoreOPFSQLStatement;
   VResultSet: IJCoreOPFSQLResultSet;
 begin
   if not (ADriver is TJCoreOPFSQLDriver) then
     raise EJCoreOPF.Create(2109, S2109_DriverIsNotSQL, [ADriver.DriverName]);
-  VResultSet := TJCoreOPFSQLDriver(ADriver).SequenceResultSet(SequenceName, 1);
+  VDriver := TJCoreOPFSQLDriver(ADriver);
+  VStmt := VDriver.CreateStatement;
+  VStmt.SQL := VDriver.Database.SequenceSQL(SequenceName, 1);
+  VResultSet := VStmt.OpenCursor(1);
   Result := VResultSet.ReadInt64;
 end;
 

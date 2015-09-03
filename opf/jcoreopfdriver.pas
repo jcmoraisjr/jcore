@@ -13,6 +13,7 @@
 unit JCoreOPFDriver;
 
 {$I jcore.inc}
+{$WARN 5024 OFF} // hint 'parameter not used'
 
 interface
 
@@ -183,22 +184,34 @@ type
 
   TJCoreOPFSQLStatementList = specialize TFPGObjectList<TJCoreOPFSQLStatement>;
 
+  { TJCoreOPFSQLDatabase }
+
+  TJCoreOPFSQLDatabase = class(TObject)
+  public
+    class function DatabaseName: string; virtual; abstract;
+    function SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; virtual;
+  end;
+
+  TJCoreOPFSQLDatabaseClass = class of TJCoreOPFSQLDatabase;
+
   { TJCoreOPFSQLDriver }
 
   TJCoreOPFSQLDriver = class(TJCoreOPFDriver, IJCoreOPFSQLStmtManager)
   private
+    FDatabase: TJCoreOPFSQLDatabase;
     FQueryList: TJCoreOPFSQLQueryList;
     FStmtList: TJCoreOPFSQLStatementList;
     FStmtQueue: TJCoreOPFSQLStatementList;
     function AcquireQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
     procedure DetachStatement(const AStmt: TJCoreOPFSQLStatement);
+    function GetDatabase: TJCoreOPFSQLDatabase;
     procedure QueueStatement(const AStmt: TJCoreOPFSQLStatement);
     procedure ReleaseQuery(const AQuery: IJCoreOPFSQLQuery);
     procedure ReleaseStatements;
   protected
     procedure InternalCommit; override;
+    function InternalDatabaseClass: TJCoreOPFSQLDatabaseClass; virtual; abstract;
     function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; virtual; abstract;
-    function InternalSequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; virtual; abstract;
     property QueryList: TJCoreOPFSQLQueryList read FQueryList;
     property StmtList: TJCoreOPFSQLStatementList read FStmtList;
     property StmtQueue: TJCoreOPFSQLStatementList read FStmtQueue;
@@ -208,7 +221,7 @@ type
     function CreateStatement: IJCoreOPFSQLStatement;
     function CreateStatement(const AParams: IJCoreOPFParams): IJCoreOPFSQLStatement;
     procedure Flush;
-    function SequenceResultSet(const ASequenceName: string; const AOIDCount: Integer): IJCoreOPFSQLResultSet;
+    property Database: TJCoreOPFSQLDatabase read GetDatabase;
   end;
 
 implementation
@@ -422,6 +435,15 @@ begin
   end;
 end;
 
+{ TJCoreOPFSQLDatabase }
+
+{$warn 5033 off}
+function TJCoreOPFSQLDatabase.SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string;
+begin
+  raise EJCoreOPF.Create(2130, S2130_DbSequenceUnsupported, [DatabaseName]);
+end;
+{$warn 5033 off}
+
 { TJCoreOPFSQLDriver }
 
 function TJCoreOPFSQLDriver.AcquireQuery(const ASQL: string;
@@ -436,6 +458,13 @@ procedure TJCoreOPFSQLDriver.DetachStatement(const AStmt: TJCoreOPFSQLStatement)
 begin
   if Assigned(AStmt) then
     StmtList.Remove(AStmt);
+end;
+
+function TJCoreOPFSQLDriver.GetDatabase: TJCoreOPFSQLDatabase;
+begin
+  if not Assigned(FDatabase) then
+    FDatabase := InternalDatabaseClass.Create;
+  Result := FDatabase;
 end;
 
 procedure TJCoreOPFSQLDriver.QueueStatement(const AStmt: TJCoreOPFSQLStatement);
@@ -480,6 +509,7 @@ end;
 destructor TJCoreOPFSQLDriver.Destroy;
 begin
   ReleaseStatements;
+  FreeAndNil(FDatabase);
   FreeAndNil(FQueryList);
   FreeAndNil(FStmtList);
   FreeAndNil(FStmtQueue);
@@ -507,16 +537,6 @@ begin
   for I := 0 to Pred(StmtQueue.Count) do
     StmtQueue[I].Flush;
   StmtQueue.Clear;
-end;
-
-function TJCoreOPFSQLDriver.SequenceResultSet(const ASequenceName: string;
-  const AOIDCount: Integer): IJCoreOPFSQLResultSet;
-var
-  VStmt: IJCoreOPFSQLStatement;
-begin
-  VStmt := CreateStatement;
-  VStmt.SQL := InternalSequenceSQL(ASequenceName, AOIDCount);
-  Result := VStmt.OpenCursor(AOIDCount);
 end;
 
 end.

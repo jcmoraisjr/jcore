@@ -189,6 +189,14 @@ type
     procedure SkipReading;
   end;
 
+  { TTestSQLDatabase }
+
+  TTestSQLDatabase = class(TJCoreOPFSQLDatabase)
+  public
+    class function DatabaseName: string; override;
+    function SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; override;
+  end;
+
   { TTestSQLDriver }
 
   TTestSQLDriver = class(TJCoreOPFSQLDriver)
@@ -200,8 +208,8 @@ type
     class var FTransaction: TStringList;
   protected
     procedure InternalCommit; override;
+    function InternalDatabaseClass: TJCoreOPFSQLDatabaseClass; override;
     function InternalCreateQuery(const ASQL: string; const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery; override;
-    function InternalSequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; override;
   public
     class constructor Create;
     class destructor Destroy;
@@ -663,6 +671,18 @@ begin
   PopData;
 end;
 
+{ TTestSQLDatabase }
+
+class function TTestSQLDatabase.DatabaseName: string;
+begin
+  Result := 'TestDatabase';
+end;
+
+function TTestSQLDatabase.SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string;
+begin
+  Result := '';
+end;
+
 { TTestSQLDriver }
 
 procedure TTestSQLDriver.InternalCommit;
@@ -671,15 +691,15 @@ begin
   Transaction.Add('commit');
 end;
 
+function TTestSQLDriver.InternalDatabaseClass: TJCoreOPFSQLDatabaseClass;
+begin
+  Result := TTestSQLDatabase;
+end;
+
 function TTestSQLDriver.InternalCreateQuery(const ASQL: string;
   const AParams: IJCoreOPFParams): IJCoreOPFSQLQuery;
 begin
   Result := TTestSQLQuery.Create(Self, ASQL, AParams);
-end;
-
-function TTestSQLDriver.InternalSequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string;
-begin
-  Result := '';
 end;
 
 class constructor TTestSQLDriver.Create;
