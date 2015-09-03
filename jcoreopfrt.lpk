@@ -6,7 +6,7 @@
       <Version Value="11"/>
       <SearchPaths>
         <IncludeFiles Value="core"/>
-        <OtherUnitFiles Value="opf;opf/drivers"/>
+        <OtherUnitFiles Value="opf;opf/drivers;opf/db"/>
         <UnitOutputDirectory Value="lib/opf/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Linking>
@@ -61,11 +61,11 @@
         <UnitName Value="JCoreOPFDriverSQLdb"/>
       </Item11>
       <Item12>
-        <Filename Value="opf/drivers/jcoreopfpostgresql.pas"/>
+        <Filename Value="opf/db/jcoreopfpostgresql.pas"/>
         <UnitName Value="JCoreOPFPostgreSQL"/>
       </Item12>
       <Item13>
-        <Filename Value="opf/drivers/jcoreopfmssqlserver.pas"/>
+        <Filename Value="opf/db/jcoreopfmssqlserver.pas"/>
         <UnitName Value="JCoreOPFMSSQLServer"/>
       </Item13>
     </Files>

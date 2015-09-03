@@ -1,5 +1,5 @@
 (*
-  JCore, OPF MS SQL Server Driver Class
+  JCore, OPF MS SQL Server DB Class
   Copyright (C) 2015 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,

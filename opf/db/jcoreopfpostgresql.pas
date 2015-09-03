@@ -1,5 +1,5 @@
 (*
-  JCore, OPF PostgreSQL Driver Class
+  JCore, OPF PostgreSQL DB Class
   Copyright (C) 2015 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
