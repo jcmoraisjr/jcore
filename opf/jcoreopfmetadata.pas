@@ -337,6 +337,7 @@ type
   // In the current version these attributes must be of the same class or a
   // parent class.
   private
+    FHasInsertOIDFields: Boolean;
     FMetadata: TJCoreOPFClassMetadata;
     FOIDClass: TJCoreOPFOIDClass;
     FOIDGenerator: IJCoreOPFOIDGenerator;
@@ -347,9 +348,10 @@ type
     FSubMaps: TJCoreOPFMaps;
     FTableName: string;
   public
-    constructor Create(const AMetadata: TJCoreOPFClassMetadata);
+    constructor Create(const AMetadata: TJCoreOPFClassMetadata; const AIsRootMap: Boolean);
     function HasOrderField: Boolean;
     function HasOwnerOID: Boolean;
+    property HasInsertOIDFields: Boolean read FHasInsertOIDFields;
     property Metadata: TJCoreOPFClassMetadata read FMetadata;
     property OIDClass: TJCoreOPFOIDClass read FOIDClass;
     property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator;
@@ -1336,7 +1338,7 @@ end;
 
 { TJCoreOPFMap }
 
-constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata);
+constructor TJCoreOPFMap.Create(const AMetadata: TJCoreOPFClassMetadata; const AIsRootMap: Boolean);
 var
   VOwnerAttr: TJCoreOPFAttrMetadata;
   VOwnerClass: TJCoreOPFClassMetadata;
@@ -1347,6 +1349,7 @@ begin
   { TODO : Proper metadata -> map conversion }
   inherited Create(False);
   FMetadata := AMetadata;
+  FHasInsertOIDFields := not AIsRootMap or not Metadata.OIDGenerator.IsPostInsertGenerator;
   FOIDClass := Metadata.OIDClass;
   FOIDGenerator := Metadata.OIDGenerator;
   FOIDName := Metadata.OIDName;
@@ -1519,7 +1522,7 @@ begin
   VIndex := MapMap.IndexOf(VName);
   if VIndex = -1 then
   begin
-    VMap := TJCoreOPFMap.Create(AMetadata);
+    VMap := TJCoreOPFMap.Create(AMetadata, MapMap.Count = 0);
     VIndex := MapMap.Add(VName, VMap);
     for I := 0 to Pred(AMetadata.AttributeCount) do
       VMap.Add(AMetadata[I]);

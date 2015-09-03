@@ -11,9 +11,12 @@ type
 
   { TTestOPFOIDGeneratorTest }
 
-  TTestOPFOIDGeneratorTest = class(TTestOPFInvoiceManualMappingTestCase)
+  TTestOPFOIDGeneratorTest = class(TTestOPFInvoiceAutoMappingTestCase)
   published
-    procedure SequenceGenerator;
+    procedure SequenceGeneratorSimple;
+    procedure SequenceGeneratorInheritance;
+    procedure AutoincGeneratorSimple;
+    procedure AutoincGeneratorInheritance;
     procedure GUIDGenerator;
   end;
 
@@ -23,7 +26,6 @@ uses
   sysutils,
   testregistry,
   JCoreOPFMetadata,
-  JCoreOPFADM,
   JCoreOPFOID,
   JCoreOPFDriver,
   JCoreOPFConfig,
@@ -32,50 +34,117 @@ uses
 
 { TTestOPFOIDGeneratorTest }
 
-procedure TTestOPFOIDGeneratorTest.SequenceGenerator;
+procedure TTestOPFOIDGeneratorTest.SequenceGeneratorSimple;
 var
-  VConfiguration: IJCoreOPFConfiguration;
-  VSession: IJCoreOPFSession;
   VProduct: TProduct;
   VID: string;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
-  VConfiguration.DriverClass := TTestSQLDriver;
-  VConfiguration.AddMappingClass([TTestEmptyMapping]);
-  VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
-  VConfiguration.Model.OIDClass := TJCoreOPFOIDInt64;
-  VConfiguration.Model.OIDGenerator := TJCoreOPFOIDGeneratorSequence.Create('GEN_APP');
-  VSession := VConfiguration.CreateSession;
+  Config.Model.OIDGenerator := TJCoreOPFOIDGeneratorSequence.Create('GEN_APP');
   VProduct := TProduct.Create;
   try
     TTestSQLDriver.Data.Add('28');
     TTestSQLDriver.ExpectedResultsets.Add(1);
-    VSession.Store(VProduct);
+    Session.Store(VProduct);
     VID := VProduct._proxy.OID.AsString;
     AssertEquals('id', '28', VID);
+    AssertSQLDriverCommands([
+     'ExecSQL SELECT next(''GEN_APP'')',
+     'WriteInt64 28',
+     'WriteString ',
+     'ExecSQL INSERT INTO PRODUCT (ID,NAME) VALUES (?,?)']);
   finally
     FreeAndNil(VProduct);
   end;
 end;
 
+procedure TTestOPFOIDGeneratorTest.SequenceGeneratorInheritance;
+var
+  VCompany: TCompany;
+  VID: string;
+begin
+  Config.Model.OIDGenerator := TJCoreOPFOIDGeneratorSequence.Create('GEN_APP');
+  VCompany := TCompany.Create;
+  try
+    TTestSQLDriver.Data.Add('11');
+    TTestSQLDriver.ExpectedResultsets.Add(1);
+    Session.Store(VCompany);
+    VID := VCompany._proxy.OID.AsString;
+    AssertEquals('id', '11', VID);
+    AssertSQLDriverCommands([
+     'ExecSQL SELECT next(''GEN_APP'')',
+     'WriteInt64 11',
+     'WriteString ',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (ID,NAME,ADDRESS) VALUES (?,?,?)',
+     'WriteInt64 11',
+     'WriteString ',
+     'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
+procedure TTestOPFOIDGeneratorTest.AutoincGeneratorSimple;
+var
+  VProduct: TProduct;
+  VID: string;
+begin
+  Config.Model.OIDGenerator := TJCoreOPFOIDGeneratorAutoinc.Create;
+  VProduct := TProduct.Create;
+  try
+    TTestSQLDriver.Data.Add('13');
+    TTestSQLDriver.ExpectedResultsets.Add(1); // insert
+    TTestSQLDriver.ExpectedResultsets.Add(1); // select
+    Session.Store(VProduct);
+    VID := VProduct._proxy.OID.AsString;
+    AssertEquals('id', '13', VID);
+    AssertSQLDriverCommands([
+     'WriteString ',
+     'ExecSQL INSERT INTO PRODUCT (NAME) VALUES (?)',
+     'ExecSQL SELECT lastId()']);
+  finally
+    FreeAndNil(VProduct);
+  end;
+end;
+
+procedure TTestOPFOIDGeneratorTest.AutoincGeneratorInheritance;
+var
+  VCompany: TCompany;
+  VID: string;
+begin
+  Config.Model.OIDGenerator := TJCoreOPFOIDGeneratorAutoinc.Create;
+  VCompany := TCompany.Create;
+  try
+    TTestSQLDriver.Data.Add('18');
+    TTestSQLDriver.ExpectedResultsets.Add(1); // first insert
+    TTestSQLDriver.ExpectedResultsets.Add(1); // select
+    Session.Store(VCompany);
+    VID := VCompany._proxy.OID.AsString;
+    AssertEquals('id', '18', VID);
+    AssertSQLDriverCommands([
+     'WriteString ',
+     'WriteNull',
+     'ExecSQL INSERT INTO CLIENT (NAME,ADDRESS) VALUES (?,?)',
+     'ExecSQL SELECT lastId()',
+     'WriteInt64 18',
+     'WriteString ',
+     'ExecSQL INSERT INTO COMPANY (ID,CONTACTNAME) VALUES (?,?)']);
+  finally
+    FreeAndNil(VCompany);
+  end;
+end;
+
 procedure TTestOPFOIDGeneratorTest.GUIDGenerator;
 var
-  VConfiguration: IJCoreOPFConfiguration;
-  VSession: IJCoreOPFSession;
   VProduct: TProduct;
   VID: string;
   I: Integer;
 begin
-  VConfiguration := TJCoreOPFConfiguration.Create(TJCoreOPFModel.Create);
-  VConfiguration.DriverClass := TTestEmptyDriver;
-  VConfiguration.AddMappingClass([TTestEmptyMapping]);
-  VConfiguration.Model.AddADMClass([TJCoreOPFADMAnsiStringNativeCtl]);
-  VConfiguration.Model.OIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
-  VConfiguration.Model.OIDClass := TJCoreOPFOIDString;
-  VSession := VConfiguration.CreateSession;
+  Config.Model.OIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
+  Config.Model.OIDClass := TJCoreOPFOIDString;
   VProduct := TProduct.Create;
   try
-    VSession.Store(VProduct);
+    Session.Store(VProduct);
     VID := VProduct._proxy.OID.AsString;
     AssertEquals('id size', 32, Length(VID));
     for I := 1 to Length(VID) do

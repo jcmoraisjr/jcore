@@ -31,6 +31,7 @@ type
   { IJCoreOPFOIDGenerator }
 
   IJCoreOPFOIDGenerator = interface(IInterface)
+    function IsPostInsertGenerator: Boolean;
     function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
     function ReadString(const ADriver: TJCoreOPFDriver): string;
   end;
@@ -91,15 +92,33 @@ type
     property Value: string read FValue;
   end;
 
+  { TJCoreOPFOIDGeneratorSQL }
+
+  TJCoreOPFOIDGeneratorSQL = class(TInterfacedObject)
+  protected
+    function DriverSQL(const ADriver: TJCoreOPFDriver): TJCoreOPFSQLDriver;
+    function ReadOID(const ADriver: TJCoreOPFSQLDriver; const ASQL: string): Int64;
+  end;
+
   { TJCoreOPFOIDGeneratorSequence }
 
-  TJCoreOPFOIDGeneratorSequence = class(TInterfacedObject, IJCoreOPFOIDGenerator)
+  TJCoreOPFOIDGeneratorSequence = class(TJCoreOPFOIDGeneratorSQL, IJCoreOPFOIDGenerator)
   private
     FSequenceName: string;
   protected
     property SequenceName: string read FSequenceName;
   public
     constructor Create(const ASequenceName: string);
+    function IsPostInsertGenerator: Boolean;
+    function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+    function ReadString(const ADriver: TJCoreOPFDriver): string;
+  end;
+
+  { TJCoreOPFOIDGeneratorAutoinc }
+
+  TJCoreOPFOIDGeneratorAutoinc = class(TJCoreOPFOIDGeneratorSQL, IJCoreOPFOIDGenerator)
+  public
+    function IsPostInsertGenerator: Boolean;
     function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
     function ReadString(const ADriver: TJCoreOPFDriver): string;
   end;
@@ -108,6 +127,7 @@ type
 
   TJCoreOPFOIDGeneratorGUID = class(TInterfacedObject, IJCoreOPFOIDGenerator)
   public
+    function IsPostInsertGenerator: Boolean;
     function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
     function ReadString(const ADriver: TJCoreOPFDriver): string;
   end;
@@ -214,6 +234,26 @@ begin
   AParams.WriteString(Value);
 end;
 
+{ TJCoreOPFOIDGeneratorSQL }
+
+function TJCoreOPFOIDGeneratorSQL.DriverSQL(const ADriver: TJCoreOPFDriver): TJCoreOPFSQLDriver;
+begin
+  if not (ADriver is TJCoreOPFSQLDriver) then
+    raise EJCoreOPF.Create(2109, S2109_DriverIsNotSQL, [ADriver.DriverName]);
+  Result := TJCoreOPFSQLDriver(ADriver);
+end;
+
+function TJCoreOPFOIDGeneratorSQL.ReadOID(const ADriver: TJCoreOPFSQLDriver; const ASQL: string): Int64;
+var
+  VStmt: IJCoreOPFSQLStatement;
+  VResultSet: IJCoreOPFSQLResultSet;
+begin
+  VStmt := ADriver.CreateStatement;
+  VStmt.SQL := ASQL;
+  VResultSet := VStmt.OpenCursor(1);
+  Result := VResultSet.ReadInt64;
+end;
+
 { TJCoreOPFOIDGeneratorSequence }
 
 constructor TJCoreOPFOIDGeneratorSequence.Create(const ASequenceName: string);
@@ -222,19 +262,17 @@ begin
   FSequenceName := ASequenceName;
 end;
 
+function TJCoreOPFOIDGeneratorSequence.IsPostInsertGenerator: Boolean;
+begin
+  Result := False;
+end;
+
 function TJCoreOPFOIDGeneratorSequence.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
 var
   VDriver: TJCoreOPFSQLDriver;
-  VStmt: IJCoreOPFSQLStatement;
-  VResultSet: IJCoreOPFSQLResultSet;
 begin
-  if not (ADriver is TJCoreOPFSQLDriver) then
-    raise EJCoreOPF.Create(2109, S2109_DriverIsNotSQL, [ADriver.DriverName]);
-  VDriver := TJCoreOPFSQLDriver(ADriver);
-  VStmt := VDriver.CreateStatement;
-  VStmt.SQL := VDriver.Database.SequenceSQL(SequenceName, 1);
-  VResultSet := VStmt.OpenCursor(1);
-  Result := VResultSet.ReadInt64;
+  VDriver := DriverSQL(ADriver);
+  Result := ReadOID(VDriver, VDriver.Database.SequenceSQL(SequenceName, 1));
 end;
 
 function TJCoreOPFOIDGeneratorSequence.ReadString(const ADriver: TJCoreOPFDriver): string;
@@ -242,9 +280,35 @@ begin
   Result := IntToStr(ReadInt64(ADriver));
 end;
 
+{ TJCoreOPFOIDGeneratorAutoinc }
+
+function TJCoreOPFOIDGeneratorAutoinc.IsPostInsertGenerator: Boolean;
+begin
+  Result := True;
+end;
+
+function TJCoreOPFOIDGeneratorAutoinc.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
+var
+  VDriver: TJCoreOPFSQLDriver;
+begin
+  VDriver := DriverSQL(ADriver);
+  Result := ReadOID(VDriver, VDriver.Database.AutoincSQL);
+end;
+
+function TJCoreOPFOIDGeneratorAutoinc.ReadString(const ADriver: TJCoreOPFDriver): string;
+begin
+  Result := IntToStr(ReadInt64(ADriver));
+end;
+
 { TJCoreOPFOIDGeneratorGUID }
 
 {$warn 5033 off}
+
+function TJCoreOPFOIDGeneratorGUID.IsPostInsertGenerator: Boolean;
+begin
+  Result := False;
+end;
+
 function TJCoreOPFOIDGeneratorGUID.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
 begin
   raise EJCoreOPF.Create(2121, S2121_UnsupportedAttributeType, [SJCoreInt64ValueMsg]);

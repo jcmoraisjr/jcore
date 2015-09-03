@@ -188,6 +188,7 @@ type
 
   TJCoreOPFSQLDatabase = class(TObject)
   public
+    function AutoincSQL: string; virtual;
     class function DatabaseName: string; virtual; abstract;
     function SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; virtual;
   end;
@@ -438,6 +439,11 @@ end;
 { TJCoreOPFSQLDatabase }
 
 {$warn 5033 off}
+function TJCoreOPFSQLDatabase.AutoincSQL: string;
+begin
+  raise EJCoreOPF.Create(2131, S2131_DbAutoincUnsupported, [DatabaseName]);
+end;
+
 function TJCoreOPFSQLDatabase.SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string;
 begin
   raise EJCoreOPF.Create(2130, S2130_DbSequenceUnsupported, [DatabaseName]);

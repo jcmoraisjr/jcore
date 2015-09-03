@@ -138,6 +138,7 @@ type
   private
     class var FCurrentOID: Integer;
   public
+    function IsPostInsertGenerator: Boolean;
     function ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
     function ReadString(const ADriver: TJCoreOPFDriver): string;
     class property CurrentOID: Integer read FCurrentOID;
@@ -193,6 +194,7 @@ type
 
   TTestSQLDatabase = class(TJCoreOPFSQLDatabase)
   public
+    function AutoincSQL: string; override;
     class function DatabaseName: string; override;
     function SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string; override;
   end;
@@ -516,6 +518,11 @@ end;
 
 { TTestOPFOIDGenerator }
 
+function TTestOPFOIDGenerator.IsPostInsertGenerator: Boolean;
+begin
+  Result := False;
+end;
+
 function TTestOPFOIDGenerator.ReadInt64(const ADriver: TJCoreOPFDriver): Int64;
 begin
   Inc(FCurrentOID);
@@ -673,6 +680,11 @@ end;
 
 { TTestSQLDatabase }
 
+function TTestSQLDatabase.AutoincSQL: string;
+begin
+  Result := 'SELECT lastId()';
+end;
+
 class function TTestSQLDatabase.DatabaseName: string;
 begin
   Result := 'TestDatabase';
@@ -680,7 +692,7 @@ end;
 
 function TTestSQLDatabase.SequenceSQL(const ASequenceName: string; const AOIDCount: Integer): string;
 begin
-  Result := '';
+  Result := Format('SELECT next(''%s'')', [ASequenceName]);
 end;
 
 { TTestSQLDriver }

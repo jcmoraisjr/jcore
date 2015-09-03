@@ -87,7 +87,8 @@ uses
   sysutils,
   JCoreConsts,
   JCoreClasses,
-  JCoreOPFPostgreSQL;
+  JCoreOPFPostgreSQL,
+  JCoreOPFMSSQLServer;
 
 { TJCoreOPFQuerySQLdb }
 
@@ -258,6 +259,8 @@ function TJCoreOPFDriverSQLdb.InternalDatabaseClass: TJCoreOPFSQLDatabaseClass;
 begin
   if SameText(ConnectionName, 'postgresql') then
     Result := TJCoreOPFPostgreSQLDatabase
+  else if SameText(ConnectionName, 'mssqlserver') then
+    Result := TJCoreOPFMSSQLServerDatabase
   else
     raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
 end;

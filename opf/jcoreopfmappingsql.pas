@@ -235,15 +235,20 @@ begin
   VOIDName := Map.OIDName;
   VOwnerOIDName := Map.OwnerOIDName;
   VADMChanged := AMapping.ADMAttributeChanged;
-  VLength := Length(VOIDName) + Length(VOwnerOIDName) + Length(VADMChanged);
+  VLength := Length(VOwnerOIDName) + Length(VADMChanged);
+  if Map.HasInsertOIDFields then
+    Inc(VLength, Length(VOIDName));
   if Map.HasOrderField then
     Inc(VLength);
   SetLength(Result, VLength);
   VIndex := 0;
-  for I := Low(VOIDName) to High(VOIDName) do
+  if Map.HasInsertOIDFields then
   begin
-    Result[VIndex] := VOIDName[I];
-    Inc(VIndex);
+    for I := Low(VOIDName) to High(VOIDName) do
+    begin
+      Result[VIndex] := VOIDName[I];
+      Inc(VIndex);
+    end;
   end;
   if Map.HasOrderField then
   begin

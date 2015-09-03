@@ -818,15 +818,35 @@ end;
 procedure TJCoreOPFClassMapping.StorePID(const APID: TJCoreOPFPID);
 var
   VOID: IJCoreOPFOID;
+  VOIDClass: TJCoreOPFOIDClass;
+  VOIDGen: IJCoreOPFOIDGenerator;
   I: Integer;
 begin
   EnsureMappingConsistency(APID);
+  { TODO : a better approach }
   if not APID.IsPersistent then
   begin
-    VOID := Metadata.OIDClass.CreateFromGenerator(Mapping.Map.OIDGenerator, Driver);
-    APID.OID := VOID;
-  end;
-  for I := 0 to Pred(MappingList.Count) do
+    // If the generator is an identity or autoinc, we need to insert the first map
+    // and just after that query the ID. On the other hand, if the generator need
+    // to run before the insert -- sequences, guid, table; we first call the
+    // generator and after that the first map. From the second map to the end
+    // nothing changes because we already have the ID.
+    VOIDGen := Metadata.OIDGenerator;
+    VOIDClass := Metadata.OIDClass;
+    if not VOIDGen.IsPostInsertGenerator then
+    begin
+      VOID := VOIDClass.CreateFromGenerator(VOIDGen, Driver);
+      APID.OID := VOID;
+    end;
+    MappingList[0].Store(APID[0]);
+    if VOIDGen.IsPostInsertGenerator then
+    begin
+      VOID := VOIDClass.CreateFromGenerator(VOIDGen, Driver);
+      APID.OID := VOID;
+    end;
+  end else
+    MappingList[0].Store(APID[0]);
+  for I := 1 to Pred(MappingList.Count) do
     MappingList[I].Store(APID[I]);
   Mapper.AddInTransactionPID(APID);
 end;
@@ -936,7 +956,8 @@ begin
     VParams := CreateParams;
     if not VPID.IsPersistent then
     begin
-      VPID.OID.WriteToParams(VParams);
+      if Map.HasInsertOIDFields then
+        VPID.OID.WriteToParams(VParams);
       WriteAttributesToParams(VParams, AMapping);
       InternalInsert(VParams, AMapping);
     end else if AMapping.IsAttributesDirty then
