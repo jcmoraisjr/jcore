@@ -492,15 +492,16 @@ procedure TTestOPFCleanDirtyAttributeTests.AggregationReorder;
 var
   VPerson: TTestIPIDPerson;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish')); // 3
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 4
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     VPerson.Languages.Exchange(0, 2);
     AssertTrue('lang dirty', VPerson._PID.IsDirty);
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertFalse('lang clean', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);

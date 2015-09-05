@@ -87,9 +87,10 @@ procedure TTestOPFMetadataTest.CircularReference;
 var
   VPerson: TCircularPerson;
 begin
+  CreateConfigProxyCircularAuto;
   VPerson := TCircularPerson.Create;
   try
-    SessionCircularAuto.Store(VPerson);
+    Session.Store(VPerson);
   finally
     FreeAndNil(VPerson);
   end;

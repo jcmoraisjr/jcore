@@ -131,6 +131,7 @@ var
   VPerson: TCircularPerson;
   VDependent: TCircularPerson;
 begin
+  CreateConfigProxyCircularAuto;
   VPerson := TCircularPerson.Create;
   try
     VPerson.Name := 'jack';
@@ -140,7 +141,7 @@ begin
     VDependent := TCircularPerson.Create;
     VPerson.Dependent.Add(VDependent);
     VDependent.Name := 'jane';
-    SessionCircularAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteString jack',
@@ -284,11 +285,12 @@ var
   VPerson: TTestIPIDPerson;
   VLang: TTestIPIDLanguage;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VLang := TTestIPIDLanguage.Create('en');
     VPerson.Languages.Add(VLang);
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteString ',
@@ -452,6 +454,7 @@ procedure TTestOPFSelectAutoMappingTests.CircularModel;
 var
   VPerson: TCircularPerson;
 begin
+  CreateConfigProxyCircularAuto;
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('1');
   TTestSQLDriver.Data.Add('joe');
@@ -462,7 +465,7 @@ begin
   TTestSQLDriver.Data.Add('jane');
   {3}TTestSQLDriver.ExpectedResultsets.Add(0);
   {4}TTestSQLDriver.ExpectedResultsets.Add(0);
-  VPerson := SessionCircularAuto.Retrieve(TCircularPerson, '1') as TCircularPerson;
+  VPerson := Session.Retrieve(TCircularPerson, '1') as TCircularPerson;
   try
     ReadDependents(VPerson);
     AssertSQLDriverCommands([
@@ -483,6 +486,7 @@ procedure TTestOPFSelectAutoMappingTests.EagerCollectionAggregation;
 var
   VPerson: TTestIPIDPerson;
 begin
+  CreateConfigIPIDContactAuto;
   {1}TTestSQLDriver.ExpectedResultsets.Add(1);
   TTestSQLDriver.Data.Add('1');
   TTestSQLDriver.Data.Add('');
@@ -491,7 +495,7 @@ begin
   TTestSQLDriver.Data.Add('null');
   {2}TTestSQLDriver.ExpectedResultsets.Add(0);
   {3}TTestSQLDriver.ExpectedResultsets.Add(0);
-  VPerson := SessionIPIDContactAuto.Retrieve(TTestIPIDPerson, '1') as TTestIPIDPerson;
+  VPerson := Session.Retrieve(TTestIPIDPerson, '1') as TTestIPIDPerson;
   try
     AssertSQLDriverCommands([
      'WriteInt64 1',
@@ -926,14 +930,15 @@ procedure TTestOPFUpdateAutoMappingTests.AggregationAdd;
 var
   VPerson: TTestIPIDPerson;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('english'));
     VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish'));
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese'));
     TTestSQLDriver.Commands.Clear;
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 4',
      'WriteString portuguese',
@@ -951,14 +956,15 @@ procedure TTestOPFUpdateAutoMappingTests.AggregationRemove;
 var
   VPerson: TTestIPIDPerson;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 3
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     VPerson.Languages.Delete(0);
     TTestSQLDriver.Commands.Clear;
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteInt64 2',
@@ -973,17 +979,18 @@ var
   VPerson: TTestIPIDPerson;
   VSpanish: TTestIPIDLanguage;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 3
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     VSpanish := TTestIPIDLanguage.Create('spanish'); // 4
-    SessionIPIDContactAuto.Store(VSpanish);
+    Session.Store(VSpanish);
     VPerson.Languages.Delete(0);
     VPerson.Languages.Add(VSpanish); // 4
     TTestSQLDriver.Commands.Clear;
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteInt64 2',
@@ -1002,19 +1009,20 @@ var
   VPerson: TTestIPIDPerson;
   VSpanish: TTestIPIDLanguage;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('german')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 3
     VPerson.Languages.Add(TTestIPIDLanguage.Create('french')); // 4
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     VSpanish := TTestIPIDLanguage.Create('spanish'); // 5
-    SessionIPIDContactAuto.Store(VSpanish);
+    Session.Store(VSpanish);
     VPerson.Languages.Delete(2);
     VPerson.Languages.Delete(0);
     VPerson.Languages.Add(VSpanish); // 4
     TTestSQLDriver.Commands.Clear;
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt64 1',
      'WriteInt64 2',
@@ -1033,15 +1041,16 @@ procedure TTestOPFUpdateAutoMappingTests.AggregationChangeOrder;
 var
   VPerson: TTestIPIDPerson;
 begin
+  CreateConfigIPIDContactAuto;
   VPerson := TTestIPIDPerson.Create;
   try
     VPerson.Languages.Add(TTestIPIDLanguage.Create('english')); // 2
     VPerson.Languages.Add(TTestIPIDLanguage.Create('spanish')); // 3
     VPerson.Languages.Add(TTestIPIDLanguage.Create('portuguese')); // 4
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     VPerson.Languages.Exchange(0, 2);
     TTestSQLDriver.Commands.Clear;
-    SessionIPIDContactAuto.Store(VPerson);
+    Session.Store(VPerson);
     AssertSQLDriverCommands([
      'WriteInt32 4',
      'WriteInt64 1',

@@ -12,6 +12,8 @@ type
   { TTestOPFMetadataADMControllerTest }
 
   TTestOPFMetadataADMControllerTest = class(TTestOPFInvoiceAutoMappingTestCase)
+  protected
+    procedure Setup; override;
   published
     procedure InsertIntegerIntfAttr;
     procedure SelectIntegerValueIntfAttr;
@@ -24,6 +26,8 @@ type
   { TTestOPFMetadataADMValueTypeTest }
 
   TTestOPFMetadataADMValueTypeTest = class(TTestOPFInvoiceAutoMappingTestCase)
+  protected
+    procedure Setup; override;
   published
     procedure InsertIntegerClassAttr;
     procedure InsertIntegerIntfAttr;
@@ -73,6 +77,12 @@ type
   end;
 
 { TTestOPFMetadataADMControllerTest }
+
+procedure TTestOPFMetadataADMControllerTest.Setup;
+begin
+  inherited Setup;
+  Config; // startup default configuration;
+end;
 
 procedure TTestOPFMetadataADMControllerTest.InsertIntegerIntfAttr;
 var
@@ -191,6 +201,12 @@ begin
 end;
 
 { TTestOPFMetadataADMValueTypeTest }
+
+procedure TTestOPFMetadataADMValueTypeTest.Setup;
+begin
+  inherited Setup;
+  Config; // startup default configuration;
+end;
 
 procedure TTestOPFMetadataADMValueTypeTest.InsertIntegerClassAttr;
 var
