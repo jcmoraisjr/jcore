@@ -300,6 +300,7 @@ type
     FExternalLinkRightFieldName: string;
     FExternalLinkTableName: string;
     FHasLazyload: Boolean;
+    FIsPersistent: Boolean;
     FOrderFieldName: string;
     FPersistentFieldName: string;
     function GetCompositionMetadata: TJCoreOPFClassMetadata;
@@ -321,6 +322,7 @@ type
     property ExternalLinkTableName: string read FExternalLinkTableName write FExternalLinkTableName;
     property HasExternalLink: Boolean read GetHasExternalLink;
     property HasLazyload: Boolean read FHasLazyload;
+    property IsPersistent: Boolean read FIsPersistent write FIsPersistent;
     property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
     property PersistentFieldName: string read FPersistentFieldName;
   end;
@@ -1300,6 +1302,7 @@ begin
   inherited Create(AModel, AOwner, APropInfo);
   FADMClass := Model.AcquireADMClass(PropInfo^.PropType);
   FAttributeType := ADMClass.AttributeType;
+  FIsPersistent := True;
   FPersistentFieldName := UpperCase(Name);
   if AttributeType in [jatEntity, jatCollection] then
   begin
@@ -1525,7 +1528,8 @@ begin
     VMap := TJCoreOPFMap.Create(AMetadata, MapMap.Count = 0);
     VIndex := MapMap.Add(VName, VMap);
     for I := 0 to Pred(AMetadata.AttributeCount) do
-      VMap.Add(AMetadata[I]);
+      if AMetadata[I].IsPersistent then
+        VMap.Add(AMetadata[I]);
   end;
   Result := MapMap.Data[VIndex];
 end;

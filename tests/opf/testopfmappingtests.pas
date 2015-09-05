@@ -25,6 +25,7 @@ type
     procedure CacheNotUpdated;
     procedure IntegerClear;
     procedure StringClean;
+    procedure NonPersistentClean;
     procedure CompositionSimpleChanged;
     procedure CompositionChanged;
     procedure CompositionAdded;
@@ -212,6 +213,27 @@ begin
     AssertTrue('person dirty2', VPerson._PID.IsDirty);
     VPerson.Name := 'Some name';
     AssertFalse('person dirty3', VPerson._PID.IsDirty);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFCleanDirtyAttributeTests.NonPersistentClean;
+var
+  VPerson: TTestIPIDPerson;
+begin
+  Config.Model.AcquireAttrMetadata(TTestIPIDPerson, 'Age').IsPersistent := False;
+  VPerson := TTestIPIDPerson.Create;
+  try
+    VPerson.Name := 'Some name';
+    VPerson.Age := 10;
+    Session.Store(VPerson);
+    AssertNotNull('person pid', VPerson._PID);
+    AssertFalse('person dirty1', VPerson._PID.IsDirty);
+    VPerson.Age := 20;
+    AssertFalse('person dirty2', VPerson._PID.IsDirty);
+    VPerson.Name := 'Other name';
+    AssertTrue('person dirty3', VPerson._PID.IsDirty);
   finally
     FreeAndNil(VPerson);
   end;

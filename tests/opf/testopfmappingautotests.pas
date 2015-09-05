@@ -14,6 +14,7 @@ type
   TTestOPFInsertAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure Single;
+    procedure SingleWithNonPersistent;
     procedure Inheritance;
     procedure CircularModel;
     procedure CompositionNull;
@@ -29,6 +30,7 @@ type
   published
     procedure Single;
     procedure SingleWithCollection;
+    procedure SingleWithNonPersistent;
     procedure ObjectNotFound;
     procedure Inheritance;
     procedure InheritanceFromParent;
@@ -44,6 +46,7 @@ type
   TTestOPFUpdateAutoMappingTests = class(TTestOPFInvoiceAutoMappingTestCase)
   published
     procedure Single;
+    procedure SingleWithNonPersistent;
     procedure InheritanceUpdateParentMap;
     procedure InheritanceUpdateSubMap;
     procedure InheritanceUpdateBothMaps;
@@ -101,6 +104,23 @@ begin
      'ExecSQL INSERT INTO PRODUCT (ID,NAME) VALUES (?,?)']);
   finally
     FreeAndNil(VProduct);
+  end;
+end;
+
+procedure TTestOPFInsertAutoMappingTests.SingleWithNonPersistent;
+var
+  VInvoice: TInvoice;
+begin
+  Config.Model.AcquireAttrMetadata(TInvoice, 'Date').IsPersistent := False;
+  VInvoice := TInvoice.Create;
+  try
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([
+     'WriteInt64 1',
+     'WriteNull',
+     'ExecSQL INSERT INTO INVOICE (ID,CLIENT) VALUES (?,?)']);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 
@@ -366,6 +386,25 @@ begin
   end;
 end;
 
+procedure TTestOPFSelectAutoMappingTests.SingleWithNonPersistent;
+var
+  VInvoice: TInvoice;
+begin
+  Config.Model.AcquireAttrMetadata(TInvoice, 'Date').IsPersistent := False;
+  {1}TTestSQLDriver.ExpectedResultsets.Add(1);
+  TTestSQLDriver.Data.Add('2');
+  TTestSQLDriver.Data.Add('null');
+  TTestSQLDriver.Data.Add('2');  // invoice item
+  VInvoice := Session.Retrieve(TInvoice, '2') as TInvoice;
+  try
+    AssertSQLDriverCommands([
+     'WriteInt64 2',
+     {1}'ExecSQL SELECT ID,CLIENT FROM INVOICE WHERE ID=?']);
+  finally
+    FreeAndNil(VInvoice);
+  end;
+end;
+
 procedure TTestOPFSelectAutoMappingTests.ObjectNotFound;
 var
   VCompany: TObject;
@@ -623,6 +662,23 @@ begin
      'ExecSQL UPDATE PRODUCT SET NAME=? WHERE ID=?']);
   finally
     FreeAndNil(VProduct);
+  end;
+end;
+
+procedure TTestOPFUpdateAutoMappingTests.SingleWithNonPersistent;
+var
+  VInvoice: TInvoice;
+begin
+  Config.Model.AcquireAttrMetadata(TInvoice, 'Date').IsPersistent := False;
+  VInvoice := TInvoice.Create;
+  try
+    Session.Store(VInvoice);
+    VInvoice.Date := '1/1';
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VInvoice);
+    AssertSQLDriverCommands([]);
+  finally
+    FreeAndNil(VInvoice);
   end;
 end;
 
