@@ -400,7 +400,7 @@ type
 
   { TJCoreOPFModel }
 
-  TJCoreOPFModel = class(TJCoreModel)
+  TJCoreOPFModel = class(TJCoreModel, IJCoreModel)
   { TODO : Model, map and metadata threadsafe }
   private
     FADMClassList: TJCoreOPFADMClassList;
@@ -432,7 +432,7 @@ type
     procedure AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
-    procedure InitEntity(const AEntity: TObject); override;
+    procedure InitEntity(const AEntity: TObject);
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
     property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator write FOIDGenerator;
     property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
