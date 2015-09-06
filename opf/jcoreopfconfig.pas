@@ -27,6 +27,25 @@ type
 
   { IJCoreOPFConfiguration }
 
+  {**
+    @abstract Interface of the global OPF configuration.
+
+    Use @link(TJCoreOPFConfiguration) class to create a new configuration instance.
+
+    @longcode(#
+    var
+      VConfig: IJCoreOPFConfiguration;
+    begin
+      VConfig := TJCoreOPFConfiguration.Create;
+    #)
+
+    @Member(AddDriverClass
+      Add an array of drivers to the configuration. Use @link(IJCoreOPFConfiguration.DriverName
+      DriverName) property to define which driver should be used with new
+      @link(IJCoreOPFSession sessions).
+      @param(ADriverClassArray Array of drivers.)
+    )
+  }
   IJCoreOPFConfiguration = interface(IInterface)
     procedure AddDriverClass(const ADriverClassArray: array of TJCoreOPFDriverClass);
     procedure AddMappingClass(const AMappingClassArray: array of TJCoreOPFMappingClass);

@@ -69,6 +69,19 @@ type
     property JoinType: TJCoreOPFSQLCriteriaJoinType read FJoinType;
   end;
 
+  {**
+    Strategy used to fetch abstract classes.
+
+    @value(jcfsLinkSubMaps
+      uses left outer join with all descendant classes and retrieve
+      it's ID in order to know the actual class of an object. A second query is sent to the database
+      to retrieve the fields of the subclasses, if necessary.
+    )
+    @value(jcfsFetchSubMaps
+      uses left outer join with all descendant classes and retrieve
+      all it's field in order to create the whole object with just one query.
+    )
+  }
   TJCoreOPFSQLCriteriaAbstractFetchStrategy = (jcfsLinkSubMaps, jcfsFetchSubMaps);
 
   { TJCoreOPFSQLCriteriaAliasList }

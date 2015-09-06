@@ -1,4 +1,5 @@
 lib
+pasdoc/output
 jcorert.pas
 jcoreopfrt.pas
 jcorewsrt.pas

@@ -28,6 +28,7 @@ type
 
   { TJCoreWSFCLHTTPHandler }
 
+  {** @exclude }
   TJCoreWSFCLHTTPHandler = class(TFPHTTPServerHandler)
   private
     FRequestRouter: IJCoreWSRequestRouter;
@@ -38,6 +39,7 @@ type
 
   { TJCoreWSFCLHTTPApp }
 
+  {** @exclude }
   TJCoreWSFCLHTTPApp = class(TCustomHTTPApplication)
   protected
     function InitializeWebHandler: TWebHandler; override;

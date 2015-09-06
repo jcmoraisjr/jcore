@@ -28,6 +28,7 @@ type
 
   { TJCoreWSFCLCGIHandler }
 
+  {** @exclude }
   TJCoreWSFCLCGIHandler = class(TCGIHandler)
   private
     FRequestRouter: IJCoreWSRequestRouter;
@@ -38,6 +39,7 @@ type
 
   { TJCoreWSFCLCGIApp }
 
+  {** @exclude }
   TJCoreWSFCLCGIApp = class(TCustomCGIApplication)
   protected
     function InitializeWebHandler: TWebHandler; override;

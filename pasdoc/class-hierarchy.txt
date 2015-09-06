@@ -1,0 +1,11 @@
+Exception=TObject
+TInterfacedObject=TObject
+TPersistent=TObject
+TComponent=TPersistent
+TJSONFiler=TComponent
+TJSONStreamer=TJSONFiler
+TJSONDeStreamer=TJSONFiler
+TFPSList=TObject
+TFPGObjectList=TFPSList
+TFPSMap=TFPSList
+TFPGMap=TFPSMap

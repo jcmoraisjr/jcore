@@ -38,6 +38,7 @@ type
     procedure UnregisterOperations(AOperations: array of TJCoreExpressionOperationClass);
   end;
 
+  {** @exclude }
   TJCoreExpressionAddOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -46,6 +47,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionSubtractOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -54,6 +56,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionMultiplyOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -62,6 +65,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionDivideOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -70,6 +74,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionIntDivOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -78,6 +83,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionPowerOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -86,6 +92,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionGreaterThanOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -94,6 +101,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionLesserThanOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -102,6 +110,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionGreaterThanOrEqualOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -110,6 +119,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionLesserThanOrEqualOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -118,6 +128,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionEqualOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -126,6 +137,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionDiffOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -134,6 +146,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionAndOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -142,6 +155,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionOrOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -150,6 +164,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionXorOperation = class(TJCoreExpressionOperation)
   protected
     class function InternalOperatorToken: string; override;
@@ -158,6 +173,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionMinFunction = class(TJCoreExpressionFunction)
   public
     function MaxParams: Integer; override;
@@ -166,6 +182,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionMaxFunction = class(TJCoreExpressionFunction)
   public
     function MaxParams: Integer; override;
@@ -174,6 +191,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionSqrtFunction = class(TJCoreExpressionFunction)
   public
     function MaxParams: Integer; override;
@@ -182,6 +200,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionPowerFunction = class(TJCoreExpressionFunction)
   public
     function MaxParams: Integer; override;
@@ -190,6 +209,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionIntPowerFunction = class(TJCoreExpressionFunction)
   public
     function MaxParams: Integer; override;
@@ -198,6 +218,7 @@ type
     procedure VarCalc; override;
   end;
 
+  {** @exclude }
   TJCoreExpressionIfFunction = class(TJCoreExpressionFunction)
   public
     function MaxParams: Integer; override;

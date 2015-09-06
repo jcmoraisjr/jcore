@@ -81,7 +81,7 @@ type
   TJCoreOPFADMClass = class of TJCoreOPFADM;
   TJCoreOPFADMClassList = specialize TFPGList<TJCoreOPFADMClass>;
   TJCoreOPFADMArray = array of TJCoreOPFADM;
-  TJCoreOPFADMMap = specialize TFPGMap<string, TJCoreOPFADM>;
+  TJCoreOPFADMMap = class(specialize TFPGMap<string, TJCoreOPFADM>);
 
   { TJCoreOPFADMValueType }
 
@@ -327,7 +327,7 @@ type
     property PersistentFieldName: string read FPersistentFieldName;
   end;
 
-  TJCoreOPFAttrMetadataList = specialize TFPGObjectList<TJCoreOPFAttrMetadata>;
+  TJCoreOPFAttrMetadataList = class(specialize TFPGObjectList<TJCoreOPFAttrMetadata>);
   TJCoreOPFAttrMetadataArray = array of TJCoreOPFAttrMetadata;
 
   { TJCoreOPFMap }

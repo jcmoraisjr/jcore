@@ -37,7 +37,7 @@ type
   end;
 
   TJCoreExpressionVar = class;
-  TJCoreExpressionVarList = specialize TFPGObjectList<TJCoreExpressionVar>;
+  TJCoreExpressionVarList = class(specialize TFPGObjectList<TJCoreExpressionVar>);
   TJCoreExpressionVars = class;
   TJCoreExpressionItem = class;
   TJCoreExpressionItemClass = class of TJCoreExpressionItem;
