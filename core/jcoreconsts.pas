@@ -100,10 +100,10 @@ resourcestring
   S3103_TypeinfoIsNotMethod = 'Typeinfo is not a tkMethod';
   S3104_AmbiguousMethodInvokers = 'Ambiguous method invoker implementation: ''%s'' and ''%s''';
   // EJCoreWS responses
-  S3201_InternalServerError500 = 'Internal server error';
-  S3202_UnknownStatus = 'Unknown status ''%d''';
-  S3203_URLNotFound = 'The requested URL ''%s'' was not found';
-  S3204_URLNotAllowed = 'The requested URL ''%s'' does not allow method ''%s''';
+  S3601_InternalServerError500 = 'Internal server error';
+  S3602_UnknownStatus = 'Unknown status ''%d''';
+  S3603_URLNotFound = 'The requested URL ''%s'' was not found';
+  S3604_URLNotAllowed = 'The requested URL ''%s'' does not allow method ''%s''';
 
 implementation
 

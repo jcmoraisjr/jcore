@@ -222,7 +222,7 @@ begin
     504: Result := 'Gateway Time-out';
     505: Result := 'HTTP Version not supported';
   else
-    Result := Format(JCoreFormatMessage(3202, S3202_UnknownStatus), [ACode]);
+    Result := Format(JCoreFormatMessage(3602, S3602_UnknownStatus), [ACode]);
   end;
 end;
 
@@ -289,7 +289,7 @@ begin
     on E: Exception do
     begin
       Logger.Error('Internal server error', E);
-      AResponse.Send(500, JCoreFormatMessage(3201, S3201_InternalServerError500));
+      AResponse.Send(500, JCoreFormatMessage(3601, S3601_InternalServerError500));
     end;
   end;
 end;
@@ -381,9 +381,9 @@ begin
       VMethod.HandleRequest(ARequest, AResponse)
     else
       AResponse.Send(405,
-       Format(JCoreFormatMessage(3204, S3204_URLNotAllowed), [ARequest.PathInfo, ARequest.Method]));
+       Format(JCoreFormatMessage(3604, S3604_URLNotAllowed), [ARequest.PathInfo, ARequest.Method]));
   end else
-    AResponse.Send(404, Format(JCoreFormatMessage(3203, S3203_URLNotFound), [ARequest.PathInfo]));
+    AResponse.Send(404, Format(JCoreFormatMessage(3603, S3603_URLNotFound), [ARequest.PathInfo]));
 end;
 
 procedure TJCoreWSRESTRequestHandler.InternalRegisterDefaultInvokers;
