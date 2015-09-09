@@ -370,16 +370,17 @@ type
   TJCoreOPFClassMetadata = class(TJCoreClassMetadata)
   private
     FMaps: TJCoreOPFMaps;
-    FOIDClass: TJCoreOPFOIDClass; // model initializes
-    FOIDGenerator: IJCoreOPFOIDGenerator; // model initializes
-    FOIDName: TJCoreStringArray; // model initializes
+    FOIDClass: TJCoreOPFOIDClass;
+    FOIDGenerator: IJCoreOPFOIDGenerator;
+    FOIDName: TJCoreStringArray;
     FSubMaps: TJCoreOPFMaps;
-    FTableName: string; // model initializes
+    FTableName: string;
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
     function GetModel: TJCoreOPFModel;
     function GetParent: TJCoreOPFClassMetadata;
     function GetSubMaps: TJCoreOPFMaps;
+    procedure InitOIDProperties;
   protected
     property Model: TJCoreOPFModel read GetModel;
   public
@@ -420,7 +421,6 @@ type
     procedure Finit; override;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
     function PIDClass: TJCoreOPFPIDClass; virtual;
-    procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); override;
     property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
     property MapMap: TJCoreOPFMapMap read FMapMap;
   public
@@ -1419,10 +1419,22 @@ begin
   Result := FSubMaps;
 end;
 
+procedure TJCoreOPFClassMetadata.InitOIDProperties;
+var
+  VModel: TJCoreOPFModel;
+begin
+  VModel := Model;
+  FOIDClass := VModel.OIDClass;
+  FOIDGenerator := VModel.OIDGenerator;
+  SetLength(FOIDName, 1);
+  FOIDName[0] := SJCoreID;
+end;
+
 constructor TJCoreOPFClassMetadata.Create(const AModel: TJCoreModel; const AClass: TClass;
   const AParent: TJCoreClassMetadata);
 begin
   inherited Create(AModel, AClass, AParent);
+  InitOIDProperties;
   FTableName := UpperCase(Copy(TheClass.ClassName, 2, MaxInt));
 end;
 
@@ -1570,29 +1582,13 @@ begin
   Result := TJCoreOPFPID;
 end;
 
-procedure TJCoreOPFModel.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
-var
-  VMetadata: TJCoreOPFClassMetadata;
-  VOIDName: TJCoreStringArray;
-begin
-  inherited RefineClassMetadata(AClassMetadata);
-  VMetadata := AClassMetadata as TJCoreOPFClassMetadata;
-  SetLength(VOIDName, 1);
-  VOIDName[0] := 'ID';
-  VMetadata.OIDName := VOIDName;
-  VMetadata.OIDClass := OIDClass;
-  if Assigned(OIDGenerator) then
-    VMetadata.OIDGenerator := OIDGenerator
-  else
-    VMetadata.OIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
-end;
-
 constructor TJCoreOPFModel.Create;
 begin
   FADMClassList := TJCoreOPFADMClassList.Create;
   inherited Create;
   FMapMap := TJCoreOPFMapMap.Create;
   FOIDClass := TJCoreOPFOIDString;
+  FOIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
 end;
 
 function TJCoreOPFModel.AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;

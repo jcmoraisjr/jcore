@@ -115,7 +115,6 @@ type
     procedure Finit; override;
     procedure InitRegistry; virtual;
     function IsReservedAttr(const AAttrName: ShortString): Boolean; virtual;
-    procedure RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata); virtual;
     property ClassMap: TJCoreClassMap read FClassMap;
     property GenericsMap: TJCoreGenericsMap read FGenericsMap;
     property MetadataMap: TJCoreClassMetadataMap read FMetadataMap;
@@ -305,7 +304,6 @@ begin
   if VClass = TObject then
     Exit;
   VPropListCount := GetPropList(VClass, VPropList);
-  RefineClassMetadata(AMetadata);
   if Assigned(VPropList) then
   begin
     try
@@ -365,10 +363,6 @@ end;
 function TJCoreModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
 begin
   Result := False;
-end;
-
-procedure TJCoreModel.RefineClassMetadata(const AClassMetadata: TJCoreClassMetadata);
-begin
 end;
 
 constructor TJCoreModel.Create;

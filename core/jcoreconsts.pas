@@ -19,6 +19,7 @@ interface
 const
   SJCoreTrueString = 'True';
   SJCoreFalseString = 'False';
+  SJCoreID = 'ID';
   SJCorePID = '_pid';
   SJCoreProxy = '_proxy';
   SJCoreController = 'JCoreController';
