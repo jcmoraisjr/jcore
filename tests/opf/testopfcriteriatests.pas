@@ -5,7 +5,7 @@ unit TestOPFCriteriaTests;
 interface
 
 uses
-  TestOPFConfig, JCoreOPFCriteria;
+  TestOPFConfig;
 
 type
 

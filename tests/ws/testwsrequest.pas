@@ -1,5 +1,6 @@
 unit TestWSRequest;
 
+{$ifndef VER3}{$fatal WS tests requires FPC 3}{$endif}
 {$mode objfpc}{$H+}
 
 interface

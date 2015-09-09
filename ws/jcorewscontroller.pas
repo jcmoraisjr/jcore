@@ -62,7 +62,7 @@ type
     property Invoker: TJCoreWSMethodInvoker read GetInvoker;
     property MethodData: TJCoreWSMethodData read FMethodData;
   public
-    constructor Create(const AControllerClass: TClass; const AMethodAddr: CodePointer; const AMethodTypeInfo: PTypeInfo; const AMethodPattern: string = '');
+    constructor Create(const AControllerClass: TClass; const AMethodAddr: Pointer; const AMethodTypeInfo: PTypeInfo; const AMethodPattern: string = '');
     destructor Destroy; override;
     function AcceptRequestMethod(const ARequestMethod: string): Boolean;
     procedure HandleRequest(const ARequest: TRequest; const AResponse: TResponse);
@@ -86,7 +86,7 @@ type
   public
     constructor Create(const AControllerClass: TClass; const AControllerURLFrag: string = '');
     destructor Destroy; override;
-    function AddMethod(const AMethodAddr: CodePointer; const AMethodTypeInfo: PTypeInfo; const AMethodPattern: string = ''): TJCoreWSControllerClass;
+    function AddMethod(const AMethodAddr: Pointer; const AMethodTypeInfo: PTypeInfo; const AMethodPattern: string = ''): TJCoreWSControllerClass;
     function FindMethod(const AMethodURLFrag: string): TJCoreWSControllerMethod;
     property ControllerClass: TClass read FControllerClass;
     property ControllerURLFrag: string read FControllerURLFrag;
@@ -151,7 +151,7 @@ begin
   Result := FInvoker;
 end;
 
-constructor TJCoreWSControllerMethod.Create(const AControllerClass: TClass; const AMethodAddr: CodePointer;
+constructor TJCoreWSControllerMethod.Create(const AControllerClass: TClass; const AMethodAddr: Pointer;
   const AMethodTypeInfo: PTypeInfo; const AMethodPattern: string);
 begin
   inherited Create;
@@ -227,7 +227,7 @@ begin
   inherited Destroy;
 end;
 
-function TJCoreWSControllerClass.AddMethod(const AMethodAddr: CodePointer;
+function TJCoreWSControllerClass.AddMethod(const AMethodAddr: Pointer;
   const AMethodTypeInfo: PTypeInfo; const AMethodPattern: string): TJCoreWSControllerClass;
 var
   VMethod: TJCoreWSControllerMethod;

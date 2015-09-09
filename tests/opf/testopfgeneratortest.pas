@@ -25,11 +25,8 @@ implementation
 uses
   sysutils,
   testregistry,
-  JCoreOPFMetadata,
   JCoreOPFOID,
   JCoreOPFDriver,
-  JCoreOPFConfig,
-  JCoreOPFSession,
   TestOPFModelInvoice;
 
 { TTestOPFOIDGeneratorTest }

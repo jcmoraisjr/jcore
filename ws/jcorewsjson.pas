@@ -101,7 +101,9 @@ begin
 end;
 
 initialization
+{$ifdef VER3}
   TJSONObject.CompressedJSON := True;
+{$endif}
 
 end.
 
