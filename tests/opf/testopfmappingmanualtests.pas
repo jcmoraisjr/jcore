@@ -1712,15 +1712,15 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFInsertManualMappingPlainTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFUpdateManualMappingPlainTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFSelectManualMappingPlainTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFDeleteOneManualMappingPlainTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.plain', TTestOPFDeleteArrayManualMappingPlainTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFInsertManualMappingInheritanceTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFUpdateManualMappingInheritanceTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFSelectManualMappingInheritanceTests);
-  RegisterTest('jcore.opf.mapping.manualmapping.inheritance', TTestOPFDeleteManualMappingInheritanceTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFInsertManualMappingPlainTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFUpdateManualMappingPlainTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFSelectManualMappingPlainTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFDeleteOneManualMappingPlainTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFDeleteArrayManualMappingPlainTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFInsertManualMappingInheritanceTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFUpdateManualMappingInheritanceTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFSelectManualMappingInheritanceTests);
+  RegisterTest('jcore.opf.mapping.manual', TTestOPFDeleteManualMappingInheritanceTests);
 
 end.
 

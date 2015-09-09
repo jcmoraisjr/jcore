@@ -608,8 +608,8 @@ end;
 
 initialization
   RegisterTest('jcore.opf.mapping.core', TTestOPFMappingTests);
-  RegisterTest('jcore.opf.mapping.cleandirty', TTestOPFCleanDirtyAttributeTests);
-  RegisterTest('jcore.opf.mapping.persistentstate', TTestOPFPersistentStateTests);
+  RegisterTest('jcore.opf.mapping.core', TTestOPFCleanDirtyAttributeTests);
+  RegisterTest('jcore.opf.mapping.core', TTestOPFPersistentStateTests);
 
 end.
 

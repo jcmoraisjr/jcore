@@ -152,7 +152,7 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.oidgenerator', TTestOPFOIDGeneratorTest);
+  RegisterTest('jcore.opf.generator', TTestOPFOIDGeneratorTest);
 
 end.
 

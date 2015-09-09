@@ -1265,10 +1265,10 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.mapping.automapping', TTestOPFInsertAutoMappingTests);
-  RegisterTest('jcore.opf.mapping.automapping', TTestOPFSelectAutoMappingTests);
-  RegisterTest('jcore.opf.mapping.automapping', TTestOPFUpdateAutoMappingTests);
-  RegisterTest('jcore.opf.mapping.automapping', TTestOPFDeleteAutoMappingTests);
+  RegisterTest('jcore.opf.mapping.auto', TTestOPFInsertAutoMappingTests);
+  RegisterTest('jcore.opf.mapping.auto', TTestOPFSelectAutoMappingTests);
+  RegisterTest('jcore.opf.mapping.auto', TTestOPFUpdateAutoMappingTests);
+  RegisterTest('jcore.opf.mapping.auto', TTestOPFDeleteAutoMappingTests);
 
 end.
 

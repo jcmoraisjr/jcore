@@ -425,9 +425,9 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.metadata.common', TTestOPFMetadataTest);
-  RegisterTest('jcore.opf.metadata.ipid', TTestOPFIPIDMetadataTests);
-  RegisterTest('jcore.opf.metadata.proxy', TTestOPFProxyMetadataTests);
+  RegisterTest('jcore.opf.metadata', TTestOPFMetadataTest);
+  RegisterTest('jcore.opf.metadata', TTestOPFIPIDMetadataTests);
+  RegisterTest('jcore.opf.metadata', TTestOPFProxyMetadataTests);
 
 end.
 

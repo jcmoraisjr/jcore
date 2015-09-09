@@ -323,8 +323,8 @@ begin
 end;
 
 initialization
-  RegisterTest('jcore.opf.metadata.adm.object', TTestOPFMetadataADMControllerTest);
-  RegisterTest('jcore.opf.metadata.adm.valuetype', TTestOPFMetadataADMValueTypeTest);
+  RegisterTest('jcore.opf.adm', TTestOPFMetadataADMControllerTest);
+  RegisterTest('jcore.opf.adm', TTestOPFMetadataADMValueTypeTest);
 
 end.
 
