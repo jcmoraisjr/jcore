@@ -134,7 +134,7 @@ type
  var
    // Initialized by TTestOPFAbstractTestCase.CreateConfiguration and TTestOPFSimpleTestCase.GetConfig
    // Finalized by TTestOPFAbstractTestCase.TearDown and TTestOPFSimpleTestCase.TearDown
-   TestDefaultModel: IJCoreModel;
+   TestInvoiceModel: IJCoreModel;
 
 implementation
 
@@ -146,7 +146,7 @@ uses
 procedure TCustomAttrEntity.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TestDefaultModel.InitEntity(Self);
+  TestInvoiceModel.InitEntity(Self);
 end;
 
 { TCustomEntity }

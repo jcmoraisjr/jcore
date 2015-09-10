@@ -75,6 +75,7 @@ type
   //TChars = set of Char;
   TJCoreStringArray = array of string;
   TJCoreClassArray = array of TClass;
+  TJCorePropInfoArray = array of PPropInfo;
   TJCoreVariantArray = array of Variant;
 
   TJCoreClassMap = specialize TFPGMap<String, TClass>;

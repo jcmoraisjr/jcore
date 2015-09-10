@@ -34,6 +34,7 @@ type
   TJCoreOPFPID = class;
   TJCoreOPFPIDClass = class of TJCoreOPFPID;
   TJCoreOPFPIDList = specialize TFPGObjectList<TJCoreOPFPID>;
+  TJCoreOPFPIDMap = specialize TFPGMap<Pointer, TJCoreOPFPID>;
   TJCoreOPFPIDArray = array of TJCoreOPFPID;
 
   IJCoreOPFPIDManager = interface
@@ -373,15 +374,19 @@ type
     FOIDClass: TJCoreOPFOIDClass;
     FOIDGenerator: IJCoreOPFOIDGenerator;
     FOIDName: TJCoreStringArray;
+    FOIDProp: TJCorePropInfoArray;
     FSubMaps: TJCoreOPFMaps;
     FTableName: string;
+    procedure BuildOIDProperties;
     function GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
     function GetMaps: TJCoreOPFMaps;
     function GetModel: TJCoreOPFModel;
     function GetParent: TJCoreOPFClassMetadata;
     function GetSubMaps: TJCoreOPFMaps;
-    procedure InitOIDProperties;
+    procedure SetOIDClass(const AValue: TJCoreOPFOIDClass);
   protected
+    procedure AddAttribute(const APropInfo: PPropInfo); override;
+    function IsPersistent: Boolean;
     property Model: TJCoreOPFModel read GetModel;
   public
     { TODO : Generics? }
@@ -391,9 +396,10 @@ type
     function FindAttribute(const AAttributeName: string): TJCoreOPFAttrMetadata;
     property Attributes[const AIndex: Integer]: TJCoreOPFAttrMetadata read GetAttributes; default;
     property Maps: TJCoreOPFMaps read GetMaps;
-    property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
+    property OIDClass: TJCoreOPFOIDClass read FOIDClass write SetOIDClass;
     property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator write FOIDGenerator;
-    property OIDName: TJCoreStringArray read FOIDName write FOIDName;
+    property OIDName: TJCoreStringArray read FOIDName;
+    property OIDProp: TJCorePropInfoArray read FOIDProp;
     property Parent: TJCoreOPFClassMetadata read GetParent;
     property SubMaps: TJCoreOPFMaps read GetSubMaps;
     property TableName: string read FTableName write FTableName;
@@ -407,9 +413,12 @@ type
     FADMClassList: TJCoreOPFADMClassList;
     FMapMap: TJCoreOPFMapMap;
     FOIDClass: TJCoreOPFOIDClass;
+    FOIDClassList: TJCoreOPFOIDClassList;
     FOIDGenerator: IJCoreOPFOIDGenerator;
     FOrderFieldName: string;
+    FPIDCache: TJCoreOPFPIDMap;
     procedure AcquireMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
+    function AcquirePIDFromCache(const AEntity: TObject): TJCoreOPFPID;
     function AcquirePIDFromIntfProp(const AEntity: TObject): TJCoreOPFPID;
     function AcquirePIDFromProxyField(const AEntity: TObject): TJCoreOPFPID;
     procedure AcquireSubMaps(const AMetadata: TJCoreOPFClassMetadata; const AMaps: TJCoreOPFMaps);
@@ -419,10 +428,11 @@ type
     function ClassMetadataClass: TJCoreClassMetadataClass; override;
     function CreateProxy(const APID: TJCoreOPFPID): TJCoreEntityProxy; virtual;
     procedure Finit; override;
-    function IsReservedAttr(const AAttrName: ShortString): Boolean; override;
     function PIDClass: TJCoreOPFPIDClass; virtual;
     property ADMClassList: TJCoreOPFADMClassList read FADMClassList;
     property MapMap: TJCoreOPFMapMap read FMapMap;
+    property OIDClassList: TJCoreOPFOIDClassList read FOIDClassList;
+    property PIDCache: TJCoreOPFPIDMap read FPIDCache;
   public
     constructor Create; override;
     function AcquireADMClass(const AAttrTypeInfo: PTypeInfo): TJCoreOPFADMClass;
@@ -430,9 +440,12 @@ type
     function AcquireMetadata(const AClass: TClass): TJCoreOPFClassMetadata;
     function AcquirePID(const AEntity: TObject): TJCoreOPFPID;
     procedure AddADMClass(const AADMClassArray: array of TJCoreOPFADMClass);
+    procedure AddOIDClass(const AOIDClassArray: array of TJCoreOPFOIDClass);
     function CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
     function CreateSubMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
+    function FindOIDClass(const AOIDProp: TJCorePropInfoArray): TJCoreOPFOIDClass;
     procedure InitEntity(const AEntity: TObject);
+    procedure ReleaseEntity(const AEntity: TObject);
     property OIDClass: TJCoreOPFOIDClass read FOIDClass write FOIDClass;
     property OIDGenerator: IJCoreOPFOIDGenerator read FOIDGenerator write FOIDGenerator;
     property OrderFieldName: string read FOrderFieldName write FOrderFieldName;
@@ -442,7 +455,8 @@ implementation
 
 uses
   sysutils,
-  JCoreConsts;
+  JCoreConsts,
+  JCoreUtils;
 
 { TJCoreOPFADM }
 
@@ -1115,10 +1129,20 @@ begin
 end;
 
 procedure TJCoreOPFPID.SetOID(const AValue: IJCoreOPFOID);
+var
+  VOIDProp: TJCorePropInfoArray;
 begin
   if IsPersistent and Assigned(AValue) then
     raise EJCoreOPF.Create(2119, S2119_CannotAssignOIDPersistent, []);
   FOID := AValue;
+  VOIDProp := Metadata.OIDProp;
+  if Length(VOIDProp) > 0 then
+  begin
+    if Assigned(FOID) then
+      FOID.WriteToOIDProp(Entity, VOIDProp)
+    else
+      Metadata.OIDClass.ClearProp(Entity, VOIDProp);
+  end;
 end;
 
 function TJCoreOPFPID.AcquireADMByAttrAddr(const AAttrAddr: Pointer): TJCoreOPFADM;
@@ -1390,6 +1414,54 @@ end;
 
 { TJCoreOPFClassMetadata }
 
+procedure TJCoreOPFClassMetadata.BuildOIDProperties;
+var
+  VOIDProp: TJCorePropInfoArray;
+  VOIDClass: TJCoreOPFOIDClass;
+  VFound: Boolean;
+  I: Integer;
+begin
+  if Assigned(Parent) and (Length(Parent.OIDName) > 0) then
+  begin
+    // Parent has valid OID
+    if Length(FOIDName) > 0 then
+      raise EJCoreOPF.Create(
+       2135, S2135_CannotOverrideOID, [Parent.TheClass.ClassName, TheClass.ClassName]);
+    FOIDName := Parent.OIDName
+  end else if (Length(FOIDName) = 0) and IsPersistent then
+  begin
+    // No OID here neither on parent and this class is
+    // persistent. Creating a default OID
+    SetLength(FOIDName, 1);
+    FOIDName[0] := SJCoreID;
+  end;
+  SetLength(VOIDProp, Length(FOIDName));
+  VFound := Length(VOIDProp) > 0;
+  for I := Low(VOIDProp) to High(VOIDProp) do
+  begin
+    { TODO : proper OID name <-> property convertion, see AddAttribute() }
+    VOIDProp[I] := GetPropInfo(TheClass.ClassInfo, '_' + FOIDName[I]);
+    if not Assigned(VOIDProp[I]) then
+      VFound := False;
+  end;
+  if VFound then
+  begin
+    if Assigned(FOIDClass) and FOIDClass.Apply(VOIDProp) then
+      VOIDClass := FOIDClass
+    else
+      VOIDClass := Model.FindOIDClass(VOIDProp);
+    if not Assigned(VOIDClass) then
+      raise EJCoreOPF.Create(2133, S2133_UnsupportedOID, [TheClass.ClassName]);
+  end else
+  begin
+    VOIDClass := Model.OIDClass;
+    SetLength(VOIDProp, 0);
+  end;
+  FOIDProp := VOIDProp;
+  FOIDClass := VOIDClass;
+  FOIDGenerator := Model.OIDGenerator;
+end;
+
 function TJCoreOPFClassMetadata.GetAttributes(const AIndex: Integer): TJCoreOPFAttrMetadata;
 begin
   Result := inherited Attributes[AIndex] as TJCoreOPFAttrMetadata;
@@ -1419,23 +1491,42 @@ begin
   Result := FSubMaps;
 end;
 
-procedure TJCoreOPFClassMetadata.InitOIDProperties;
-var
-  VModel: TJCoreOPFModel;
+procedure TJCoreOPFClassMetadata.SetOIDClass(const AValue: TJCoreOPFOIDClass);
 begin
-  VModel := Model;
-  FOIDClass := VModel.OIDClass;
-  FOIDGenerator := VModel.OIDGenerator;
-  SetLength(FOIDName, 1);
-  FOIDName[0] := SJCoreID;
+  if Assigned(AValue) and (Length(OIDProp) > 0) and not AValue.Apply(OIDProp) then
+    raise EJCoreOPF.Create(2132, S2132_InvalidOIDClass, [TheClass.ClassName, AValue.ClassName]);
+  FOIDClass := AValue;
+end;
+
+procedure TJCoreOPFClassMetadata.AddAttribute(const APropInfo: PPropInfo);
+var
+  VAttrName: ShortString;
+begin
+  VAttrName := APropInfo^.Name;
+  if not SameText(SJCorePID, VAttrName) then
+  begin
+    if VAttrName[1] = '_' then
+    begin
+      SetLength(FOIDName, Length(FOIDName) + 1);
+      FOIDName[High(FOIDName)] := Copy(VAttrName, 2, MaxInt);
+    end else
+      inherited AddAttribute(APropInfo);
+  end;
+end;
+
+function TJCoreOPFClassMetadata.IsPersistent: Boolean;
+begin
+  { TODO : proper is persistent check - note that this method
+    is being called inside the class metadata constructor }
+  Result := AttributeCount > 0;
 end;
 
 constructor TJCoreOPFClassMetadata.Create(const AModel: TJCoreModel; const AClass: TClass;
   const AParent: TJCoreClassMetadata);
 begin
+  FTableName := UpperCase(Copy(AClass.ClassName, 2, MaxInt));
   inherited Create(AModel, AClass, AParent);
-  InitOIDProperties;
-  FTableName := UpperCase(Copy(TheClass.ClassName, 2, MaxInt));
+  BuildOIDProperties;
 end;
 
 destructor TJCoreOPFClassMetadata.Destroy;
@@ -1465,6 +1556,26 @@ begin
     AcquireMaps(AMetadata.Parent, AMaps);
     if AMetadata.AttributeCount > 0 then
       AMaps.Add(AcquireMap(AMetadata));
+  end;
+end;
+
+function TJCoreOPFModel.AcquirePIDFromCache(const AEntity: TObject): TJCoreOPFPID;
+var
+  VMetadata: TJCoreOPFClassMetadata;
+  VIndex: Integer;
+begin
+  VIndex := PIDCache.IndexOf(AEntity);
+  if VIndex >= 0 then
+  begin
+    Result := PIDCache.Data[VIndex];
+  end else
+  begin
+    VMetadata := AcquireMetadata(AEntity.ClassType);
+    if Length(VMetadata.OIDProp) > 0 then
+    begin
+      Result := PIDClass.Create(AEntity, VMetadata);
+      PIDCache.Add(AEntity, Result);
+    end;
   end;
 end;
 
@@ -1566,15 +1677,19 @@ var
   I: Integer;
 begin
   FreeAndNil(FADMClassList);
+  FreeAndNil(FOIDClassList);
   for I := 0 to Pred(FMapMap.Count) do
     FMapMap.Data[I].Free;
   FreeAndNil(FMapMap);
+  for I := 0 to Pred(FPIDCache.Count) do
+  begin
+    { TODO : Move leaking analyzer to session }
+    LOG.Warn(JCoreFormatMessage(
+     2801, Format(S2801_PIDLeaking, [FPIDCache.Data[I].Metadata.TheClass.ClassName])));
+    FPIDCache.Data[I].Free;
+  end;
+  FreeAndNil(FPIDCache);
   inherited Finit;
-end;
-
-function TJCoreOPFModel.IsReservedAttr(const AAttrName: ShortString): Boolean;
-begin
-  Result := SameText(SJCorePID, AAttrName) or inherited IsReservedAttr(AAttrName);
 end;
 
 function TJCoreOPFModel.PIDClass: TJCoreOPFPIDClass;
@@ -1585,8 +1700,10 @@ end;
 constructor TJCoreOPFModel.Create;
 begin
   FADMClassList := TJCoreOPFADMClassList.Create;
+  FOIDClassList := TJCoreOPFOIDClassList.Create;
   inherited Create;
   FMapMap := TJCoreOPFMapMap.Create;
+  FPIDCache := TJCoreOPFPIDMap.Create;
   FOIDClass := TJCoreOPFOIDString;
   FOIDGenerator := TJCoreOPFOIDGeneratorGUID.Create;
 end;
@@ -1614,9 +1731,11 @@ function TJCoreOPFModel.AcquirePID(const AEntity: TObject): TJCoreOPFPID;
 begin
   if not Assigned(AEntity) then
     raise EJCoreNilPointer.Create;
-  Result := AcquirePIDFromIntfProp(AEntity);
+    Result := AcquirePIDFromIntfProp(AEntity);
   if not Assigned(Result) then
     Result := AcquirePIDFromProxyField(AEntity);
+  if not Assigned(Result) then
+    Result := AcquirePIDFromCache(AEntity);
   if not Assigned(Result) then
     raise EJCoreOPF.Create(2108, S2108_PersistentIDNotFound, [AEntity.ClassName]);
 end;
@@ -1627,6 +1746,14 @@ var
 begin
   for VADMClass in AADMClassArray do
     ADMClassList.Add(VADMClass);
+end;
+
+procedure TJCoreOPFModel.AddOIDClass(const AOIDClassArray: array of TJCoreOPFOIDClass);
+var
+  VOIDClass: TJCoreOPFOIDClass;
+begin
+  for VOIDClass in AOIDClassArray do
+    OIDClassList.Add(VOIDClass);
 end;
 
 function TJCoreOPFModel.CreateMaps(const AMetadata: TJCoreOPFClassMetadata): TJCoreOPFMaps;
@@ -1651,9 +1778,35 @@ begin
   end;
 end;
 
+function TJCoreOPFModel.FindOIDClass(const AOIDProp: TJCorePropInfoArray): TJCoreOPFOIDClass;
+var
+  I: Integer;
+begin
+  for I := 0 to Pred(FOIDClassList.Count) do
+  begin
+    { TODO : use a proper factory }
+    Result := FOIDClassList[I];
+    if Result.Apply(AOIDProp) then
+      Exit;
+  end;
+  Result := nil;
+end;
+
 procedure TJCoreOPFModel.InitEntity(const AEntity: TObject);
 begin
   AcquirePID(AEntity);
+end;
+
+procedure TJCoreOPFModel.ReleaseEntity(const AEntity: TObject);
+var
+  VIndex: Integer;
+begin
+  VIndex := PIDCache.IndexOf(AEntity);
+  if VIndex >= 0 then
+  begin
+    PIDCache.Data[VIndex].Free;
+    PIDCache.Delete(VIndex);
+  end;
 end;
 
 end.

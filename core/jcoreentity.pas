@@ -66,6 +66,7 @@ type
   IJCoreModel = interface(IInterface)
   ['{864C46EB-53E8-F576-445C-8573FD52E873}']
     procedure InitEntity(const AEntity: TObject);
+    procedure ReleaseEntity(const AEntity: TObject);
   end;
 
   { TJCoreEntityProxy }

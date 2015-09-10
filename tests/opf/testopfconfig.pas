@@ -74,6 +74,7 @@ type
     procedure AssertSQLDriverCommands(const ACommands: array of string);
     procedure AssertSQLDriverTransaction(const ATransactions: array of string);
     procedure ConfigAutoMapping;
+    procedure ConfigIdContactModel;
     procedure ConfigIPIDContactMapping;
     procedure ConfigIPIDContactModel;
     procedure ConfigProxyCircularModel;
@@ -81,6 +82,7 @@ type
     procedure ConfigProxyContactModel;
     procedure ConfigProxyInvoiceMapping;
     procedure ConfigProxyInvoiceModel;
+    procedure CreateConfigIdContactAuto;
     procedure CreateConfigIPIDContactAuto;
     procedure CreateConfigIPIDContactManual;
     procedure CreateConfigProxyCircularAuto;
@@ -106,6 +108,13 @@ type
   { TTestOPFProxyContactTestCase }
 
   TTestOPFProxyContactTestCase = class(TTestOPFAbstractTestCase)
+  protected
+    procedure InternalConfigureSession; override;
+  end;
+
+  { TTestOPFIdContactTestCase }
+
+  TTestOPFIdContactTestCase = class(TTestOPFAbstractTestCase)
   protected
     procedure InternalConfigureSession; override;
   end;
@@ -296,12 +305,12 @@ end;
 procedure TTestOPFAbstractTestCase.CreateConfiguration;
 begin
   FConfig := TTestOPFConfig.Create;
-  TestDefaultModel := FConfig.Model;
   FConfig.DriverClass := TTestSQLDriver;
   FConfig.Model.OIDClass := TJCoreOPFOIDInt64;
   FConfig.Model.OIDGenerator := TTestOPFOIDGenerator.Create;
   FConfig.Model.OrderFieldName := 'SEQ';
-  TestDefaultModel := FConfig.Model;
+  TestContactModel := FConfig.Model;
+  TestInvoiceModel := FConfig.Model;
 end;
 
 function TTestOPFAbstractTestCase.GetConfig: IJCoreOPFConfiguration;
@@ -358,6 +367,11 @@ begin
   Config.AddMappingClass([TTestSQLMapping]);
 end;
 
+procedure TTestOPFAbstractTestCase.ConfigIdContactModel;
+begin
+  Config.Model.AddClass([TTestIdPerson]);
+end;
+
 procedure TTestOPFAbstractTestCase.ConfigIPIDContactMapping;
 begin
   Config.AddMappingClass([
@@ -406,6 +420,14 @@ begin
    TAddress, TClient, TPerson, TCompany, TProduct, TInvoiceItem, TInvoiceItemProduct, TInvoiceItemService,
    TInvoice]);
   Config.Model.AddGenerics(TInvoiceItemList, TInvoiceItem);
+end;
+
+procedure TTestOPFAbstractTestCase.CreateConfigIdContactAuto;
+begin
+  CreateConfiguration;
+  ConfigAutoMapping;
+  ConfigIdContactModel;
+  FSession := FConfig.CreateSession as ITestOPFSession;
 end;
 
 procedure TTestOPFAbstractTestCase.CreateConfigIPIDContactAuto;
@@ -472,7 +494,8 @@ end;
 procedure TTestOPFAbstractTestCase.TearDown;
 begin
   inherited TearDown;
-  TestDefaultModel := nil;
+  TestContactModel := nil;
+  TestInvoiceModel := nil;
   TTestSQLDriver.Commands.Clear;
   TTestSQLDriver.Data.Clear;
   TTestSQLDriver.ExpectedResultsets.Clear;
@@ -495,6 +518,13 @@ end;
 procedure TTestOPFProxyContactTestCase.InternalConfigureSession;
 begin
   CreateConfigProxyContactManual;
+end;
+
+{ TTestOPFIdContactTestCase }
+
+procedure TTestOPFIdContactTestCase.InternalConfigureSession;
+begin
+  CreateConfigIdContactAuto;
 end;
 
 { TTestOPFInvoiceManualMappingTestCase }

@@ -104,7 +104,8 @@ uses
   types,
   JCoreConsts,
   JCoreClasses,
-  JCoreOPFADM;
+  JCoreOPFADM,
+  JCoreOPFOID;
 
 { TJCoreOPFConfiguration }
 
@@ -189,6 +190,8 @@ begin
     FModel.AddADMClass([TJCoreOPFIntegerType]);
     // Entities and collections
     FModel.AddADMClass([TJCoreOPFADMEntity, TJCoreOPFADMFPSListCollection]);
+    // OIDs
+    FModel.AddOIDClass([TJCoreOPFOIDString, TJCoreOPFOIDInt32, TJCoreOPFOIDInt64]);
   end else
     FModel := AModel;
   inherited Create;

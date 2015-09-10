@@ -11,6 +11,26 @@ uses
 
 type
 
+  { TTestIdBase }
+
+  TTestIdBase = class(TObject)
+  private
+    FId: Integer;
+  public
+    destructor Destroy; override;
+  published
+    property _ID: Integer read FId write FId;
+  end;
+
+  { TTestIdPerson }
+
+  TTestIdPerson = class(TTestIdBase)
+  private
+    FName: string;
+  published
+    property Name: string read FName write FName;
+  end;
+
   { TTestIPIDBase }
 
   TTestIPIDBase = class(TJCoreManagedObject)
@@ -160,10 +180,21 @@ type
     property City: TTestProxyCity read GetCity write SetCity;
   end;
 
+var
+  TestContactModel: IJCoreModel;
+
 implementation
 
 uses
   sysutils;
+
+{ TTestIdBase }
+
+destructor TTestIdBase.Destroy;
+begin
+  TestContactModel.ReleaseEntity(Self);
+  inherited Destroy;
+end;
 
 { TTestIPIDLanguage }
 

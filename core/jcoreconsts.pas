@@ -36,11 +36,8 @@ resourcestring
   SJCoreNumberValueMsg = 'Number';
   SJCoreStringDelimiterMsg = 'String delimiter';
   SJCoreStringValueMsg = 'String';
-
-  //// Messages
   SJCoreExceptionRaisedWithMessage = '%s exception was raised with the following message: %s';
 
-  //// Messages from exceptions
   // EJCoreNilPointer
   S0101_NilPointer = 'Nil pointer';
   // EJCoreClasses
@@ -71,7 +68,7 @@ resourcestring
   S2105_ConnectionNotFound = 'Connection not found: %s';
   S2106_UnsupportedConnection = 'Unsupported connection: %s';
   S2107_DetachedStatement = 'Detached statement';
-  S2108_PersistentIDNotFound = 'PersistentID field not found';
+  S2108_PersistentIDNotFound = 'PersistentID field not found for class ''%s''';
   S2109_DriverIsNotSQL = 'Only SQL drivers are supported. Driver: ''%s''';
   S2110_EmptyResultSet = 'Resultset is empty. Expected resultset size is ''%d''';
   S2111_UnassignedParams = 'Unassigned params';
@@ -94,12 +91,18 @@ resourcestring
   S2129_IncompatibleJoinOID = 'Cannot join ''%s'': incompatible OID';
   S2130_DbSequenceUnsupported = 'Database ''%s'' does not support sequences';
   S2131_DbAutoincUnsupported = 'Database ''%s'' does not support auto-increment field';
+  S2132_InvalidOIDClass = 'OID of the class metadata ''%s'' does not support OID class ''%s''';
+  S2133_UnsupportedOID = 'OID of the class metadata ''%s'' is not supported';
+  S2134_InvalidOIDProp = 'Invalid OID properties assigned to OID ''%s''';
+  S2135_CannotOverrideOID = 'Cannot override OID from ''%s'' on the class ''%s''';
+  // OPF warnings
+  S2801_PIDLeaking = 'Entity class ''%s'' is leaking it''s PID instance';
   // EJCoreWS
   S3101_UnsupportedMethod = 'Method ''%s.%s'' does not have a supported invoker';
   S3102_TypeinfoIsNotMethod = 'Typeinfo ''%s.%s'' is not a tkMethod';
   S3103_TypeinfoIsNotMethod = 'Typeinfo is not a tkMethod';
   S3104_AmbiguousMethodInvokers = 'Ambiguous method invoker implementation: ''%s'' and ''%s''';
-  // EJCoreWS responses
+  // WS responses
   S3601_InternalServerError500 = 'Internal server error';
   S3602_UnknownStatus = 'Unknown status ''%d''';
   S3603_URLNotFound = 'The requested URL ''%s'' was not found';

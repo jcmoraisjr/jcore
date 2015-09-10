@@ -13,6 +13,7 @@ type
 
   TTestOPFMetadataTest = class(TTestOPFInvoiceManualMappingTestCase)
   published
+    procedure NoPIDEntity;
     procedure CreatePIDInheritance;
     procedure CircularReference;
     procedure OwnOwnedMetadata;
@@ -41,10 +42,22 @@ type
     procedure LazyCollection;
   end;
 
+  { TTestOPFIdMetadataTests }
+
+  TTestOPFIdMetadataTests = class(TTestOPFIdContactTestCase)
+  published
+    procedure CreateId;
+    procedure CreateAltId;
+    procedure CreateOverridenId;
+    procedure UpdateId;
+    procedure DisposeId;
+  end;
+
 implementation
 
 uses
   sysutils,
+  Classes,
   fgl,
   testregistry,
   JCoreClasses,
@@ -60,6 +73,37 @@ type
   TTestPIDFriend = class(TJCoreOPFPID);
 
 { TTestOPFMetadataTest }
+
+type
+
+  { TTestPersonNoPID }
+
+  TTestPersonNoPID = class(TPersistent)
+  private
+    FName: string;
+  published
+    property Name: string read FName write FName;
+  end;
+
+procedure TTestOPFMetadataTest.NoPIDEntity;
+var
+  VPerson: TTestPersonNoPID;
+begin
+  CreateConfigIPIDContactAuto;
+  VPerson := TTestPersonNoPID.Create;
+  try
+    try
+      Session.Store(VPerson);
+      Fail('EJCoreOPF(2108) expected');
+    except
+      on E: EJCoreOPF do
+        if E.Code <> 2108 then
+          raise;
+    end;
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
 
 procedure TTestOPFMetadataTest.CreatePIDInheritance;
 var
@@ -424,10 +468,137 @@ begin
   end;
 end;
 
+{ TTestOPFIdMetadataTests }
+
+procedure TTestOPFIdMetadataTests.CreateId;
+var
+  VPerson: TTestIdPerson;
+begin
+  VPerson := TTestIdPerson.Create;
+  try
+    VPerson.Name := 'jane';
+    Session.Store(VPerson);
+    AssertEquals('person id', 1, VPerson._ID);
+    AssertSQLDriverCommands([
+     'WriteInt32 1',
+     'WriteString jane',
+     'ExecSQL INSERT INTO TESTIDPERSON (ID,NAME) VALUES (?,?)']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+type
+
+  { TTestOIDPerson }
+
+  TTestOIDPerson = class(TPersistent)
+  private
+    FName: string;
+    FOID: string;
+  published
+    property _OID: string read FOID write FOID;
+    property Name: string read FName write FName;
+  end;
+
+procedure TTestOPFIdMetadataTests.CreateAltId;
+var
+  VPerson: TTestOIDPerson;
+begin
+  VPerson := TTestOIDPerson.Create;
+  try
+    VPerson.Name := 'jack';
+    Session.Store(VPerson);
+    AssertEquals('person oid', '1', VPerson._OID);
+    AssertSQLDriverCommands([
+     'WriteString 1',
+     'WriteString jack',
+     'ExecSQL INSERT INTO TESTOIDPERSON (OID,NAME) VALUES (?,?)']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+type
+
+  { TTestBaseOID }
+
+  TTestBaseOID = class(TPersistent)
+  private
+    FOID: Integer;
+  published
+    property _OID: Integer read FOID write FOID;
+  end;
+
+  { TTestOverrideOID }
+
+  TTestOverrideOID = class(TTestBaseOID)
+  private
+    FID: Integer;
+    FName: string;
+  published
+    property _ID: Integer read FID write FID;
+    property Name: string read FName write FName;
+  end;
+
+
+procedure TTestOPFIdMetadataTests.CreateOverridenId;
+begin
+  try
+    Config.Model.AcquireMetadata(TTestOverrideOID);
+    Fail('EJCoreOPF(2135) expected');
+  except
+    on E: EJCoreOPF do
+      if E.Code <> 2135 then
+        raise;
+  end;
+end;
+
+procedure TTestOPFIdMetadataTests.UpdateId;
+var
+  VPerson: TTestIdPerson;
+begin
+  VPerson := TTestIdPerson.Create;
+  try
+    VPerson.Name := 'james';
+    Session.Store(VPerson);
+    AssertEquals('person id', 1, VPerson._ID);
+    VPerson.Name := 'joe';
+    TTestSQLDriver.Commands.Clear;
+    Session.Store(VPerson);
+    AssertSQLDriverCommands([
+     'WriteString joe',
+     'WriteInt32 1',
+     'ExecSQL UPDATE TESTIDPERSON SET NAME=? WHERE ID=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
+procedure TTestOPFIdMetadataTests.DisposeId;
+var
+  VPerson: TTestIdPerson;
+begin
+  VPerson := TTestIdPerson.Create;
+  try
+    Session.Store(VPerson);
+    AssertEquals('person id', 1, VPerson._ID);
+    TTestSQLDriver.Commands.Clear;
+    Session.Dispose(VPerson);
+    AssertEquals('person id', 0, VPerson._ID);
+    AssertSQLDriverCommands([
+     'WriteInt32 1',
+     'ExecSQL DELETE FROM TESTIDPERSON WHERE ID=?']);
+  finally
+    FreeAndNil(VPerson);
+  end;
+end;
+
 initialization
   RegisterTest('jcore.opf.metadata', TTestOPFMetadataTest);
   RegisterTest('jcore.opf.metadata', TTestOPFIPIDMetadataTests);
   RegisterTest('jcore.opf.metadata', TTestOPFProxyMetadataTests);
+  RegisterTest('jcore.opf.metadata', TTestOPFIdMetadataTests);
 
 end.
 
