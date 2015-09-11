@@ -13,7 +13,7 @@ pasdoc \
     ../{ws,ws/apphandlers}/*.pas \
   --external-class-hierarchy class-hierarchy.txt \
   --format html \
-  --verbosity 1 \
+  --verbosity 2 \
   --staronly \
   --use-tipue-search \
   --write-uses-list \
@@ -22,7 +22,7 @@ pasdoc \
   --graphviz-classes \
   --link-gv-uses png \
   --link-gv-classes png \
-  --output output
+  --output output | grep -v '^Info\[2\]'
 cd output/
 echo "Generating uses dependency graph"
 dot -Grankdir=RL -Tpng -oGVUses.png GVUses.dot
