@@ -15,7 +15,7 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Files Count="13">
+    <Files Count="17">
       <Item1>
         <Filename Value="opf/jcoreopfdriver.pas"/>
         <UnitName Value="JCoreOPFDriver"/>
@@ -65,9 +65,25 @@
         <UnitName Value="JCoreOPFPostgreSQL"/>
       </Item12>
       <Item13>
+        <Filename Value="opf/db/jcoreopforacle.pas"/>
+        <UnitName Value="JCoreOPFOracle"/>
+      </Item13>
+      <Item14>
         <Filename Value="opf/db/jcoreopfmssqlserver.pas"/>
         <UnitName Value="JCoreOPFMSSQLServer"/>
-      </Item13>
+      </Item14>
+      <Item15>
+        <Filename Value="opf/db/jcoreopffirebird.pas"/>
+        <UnitName Value="JCoreOPFFirebird"/>
+      </Item15>
+      <Item16>
+        <Filename Value="opf/db/jcoreopfsqlite.pas"/>
+        <UnitName Value="JCoreOPFSQLite"/>
+      </Item16>
+      <Item17>
+        <Filename Value="opf/db/jcoreopfmysql.pas"/>
+        <UnitName Value="JCoreOPFMySQL"/>
+      </Item17>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

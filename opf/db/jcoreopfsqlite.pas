@@ -1,5 +1,5 @@
 (*
-  JCore, OPF MS SQL Server DB Class
+  JCore, OPF SQLite DB Class
   Copyright (C) 2015 Joao Morais
 
   See the file LICENSE.txt, included in this distribution,
@@ -10,7 +10,7 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 *)
 
-unit JCoreOPFMSSQLServer;
+unit JCoreOPFSQLite;
 
 {$I jcore.inc}
 
@@ -21,9 +21,9 @@ uses
 
 type
 
-  { TJCoreOPFMSSQLServerDatabase }
+  { TJCoreOPFSQLiteDatabase }
 
-  TJCoreOPFMSSQLServerDatabase = class(TJCoreOPFSQLDatabase)
+  TJCoreOPFSQLiteDatabase = class(TJCoreOPFSQLDatabase)
   public
     function AutoincSQL: string; override;
     class function DatabaseName: string; override;
@@ -31,16 +31,16 @@ type
 
 implementation
 
-{ TJCoreOPFMSSQLServerDatabase }
+{ TJCoreOPFSQLiteDatabase }
 
-function TJCoreOPFMSSQLServerDatabase.AutoincSQL: string;
+function TJCoreOPFSQLiteDatabase.AutoincSQL: string;
 begin
-  Result := 'SELECT scope_identity()';
+  Result := 'SELECT last_insert_rowid()';
 end;
 
-class function TJCoreOPFMSSQLServerDatabase.DatabaseName: string;
+class function TJCoreOPFSQLiteDatabase.DatabaseName: string;
 begin
-  Result := 'MS SQL Server';
+  Result := 'SQLite';
 end;
 
 end.

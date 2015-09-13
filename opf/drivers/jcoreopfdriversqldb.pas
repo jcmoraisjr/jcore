@@ -88,7 +88,11 @@ uses
   JCoreConsts,
   JCoreClasses,
   JCoreOPFPostgreSQL,
-  JCoreOPFMSSQLServer;
+  JCoreOPFOracle,
+  JCoreOPFMSSQLServer,
+  JCoreOPFFirebird,
+  JCoreOPFSQLite,
+  JCoreOPFMySQL;
 
 { TJCoreOPFQuerySQLdb }
 
@@ -259,8 +263,16 @@ function TJCoreOPFDriverSQLdb.InternalDatabaseClass: TJCoreOPFSQLDatabaseClass;
 begin
   if SameText(ConnectionName, 'postgresql') then
     Result := TJCoreOPFPostgreSQLDatabase
+  else if SameText(ConnectionName, 'oracle') then
+    Result := TJCoreOPFOracleDatabase
   else if SameText(ConnectionName, 'mssqlserver') then
     Result := TJCoreOPFMSSQLServerDatabase
+  else if SameText(ConnectionName, 'firebird') then
+    Result := TJCoreOPFFirebirdDatabase
+  else if SameText(ConnectionName, 'sqlite3') then
+    Result := TJCoreOPFSQLiteDatabase
+  else if SameText(Copy(ConnectionName, 1, 6), 'mysql ') then
+    Result := TJCoreOPFMySQLDatabase
   else
     raise EJCoreOPF.Create(2106, S2106_UnsupportedConnection, [ConnectionName]);
 end;
