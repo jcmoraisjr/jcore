@@ -1,2 +1,57 @@
 @shorttitle(Overview)
 @title(JCore overview)
+
+Open source and object oriented frameworks for Object Pascal.
+
+Truly object oriented Pascal programming assisted by frameworks is a bit challenging. Integration between
+systems via REST protocol, serialization, deserialization and persistence of objects in a transparent way,
+dependency injection, integrations without coupling, flexible configuration logs, and the list goes on. Put
+it all together in an elegant and simple interface, while still being robust and reliable. There are few
+tools that meet these criteria. JCore is a tool that try hard to deliver most of these requirements to
+Object Pascal developers as a free and open source library.
+
+Although JCore has been designed with the concept of @html(<a
+href="https://en.wikipedia.org/wiki/Convention_over_configuration">)Convention over
+Configuration@html(</a>) in mind, it is a premise of the framework to not create services or settings in
+the initialization area of their units. Therefore you need to manually declare what you want to use. On one
+hand it makes the initial settings a bit more verbose, on the other hand brings more flexibility and less
+unexpected behavior.
+
+Another premise used by JCore is to not use global variables. Despite the minimal configuration to build a
+"Hello World" be a little bigger, avoiding global variables allows you to design the architecture of your
+application with more freedom. It is for this reason that you need, for example, create and save an OPF
+configuration instance by yourself.
+
+JCore is divided into modules. The Core module has frameworks and reusable utilities. Each of the other
+modules depends only on the Core, for example, there is no dependency between OPF and Web Services. Thus if
+you only need OPF, add only Core and OPF to your project. There are Lazarus packages that can help you to
+include JCore as dependency, but using Lazarus package is not mandatory. If you don't use Lazarus just
+point the compiler to the directories of each module you want to add. There is also a Lazarus package with
+an expert that can help you build your JCore application from scratch.
+
+About Delphi compatibility: JCore is FPC first, and although Delphi compatibility is welcome, I cannot
+maintain it by myself. Let me know if you can fix the code and can be a maintainer of the Delphi
+compatibility --- in this case write to joao.morais at pressobjects org.
+
+Welcome aboard! I hope you enjoy using JCore as much as I enjoyed design and build it. =)
+
+@html(<h2>)Contents:@html(</h2>)
+@tableOfContents
+
+@html(<hr noshade size="1">)
+
+@section 1 core Core
+
+@include(overview-core.txt)
+
+@html(<hr noshade size="1">)
+
+@section 1 opf OPF
+
+@include(overview-opf.txt)
+
+@html(<hr noshade size="1">)
+
+@section 1 ws Web Services
+
+@include(overview-ws.txt)

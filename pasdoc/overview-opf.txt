@@ -1,0 +1,759 @@
+OPF --- which stands for Object Persistence Framework --- is a library that maps in memory objects to and
+from a permanent storage, such as a database or flat files. JCoreOPF is the OPF implementation of JCore.
+The following sections describe a little about this framework.
+
+@section 2 opf-config Configuration
+
+The building of a JCoreOPF environment begins with the creation of a global variable called
+@link(IJCoreOPFConfiguration Config). The Config responsibility is to maintain overall OPF data such as
+class and driver parameters, mapping classes, as well as model information such as OID class, generator,
+attribute types and metadata.
+
+The following code snippets show the most common parameterization of the Config instance.
+     
+@orderedList(
+  @item(Create the Config instance. Note that the instance is stored in a COM interface, thus there is no
+    need to worry about its life cycle.
+    @longcode(#
+    uses
+      JCoreOPFConfig;
+    var
+      VConfig: IJCoreOPFConfiguration;
+    begin
+      VConfig := TJCoreOPFConfiguration.Create;
+    #)
+  )
+  @item(Enter a @link(TJCoreOPFDriver driver) class to be used by the OPF.
+    @longcode(#
+    uses
+      // ...
+      JCoreOPFDriverSQLdb;
+    begin
+      // ...
+      VConfig.DriverClass := TJCoreOPFDriverSQLdb;
+    #)
+  )
+  @item(Driver parameterizations. Remember to include any support units.
+    @longcode(#
+    uses
+      // ...
+      pqconnection;
+    begin
+      // ...
+      // 'connection' is the SQLdb's ConnectionName
+      VConfig.Params.Values['connection'] := 'PostgreSQL';
+      VConfig.Params.Values['hostname'] := 'localhost';
+      VConfig.Params.Values['database'] := 'mydb';
+      VConfig.Params.Values['username'] := 'mydb_user';
+      VConfig.Params.Values['password'] := 'passwd';
+    #)
+  )
+  @item(Include all mapping classes that you will need. The class @link(TJCoreOPFSQLMapping) performs
+    self-mapping and will be the only class required in most cases.
+    @longcode(#
+    uses
+      // ...
+      JCoreOPFMappingSQL;
+    begin
+      // ...
+      VConfig.AddMappingClass([TJCoreOPFSQLMapping]);
+    #)
+  )
+  @item(Add the model classes. JCoreOPF need to know all the entity's classes to build the compositions
+    correctly. Adding generics circumvents a generics RTTI limitation in the current version of FPC, this
+    method will be removed as soon as the information is provided by the compiler.
+    @longcode(#
+    begin
+      // ...
+      VConfig.Model.AddClass([
+        TPerson, TCity, TInvoice, TInvoiceItem]);
+      VConfig.Model.AddGenerics(
+        TInvoiceItemList, TInvoiceItem);
+    #)
+  )
+  @item(Set the OID. If neither an OID is informed nor an @code(Id) property is declared in the entity,
+    JCoreOPF will use a GUID generator and will generate a string key with 32 digits. See @html(<a
+    href="#opf-oid">)OID@html(</a>) for other configuration options of the OID.
+    @longcode(#
+    uses
+      // ...
+      JCoreOPFOID;
+    begin
+      // ...
+      VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
+      VConfig.Model.OIDGenerator :=
+        TJCoreOPFOIDGeneratorSequence.Create('seq_app');
+    #)
+  )
+  @item(All persisted or retrieved entities depend on an internal control object called @link(TJCoreOPFPID
+    PID). The simplest way to meet the requirement in an efficient way is to inherit the entities from the
+    @link(TJCoreEntity) class. Another entity setup options @html(<a href="#opf-pid">)here@html(</a>).
+    @longcode(#
+    uses
+      JCoreEntity;
+    type
+      TPerson = class(TJCoreEntity)
+      private
+        FName: string;
+      published
+        property Name: string read FName write FName;
+      end;
+    #)
+  )
+  @item(Use @link(IJCoreOPFSession sessions) to include, find, change, or delete entities in the
+    persistence mechanism. See other Session use samples @html(<a href="#opf-session">)here@html(</a>).
+    @longcode(#
+    uses
+      // ...
+      JCoreOPFSession;
+    var
+      // ...
+      VSession: IJCoreOPFSession;
+    begin
+      // ...
+      VSession := VConfig.CreateSession;
+      VSession.Store(...);
+    #)
+  )
+)
+
+The configurations above are the minimum necessary for building a functional JCoreOPF environment. The
+following topics discuss these configuration options in a little more detail.
+
+Time to take a cup of coffee.
+
+@section 2 opf-session Session
+
+To add, find, change or delete objects you need to create Sessions. While the Config instance is thread
+safe, the persistent sessions are not.
+
+@bold(Important:) in multithreaded applications, do create a new Session for each new thread.
+
+@section 3 opf-session-store Store
+
+Use the @link(IJCoreOPFSession.Store Store) method to store a new entity or change an existing one in the
+database.
+
+@longcode(#
+  uses
+    // ...
+    JCoreOPFSession;
+  var
+    // ...
+    VSession: IJCoreOPFSession;
+    VPerson: TPerson;
+  begin
+    // ...
+    VSession := VConfig.CreateSession;
+    VPerson := TPerson.Create;
+    try
+      VPerson.Name := 'jack';
+      VSession.Store(VPerson);
+      // oops, wrong name
+      VPerson.Name := 'james';
+      VSession.Store(VPerson);
+    finally
+      FreeAndNil(VPerson);
+    end;
+#)
+
+@section 3 opf-session-retrieve Retrieve
+
+To retrieve an object whose @code(Id) is known use the method @link(IJCoreOPFSession.Retrieve Retrieve).
+
+@longcode(#
+  var
+    // ...
+    VPerson: TPerson;
+  begin
+    // ...
+    VPerson := VSession.Retrieve(TPerson, ['1']) as TPerson;
+    try
+      // ...
+    finally
+      FreeAndNil(VPerson);
+    end;
+#)
+
+The interface of the @link(IJCoreOPFSession.Retrieve Retrieve) method is unique to any OID type and expects
+the Id in string format. JCoreOPF converts to the correct format before searching on the database.
+
+@section 3 opf-session-dispose Dispose
+
+To delete an object from the database use one of two @link(IJCoreOPFSession.Dispose Dispose) method
+approaches.
+
+@orderedList(
+  @item(With one instance:
+    @longcode(#
+  var
+    // ...
+    VPerson: TPerson;
+  begin
+    // ...
+    VSession.Dispose(VPerson);
+    #)
+  )
+  @item(With just the class and the @code(Id):
+    @longcode(#
+  begin
+    // ...
+    VSession.Dispose(TPerson, ['1']);
+    #)
+  )
+)
+
+@section 3 opf-session-stmt Statement
+
+Use @link(IJCoreOPFSQLStatement statements) to run queries or change data without using the JCoreOPF
+mapping.
+
+@orderedList(
+  @item(Updating data:
+    @longcode(#
+  uses
+    // ...
+    JCoreOPFDriver;
+  var
+    // ...
+    VStmt: IJCoreOPFSQLStatement;
+  begin
+    // ...
+    VStmt := VSession.CreateStatement;
+    VStmt.SQL := 'UPDATE person SET name=? WHERE id=?';
+    VStmt.WriteString('james');
+    Vstmt.WriteInt64(1);
+    VStmt.ExecuteImmediate;
+    #)
+  )
+  @item(Querying data:
+    @longcode(#
+  uses
+    // ...
+    JCoreOPFDriver;
+  var
+    // ...
+    VStmt: IJCoreOPFSQLStatement;
+    VResultSet: IJCoreOPFSQLResultSet;
+    I: Integer;
+  begin
+    // ...
+    VStmt := VSession.CreateStatement;
+    VStmt.SQL := 'SELECT name FROM person p WHERE p.nick=?';
+    VStmt.WriteString('joe');
+    VResultSet := VStmt.OpenCursor;
+    for I := 0 to Pred(VResultSet.Size) do
+      writeln('Name: ', VResultSet.ReadString);
+    #)
+  )
+)
+
+@section 3 opf-session-criteria Criteria
+
+Unlike statements, @link(IJCoreOPFSQLCriteria criteria) uses JCoreOPF mapping for querying the database.
+This way it can retrieve an object or a list of objects instead of a cursor.
+
+@orderedList(
+  @item(Filtering by @link(TJCoreOPFCriteriaRestriction criterions):
+    @longcode(#
+  var
+    VPersonList: TObjectList;
+  begin
+    VPersonList := Session.CreateCriteria(TPerson)
+      .Add(TJCoreOPFCriteriaRestriction.Gt('age', 18))
+      .RetrieveList;
+    #)
+  )
+  @item(Filtering by SQL code:
+    @longcode(#
+  var
+    VPersonList: TObjectList;
+  begin
+    VPersonList := Session.CreateCriteria(TPerson)
+      .Add(TJCoreOPFCriteriaRestriction.SQL('age > ?', [18]))
+      .RetrieveList;
+    #)
+  )
+  @item(Returning none or just one object:
+    @longcode(#
+  var
+    VPerson: TPerson;
+  begin
+    VPerson := Session.CreateCriteria(TPerson)
+      .Add(TJCoreOPFCriteriaRestriction.Eq('name', 'jack'))
+      .RetrieveUnique as TPerson;
+    #)
+  )
+)
+
+@section 2 opf-metadata Metadata
+
+Metadatas are used to store model settings. Only part of the metadata can be configured directly at the
+entity's declaration, whose reading is made by JCoreOPF via RTTI. Other settings can only be made searching
+and changing the metadata at runtime. We look forward the FPC's @html(<a
+href="http://wiki.freepascal.org/Property_attributes">)property attributes@html(</a>) implementation. =)
+
+Declaring a string of 50 chars in length and a composition:
+
+@longcode(#
+  uses
+    JCoreEntity;
+  type
+    // ...
+    TPerson = class(TJCoreEntity)
+    // ... private fields
+    published
+      property Name: string index 50;
+      property Address: TAddress stored True;
+    end;
+#)
+
+Compositions cannot be shared with more than one object and are destroyed when the object that references
+it is destroyed (@link(IJCoreOPFSession.Dispose Dispose)). If the @code(stored) option is not informed, by
+default JCoreOPF creates a composition.
+
+Declaring a string of 100 chars in length and an aggregation:
+
+@longcode(#
+  uses
+    JCoreEntity;
+  type
+    TPerson = class(TJCoreEntity)
+    // ... private fields
+    published
+      property Name: string index 100;
+      property City: TCity stored False;
+    end;
+#)
+
+Aggregations can be shared among multiple objects and are not destroyed when the object that references it
+is destroyed.
+
+@bold(Important:) while data within compositions are sent to the database whenever the main object is
+updated (@link(IJCoreOPFSession.Store Store)), this only happens with aggregations when it does not yet
+exist in the database. To update the data from an aggregation --- @code(Person.City) in the above example
+--- you must explicitly call the @link(IJCoreOPFSession.Store Store) method for the @code(City) instance.
+
+Declaring a list composition:
+
+@longcode(#
+  uses
+    // ...
+    fgl;
+    JCoreEntity;
+  type
+    TInvoiceItem = class(TJCoreEntity)
+    // ... private fields and published properties
+    end;
+
+    TInvoiceItemList = 
+      specialize TFPGObjectList<TInvoiceItem>;
+
+    TInvoice = class(TJCoreEntity)
+    // ... private fields
+    published
+      property Items: TInvoiceItemList
+        read FItems write FItems;
+    end;
+#)
+
+@bold(Important:) note that the entity's memory management is a responsibility of the programmer. The code
+snippet above declares one of the types natively supported by JCoreOPF, however the control of the entity's
+life cycle and all its attributes should be treated. To complete the example above is necessary to overload
+the @code(Destroy) and implement @code(FreeAndNil(FItems)). Moreover, to simplify the user interface is
+recommended to use getter and setter, respectively, to create the list if it does not exist and to destroy
+the old list before assigning a new one.
+
+Because of a generics RTTI limitation on FPC, whenever declaring a generic list you must register it with
+the Model. The configuration below allows the JCoreOPF to know that @code(TInvoiceItemList) is a list of
+@code(TInvoiceItem).
+
+@longcode(#
+  begin
+    // ...
+    VConfig.Model.AddGenerics(
+      TInvoiceItemList, TInvoiceItem);
+#)
+
+The list compositions have the same behavior of simple compositions, ie, all items are destroyed when
+the main object is destroyed, and all the items that has changed will be updated in the database when the
+main object is updated (@link(IJCoreOPFSession.Store Store)).
+
+Declaring a list aggregation:
+
+@longcode(#
+  uses
+    // ...
+    fgl;
+    JCoreEntity;
+  type
+    TLanguage = class(TJCoreEntity)
+    // ... private fields and published properties
+    end;
+
+    TLanguageList = specialize TFPGObjectList<TLanguage>;
+
+    TPerson = class(TJCoreEntity)
+    // ... private fields
+    published
+      property SpokingLanguages: TLanguageList
+        read FSpokingLanguages write FSpokingLanguages;
+        stored False;
+    end;
+#)
+
+Worth the same hints of list compositions: destroy the list whenever you destroy the entity and use as a
+good practice to declare getter and setter to control the list lifecycle.
+
+List aggregations has the same behavior of simple aggregations:
+
+@unorderedList(
+  @item(Each item (@code(TLanguage)) can be shared with more than one entity (@code(TPerson))
+  )
+  @item(Changes in the data items (@code(TLanguage)) will not be sent to the database when saving the
+    entity (@code(TPerson)), unless they are not there yet
+  )
+  @item(Only the links to the items (@code(TLanguage)) will be destroyed when the entity (@code(TPerson))
+    is destroyed, that is, by excluding @code(TPerson), each @code(TLanguage) that it references remain on
+    the database
+  )
+)
+
+JCoreOPF automatically recognizes the published properties and their types without the need for manual
+intervention. To adjust any setting that is not possible using RTTI, it is necessary to search and modify
+the metadata of a @link(TJCoreOPFClassMetadata class) or an @link(TJCoreOPFAttrMetadata attribute) manually.
+
+Search the @link(TJCoreClassMetadata class metadata) of @code(TPerson) class and change it's generator:
+
+@longcode(#
+  begin
+    // ...
+    VConfig.Model.AcquireMetadata(TPerson).OIDGenerator :=
+      TJCoreOPFOIDGeneratorSequence.Create('seq_person');
+#)
+
+Search the @link(TJCoreOPFAttrMetadata attribute metadata) of @code(TPerson.Name) attribute and change the
+name of it's field in the database:
+
+@longcode(#
+  begin
+    // ...
+    VConfig.Model.AcquireAttrMetadata(TPerson, 'Name')
+      .PersistentFieldName := 'PERSON_NAME';
+#)
+
+@section 2 opf-oid OID
+
+Every entity persisted in the database needs a means to be referenced when loaded into memory. In JCoreOPF
+this is done with @link(TJCoreOPFModel.OIDClass OID management) class and @link(TJCoreOPFModel.OIDGenerator
+OID Generator) instance. The former sets the class whose instance will control the OID data itself, the
+latter will be used whenever a new OID need to be created.
+
+Each of the model classes have an implicit OID that can be customized. If no customization is applied,
+JCoreOPF will create a GUID, store it in a field named Id, and expects that the field supports a string of
+32 chars in length.
+
+To globally change the OID generator to the database's sequence @code(seq_app) and store it in a field
+named @code(Id) whose type is @code(Int64):
+
+@longcode(#
+  uses
+    // ...
+    JCoreOPFOID;
+  begin
+    // ...
+    VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
+    VConfig.Model.OIDGenerator :=
+      TJCoreOPFOIDGeneratorSequence.Create('seq_app');
+#)
+
+If you prefer to use an auto-increment field or if the database does not support sequences:
+
+@longcode(#
+  uses
+    // ...
+    JCoreOPFOID;
+  begin
+    // ...
+    VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
+    VConfig.Model.OIDGenerator :=
+      TJCoreOPFOIDGeneratorAutoinc.Create;
+#)
+
+It is possible to use a different generator for each model class:
+
+@longcode(#
+  begin
+    // ...
+    VConfig.Model.OIDClass := TJCoreOPFOIDInt64;
+    VConfig.Model.AcquireMetadata(TPerson).OIDGenerator :=
+      TJCoreOPFOIDGeneratorSequence.Create('seq_person');
+    VConfig.Model.AcquireMetadata(TInvoice).OIDGenerator :=
+      TJCoreOPFOIDGeneratorSequence.Create('seq_invoice');
+    VConfig.Model.AcquireMetadata(TCity).OIDGenerator :=
+      TJCoreOPFOIDGeneratorSequence.Create('seq_city');
+#)
+
+@bold(Important:) on inheritances, the same OID is shared between all subclasses. If a model entity
+inherits from another persistent entity, only the most abstract class may set a custom OID and generator.
+
+The contents of the OID is always available in @link(IJCorePID.OID), see @html(<a
+href="#opf-pid">)PID@html(</a>) for information on how to declare the PID.
+
+*** Unstable usage interfaces, so missing doc:
+
+@unorderedList(
+  @item(declare an OID using RTTI)
+  @item(declare an OID from the attribute metadata)
+  @item(name the PersistentField of an OID)
+)
+
+The OID architecture of JCoreOPF was built in such a way to allow the use of compound OID, however this
+feature is not implemented yet.
+
+@section 2 opf-pid PID
+
+@link(TJCoreOPFPID PID) is a JCoreOPF internal instance with persistence and metadata information of the
+entity, widely used in the internal implementation of the framewowk. There is a different @code(PID)
+instance for each persistent entity loaded into memory, thus it --- the @code(PID) --- should be destroyed
+whenever its entity is destroyed.
+
+A @code(PID) is created whenever an entity is retrieved from the database or whenever a non-persistent
+entity is stored in the database. JCoreOPF takes care of the construction of the @code(PID), and depending
+on how the entity is declared, it's the programmer's responsibility to destroy the @code(PID) whenever the
+entity is destroyed.
+
+To declare an entity, use any of the following four approaches.
+
+@orderedList(
+  @item(Inherits from @link(TJCoreEntity).
+    @longcode(#
+  TPerson = class(TJCoreEntity)
+  private
+    FName: string;
+  published
+    property Name: string read FName write FName;
+  end;
+    #)
+  )
+  @item(Declare the @code(_proxy) attribute as @link(TJCoreEntityProxy) before entity's private area. When
+    using this approach is necessary to inherit the entity from @code(TPersistent) or use the compiler
+    directive @code({$M+}), so that the framework can locate the @code(_proxy) attribute at runtime.
+    @longcode(#
+  {$M+}
+  TPerson = class(TObject)
+    _proxy: TJCoreEntityProxy;
+  private
+    FName: string;
+  public
+    // Destructor implements FreeAndNil(_proxy);
+    destructor Destroy; override;
+  published
+    property Name: string read FName write FName;
+  end;
+  {$M+}
+    #)
+  )
+  @item(Declare the @code(_pid) property as @link(IJCorePID) at the published area of the entity.
+    @longcode(#
+  TPerson = class(TObject)
+  private
+    FPID: IJCorePID;
+    FName: string;
+  published
+    property _pid: IJCorePID read FPID write FPID;
+    property Name: string read FName write FName;
+  end;
+    #)
+  )
+  @item(Do not declare any @code(PID) or @code(Proxy) reference and leave JCoreOPF find the @code(PID) by
+    itself. When using this approach it is necessary to notify JCoreOPF the destruction of the entity using
+    the @link(TJCoreOPFModel.ReleaseEntity ReleaseEntity) method.
+    @longcode(#
+  // Model unit
+  TPerson = class(TObject)
+  private
+    FId: Integer;
+    FName: string;
+  public
+    // Destructor implements VModel.ReleaseEntity(Self)
+    destructor Destroy; override;
+  published
+    property Id: Integer read FId write FId;
+    property Name: string read FName write FName;
+  end;
+  // ...
+  var
+    VModel: IJCoreModel;
+  
+  // Configuration unit
+  begin
+    // ...
+    VModel := VConfig.Model;
+    #)
+  )
+)
+
+Which approach to use? Inherit the entity from @link(TJCoreEntity) if the entity does not have to inherit
+from another class, otherwise declare the @code(_proxy) attribute or the @code(_pid) property. While
+@code(_pid) has the advantage of not needing to be destroyed manually, @code(_proxy) has the advantage that
+it can be called even before the framework initializes it --- calling a @nil @code(_proxy) is safe.
+All of these three approaches have the same performance.
+
+The lack of a reference to the @code(PID) in the entity's declaration has a little impact on performance
+and leaves the entity without support of some features such as lazy loading. In this approach it is
+necessary to @link(TJCoreOPFModel.ReleaseEntity notify) JCoreOPF of the entity's destruction. If the
+@code(PID) is not released when the instance is destroyed, it will be released only when its session is
+destroyed.
+
+*** There is an undocumented feature regarding a native @code(Id) property. The usage interface of this
+feature isn't stable yet.
+
+@section 2 opf-adm Attributes
+
+The Mediation between the persistence engine and JCoreOPF's mapping is done through @link(TJCoreOPFADM ADM)
+--- Attribute Data Mediator --- instances. The creation and destruction of ADMs is handled by the framework.
+
+JCoreOPF has three distinct types of ADM implementations. All the types has the same performance, adopt one
+that suit you best.
+
+@orderedList(
+  @item(ADM for native types --- they are used with native compiler types. It has the advantage of
+    simplicity and the disadvantage of not supporting @code(null).
+    @longcode(#
+    uses
+      JCoreEntity;
+    type
+      TPerson = class(TJCoreEntity)
+      // ... private fields
+      published
+        property Name: string read FName write FName;
+        property Age: Integer read FAge write FAge;
+      end;
+    #)
+  )
+  @item(ADM for object types --- they are used in attributes managed as objects. JCore has interfaces and
+    support classes to various native types, see unit @link(JCoreTypes). It has the advantage of supporting
+    @code(null) and the disadvantage of a more verbose syntax --- @code(VPerson.Name.Value) --- to access
+    the native content. The JCore Types are immutable, thus it is safe to reference the object instead of
+    copying the native content.
+    @longcode(#
+    uses
+      JCoreEntity,
+      JCoreTypes;
+    type
+      TPerson = class(TJCoreEntity)
+      // ... private fields
+      published
+        property Name: IJCoreString read FName write FName;
+        property Age: IJCoreInteger read FAge write FAge;
+      end;
+    #)
+  )
+  @item(ADM as attribute --- the ADM itself is used in place of the native attribute or attribute as object.
+    It has the advantage of grouping in the same interface: support of @code(null), flag for modified
+    content, cached content and other internal information from the ADM. The disadvantages are: the need to
+    keep a reference to the Model in order to initialize the attributes, a more verbose syntax ---
+    @code(VPerson.Name.Value) --- to access the content, and a small overhead during construction of the
+    instance.
+
+    @longcode(#
+    uses
+      JCoreEntity,
+      JCoreOPFADM;
+    type
+      TPerson = class(TJCoreEntity)
+      // ... private fields
+      public
+        procedure AfterConstruction; override;
+      published
+        property Name: TJCoreOPFStringType
+          read FName write FName;
+        property Age: TJCoreOPFIntegerType
+          read FAge write FAge;
+      end;
+    implementation
+    // ...
+    procedure TPerson.AfterConstruction;
+    begin
+      VModel.InitEntity(Self);
+    end;
+    #)
+
+    @bold(Important:) an ADM belongs to a single attribute of a single instance and it is not an immutable
+    object. Copying data should always be made from the native value instead of referencing the attribute
+    object.
+    
+    The @code(VModel) variable is used to create the entity's ADMs in the ADM as attribute approach. It's
+    content must be initialized just after the creation of the Config instance.
+
+    @longcode(#
+    // Model unit
+    type
+      TPerson = class(TJCoreEntity)
+      // ...
+    var
+      VModel: IJCoreModel;
+
+    // Configuration instance unit
+    begin
+      VConfig := TJCoreOPFConfiguration.Create;
+      VModel := VConfig.Model;
+    #)
+
+    @bold(Important:) unlike native attributes, the ADM as attribute lifecycle is managed by JCoreOPF. Do
+    not create nor destroy them by hand, instead create them using @link(IJCoreModel.InitEntity InitEntity)
+    method and leave @code(PID) destroy them.
+  )
+)
+
+@section 2 opf-lazyload Lazy loading
+
+Lazy loading is a feature that allows the entity to be partially loaded. Some attributes like blobs or
+lists might be configured to be loaded only if the information is actually required.
+
+Setting up a list of product items to be loaded on demand:
+
+@longcode(#
+  type
+    TInvoice = class(TJCoreEntity)
+    private
+      FItems: TInvoiceItemList;
+      function GetItems: TInvoiceItemList;
+      procedure SetItems(const AValue: TInvoiceItemList);
+    published
+      property Items: TInvoiceItemList
+        read GetItems write SetItems;
+    end;
+  implementation
+  // ...
+  function TInvoice.GetItems: TInvoiceItemList;
+  begin
+    if not _proxy.Lazyload(@FItems) then
+      FItems := TInvoiceItemList.Create(True);
+    Result := FItems;
+  end;
+#)
+
+The lazy load syntax in depth:
+
+@unorderedList(
+  @item(Declare a getter in every attribute you want to load on demand)
+  @item(Call @link(TJCoreEntityProxy.Lazyload _proxy.Lazyload) method sending the @italic(address) of the
+    attribute in the only parameter available. If @code(_pid) property approach is used, call
+    @link(IJCorePID.Lazyload _pid.Lazyload) instead after ensure that @code(_pid) is not @nil)
+  @item(If the method returns @True JCoreOPF has already loaded the data and updated the attribute, no
+    further action is required. Just return the attribute value)
+  @item(If the method returns @False JCoreOPF could not load the data or update the attribute, you should
+    create a valid reference just like if lazy loading was not configured)
+)
+
+How does the feature work? Whenever the getter of a property is set with a call to the
+@link(TJCoreEntityProxy.Lazyload LazyLoad) method, JCoreOPF recognizes that call and flags the attribute to
+not be loaded from the database. The implementation of the getter delegates to JCoreOPF the responsibility
+to load the data. On success or if the data have already been loaded, the method returns @True indicating
+success. If JCoreOPF cannot load or create the data, the method returns @False which means the framework
+didn't touch the attribute and the getter should take care of the request.
+
+The lazy loading of JCoreOPF works with any attribute type, although it makes more sense with lists and
+attributes that have a lot of content and little use.

@@ -1,0 +1,26 @@
+JCore is divided into modules. This is good because although the product as a whole can become big and
+meet various kinds of needs, your project must declare and use only what it really need. This is also good
+for JCore's evolution because the evolution of a module does not impact another module which it does
+not depend.
+
+The Core module has frameworks and utilities reused by other modules. For example, logging and dependency
+injection features are useful to any module. Being small frameworks, they are declared in the Core module
+in order to be shared.
+
+Check out below its main features.
+
+@section 2 core-dic Dependency Injection
+
+*** On the road
+
+@section 2 core-expression Expression Parser
+
+*** On the road
+
+@section 2 core-loggin Logging
+
+*** On the road
+
+@section 2 core-types Types
+
+*** On the road
