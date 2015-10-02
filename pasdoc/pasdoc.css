@@ -29,7 +29,7 @@ body {
   font-family: Verdana,Arial;
   color: black;
   background-color: white;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 table.container {
@@ -130,9 +130,9 @@ h6.description_section {
 
 /* Style applied to Pascal code in documentation
    (e.g. produced by @longcode tag) } */
-span.pascal_string { color: #000080; }
+span.pascal_string { color: #0000A0; }
 span.pascal_keyword { font-weight: bolder; }
-span.pascal_comment { color: #000080; font-style: italic; }
+span.pascal_comment { color: #0000A0; font-style: italic; }
 span.pascal_compiler_comment { color: #008000; }
 span.pascal_numeric { }
 span.pascal_hex { }

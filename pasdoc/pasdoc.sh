@@ -12,6 +12,7 @@ pasdoc \
     ../{opf,opf/drivers,opf/db}/*.pas \
     ../{ws,ws/apphandlers}/*.pas \
   --external-class-hierarchy class-hierarchy.txt \
+  --css pasdoc.css \
   --format html \
   --verbosity 2 \
   --staronly \
