@@ -6,11 +6,7 @@ mkdir output
 pasdoc \
   --title "JCore API docs" \
   --introduction overview.txt \
-  --include \
-    ../core \
-    ../core/*.pas \
-    ../{opf,opf/drivers,opf/db}/*.pas \
-    ../{ws,ws/apphandlers}/*.pas \
+  --include ../core \
   --external-class-hierarchy class-hierarchy.txt \
   --css pasdoc.css \
   --format html \
@@ -23,6 +19,9 @@ pasdoc \
   --graphviz-classes \
   --link-gv-uses png \
   --link-gv-classes png \
+    ../core/*.pas \
+    ../{opf,opf/drivers,opf/db}/*.pas \
+    ../{ws,ws/apphandlers}/*.pas \
   --output output | grep -v '^Info\[2\]'
 cd output/
 echo "Generating uses dependency graph"
