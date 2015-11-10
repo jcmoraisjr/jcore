@@ -9,11 +9,6 @@
         <OtherUnitFiles Value="ws;ws/apphandlers"/>
         <UnitOutputDirectory Value="lib/ws/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
-      <Linking>
-        <Debugging>
-          <DebugInfoType Value="dsDwarf2Set"/>
-        </Debugging>
-      </Linking>
     </CompilerOptions>
     <Files Count="7">
       <Item1>

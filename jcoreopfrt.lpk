@@ -9,11 +9,6 @@
         <OtherUnitFiles Value="opf;opf/drivers;opf/db"/>
         <UnitOutputDirectory Value="lib/opf/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
-      <Linking>
-        <Debugging>
-          <DebugInfoType Value="dsDwarf2Set"/>
-        </Debugging>
-      </Linking>
     </CompilerOptions>
     <Files Count="17">
       <Item1>
