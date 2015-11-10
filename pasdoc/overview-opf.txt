@@ -33,7 +33,7 @@ The following code snippets show the most common parameterization of the Config 
       VConfig.DriverClass := TJCoreOPFDriverSQLdb;
     #)
   )
-  @item(Driver parameterizations. Remember to include any support units.
+  @item(Driver parameterizations. Remember to include any support unit.
     @longcode(#
     uses
       // ...
@@ -49,7 +49,7 @@ The following code snippets show the most common parameterization of the Config 
     #)
   )
   @item(Include all mapping classes that you will need. The class @link(TJCoreOPFSQLMapping) performs
-    self-mapping and will be the only class required in most cases.
+    auto-mapping and will be the only class required in most cases.
     @longcode(#
     uses
       // ...
@@ -286,6 +286,10 @@ This way it can retrieve an object or a list of objects instead of a cursor.
   )
 )
 
+@section 3 opf-session-transaction Transaction control
+
+*** Unstable usage interface
+
 @section 2 opf-metadata Metadata
 
 Metadatas are used to store model settings. Only part of the metadata can be configured directly at the
@@ -339,7 +343,7 @@ Declaring a list composition:
 @longcode(#
   uses
     // ...
-    fgl;
+    fgl,
     JCoreEntity;
   type
     TInvoiceItem = class(TJCoreEntity)
@@ -652,7 +656,7 @@ that suit you best.
   )
   @item(ADM as attribute --- the ADM itself is used in place of the native attribute or attribute as object.
     It has the advantage of grouping in the same interface: support of @code(null), flag for modified
-    content, cached content and other internal information from the ADM. The disadvantages are: the need to
+    content, cached content and other internal informations from the ADM. The disadvantages are: the need to
     keep a reference to the Model in order to initialize the attributes, a more verbose syntax ---
     @code(VPerson.Name.Value) --- to access the content, and a small overhead during construction of the
     instance.
