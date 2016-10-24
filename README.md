@@ -1,16 +1,14 @@
-JCore
-=====
+#JCore
 
-Some utility classes
+Some classes and frameworks I have implemented so far.
 
-* OPF (drafts)
+* OPF
 * Dependency Injection Container
 * Expression Parser
 
-OPF
----
+##OPF
 
-Drafts of a persistence framework. Features being implemented:
+Features being implemented:
 
 * Entities inherits from TObject and declares native data types
 * Support of any data type, registering new data mediators for unsupported PTypeInfos
@@ -23,14 +21,17 @@ Drafts of a persistence framework. Features being implemented:
 * Lazarus wizards for manual mappings, manual model and persistence configuration
 * API docs
 
-First alpha: Dec/2014
+There are some docs [here](http://jcore.pressobjects.org/docs/api/0.4/).
 
-Dependency Injection Container
-------------------------------
+Some missing pieces before stabilize 0.4:
 
-Classes which help you separate specifications from implementations, as well
-as give you the hability to override default implementation from a framework
-with your own classes.
+* Support of native data types
+* Manual transactions
+* Criteria improvement
+
+##Dependency Injection Container
+
+Classes which help you separate specifications from implementations, as well as give you the hability to override default implementation from a framework with your own classes.
 
 * Declare your specification using interfaces
 * Register at least one implementation
@@ -51,37 +52,33 @@ Using qualifier:
     ...
     TJCoreDIC.Locate(IPayment, ‘paypal’, VPayment);
 
-Expression Parser
------------------
+##Expression Parser
 
-An expression parser with an extensible function and operation library as well
-as support to variables.
+An expression parser with an extensible function and operation library as well as support to variables.
 
-The library is as fast as it can be: when the formula is changed, it is parsed
-in order to create an array with all operations, in the correct order. All
-results are referenced and reused without moves and copies. Point to pointers.
+The library is as fast as it can be: when the formula is changed, it is parsed in order to create an array with all operations, in the correct order. All results are referenced and reused without moves and copies. Point to pointers.
 
 A simple calc:
 
     VExpression := TJCoreExpression.Create('2+2');
-	try
-	  writeln(VExpression.VarValue);
-	finally
-	  FreeAndNil(VExpression);
-	end;
+    try
+      writeln(VExpression.VarValue);
+    finally
+      FreeAndNil(VExpression);
+    end;
 
 Using vars:
 
     VExpression := TJCoreExpression.Create;
-	try
+    try
       VExpression.Vars.Variable['x'] := 2;
-	  VExpression.ParseExpression('2+x');
-	  writeln(VExpression.VarValue);
+      VExpression.ParseExpression('2+x');
+      writeln(VExpression.VarValue);
       VExpression.Vars.Variable['x'] := 4;
-	  writeln(VExpression.VarValue);
-	finally
-	  FreeAndNil(VExpression);
-	end;
+      writeln(VExpression.VarValue);
+    finally
+      FreeAndNil(VExpression);
+    end;
 
 User defined function:
 
@@ -113,15 +110,15 @@ User defined function:
       Res^ := Sin(Params[0]^);
     end;
 
-	begin
+    begin
       JCoreExpressionLibrary.RegisterFunctions([TSinFunction]);
       VExpression := TJCoreExpression.Create('sin(30)');
-	  try
-	    writeln(VExpression.VarValue);
-	  finally
-	    FreeAndNil(VExpression);
-	  end;
-	end;
+      try
+        writeln(VExpression.VarValue);
+      finally
+        FreeAndNil(VExpression);
+      end;
+    end;
 
 User defined operation:
 
@@ -133,7 +130,7 @@ User defined operation:
       procedure VarCalc; override;
     end;
 
-	class function TModOperation.InternalOperatorToken: string;
+    class function TModOperation.InternalOperatorToken: string;
     begin
       Result := 'mod';
     end;
@@ -148,12 +145,12 @@ User defined operation:
       Res^ := Val1^ mod Val2^;
     end;
 
-	begin
+    begin
       JCoreExpressionLibrary.RegisterOperations([TModOperation]);
       VExpression := TJCoreExpression.Create('3 mod 1');
-	  try
-	    writeln(VExpression.VarValue);
-	  finally
-	    FreeAndNil(VExpression);
-	  end;
-	end;
+      try
+        writeln(VExpression.VarValue);
+      finally
+        FreeAndNil(VExpression);
+      end;
+    end;
