@@ -21,7 +21,6 @@ pasdoc \
   --link-gv-classes png \
     ../core/*.pas \
     ../{opf,opf/drivers,opf/db}/*.pas \
-    ../{ws,ws/apphandlers}/*.pas \
   --output output | grep -v '^Info\[2\]'
 cd output/
 echo "Generating uses dependency graph"

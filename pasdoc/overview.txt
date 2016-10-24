@@ -49,9 +49,3 @@ Welcome aboard! I hope you enjoy using JCore as much as I enjoyed design and bui
 @section 1 opf OPF
 
 @include(overview-opf.txt)
-
-@html(<hr noshade size="1">)
-
-@section 1 ws Web Services
-
-@include(overview-ws.txt)

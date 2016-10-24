@@ -13,7 +13,7 @@
         <CustomOptions Value="-vm5024"/>
       </Other>
     </CompilerOptions>
-    <Files Count="22">
+    <Files Count="19">
       <Item1>
         <Filename Value="core/testlist.pas"/>
         <UnitName Value="TestList"/>
@@ -90,32 +90,17 @@
         <Filename Value="opf/testopfmappingautotests.pas"/>
         <UnitName Value="TestOPFMappingAutoTests"/>
       </Item19>
-      <Item20>
-        <Filename Value="ws/testwsinvokers.pas"/>
-        <UnitName Value="TestWSInvokers"/>
-      </Item20>
-      <Item21>
-        <Filename Value="ws/testwscontroller.pas"/>
-        <UnitName Value="TestWSController"/>
-      </Item21>
-      <Item22>
-        <Filename Value="ws/testwsrequest.pas"/>
-        <UnitName Value="TestWSRequest"/>
-      </Item22>
     </Files>
-    <RequiredPkgs Count="4">
+    <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="JCoreWSRT"/>
+        <PackageName Value="JCoreOPFRT"/>
       </Item1>
       <Item2>
-        <PackageName Value="JCoreOPFRT"/>
+        <PackageName Value="JCoreRT"/>
       </Item2>
       <Item3>
-        <PackageName Value="JCoreRT"/>
-      </Item3>
-      <Item4>
         <PackageName Value="FCL"/>
-      </Item4>
+      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
