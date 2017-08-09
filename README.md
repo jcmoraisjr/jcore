@@ -1,4 +1,4 @@
-#JCore
+# JCore
 
 Some classes and frameworks I have implemented so far.
 
@@ -6,7 +6,7 @@ Some classes and frameworks I have implemented so far.
 * Dependency Injection Container
 * Expression Parser
 
-##OPF
+## OPF
 
 Features being implemented:
 
@@ -21,7 +21,7 @@ Features being implemented:
 * Lazarus wizards for manual mappings, manual model and persistence configuration
 * API docs
 
-There are some docs [here](http://jcore.pressobjects.org/docs/api/0.4/).
+There are some docs [here](http://pressobjects.github.io/jcore-api/docs/api/0.4/).
 
 Some missing pieces before stabilize 0.4:
 
@@ -29,7 +29,7 @@ Some missing pieces before stabilize 0.4:
 * Manual transactions
 * Criteria improvement
 
-##Dependency Injection Container
+## Dependency Injection Container
 
 Classes which help you separate specifications from implementations, as well as give you the hability to override default implementation from a framework with your own classes.
 
@@ -52,7 +52,7 @@ Using qualifier:
     ...
     TJCoreDIC.Locate(IPayment, ‘paypal’, VPayment);
 
-##Expression Parser
+## Expression Parser
 
 An expression parser with an extensible function and operation library as well as support to variables.
 
