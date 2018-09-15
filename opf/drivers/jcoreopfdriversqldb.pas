@@ -196,7 +196,7 @@ begin
   Query.UniDirectional := True;
   Query.Open;
   FFieldCount := Query.FieldCount;
-  FRecordCount := Query.RecordCount;
+  FRecordCount := Query.RowsAffected;
   Result := Self;
 end;
 
