@@ -4,3 +4,4 @@ jcorert.pas
 jcoreopfrt.pas
 jcorewsrt.pas
 *.bak
+backup/
