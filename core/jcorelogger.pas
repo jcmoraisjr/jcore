@@ -130,7 +130,10 @@ var
   VIndex: Integer;
 begin
   if not Assigned(FLoggerMap) then
+  begin
     FLoggerMap := TJCoreLoggerMap.Create;
+    FLoggerMap.Sorted := True;
+  end;
   if FLoggerMap.Find(ALogger, VIndex) then
     Result := FLoggerMap.Data[VIndex]
   else
