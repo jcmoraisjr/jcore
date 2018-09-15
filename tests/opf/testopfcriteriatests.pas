@@ -16,6 +16,7 @@ type
     procedure NonFilterSimple;
     procedure NonFilterAbstract;
     procedure NonFilterInherited;
+    procedure NonFilterComposite;
     procedure FilterEqualsSimple;
     procedure FilterEqualsAbstract;
     procedure FilterEqualsInherited;
@@ -73,6 +74,19 @@ begin
   try
     AssertSQLDriverCommands([
      'ExecSQL SELECT t0.ID,t0.NAME,t0.ADDRESS,t1.NICK FROM CLIENT t0 INNER JOIN PERSON t1 ON t0.ID = t1.ID']);
+  finally
+    FreeAndNil(VList);
+  end;
+end;
+
+procedure TTestOPFCriteriaTest.NonFilterComposite;
+var
+  VList: TObjectList;
+begin
+  VList := Session.CreateCriteria(TInvoice).RetrieveList;
+  try
+    AssertSQLDriverCommands([
+     'ExecSQL SELECT ID,CLIENT,DATE FROM INVOICE']);
   finally
     FreeAndNil(VList);
   end;

@@ -246,7 +246,8 @@ begin
     else
       VPrefix := '';
     for I := 0 to Pred(FMap.Count) do
-      Result := Result + VPrefix + FMap[I].PersistentFieldName + ',';
+      if FMap[I].AttributeType <> jatCollection then
+        Result := Result + VPrefix + FMap[I].PersistentFieldName + ',';
   end;
 end;
 
