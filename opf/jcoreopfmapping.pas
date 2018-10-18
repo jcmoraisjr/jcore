@@ -584,6 +584,7 @@ begin
             VCompMapping := TJCoreOPFComplementaryMappingManager.Create;
           VCompMapping.AddPID(VPID);
         end;
+        Mapper.AddInTransactionPID(VPID);
       end;
 
       // Reading complementary mappings

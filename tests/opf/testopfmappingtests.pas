@@ -575,7 +575,6 @@ begin
   TTestSQLDriver.ExpectedResultsets.Add(1);
   VPerson := Session.Retrieve(TTestIPIDPerson, '1') as TTestIPIDPerson;
   try
-    Session.Store(VPerson);
     AssertNotNull('person pid', VPerson._PID);
     AssertTrue('person persistent', VPerson._PID.IsPersistent);
   finally
