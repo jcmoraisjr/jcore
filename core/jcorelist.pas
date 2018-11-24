@@ -35,6 +35,7 @@ type
     FOrderedList: TOrderedList;
     FTypeInfoInt64: PTypeInfo;
     FTypeInfoInteger: PTypeInfo;
+    FTypeInfoFloat: PTypeInfo;
     FTypeInfoString: PTypeInfo;
     procedure ClearOrderedList;
     procedure PopValue(const AType: TTypeKind);
@@ -49,10 +50,12 @@ type
     property Count: Integer read FCount;
     function PopInt32: Integer;
     function PopInt64: Int64;
+    function PopFloat: Extended;
     function PopString: string;
     function PopType: TTypeKind;
     procedure PushInt32(const AValue: Integer);
     procedure PushInt64(const AValue: Int64);
+    procedure PushFloat(const AValue: Extended);
     procedure PushNull;
     procedure PushString(const AValue: string);
     procedure PushVariant(const AValue: Variant);
@@ -123,6 +126,7 @@ begin
   FOrderedList := CreateOrderedList;
   FTypeInfoInt64 := PTypeInfo(TypeInfo(Int64));
   FTypeInfoInteger := PTypeInfo(TypeInfo(Integer));
+  FTypeInfoFloat := PTypeInfo(TypeInfo(Extended));
   FTypeInfoString := PTypeInfo(TypeInfo(string));
 end;
 
@@ -151,6 +155,18 @@ var
 begin
   ValidateType(FTypeInfoInt64);
   VValue := PInt64(OrderedList.Pop);
+  Result := VValue^;
+  Dec(FCount);
+  FCurrentType := nil;
+  Dispose(VValue);
+end;
+
+function TJCoreNativeTypeOrderedList.PopFloat: Extended;
+var
+  VValue: PExtended;
+begin
+  ValidateType(FTypeInfoFloat);
+  VValue := PExtended(OrderedList.Pop);
   Result := VValue^;
   Dec(FCount);
   FCurrentType := nil;
@@ -203,6 +219,17 @@ begin
   New(VValue);
   VValue^ := AValue;
   PushTypedValue(VValue, FTypeInfoInt64);
+  Inc(FCount);
+end;
+
+procedure TJCoreNativeTypeOrderedList.PushFloat(const AValue: Extended);
+var
+  VValue: PExtended;
+begin
+  ValidateType(nil);
+  New(VValue);
+  VValue^ := AValue;
+  PushTypedValue(VValue, FTypeInfoFloat);
   Inc(FCount);
 end;
 

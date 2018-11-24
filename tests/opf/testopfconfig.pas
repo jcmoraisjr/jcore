@@ -185,6 +185,7 @@ type
     function OpenCursor: IJCoreOPFSQLResultSet;
     function ReadInt32: Integer;
     function ReadInt64: Int64;
+    function ReadFloat: Extended;
     function ReadNull: Boolean;
     function ReadString: string;
     function Size: Integer;
@@ -679,6 +680,11 @@ end;
 function TTestSQLQuery.ReadInt64: Int64;
 begin
   Result := StrToInt64(PopData);
+end;
+
+function TTestSQLQuery.ReadFloat: Extended;
+begin
+  Result := StrToFloat(PopData);
 end;
 
 function TTestSQLQuery.ReadNull: Boolean;

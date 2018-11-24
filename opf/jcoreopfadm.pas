@@ -110,13 +110,17 @@ type
     FCache: Extended;
     function GetGetter: Extended;
     function GetValue: Extended;
+    procedure SetValue(AValue: Extended);
+    procedure UseSetter(const AValue: Extended);
   protected
     procedure InternalGetter; override;
     function InternalIsDirty: Boolean; override;
     procedure InternalUpdateCache; override;
-    property Value: Extended read GetValue;
+    property Value: Extended read GetValue write SetValue;
   public
     class function Apply(const AModel: TJCoreModel; const AAttrTypeInfo: PTypeInfo): Boolean; override;
+    procedure ReadFromResultSet(const AResultSet: IJCoreOPFResultSet); override;
+    procedure WriteToParams(const AParams: IJCoreOPFParams); override;
   end;
 
   { TJCoreOPFADMAnsiStringNativeCtl }
@@ -366,6 +370,19 @@ begin
     Result := GetGetter;
 end;
 
+procedure TJCoreOPFADMFloatNativeCtl.SetValue(AValue: Extended);
+begin
+  if Assigned(AttrAddr) then
+    Extended(AttrAddr^) := AValue
+  else
+    UseSetter(AValue);
+end;
+
+procedure TJCoreOPFADMFloatNativeCtl.UseSetter(const AValue: Extended);
+begin
+  SetFloatProp(PID.Entity, AttrPropInfo, AValue);
+end;
+
 procedure TJCoreOPFADMFloatNativeCtl.InternalGetter;
 begin
   GetGetter;
@@ -385,6 +402,19 @@ class function TJCoreOPFADMFloatNativeCtl.Apply(const AModel: TJCoreModel;
   const AAttrTypeInfo: PTypeInfo): Boolean;
 begin
   Result := AAttrTypeInfo^.Kind = tkFloat;
+  //and (AAttrTypeInfo^.Name <> 'TDateTime')*);
+end;
+
+procedure TJCoreOPFADMFloatNativeCtl.ReadFromResultSet(
+  const AResultSet: IJCoreOPFResultSet);
+begin
+  Value := AResultSet.ReadFloat;
+end;
+
+procedure TJCoreOPFADMFloatNativeCtl.WriteToParams(
+  const AParams: IJCoreOPFParams);
+begin
+  AParams.WriteFloat(Value);
 end;
 
 { TJCoreOPFADMAnsiStringNativeCtl }

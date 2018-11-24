@@ -53,6 +53,7 @@ type
     function OpenCursor: IJCoreOPFSQLResultSet;
     function ReadInt32: Integer;
     function ReadInt64: Int64;
+    function ReadFloat: Extended;
     function ReadNull: Boolean;
     function ReadString: string;
     function Size: Integer;
@@ -148,6 +149,7 @@ begin
       tkAString: VParam.AsString := Params.ReadString;
       tkInteger: VParam.AsInteger := Params.ReadInt32;
       tkInt64: VParam.AsLargeInt := Params.ReadInt64;
+      tkFloat: VParam.AsFloat := Params.ReadFloat;
       else
         raise EJCoreOPF.Create(2104, S2104_UnsupportedType, [GetEnumName(TypeInfo(TTypeKind), Ord(VType))]);
     end;
@@ -209,6 +211,12 @@ end;
 function TJCoreOPFQuerySQLdb.ReadInt64: Int64;
 begin
   Result := Query.Fields[CurrentField].AsLargeInt;
+  NextField;
+end;
+
+function TJCoreOPFQuerySQLdb.ReadFloat: Extended;
+begin
+  Result := Query.Fields[CurrentField].AsFloat;
   NextField;
 end;
 

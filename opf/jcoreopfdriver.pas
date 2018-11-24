@@ -33,10 +33,12 @@ type
     function Count: Integer;
     function ReadInt32: Integer;
     function ReadInt64: Int64;
+    function ReadFloat: Extended;
     function ReadString: string;
     function ReadType: TTypeKind;
     procedure WriteInt32(const AValue: Integer);
     procedure WriteInt64(const AValue: Int64);
+    procedure WriteFloat(const AValue: Extended);
     procedure WriteNull;
     procedure WriteString(const AValue: string);
     procedure WriteVariant(const AValue: Variant);
@@ -47,6 +49,7 @@ type
   IJCoreOPFResultSet = interface(IInterface)
     function ReadInt32: Integer;
     function ReadInt64: Int64;
+    function ReadFloat: Extended;
     function ReadNull: Boolean;
     function ReadString: string;
     function Size: Integer;
@@ -87,10 +90,12 @@ type
     function Count: Integer;
     function IJCoreOPFParams.ReadInt32 = PopInt32;
     function IJCoreOPFParams.ReadInt64 = PopInt64;
+    function IJCoreOPFParams.ReadFloat = PopFloat;
     function IJCoreOPFParams.ReadString = PopString;
     function IJCoreOPFParams.ReadType = PopType;
     procedure IJCoreOPFParams.WriteInt32 = PushInt32;
     procedure IJCoreOPFParams.WriteInt64 = PushInt64;
+    procedure IJCoreOPFParams.WriteFloat = PushFloat;
     procedure IJCoreOPFParams.WriteNull = PushNull;
     procedure IJCoreOPFParams.WriteString = PushString;
     procedure IJCoreOPFParams.WriteVariant = PushVariant;

@@ -27,6 +27,7 @@ type
   published
     procedure PushPopInt32;
     procedure PushPopInt64;
+    procedure PushPopFloat;
     procedure PushPopString;
     procedure PushPopVariantString;
     procedure PushPopVariantInteger;
@@ -101,6 +102,20 @@ begin
   AssertEquals('stack.poptype', 'tkInt64', TypeToName(VType));
   VValue := Stack.PopInt64;
   AssertEquals('stack.popint64', 18, VValue);
+  AssertEquals('stack.count', 0, Stack.Count);
+end;
+
+procedure TNativeTypeOrderedListTest.PushPopFloat;
+var
+  VType: TTypeKind;
+  VValue: Extended;
+begin
+  Stack.PushFloat(3.14159265359);
+  AssertEquals('stack.count', 1, Stack.Count);
+  VType := Stack.PopType;
+  AssertEquals('stack.poptype', 'tkFloat', TypeToName(VType));
+  VValue := Stack.PopFloat;
+  AssertEquals('stack.popfloat', 3.14159265359, VValue, 0.000000000001);
   AssertEquals('stack.count', 0, Stack.Count);
 end;
 
